@@ -1,6 +1,6 @@
 # SoCDP8
 
-This project will provide an implementation of a DEC PDP-8/I on an a chip that contains an FPGA and an ARM CPU, for example the Xilinx Zynq.
+This project will provide an implementation of a [DEC PDP-8/I](https://en.wikipedia.org/wiki/PDP-8) on an a chip that contains an FPGA and an ARM CPU, for example the Xilinx Zynq.
 
 It will target the [PiDP-8/I console](https://obsolescence.wixsite.com/obsolescence/pidp-8) built by Oscar Vermeulen as a replacement for the Raspberry Pi solution.
 
