@@ -23,12 +23,12 @@ Peripherals will be implemented on the ARM CPU of the SoC. This will allow an ea
 
 ## Supported SoC Boards
 I evaluated a few SoC boards:
-* [ZynqBerry (Xilinx Zynq)](https://shop.trenz-electronic.de/en/TE0726-03M-ZynqBerry-Zynq-7010-in-Raspberry-Pi-form-factor)
+* [ZynqBerry (Xilinx Zynq 7010)](https://shop.trenz-electronic.de/en/TE0726-03M-ZynqBerry-Zynq-7010-in-Raspberry-Pi-form-factor)
   * 130€, available at several shops
   * has the same form factor as the Raspberry Pi, including the GPIO connector
   * doesn't have free GPIO pins
   * has the smallest Zynq
-* [Pynq-Z2 (Xilinx Zynq)](http://www.tul.com.tw/ProductsPYNQ-Z2.html)
+* [Pynq-Z2 (Xilinx Zynq 7020)](http://www.tul.com.tw/ProductsPYNQ-Z2.html)
   * 132€, available at several shops
   * has a Raspberry Pi connector
   * has lots of remaining GPIO pins, including one free PMOD for dozens of ready-made sensors
