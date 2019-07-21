@@ -34,7 +34,7 @@ I evaluated a few SoC boards:
   * has lots of remaining GPIO pins, including one free PMOD for dozens of ready-made sensors
   * has a few switches, buttons and LEDs
   * must be connected using a ribbon cable due to the different form factor, but still fits in the PiDP-8/I box
-* [Atlas-SoC (Altera Cyclone V)](https://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&CategoryNo=163&No=941&PartNo=1)
+* [DE0-Nano-SoC (Altera Cyclone V)](https://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&CategoryNo=163&No=941&PartNo=1)
   * 125€, had to order internationally
   * the 40 pin connector is not compatible, an adapter board would be required
   * has lots of remaining GPIO pins
