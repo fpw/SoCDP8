@@ -4,6 +4,8 @@ This project will provide an implementation of a DEC PDP-8/I on an a chip that c
 
 It will target the [PiDP-8/I console](https://obsolescence.wixsite.com/obsolescence/pidp-8) built by Oscar Vermeulen as a replacement for the Raspberry Pi solution.
 
+![GitHub Logo](/pictures/socdp-8.jpg)
+
 ## Why a SoC solution?
 The common Raspberry Pi + Linux + SIMH approach has a few drawbacks:
 * inaccurate simulation: for example, single stepping doesn't work
@@ -38,8 +40,6 @@ I evaluated a few SoC boards:
 For now, I am targeting the Zynq and will use the Pynq-Z2 board for development.
 
 ## Project Status
-I have completed a proof-of-concept phase by implementing a simplified version of the PDP-8/I in VHDL along with a driver for the PiDP-8/I console. The system can run on the FPGA inside the Zynq. It can communicate with the a C++ program running on the ARM CPU through internal GPIOs and shared memory. The startup time is less than a second and does not depend on the complexity of the system. The picture below shows the PiDP-8/I connected to the Pynq-Z2 board that runs this implementation. Next to it is the ZynqBerry board that can also run it. The C++ program loaded the RIM loader into the memory of the emulated PDP-8/I and the console allows examining and single stepping the program.
+I have completed a proof-of-concept phase by implementing a simplified version of the PDP-8/I in VHDL along with a driver for the PiDP-8/I console. The system can run on the FPGA inside the Zynq. It can communicate with the a C++ program running on the ARM CPU through internal GPIOs and shared memory. The startup time is less than a second and does not depend on the complexity of the system. The picture on top shows the PiDP-8/I connected to the Pynq-Z2 board that runs this implementation. Next to it is the ZynqBerry board that can also run it. The C++ program loaded the RIM loader into the memory of the emulated PDP-8/I and the console allows examining and single stepping the program.
 
 Unforunately, I had to make a small modification to the PiDP-8/I hardware to support the Zynq boards: The 1k resistors must be replaced by 220 Ohm resistors to support the different pullup resistance of the Zynq drivers. But at least 220 Ohm also work with the Raspberry Pi, so this modification is compatible.
-
-![GitHub Logo](/pictures/socdp-8.jpg)
