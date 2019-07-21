@@ -31,7 +31,7 @@ I evaluated a few SoC boards:
 * [Pynq-Z2 (Xilinx Zynq)](http://www.tul.com.tw/ProductsPYNQ-Z2.html)
   * 132€, available at several shops
   * has a Raspberry Pi connector
-  * has lots of remaining GPIO pins
+  * has lots of remaining GPIO pins, including one free PMOD for dozens of ready-made sensors
   * has a few switches, buttons and LEDs
   * must be connected using a ribbon cable due to the different form factor, but still fits in the PiDP-8/I box
 * [Atlas-SoC (Altera Cyclone V)](https://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&CategoryNo=163&No=941&PartNo=1)
