@@ -24,15 +24,18 @@ Peripherals will be implemented on the ARM CPU of the SoC. This will allow an ea
 ## Supported SoC Boards
 I evaluated a few SoC boards:
 * [ZynqBerry (Xilinx Zynq)](https://shop.trenz-electronic.de/en/TE0726-03M-ZynqBerry-Zynq-7010-in-Raspberry-Pi-form-factor)
+  * 130€, available at several shops
   * has the same form factor as the Raspberry Pi, including the GPIO connector
   * doesn't have free GPIO pins
   * has the smallest Zynq
 * [Pynq-Z2 (Xilinx Zynq)](http://www.tul.com.tw/ProductsPYNQ-Z2.html)
+  * 132€, available at several shops
   * has a Raspberry Pi connector
   * has lots of remaining GPIO pins
   * has a few switches, buttons and LEDs
   * must be connected using a ribbon cable due to the different form factor, but still fits in the PiDP-8/I box
 * [Atlas-SoC (Altera Cyclone V)](https://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&CategoryNo=163&No=941&PartNo=1)
+  * 125€, had to order internationally
   * the 40 pin connector is not compatible, an adapter board would be required
   * has lots of remaining GPIO pins
   * has a few switches, buttons and LEDs
