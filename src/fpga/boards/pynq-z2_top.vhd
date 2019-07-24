@@ -12,14 +12,22 @@ use work.socdp8_package.all;
 use work.pidp8_console_package.all;
 
 entity pynq_z2_top is
-    port(
+    port (
         clk_50: in std_logic;
-        rst_n: in std_logic;
+        rst: in std_logic;
 
         -- PiDP-8 front panel connections
         column: inout std_logic_vector(11 downto 0);
         switch_row: out std_logic_vector(2 downto 0);
         led_row: out std_logic_vector(7 downto 0);
+        
+        -- external memory connections
+        mem_addr: out std_logic_vector(31 downto 0);
+        mem_din: out std_logic_vector(31 downto 0);
+        mem_dout: in std_logic_vector(31 downto 0);
+        mem_write: out std_logic_vector(3 downto 0);
+        mem_en: out std_logic;
+        mem_rst: out std_logic;
 
         -- Board features
         board_led: out std_logic_vector(3 downto 0);
@@ -46,17 +54,20 @@ architecture Behavioral of pynq_z2_top is
     signal col_t: std_logic;
 
     -- interconnection
-    signal rst: std_logic;
     signal leds: pdp8i_leds;
     signal switches: pdp8i_switches;
-begin
 
--- Alias signals because Xilinx doesn't allow top entities to be VHDL-2008...
-rst <= not rst_n;
+    -- interconnection
+    signal mem_addr_buf: std_logic_vector(14 downto 0);
+    signal mem_din_buf: std_logic_vector(11 downto 0);
+    signal mem_dout_buf: std_logic_vector(11 downto 0);
+    signal mem_write_buf: std_logic;
+begin
 
 console_inst: entity work.pidp8_console
 generic map (
-    clk_frq => clk_frq
+    clk_frq => clk_frq,
+    simulate_lamps => '0'
 )
 port map (
     clk => clk_50,
@@ -71,20 +82,37 @@ port map (
     switches => switches
 );
 
--- Test
-leds.ion <= '1';
-leds.pc <= switches.swr;
-leds.data_field <= switches.data_field;
-leds.inst_field <= switches.inst_field;
-leds.cycle <= CYCLE_DEFER;
-leds.instruction <= INST_DCA;
-leds.pause <= switches.stop;
-leds.run <= switches.sing_inst;
+pdp8_inst: entity work.pdp8
+generic map (
+    clk_frq => clk_frq
+)
+port map (
+    clk => clk_50,
+    rst => rst,
+    ext_mem_out.data => mem_din_buf,
+    ext_mem_out.write => mem_write_buf,
+    ext_mem_out.addr => mem_addr_buf,
+    ext_mem_in.data => mem_dout_buf,
+    leds => leds,
+    switches => switches
+);
+
+-- convert PDP memory to shared BRAM
+mem_addr(31 downto 16) <= (others => '0');
+mem_addr(15 downto 0) <= mem_addr_buf(14 downto 1) & "00";
+mem_din(31 downto 0) <= "0000" & mem_din_buf & "0000" & mem_din_buf;
+mem_dout_buf <= mem_dout(11 downto 0) when mem_addr_buf(0) = '0' else mem_dout(27 downto 16);
+mem_write <=
+    "0011" when mem_write_buf = '1' and mem_addr_buf(0) = '0' else
+    "1100" when mem_write_buf = '1' and mem_addr_buf(0) = '1' else
+    "0000";
+mem_en <= '1';
+mem_rst <= '0';
 
 -- Using IOBUFs to activate and deactive pullups at runtime
--- Xilinx IOBUFs behave like this:
--- IO <= I when T = '0' else 'Z';
--- O <= IO;
+--- Xilinx IOBUFs behave like this:
+---- IO <= I when T = '0' else 'Z';
+---- O <= IO;
 col_bufs: for i in 0 to 11 generate begin
     col_iobuf: IOBUF
     port map (

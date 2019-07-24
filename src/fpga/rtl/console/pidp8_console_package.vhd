@@ -21,7 +21,7 @@ package pidp8_console_package is
         step_counter: std_logic_vector(4 downto 0);
         mqr: std_logic_vector(11 downto 0);
         instruction: pdp8_instruction;
-        cycle: pdp8_cycle;
+        state: pdp8_state;
         ion: std_logic;
         pause: std_logic;
         run: std_logic;

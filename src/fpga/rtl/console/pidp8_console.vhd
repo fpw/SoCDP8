@@ -12,6 +12,7 @@ use work.pidp8_console_package.all;
 entity pidp8_console is
     generic (
         clk_frq: natural;
+        simulate_lamps: std_logic;
         -- we want 50 us steps for the multiplexing, how far do we have to count?
         cycles_max: natural := period_to_cycles(clk_frq, 50.0e-6);
         -- and a PWM delay of 1 us
@@ -56,10 +57,9 @@ architecture Behavioral of pidp8_console is
     type state_t is (RESET, LED_OUT, LED_PAUSE, COL_IN, COL_PAUSE);
     signal state: state_t := RESET;
 
-    signal switch_row1_cur, switch_row1_last, switch_row1_deb: std_logic_vector(11 downto 0);
-    signal switch_row2_cur, switch_row2_last, switch_row2_deb: std_logic_vector(5 downto 0);
-    signal switch_row3_cur, switch_row3_last, switch_row3_deb: std_logic_vector(7 downto 0);
-    signal switch_row3_edge: std_logic_vector(5 downto 0);
+    signal switch_row1: std_logic_vector(11 downto 0);
+    signal switch_row2: std_logic_vector(5 downto 0);
+    signal switch_row3: std_logic_vector(7 downto 0);
 
     -- combinatorial
     type led_row_a is array(0 to 7) of std_logic_vector(11 downto 0);
@@ -78,11 +78,11 @@ led_row_data(2) <= reverse(leds.mem_buf);
 led_row_data(3) <= reverse(leds.accu);
 led_row_data(4) <= reverse(leds.mqr);
 
-with leds.cycle select led_row_data(5)(11 downto 8) <=
-    "0001" when CYCLE_FETCH,
-    "0010" when CYCLE_EXEC,
-    "0100" when CYCLE_DEFER,
-    "1000" when CYCLE_COUNT,
+with leds.state select led_row_data(5)(11 downto 8) <=
+    "0001" when STATE_FETCH,
+    "0010" when STATE_EXEC,
+    "0100" when STATE_DEFER,
+    "1000" when STATE_COUNT,
     "0000" when others;
 with leds.instruction select led_row_data(5)(7 downto 0) <=
     "00000001" when INST_AND,
@@ -98,89 +98,93 @@ with leds.instruction select led_row_data(5)(7 downto 0) <=
 led_row_data(6)(11 downto 2) <=
      "00" & reverse(leds.step_counter) &
      leds.run & leds.pause & leds.ion;
-with leds.cycle select led_row_data(6)(1 downto 0) <=
-    "01" when CYCLE_ADDR,
-    "10" when CYCLE_BREAK,
+with leds.state select led_row_data(6)(1 downto 0) <=
+    "01" when STATE_ADDR,
+    "10" when STATE_BREAK,
     "00" when others;
 
 led_row_data(7) <= "00000" & leds.link & reverse(leds.inst_field) & reverse(leds.data_field);
 
 -- Connect switch register to switch output.
 -- Note that switches are from 0 := MSB in vectors.
-switches.swr <= reverse(switch_row1_deb);
-switches.data_field <= reverse(switch_row2_deb(2 downto 0));
-switches.inst_field <= reverse(switch_row2_deb(5 downto 3));
-switches.start <= switch_row3_edge(0);
-switches.load <= switch_row3_edge(1);
-switches.dep <= switch_row3_edge(2);
-switches.exam <= switch_row3_edge(3);
-switches.cont <= switch_row3_edge(4);
-switches.stop <= switch_row3_edge(5);
-switches.sing_step <= switch_row3_deb(6);
-switches.sing_inst <= switch_row3_deb(7);
+switches.swr <= reverse(switch_row1);
+switches.data_field <= reverse(switch_row2(2 downto 0));
+switches.inst_field <= reverse(switch_row2(5 downto 3));
+switches.start <= switch_row3(0);
+switches.load <= switch_row3(1);
+switches.dep <= switch_row3(2);
+switches.exam <= switch_row3(3);
+switches.cont <= switch_row3(4);
+switches.stop <= switch_row3(5);
+switches.sing_step <= switch_row3(6);
+switches.sing_inst <= switch_row3(7);
 
--- synchronize column input
+-- Note that the entire system only has one central debouncing circuit,
+-- so only synchronize the switch column signals here. The debouncer
+-- is implemented in the timing generator.
 col_in1 <= column_in when rising_edge(clk);
 col_in2 <= col_in1 when rising_edge(clk);
 
--- simulate lamps by observing the state to output it via PWM
-lampst: entity work.lamp
-generic map (
-    clk_frq => clk_frq,
-    lamp_count => lamp_count,
-    rise_time_ms => 100
-)
-port map (
-    clk => clk,
-    rst => rst,
-    input(11 downto 0) => led_row_data(0),
-    input(23 downto 12) => led_row_data(1),
-    input(35 downto 24) => led_row_data(2),
-    input(47 downto 36) => led_row_data(3),
-    input(59 downto 48) => led_row_data(4),
-    input(71 downto 60) => led_row_data(5),
-    input(83 downto 72) => led_row_data(6),
-    input(95 downto 84) => led_row_data(7),
-    brightness(0 to 11) => led_brightness(0),
-    brightness(12 to 23) => led_brightness(1),
-    brightness(24 to 35) => led_brightness(2),
-    brightness(36 to 47) => led_brightness(3),
-    brightness(48 to 59) => led_brightness(4),
-    brightness(60 to 71) => led_brightness(5),
-    brightness(72 to 83) => led_brightness(6),
-    brightness(84 to 95) => led_brightness(7)
-);
-
-pwm: process
-begin
-    wait until rising_edge(clk);
-
-    if pwm_counter < pwm_cycles_max - 1 then
-        pwm_counter <= pwm_counter + 1;
-    else
-        pwm_counter <= 0;
-        
-        if duty_counter < 31 then
-            duty_counter <= duty_counter + 1;
+gen_lamps: if simulate_lamps generate
+    -- simulate lamps by observing the state to output it via PWM
+    lamps: entity work.lamp
+    generic map (
+        clk_frq => clk_frq,
+        lamp_count => lamp_count,
+        rise_time_ms => 100
+    )
+    port map (
+        clk => clk,
+        rst => rst,
+        input(11 downto 0) => led_row_data(0),
+        input(23 downto 12) => led_row_data(1),
+        input(35 downto 24) => led_row_data(2),
+        input(47 downto 36) => led_row_data(3),
+        input(59 downto 48) => led_row_data(4),
+        input(71 downto 60) => led_row_data(5),
+        input(83 downto 72) => led_row_data(6),
+        input(95 downto 84) => led_row_data(7),
+        brightness(0 to 11) => led_brightness(0),
+        brightness(12 to 23) => led_brightness(1),
+        brightness(24 to 35) => led_brightness(2),
+        brightness(36 to 47) => led_brightness(3),
+        brightness(48 to 59) => led_brightness(4),
+        brightness(60 to 71) => led_brightness(5),
+        brightness(72 to 83) => led_brightness(6),
+        brightness(84 to 95) => led_brightness(7)
+    );
+    
+    pwm: process
+    begin
+        wait until rising_edge(clk);
+    
+        if pwm_counter < pwm_cycles_max - 1 then
+            pwm_counter <= pwm_counter + 1;
         else
+            pwm_counter <= 0;
+            
+            if duty_counter < 31 then
+                duty_counter <= duty_counter + 1;
+            else
+                duty_counter <= 0;
+            end if;
+        end if;
+    
+        for col in 0 to 11 loop
+            if led_brightness(cur_row)(col) /= 0 and led_brightness(cur_row)(col) >= duty_counter then
+                col_out(col) <= '0'; -- low active, this enabled the LED
+            else
+                col_out(col) <= '1';
+            end if;
+        end loop;
+    
+        if rst = '1' then
+            pwm_counter <= 0;
             duty_counter <= 0;
+            col_out <= (others => '1');
         end if;
-    end if;
-
-    for col in 0 to 11 loop
-        if led_brightness(cur_row)(col) /= 0 and led_brightness(cur_row)(col) >= duty_counter then
-            col_out(col) <= '0'; -- low active, this enabled the LED
-        else
-            col_out(col) <= '1';
-        end if;
-    end loop;
-
-    if rst = '1' then
-        pwm_counter <= 0;
-        duty_counter <= 0;
-        col_out <= (others => '1');
-    end if;
-end process;
+    end process;
+end generate;
 
 count_cycles: process
 begin
@@ -209,9 +213,6 @@ begin
         count_50us := count_50us + 1;
     end if;
 
-    -- reset momentary switch states to generate edge impulses
-    switch_row3_edge <= (others => '0');
-
     case state is
         when RESET =>
             count_50us := 0;
@@ -224,6 +225,9 @@ begin
             end if;
         when LED_OUT =>
             col_t_out <= '0';
+            if simulate_lamps = '0' then
+                col_out <= not led_row_data(cur_row);
+            end if;
             if count_50us = 31 then
                 count_50us := 0;
                 state <= LED_PAUSE;
@@ -248,17 +252,17 @@ begin
                     sw_row_out <= "110";
                 when 1 =>
                     if step_50us = '1' then
-                        switch_row1_cur <= not col_in2;
+                        switch_row1 <= not col_in2;
                     end if;
                     sw_row_out <= "101";
                 when 2 =>
                     if step_50us = '1' then
-                        switch_row2_cur <= not col_in2(5 downto 0);
+                        switch_row2 <= not col_in2(5 downto 0);
                     end if;
                     sw_row_out <= "011";
                 when 3 =>
                     if step_50us = '1' then
-                        switch_row3_cur <= not col_in2(7 downto 0);
+                        switch_row3 <= not col_in2(7 downto 0);
                     end if;
                     count_50us := 0;
                     state <= COL_PAUSE;
@@ -269,14 +273,6 @@ begin
             sw_row_out <= "111";
             col_t_out <= '1';
             if count_50us = 1 then
-                switch_row1_deb <= switch_row1_last and switch_row1_cur;
-                switch_row2_deb <= switch_row2_last and switch_row2_cur;
-                switch_row3_deb <= switch_row3_last and switch_row3_cur;
-                switch_row3_edge <= not switch_row3_last(5 downto 0) and switch_row3_cur(5 downto 0);
-
-                switch_row1_last <= switch_row1_cur;
-                switch_row2_last <= switch_row2_cur;
-                switch_row3_last <= switch_row3_cur;
                 count_50us := 0;
                 state <= LED_OUT;
             end if;

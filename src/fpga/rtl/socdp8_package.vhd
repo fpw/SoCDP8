@@ -6,21 +6,37 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.MATH_REAL.ALL;
 
 package socdp8_package is
-    type pdp8_instruction is (INST_AND, INST_TAD, INST_ISZ,
+    -- The manual function timing states (MFTS) and automatic timing states (TS)
+    type timing_state is (MFT0, MFT1, MFT2, TS1, TS2, TS3, TS4);
+
+    type pdp8_instruction is (INST_NONE,
+                              INST_AND, INST_TAD, INST_ISZ,
                               INST_DCA, INST_JMS, INST_JMP,
-                              INST_IOT, INST_OPR,
-                              INST_NONE
-                     );
+                              INST_IOT, INST_OPR
+    );
 
-    type pdp8_cycle is (CYCLE_FETCH, CYCLE_EXEC, CYCLE_DEFER,
-                        CYCLE_COUNT, CYCLE_ADDR, CYCLE_BREAK,
-                        CYCLE_NONE
-               );
+    type pdp8_state is (STATE_MANUAL,
+                        STATE_FETCH, STATE_EXEC, STATE_DEFER,
+                        STATE_COUNT, STATE_ADDR, STATE_BREAK
+    );
 
-    -- reverse input vector
+    -- external memory connections
+    type ext_mem_out is record
+        addr: std_logic_vector(14 downto 0);
+        data: std_logic_vector(11 downto 0);
+        write: std_logic;
+    end record;
+
+    type ext_mem_in is record
+        data: std_logic_vector(11 downto 0);
+    end record;
+
+    -- Utility functions
+    
+    --- reverse input vector
     function reverse(x: in std_logic_vector) return std_logic_vector;
     
-    -- given a clock frequency and a period (e.g. 1.0-e6 for 1 us), calculate a counter value to generate the period
+    --- given a clock frequency and a period (e.g. 1.0-e6 for 1 us), calculate a counter value to generate the period
     function period_to_cycles(clk_frq: in natural; period: in real) return natural;
 end socdp8_package;
 
