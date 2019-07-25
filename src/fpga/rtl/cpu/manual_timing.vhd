@@ -9,9 +9,9 @@ use work.socdp8_package.all;
 
 -- This entity implements the manual timing generator
 --
--- Discussion of drawing D-BS-8I-0-2
--- Relevant regions M117 (A8), M700 (A7), M113 (B7) and M115 (B8) - described on page 4-21
+-- Discussion of relevant drawing D-BS-8I-0-2:
 --
+-- Regions M117 (A8), M700 (A7), M113.E15 (B7) and M115 (B8) - described on page 4-21:
 -- If any of the keys LA, ST, EX, DP or CONT is pressed, signal M117.J2 is generated.
 -- This signal indicates that any of the momentary switches is down except for the stop switch.
 -- The switch signals are not debounced by the console, so the signal is filtered and fed into
@@ -30,10 +30,15 @@ use work.socdp8_package.all;
 -- as soon as MFTS0 goes back to low.
 -- To model this, MFTS1 to MFTS3 can be combined into a state signal since they cannot be active at the
 -- same time. The pulse signals are combined into a single pulse output since the state signal indicates
--- which state was activated by the pulse. For example, MFTP2 := mftp high and mfts = MFT2 
+-- which state was activated by the pulse. For example, MFTP2 := mftp high and mfts = MFT2
+--
+-- Region M113.E11 (B5):
+-- This region inverts and comines switch signals to commonly used signals.
+-- We combine these signals on the fly and leave the rest to the optimizer.
+ 
 entity manual_timing is
     generic (
-        clk_frq: in natural;
+        clk_frq: natural;
         -- the debouncer requires 100 ms, see page 4-21
         num_cycles_deb: natural := period_to_cycles(clk_frq, 100.0e-3);
         -- manual timing requires 2 us pulses
@@ -117,8 +122,17 @@ begin
     case state is
         when MFT_NONE =>
             if mftp0 = '1' then
+                -- a key was just activated
                 counter_timer <= 0;
                 mftp <= '1'; -- MFTP0
+                state <= MFT0;
+            end if;
+        when MFT0 =>
+            if counter_timer < num_cycles_pulse - 1 then
+                counter_timer <= counter_timer + 1;
+            else
+                counter_timer <= 0;
+                mftp <= '1'; -- MFTP1
                 state <= MFT1;
             end if;
         when MFT1 =>
@@ -126,18 +140,10 @@ begin
                 counter_timer <= counter_timer + 1;
             else
                 counter_timer <= 0;
-                mftp <= '1'; -- MFTP1
+                mftp <= '1'; -- MFTP2
                 state <= MFT2;
             end if;
         when MFT2 =>
-            if counter_timer < num_cycles_pulse - 1 then
-                counter_timer <= counter_timer + 1;
-            else
-                counter_timer <= 0;
-                mftp <= '1'; -- MFTP2
-                state <= MFT3;
-            end if;
-        when MFT3 =>
             if mfts0 = '0' then
                 state <= MFT_NONE;
             end if;
