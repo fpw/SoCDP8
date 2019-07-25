@@ -7,7 +7,8 @@ use IEEE.MATH_REAL.ALL;
 
 package socdp8_package is
     -- The manual function timing states (MFTS) and automatic timing states (TS)
-    type timing_state is (MFT0, MFT1, MFT2, TS1, TS2, TS3, TS4);
+    type memory_time is (TS1, TS2, TS3, TS4);
+    type manual_function_time is (MFT_NONE, MFT1, MFT2, MFT3);
 
     type pdp8_instruction is (INST_NONE,
                               INST_AND, INST_TAD, INST_ISZ,

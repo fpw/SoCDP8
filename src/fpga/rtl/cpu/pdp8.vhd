@@ -27,10 +27,12 @@ entity pdp8 is
 end pdp8;
 
 architecture Behavioral of pdp8 is
+    -- whether to generate continuous memory cycles
+    signal run: std_logic;
+
     -- current major state
     signal state: pdp8_state;
-    -- auto mode
-    signal run: std_logic;
+
     -- interrupt on FF
     signal ion: std_logic;
     
@@ -40,9 +42,10 @@ architecture Behavioral of pdp8 is
     signal initialize: std_logic;
 
     -- interconnect wires
-    --- from timing generator
-    signal time_state: timing_state;
-    signal time_pulse: std_logic;
+    --- from manual timing generator
+    signal mft: manual_function_time;
+    signal mftp: std_logic;
+    signal mfts0: std_logic;
     --- from memory
     signal strobe: std_logic;
     signal sense: std_logic_vector(11 downto 0);
@@ -56,23 +59,24 @@ architecture Behavioral of pdp8 is
     signal ac_load, pc_load, ma_load, mb_load: std_logic;
 begin
 
-timing: entity work.timing_generator
+manual_timing_inst: entity work.manual_timing
 generic map (
     clk_frq => clk_frq
 )
 port map (
     clk => clk,
     rst => rst,
-    time_state_o => time_state,
-    time_pulse_o => time_pulse,
     run => run,
-    strobe => strobe,
-    mem_done => mem_done,
-    key_la => switches.load,
-    key_st => switches.start,
+    
+    key_load => switches.load,
+    key_start => switches.start,
     key_ex => switches.exam,
     key_dep => switches.dep,
-    key_cont => switches.cont
+    key_cont => switches.cont,
+    
+    mfts0 => mfts0,
+    mftp => mftp,
+    mft => mft
 );
 
 regs: entity work.registers
@@ -133,9 +137,6 @@ begin
     manual_preset <= '0';
     initialize <= '0';
 
-    --- memory
-    mem_start <= '0';
-
     --- registers    
     no_shift <= '1';
     carry_insert <= '0';
@@ -149,97 +150,31 @@ begin
     ma_load <= '0';
     mb_load <= '0';
     
-    if time_pulse = '1' then
-        case time_state is
-            -- MFT signals: see drawing D-FD-8I-0-1.
-            -- Remember that setting mem_start will result in strobe which will move to TS2
-            when MFT0 =>
-                if switches.load = '1' or switches.dep = '1' or switches.exam = '1' or switches.start = '1' then
-                    manual_preset <= '1';
-                end if;
-                if switches.start = '1' then
-                    initialize <= '1';
-                end if;
+    if mftp = '1' then
+        case mft is
+            when MFT_NONE =>
             when MFT1 =>
-                if switches.dep = '1' or switches.exam = '1' or switches.start = '1' then
-                    -- PC -> MA
-                    pc_enable <= '1';
-                    ma_load <= '1';
-                end if;
             when MFT2 =>
-                if switches.load = '1' then
-                    -- SR -> PC
-                    sr_enable <= '1';
-                    pc_load <= '1';
-                end if;
-                if switches.dep = '1' or switches.exam = '1' then
-                    -- MA + 1 -> PC
-                    ma_enable <= '1';
-                    carry_insert <= '1';
-                    pc_load <= '1';
-                end if;
-                if switches.start = '1' or switches.dep = '1' or switches.exam = '1' or switches.cont = '1' then
-                    -- mem_start will bring us to TS2
-                    mem_start <= '1';
-                end if;
-            -- TS signals: see drawing D-FD-8I-0-1. 
-            when TS1 =>
-                case state is
-                    when STATE_FETCH =>
-                        -- MA + 1 -> PC
-                        ma_enable <= '1';
-                        carry_insert <= '1';
-                        pc_load <= '1';
-                    when others =>
-                end case;
-                -- mem start to that we will reach TS2 through the strobe signal and read memory
-                mem_start <= '1';
-            when TS2 =>
-                case state is
-                    when STATE_FETCH =>
-                        -- MEM -> MB
-                        mem_enable <= '1';
-                        mb_load <= '1';
-                    when STATE_MANUAL =>
-                        if switches.dep = '1' then
-                            -- SR -> MB
-                            sr_enable <= '1';
-                            mb_load <= '1';
-                        else
-                            -- default transfer is MEM -> MB to write back
-                            mem_enable <= '1';
-                            mb_load <= '1';
-                        end if;
-                    when others =>
-                end case;
-            when TS3 =>
-                if switches.start or switches.cont then
-                    run <= '1';
-                end if;
-                if switches.stop = '1' or switches.sing_step = '1' or switches.exam = '1' or switches.dep = '1' then
-                    run <= '0';
-                end if;
-            when TS4 =>
-                case state is
-                    when STATE_FETCH =>
-                        pc_enable <= '1';
-                        ma_load <= '1';
-                        if switches.sing_inst = '1' then
-                            state <= STATE_MANUAL;
-                        end if;
-                    when others =>
-                end case;
+            when MFT3 =>
         end case;
     end if;
     
-    if rst = '1' or manual_preset = '1' then
+    -- generated by LA, START, EX, DEP
+    if manual_preset = '1' then
+        run <= '0';
         state <= STATE_MANUAL;
         ion <= '0';
-        run <= '0';
     end if;
 
+    -- generated by start switch
     if initialize = '1' then
         state <= STATE_FETCH;
+        ion <= '0';
+    end if;
+
+    if rst = '1' then
+        run <= '0';
+        state <= STATE_MANUAL;
         ion <= '0';
     end if;
 end process;

@@ -66,8 +66,7 @@ architecture Behavioral of registers is
     -- 4.1.5 memory buffer: data to be written into memory
     signal mem_buf: std_logic_vector(11 downto 0);
     -- 4.1.6 sense: data read from memory, synonym: mem (external sense signal)
-    -- 4.1.7 instruction register: operation code of the instruction currently being performed
-    signal inst: std_logic_vector(2 downto 0);
+    -- 4.1.7 instruction register: operation code of the instruction currently being performed (combinatorial)
     -- 4.1.8 switch register: console switches (external sw signal)
     
     -- input register bus
@@ -125,7 +124,6 @@ begin
         pc <= (others => '0');
         mem_addr <= (others => '0');
         mem_buf <= (others => '0');
-        inst <= (others => '0');
     end if;
 end process;
 
