@@ -32,6 +32,38 @@ package socdp8_package is
     type ext_mem_in is record
         data: std_logic_vector(11 downto 0);
     end record;
+    
+    -- Console connections
+    type pdp8i_leds is record
+        data_field: std_logic_vector(2 downto 0);
+        inst_field: std_logic_vector(2 downto 0);
+        pc: std_logic_vector(11 downto 0);
+        mem_addr: std_logic_vector(11 downto 0);
+        mem_buf: std_logic_vector(11 downto 0);
+        link: std_logic;
+        accu: std_logic_vector(11 downto 0);
+        step_counter: std_logic_vector(4 downto 0);
+        mqr: std_logic_vector(11 downto 0);
+        instruction: pdp8_instruction;
+        state: pdp8_state;
+        ion: std_logic;
+        pause: std_logic;
+        run: std_logic;
+    end record;
+
+    type pdp8i_switches is record
+        data_field: std_logic_vector(2 downto 0);
+        inst_field: std_logic_vector(2 downto 0);
+        swr: std_logic_vector(11 downto 0);
+        start: std_logic;
+        load: std_logic;
+        dep: std_logic;
+        exam: std_logic;
+        cont: std_logic;
+        stop: std_logic;
+        sing_step: std_logic;
+        sing_inst: std_logic;
+    end record;
 
     -- Utility functions
     

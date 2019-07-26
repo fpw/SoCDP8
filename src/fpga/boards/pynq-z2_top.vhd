@@ -9,7 +9,6 @@ library unisim;
 use unisim.vcomponents.all;
 
 use work.socdp8_package.all;
-use work.pidp8_console_package.all;
 
 entity pynq_z2_top is
     port (

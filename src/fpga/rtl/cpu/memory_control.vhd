@@ -4,8 +4,8 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
-use work.socdp8_package.all;
 
+use work.socdp8_package.all;
 
 -- This entity controls the memory transactions. Read access to the core memory was destructive so
 -- a memory cycle always consists of reading the memory followed by writing it back. External signals

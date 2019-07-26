@@ -1,7 +1,6 @@
 -- Part of SoCDP8, Copyright by Folke Will, 2019
 -- Licensed under CERN Open Hardware Licence v1.2
 -- See HW_LICENSE for details
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
