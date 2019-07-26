@@ -34,15 +34,18 @@ architecture Behavioral of pdp8 is
     -- external switches and the HLT instruction.
     signal run: std_logic;
 
+    -- Since the manual time pulses and computer time pulses cannot overlap,
+    -- the time signals are combined and stored in this state register.
+    -- Also, a state is only assumed for one cycle and then goes back to idle
+    -- so that we can implement a normal state machine with this state.
+    signal time_state_pulse: combined_time_state;
+
     -- current major state
     signal state: pdp8_state;
 
     -- interrupt on FF
     signal ion: std_logic;
-    
-    -- fetch is to be entered
-    signal f_set: std_logic := '0';
-    
+
     -- Drawing D-BS-8I-0-2, region M617.F30 (B5):
     -- This region generates the MANUAL PRESET signal which is used to clear some FFs throughout the system,
     -- for example the major state FFs. The signal is generated if the CONT switch is not active (!) at
@@ -172,7 +175,37 @@ port map (
     ext_mem_out => ext_mem_out
 );
 
-time_states: process
+-- Combine the level-based manual and computer time generators
+-- to a single edge-based state generator. 
+gen_combined_state: process
+begin
+    wait until rising_edge(clk);
+
+    -- We want time state pulses, so reset to idle by default
+    time_state_pulse <= TS_IDLE;
+
+    -- The computer time state changed    
+    if tp = '1' then
+        case ts is
+            when TS1 => time_state_pulse <= TS1;
+            when TS2 => time_state_pulse <= TS2;
+            when TS3 => time_state_pulse <= TS3;
+            when TS4 => time_state_pulse <= TS4;
+        end case;
+    end if;
+
+    -- The manual time state changed
+    if mftp = '1' then
+        case mft is
+            when MFT0 => time_state_pulse <= MFT0;
+            when MFT1 => time_state_pulse <= MFT1;
+            when MFT2 => time_state_pulse <= MFT2;
+            when MFT_NONE => null;
+        end case;
+    end if;
+end process;
+
+time_state_pulses: process
 begin
     wait until rising_edge(clk);
     
@@ -200,75 +233,82 @@ begin
     ma_load <= '0';
     mb_load <= '0';
     
-    if mftp = '1' then
-        -- This implements drawing D-FD-8I-0-1
-        case mft is
-            when MFT0 =>
-                if switches.start = '1' then
-                    initialize <= '1';
+    case time_state_pulse is
+        -- the TS transfers are described in drawing D-FD-8I-0-1 (Manual Functions)
+        when TS1 =>
+        when TS2 =>
+            -- TS2 is entered because of the strobe signal that indicates that memory is ready.
+            -- We must write something to MB in this state so it can be written back.
+            -- The default transfer is therefore MEM -> MB to just restore the memory that was read.
+            if mfts0 and switches.dep then
+                -- SR -> MB
+                sr_enable <= '1';
+            else
+                -- MEM -> MB
+                mem_enable <= '1';
+            end if;
+            mb_load <= '1';
+        when TS3 =>
+        when TS4 =>
+            run <= '1';
+            if switches.sing_step then
+                run <= '0';
+            end if;
+            if mfts0 and (switches.exam or switches.dep) then
+                run <= '0';
+            end if;
+            -- TODO: Only if the new major state is fetch (true for now), check sing_inst and stop
+            if true then
+                state <= STATE_FETCH;
+                if switches.sing_inst or switches.stop then
+                    run <= '0';
                 end if;
-                
-                -- Originally, condition is switches.cont = '0' but this is more readable
-                if switches.start or switches.exam or switches.dep or switches.load then
-                    manual_preset <= '1';
-                end if;
-            when MFT1 =>
-                if switches.exam or switches.dep or switches.start then
-                    -- PC -> MA
-                    pc_enable <= '1';
-                    ma_load <= '1';
-                end if;
-            when MFT2 =>
-                if switches.load = '1' then
-                    -- SR -> PC
-                    sr_enable <= '1';
-                    pc_load <= '1';
-                end if;
-                
-                if switches.start = '1' then
-                    ion <= '0';
-                    f_set <= '1';
-                end if;
-                
-                if switches.exam = '1' or switches.dep = '1' then
-                    -- MA + 1 -> PC
-                    ma_enable <= '1';
-                    carry_insert <= '1';
-                    pc_load <= '1';
-                end if;
+            end if;
+        when MFT0 =>
+            if switches.start = '1' then
+                initialize <= '1';
+            end if;
             
-                -- Originally, condition is switches.load = '0' but this is more readable
-                if switches.start or switches.exam or switches.dep or switches.cont then
-                    mem_start <= '1';
-                end if;
-                
-                if switches.cont = '1' then
-                    force_tp4 <= '1';
-                end if;
-            when MFT_NONE => null;
-        end case;
-    end if;
+            -- Originally, condition is switches.cont = '0' but this is more readable
+            if switches.start or switches.exam or switches.dep or switches.load then
+                manual_preset <= '1';
+            end if;
+        -- the MFT transfers are described in drawing D-FD-8I-0-1 (Manual Functions)
+        when MFT1 =>
+            if switches.exam or switches.dep or switches.start then
+                -- PC -> MA
+                pc_enable <= '1';
+                ma_load <= '1';
+            end if;
+        when MFT2 =>
+            if switches.load = '1' then
+                -- SR -> PC
+                sr_enable <= '1';
+                pc_load <= '1';
+            end if;
+            
+            if switches.start = '1' then
+                ion <= '0';
+            end if;
+            
+            if switches.exam = '1' or switches.dep = '1' then
+                -- MA + 1 -> PC
+                ma_enable <= '1';
+                carry_insert <= '1';
+                pc_load <= '1';
+            end if;
+        
+            -- Originally, condition is switches.load = '0' but this is more readable
+            if switches.start or switches.exam or switches.dep or switches.cont then
+                mem_start <= '1';
+            end if;
+            
+            if switches.cont = '1' then
+                force_tp4 <= '1';
+            end if;
+        when TS_IDLE => null;
+    end case;
     
-    if tp = '1' then
-        case ts is
-            when TS1 =>
-            when TS2 => 
-            when TS3 =>
-            when TS4 =>
-                run <= '1';
-                if switches.sing_step then
-                    run <= '0';
-                end if;
-                if f_set and (switches.sing_inst or switches.stop) then
-                    run <= '0';
-                end if;
-                if mfts0 and (switches.exam or switches.dep) then
-                    run <= '0';
-                end if;
-                -- TODO: the hlt instruction must also clear run
-        end case;
-    end if;
-
     if mem_idle = '1' and run = '1' and pause = '0' then
         mem_start <= '1';
     end if;
