@@ -62,10 +62,7 @@ architecture Behavioral of computer_timing is
     signal pulse: std_logic; 
     signal time_counter: natural range 0 to num_cycles_pulse - 1;
     signal mem_idle: std_logic;
-    signal tp4: std_logic;
 begin
-
-tp4 <= (run and (not pause) and mem_idle) or force_tp4;
 
 computer_time_generator: process
 begin
@@ -97,11 +94,16 @@ begin
                 state <= TS4;
             end if;
         when TS4 =>
-            if tp4 = '1' then
+            if run = '1' and pause = '0' and mem_idle = '1' then
                 pulse <= '1'; -- TP4
                 state <= TS1;
             end if;
     end case;
+
+    if force_tp4 = '1' then
+        pulse <= '1'; -- TP4
+        state <= TS1;
+    end if;
 
     if strobe = '1' then
         mem_idle <= '0';

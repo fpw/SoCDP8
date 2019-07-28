@@ -9,15 +9,17 @@ package socdp8_package is
     -- The manual function timing states (MFTS) and automatic timing states (TS)
     type computer_time_state is (TS1, TS2, TS3, TS4);
     type manual_function_time is (MFT_NONE, MFT0, MFT1, MFT2);
+    
+    -- We combine these into a global state
     type combined_time_state is (TS_IDLE, TS1, TS2, TS3, TS4, MFT0, MFT1, MFT2);
 
-    type pdp8_instruction is (INST_NONE,
+    type pdp8_instruction is (INST_NONE, -- TODO can only happen if IOT and UF = 0
                               INST_AND, INST_TAD, INST_ISZ,
                               INST_DCA, INST_JMS, INST_JMP,
                               INST_IOT, INST_OPR
     );
 
-    type pdp8_state is (STATE_MANUAL,
+    type major_state is (STATE_NONE,
                         STATE_FETCH, STATE_EXEC, STATE_DEFER,
                         STATE_COUNT, STATE_ADDR, STATE_BREAK
     );
@@ -32,7 +34,81 @@ package socdp8_package is
     type ext_mem_in is record
         data: std_logic_vector(11 downto 0);
     end record;
+   
+    -- note that all shifts are actually rotations, but the original signal names are used here
+    type shift_type is (NO_SHIFT, RIGHT_SHIFT, LEFT_SHIFT, DOUBLE_RIGHT_ROTATE, DOUBLE_LEFT_ROTATE);
     
+    -- register transfers
+    type register_transfers is record
+        -- initialize clears AC and L
+        initialize: std_logic;
+    
+        -- an enable signal puts the register data on the register bus
+        -- enabling multiple registers will cause an addition
+        ac_enable: std_logic;
+        ac_comp_enable: std_logic;
+        pc_enable: std_logic;
+        ma_enable: std_logic;
+        ma_enable_page: std_logic; -- enable only the page region of MA (original ma_enable_0_4)
+        mem_enable: std_logic;
+        mem_enable_addr: std_logic; -- enable only the addr region of MEM (6 downto 0)
+        sr_enable: std_logic;
+        l_enable: std_logic;
+        l_comp_enable: std_logic;
+        clear_run: std_logic;
+        
+        -- a load signal will load the register with the data on the register bus
+        ac_load: std_logic;
+        pc_load: std_logic;
+        ma_load: std_logic;
+        mb_load: std_logic;
+        l_load: std_logic;
+        
+        -- add one to the register bus
+        carry_insert: std_logic;
+        
+        -- AND bus with MB
+        and_enable: std_logic;
+        
+        -- shift the register bus data when loading back into the register
+        shift: shift_type;
+        
+        -- set skip if no carry during operation
+        skip_if_carry: std_logic;
+        skip_set: std_logic;
+    end record;
+    
+    -- This constant describes a non-transfer, it can be used to initialize
+    -- a transfer with default values. This allows adding new fields to the
+    -- record and initializing them here without further modifications to existing
+    -- code.
+    constant nop_transfer: register_transfers := (
+        initialize => '0',
+        ac_enable => '0',
+        ac_comp_enable => '0',
+        pc_enable => '0',
+        ma_enable => '0',
+        ma_enable_page => '0',
+        mem_enable => '0',
+        mem_enable_addr => '0',
+        sr_enable => '0',
+        l_enable => '0',
+        l_comp_enable => '0',
+        clear_run => '0',
+        
+        carry_insert => '0',
+        and_enable => '0',
+        shift => NO_SHIFT,
+        skip_if_carry => '0',
+        skip_set => '0',
+
+        ac_load => '0',
+        pc_load => '0',
+        ma_load => '0',
+        mb_load => '0',
+        l_load => '0'
+    );
+
     -- Console connections
     type pdp8i_leds is record
         data_field: std_logic_vector(2 downto 0);
@@ -45,7 +121,7 @@ package socdp8_package is
         step_counter: std_logic_vector(4 downto 0);
         mqr: std_logic_vector(11 downto 0);
         instruction: pdp8_instruction;
-        state: pdp8_state;
+        state: major_state;
         ion: std_logic;
         pause: std_logic;
         run: std_logic;
