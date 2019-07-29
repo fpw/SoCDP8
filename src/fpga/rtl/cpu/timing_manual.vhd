@@ -36,7 +36,7 @@ use work.socdp8_package.all;
 -- This region inverts and comines switch signals to commonly used signals.
 -- We combine these signals on the fly and leave the rest to the optimizer.
  
-entity manual_timing is
+entity timing_manual is
     generic (
         clk_frq: natural;
         -- the debouncer requires 100 ms, see page 4-21
@@ -60,12 +60,12 @@ entity manual_timing is
         
         -- this signal indicates that a key is being held and the system is not running
         mfts0: out std_logic;
-        mft: out manual_function_time;
+        mft: out time_state_manual;
         mftp: out std_logic
     );
-end manual_timing;
+end timing_manual;
 
-architecture Behavioral of manual_timing is
+architecture Behavioral of timing_manual is
     type state_int is (MFT0, MFT0_WAIT, MFT1, MFT1_WAIT, MFT2, MFT2_WAIT, MFT3);
     signal state: state_int;
     signal counter_timer: natural range 0 to num_cycles_pulse - 1;

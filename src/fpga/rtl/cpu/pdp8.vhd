@@ -68,11 +68,11 @@ architecture Behavioral of pdp8 is
 
     -- interconnect wires
     --- from manual timing generator
-    signal mft: manual_function_time;
+    signal mft: time_state_manual;
     signal mftp: std_logic;
     signal mfts0: std_logic;
     --- from automatic timing generator
-    signal ts: computer_time_state;
+    signal ts: time_state_auto;
     signal tp: std_logic;
     signal mem_idle: std_logic;
     --- from memory
@@ -90,7 +90,7 @@ architecture Behavioral of pdp8 is
     signal next_state_inst: major_state;
 begin
 
-manual_timing_inst: entity work.manual_timing
+manual_timing_inst: entity work.timing_manual
 generic map (
     clk_frq => clk_frq
 )
@@ -110,7 +110,7 @@ port map (
     mft => mft
 );
 
-computer_timing_inst: entity work.computer_timing
+computer_timing_inst: entity work.timing_auto
 generic map (
     clk_frq => clk_frq
 )

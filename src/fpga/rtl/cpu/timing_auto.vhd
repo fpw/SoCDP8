@@ -7,7 +7,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 use work.socdp8_package.all;
 
--- This entity implements the computer time state generator
+-- This entity implements the auto time state generator
 --
 -- Discussion of relevant drawing D-BS-8I-0-2:
 -- 
@@ -23,7 +23,7 @@ use work.socdp8_package.all;
 -- TP4 is generated if CONT is detected by the debouncer or if MEM IDLE is high (which
 -- is set through MEM DONE) and RUN is active and PAUSE is not active.
 --
--- In summary, the computer time cycle is controlled by the memory timing: Starting in TS1,
+-- In summary, the auto time cycle is controlled by the memory timing: Starting in TS1,
 -- it transitions to TS2 when the memory is ready for reading (STROBE), goes to TS3 and then
 -- TS4 through fixed delays and finally back to TS1 when the memory writing is also
 -- finished (MEM DONE) or forced externally (force_tp4 ~ debounced cont key).
@@ -31,7 +31,7 @@ use work.socdp8_package.all;
 -- Since only one of the states can be active at a time, this can modeled using a state signal
 -- and a single pulse when transitions occur.
 
-entity computer_timing is
+entity timing_auto is
     generic (
         clk_frq: natural;
         -- pulse delay for automatic state transitions
@@ -41,7 +41,7 @@ entity computer_timing is
         clk: in std_logic;
         rst: in std_logic;
         
-        -- the computer time states depend on the memory signals
+        -- the auto time states depend on the memory signals
         strobe: in std_logic;
         mem_done: in std_logic;
         
@@ -51,13 +51,13 @@ entity computer_timing is
         pause: in std_logic;
         force_tp4: in std_logic;
 
-        ts: out computer_time_state;
+        ts: out time_state_auto;
         mem_idle_o: out std_logic;
         tp: out std_logic
     );
-end computer_timing;
+end timing_auto;
 
-architecture Behavioral of computer_timing is
+architecture Behavioral of timing_auto is
     -- The original idea in the PDP/8-I is that the gates become stable inside ths TS phase and then a short
     -- TP pulse activates the registers to perform the transaction as calculated by the gates
     -- during the TS phase.
@@ -68,7 +68,6 @@ architecture Behavioral of computer_timing is
     -- active TS phase is still the one matching the pulse.
     type state_int is (TS1, TS1_WAIT, TS2, TS2_WAIT, TS3, TS3_WAIT, TS4, TS4_WAIT);
     signal state: state_int;
-    signal next_state: computer_time_state;
     signal pulse: std_logic; 
     signal time_counter: natural range 0 to num_cycles_pulse - 1;
     signal mem_idle: std_logic;

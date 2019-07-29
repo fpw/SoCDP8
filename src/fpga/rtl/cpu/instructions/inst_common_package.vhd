@@ -11,7 +11,7 @@ package inst_common is
     -- input required to execute instructions
     type inst_input is record
         state: major_state;
-        time_div: computer_time_state;
+        time_div: time_state_auto;
         mb: std_logic_vector(11 downto 0);
         link: std_logic;
         auto_index: std_logic;
