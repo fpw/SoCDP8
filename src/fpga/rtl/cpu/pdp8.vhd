@@ -34,19 +34,13 @@ architecture Behavioral of pdp8 is
     -- external switches and the HLT instruction.
     signal run: std_logic;
 
-    -- Since the manual time pulses and computer time pulses cannot overlap,
-    -- the time signals are combined and stored in this state register.
-    -- Also, a state is only assumed for one cycle and then goes back to idle
-    -- so that we can implement a normal state machine with this state.
-    signal time_state_pulse: combined_time_state;
-
     -- Drawing D-BS-8I-0-2, region M617.F30 (B5):
     -- This region generates the MANUAL PRESET signal which is used to clear some FFs throughout the system,
     -- for example the major state FFs. The signal is generated if the CONT switch is not active (!) at
     -- MFTP0, i.e. it is active if LA, ST, EX or DP are pressed. This matches drawing D-FD-8I-0-1 where this
     -- transfer is called 0 -> MAJOR STATES.
     signal manual_preset: std_logic;
-
+    
     -- Drawing D-BS-8I-0-2, region M113.E15 (C8):
     -- This region generates the MEM START signal if the LOAD key is not active (!) at MFTP2, i.e. MEM START
     -- is generated if ST, EX, DP or CONT are pressed. This matches drawing D-FD-8I-0-1.
@@ -191,37 +185,7 @@ port map (
     transfers => reg_trans_inst,
     state_next => next_state_inst
 );
-
--- Combine the level-based manual and computer time generators
--- to a single edge-based state generator. 
-gen_combined_state: process
-begin
-    wait until rising_edge(clk);
-
-    -- We want time state pulses, so reset to idle by default
-    time_state_pulse <= TS_IDLE;
-
-    -- The computer time state changed    
-    if tp = '1' then
-        case ts is
-            when TS1 => time_state_pulse <= TS1;
-            when TS2 => time_state_pulse <= TS2;
-            when TS3 => time_state_pulse <= TS3;
-            when TS4 => time_state_pulse <= TS4;
-        end case;
-    end if;
-
-    -- The manual time state changed
-    if mftp = '1' then
-        case mft is
-            when MFT0 => time_state_pulse <= MFT0;
-            when MFT1 => time_state_pulse <= MFT1;
-            when MFT2 => time_state_pulse <= MFT2;
-            when MFT_NONE => null;
-        end case;
-    end if;
-end process;
-
+    
 time_state_pulses: process
 begin
     wait until rising_edge(clk);
@@ -249,128 +213,159 @@ begin
     -- executed due to the memory transaction. The major state will be STATE_NONE in this full cycle
     -- for all keys except CONT.
     --
-    -- If the run FF is set in TS4 (which is prevented by switches SING STEP, EX, DEP and by
-    -- SING INST and STOP if the next major state is FETCH), then continouos memory cycles are
+    -- However, if the run FF is cleared in TS3, then TS4 is entered but TP4 will be delayed until
+    -- manually forced through the CONT key in MFT2. This means that that the last transfer of
+    -- the instruction will be delayed. 
+    --
+    -- If the run FF is set in TS3 (which is prevented by switches SING STEP, EX, DEP and by
+    -- SING INST and STOP if the next major would be FETCH), then continouos memory cycles are
     -- generated and the system will run TS2 - TS3 - TS4 - TS1 until run is cleared.
     --
     -- Since the manual pulses are not generated while run is set, the system has to be stopped
-    -- in TS4 by SING STEP, SING INST or STOP. EX and DEP cannot be used because they only clear
+    -- in TS3 by SING STEP, SING INST or STOP. EX and DEP cannot be used because they only clear
     -- the run FF if the switches were pressed while run was initially clear (indicated by MFTS0).
 
-    if ts = TS1 and state = STATE_FETCH and strobe = '1' then
-        inst <= inst_cur;
-    end if;
-
-    if manual_preset = '1' then
-        state <= STATE_NONE;
-    end if;
-
-    case time_state_pulse is
+    case ts is
         -- the TS transfers are described in drawing D-FD-8I-0-1 (Auto Functions)
         when TS1 =>
-            if state /= STATE_NONE then
-                reg_trans <= reg_trans_inst;
-            end if;
-
-            -- start a new memory cycle so we eventually go to TS2
+            -- start a new memory cycle so we eventually get the pulse
             if run = '1' and pause = '0' and mem_idle = '1' then
                 mem_start <= '1';
             end if;
-        when TS2 =>
-            if state /= STATE_NONE then
-                reg_trans <= reg_trans_inst;
-            else
-                if mft = MFT2 and switches.dep = '1' then
-                    -- SR -> MB
-                    reg_trans.sr_enable <= '1';
-                    reg_trans.mb_load <= '1';
+            
+            if tp = '1' then
+                if state = STATE_FETCH then
+                    -- we must implement fetch.TS1 here because the instruction is not known yet
+                    -- MA + 1 -> PC
+                    reg_trans.ma_enable <= '1';
+                    reg_trans.carry_insert <= '1';
+                    reg_trans.pc_load <= '1';
                 else
-                    -- default: restore memory that was read
+                    reg_trans <= reg_trans_inst;
+                end if;
+            end if;
+        when TS2 =>
+            if tp = '1' then
+                if state = STATE_FETCH then
+                    -- we must implement fetch.TS2 here because the instruction register is not loaded yet
                     -- MEM -> MB
                     reg_trans.mem_enable <= '1';
                     reg_trans.mb_load <= '1';
+                    
+                    -- for the next cycles, the instruction register will be available
+                    inst <= inst_cur;
+                elsif state /= STATE_NONE then
+                    reg_trans <= reg_trans_inst;
+                else
+                    if mft = MFT3 and switches.dep = '1' then
+                        -- SR -> MB
+                        reg_trans.sr_enable <= '1';
+                        reg_trans.mb_load <= '1';
+                    else
+                        -- default: restore memory that was read
+                        -- MEM -> MB
+                        reg_trans.mem_enable <= '1';
+                        reg_trans.mb_load <= '1';
+                    end if;
                 end if;
             end if;
         when TS3 =>
-            if state /= STATE_NONE then
-                reg_trans <= reg_trans_inst;
-            end if;
-
-            -- run is enabled by default...
-            run <= '1';
-            
-            -- ...unless
-            --- a) the SING STEP switch always pauses run
-            if switches.sing_step then
-                run <= '0';
-            end if;
-            
-            --- b) the DEP and EXAM switches also keep run disabled for further EXAMs or DEPs
-            if mfts0 and (switches.exam or switches.dep) then
-                run <= '0';
-            end if;
-            
-            --- c) the STOP and SING INST switches disable run but only if the next cycle would be fetch
-            if (next_state_inst = STATE_FETCH or state = STATE_NONE) and (switches.sing_inst = '1' or switches.stop = '1') then
-                run <= '0';
-            end if;
-            
-            --- d) the HLT instruction
-            if reg_trans_inst.clear_run = '1' then
-                run <= '0';
+            if tp = '1' then
+                if state /= STATE_NONE then
+                    reg_trans <= reg_trans_inst;
+                end if;
+    
+                -- run is enabled by default...
+                run <= '1';
+                
+                -- ...unless
+                --- a) the SING STEP switch always pauses run
+                if switches.sing_step then
+                    run <= '0';
+                end if;
+                
+                --- b) the DEP and EXAM switches also keep run disabled for further EXAMs or DEPs
+                if mfts0 and (switches.exam or switches.dep) then
+                    run <= '0';
+                end if;
+                
+                --- c) the STOP and SING INST switches disable run but only if the next cycle would be fetch
+                if (next_state_inst = STATE_FETCH or state = STATE_NONE) and (switches.sing_inst = '1' or switches.stop = '1') then
+                    run <= '0';
+                end if;
+                
+                --- d) the HLT instruction
+                if reg_trans_inst.clear_run = '1' then
+                    run <= '0';
+                end if;
             end if;
         when TS4 =>
-            if state /= STATE_NONE then
-                reg_trans <= reg_trans_inst;
-                state <= next_state_inst;
-            else
-                state <= STATE_FETCH;
+            -- If run was set to 0 in TS3, this pulse will not happen until CONT is pressed.
+            -- Pressing START will go to TS1 without this pulse! 
+            if tp = '1' then
+                if state /= STATE_NONE then
+                    reg_trans <= reg_trans_inst;
+                    state <= next_state_inst;
+                else
+                    state <= STATE_FETCH;
+                end if;
             end if;
+    end case;
+    
+    case mft is
         when MFT0 =>
-            if switches.start = '1' then
-                reg_trans.initialize <= '1';
-            end if;
-            
-            -- Originally, condition is switches.cont = '0' but this is more readable
-            if switches.start or switches.exam or switches.dep or switches.load then
-                manual_preset <= '1';
+            if mftp = '1' then
+                if switches.start = '1' then
+                    reg_trans.initialize <= '1';
+                end if;
+                
+                -- Originally, condition is switches.cont = '0' but this is more readable
+                if switches.start or switches.exam or switches.dep or switches.load then
+                    manual_preset <= '1';
+                    state <= STATE_NONE;
+                end if;
             end if;
         -- the MFT transfers are described in drawing D-FD-8I-0-1 (Manual Functions)
         when MFT1 =>
-            if switches.exam or switches.dep or switches.start then
-                -- PC -> MA
-                reg_trans.pc_enable <= '1';
-                reg_trans.ma_load <= '1';
+            if mftp = '1' then
+                if switches.exam or switches.dep or switches.start then
+                    -- PC -> MA
+                    reg_trans.pc_enable <= '1';
+                    reg_trans.ma_load <= '1';
+                end if;
             end if;
         when MFT2 =>
-            if switches.load = '1' then
-                -- SR -> PC
-                reg_trans.sr_enable <= '1';
-                reg_trans.pc_load <= '1';
-            end if;
+            if mftp = '1' then
+                if switches.load = '1' then
+                    -- SR -> PC
+                    reg_trans.sr_enable <= '1';
+                    reg_trans.pc_load <= '1';
+                end if;
+                
+                if switches.start = '1' then
+                    ion <= '0';
+                    state <= STATE_FETCH;
+                end if;
+                
+                if switches.exam = '1' or switches.dep = '1' then
+                    -- MA + 1 -> PC
+                    reg_trans.ma_enable <= '1';
+                    reg_trans.carry_insert <= '1';
+                    reg_trans.pc_load <= '1';
+                end if;
             
-            if switches.start = '1' then
-                ion <= '0';
-                state <= STATE_FETCH;
+                -- Start a memory cycle if any of the following switches is pressed
+                -- Originally, the condition is switches.load = '0' but this is more readable:
+                if switches.start or switches.exam or switches.dep or switches.cont then
+                    mem_start <= '1';
+                end if;
+    
+                if switches.cont = '1' then
+                    force_tp4 <= '1';
+                end if;
             end if;
-            
-            if switches.exam = '1' or switches.dep = '1' then
-                -- MA + 1 -> PC
-                reg_trans.ma_enable <= '1';
-                reg_trans.carry_insert <= '1';
-                reg_trans.pc_load <= '1';
-            end if;
-        
-            -- Start a memory cycle if any of the following switches is pressed
-            -- Originally, the condition is switches.load = '0' but this is more readable:
-            if switches.start or switches.exam or switches.dep or switches.cont then
-                mem_start <= '1';
-            end if;
-
-            if switches.cont = '1' then
-                force_tp4 <= '1';
-            end if;
-        when TS_IDLE => null;
+        when MFT3 =>
+            null;
     end case;
 
     if rst = '1' then

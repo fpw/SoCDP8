@@ -58,7 +58,17 @@ entity computer_timing is
 end computer_timing;
 
 architecture Behavioral of computer_timing is
-    signal state: computer_time_state;
+    -- The original idea in the PDP/8-I is that the gates become stable inside ths TS phase and then a short
+    -- TP pulse activates the registers to perform the transaction as calculated by the gates
+    -- during the TS phase.
+    -- However, the pulse also immediately changes the TS to the next phase. This wasn't a problem
+    -- in the original design due to signal propagation delays, but it would be a problem in a
+    -- synchronous design.
+    -- For this reason, we delay the state change by one clock cycle so the pulse comes when the
+    -- active TS phase is still the one matching the pulse.
+    type state_int is (TS1, TS1_WAIT, TS2, TS2_WAIT, TS3, TS3_WAIT, TS4, TS4_WAIT);
+    signal state: state_int;
+    signal next_state: computer_time_state;
     signal pulse: std_logic; 
     signal time_counter: natural range 0 to num_cycles_pulse - 1;
     signal mem_idle: std_logic;
@@ -76,34 +86,56 @@ begin
             if strobe = '1' then
                 time_counter <= 0;
                 pulse <= '1'; -- TP1
-                state <= TS2;
+                state <= TS1_WAIT;
             end if;
+        when TS1_WAIT =>
+            state <= TS2;
         when TS2 =>
             if time_counter < num_cycles_pulse - 1 then
                 time_counter <= time_counter + 1;
             else
                 time_counter <= 0;
                 pulse <= '1'; -- TP2
-                state <= TS3;
+                state <= TS2_WAIT;
             end if;
+        when TS2_WAIT =>
+            state <= TS3;
         when TS3 =>
             if time_counter < num_cycles_pulse - 1 then
                 time_counter <= time_counter + 1;
             else
                 pulse <= '1'; -- TP3
-                state <= TS4;
+                state <= TS3_WAIT;
             end if;
+        when TS3_WAIT =>
+            state <= TS4;
         when TS4 =>
             if run = '1' and pause = '0' and mem_idle = '1' then
                 pulse <= '1'; -- TP4
-                state <= TS1;
+                state <= TS4_WAIT;
             end if;
+        when TS4_WAIT =>
+            state <= TS1;
     end case;
-
+    
     if force_tp4 = '1' then
-        pulse <= '1'; -- TP4
+        state <= TS4_WAIT;
+        pulse <= '1';
+    end if;
+    
+    if rst = '1' then
+        state <= TS1;
+        pulse <= '0';
+    end if;
+    
+    if manual_preset = '1' then
         state <= TS1;
     end if;
+end process;
+
+gen_mem_idle: process
+begin
+    wait until rising_edge(clk);
 
     if strobe = '1' then
         mem_idle <= '0';
@@ -113,18 +145,17 @@ begin
     
     if rst = '1' then
         mem_idle <= '1';
-        state <= TS1;
-        pulse <= '0';
     end if;
-    
-    if manual_preset = '1' then
-        state <= TS1;
-    end if;
-    
 end process;
 
 mem_idle_o <= mem_idle;
-ts <= state;
+
+with state select ts <=
+    TS1 when TS1 | TS1_WAIT,
+    TS2 when TS2 | TS2_WAIT,
+    TS3 when TS3 | TS3_WAIT,
+    TS4 when TS4 | TS4_WAIT,
+    TS1 when others;
 tp <= pulse;
 
 end Behavioral;

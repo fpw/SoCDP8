@@ -111,7 +111,7 @@ begin
     if transfers.and_enable = '1' then
         input_bus <= '0' & (input_bus_tmp(11 downto 0) and mem_buf);  
     else
-        input_bus <= std_logic_vector(signed(input_bus_tmp(11) & input_bus_tmp(11 downto 0)) + transfers.carry_insert); 
+        input_bus <= std_logic_vector(unsigned('0' & input_bus_tmp(11 downto 0)) + transfers.carry_insert); 
     end if;
 end process;
 
@@ -196,6 +196,6 @@ with sense(11 downto 9) select inst_o <=
     INST_JMP when "101",
     INST_IOT when "110",
     INST_OPR when "111",
-    INST_NONE when others;
+    INST_AND when others;
 
 end Behavioral;

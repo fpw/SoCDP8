@@ -110,8 +110,6 @@ begin
                         if input.mb(0) = '1' then
                             transfers.carry_insert <= '1';
                         end if;
-
-                        transfers.ac_load <= '1';
                         transfers.l_load <= '1';
                     else
                         -- Group 2
@@ -130,11 +128,6 @@ begin
                             if input.mb(4) = '1' and input.link = '1' then
                                 transfers.skip_set <= '1';
                             end if;
-                            
-                            -- SKP
-                            if input.mb(4) = '0' and input.mb(5) = '0' and input.mb(6) = '0' then
-                                transfers.skip_set <= '1';
-                            end if;
                         else
                             -- SPA
                             if input.mb(6) = '1' and input.ac_zero = '0' then
@@ -148,6 +141,11 @@ begin
     
                             -- SZL
                             if input.mb(4) = '1' and input.link = '0' then
+                                transfers.skip_set <= '1';
+                            end if;
+
+                            -- SKP
+                            if input.mb(4) = '0' and input.mb(5) = '0' and input.mb(6) = '0' then
                                 transfers.skip_set <= '1';
                             end if;
                         end if;
@@ -177,8 +175,8 @@ begin
                         if input.mb(7) = '1' and input.mb(2) = '1' then
                             transfers.sr_enable <= '1';
                         end if;
-
                     end if;
+                    transfers.ac_load <= '1';
                 when TS4 =>
                     ts4_back_to_fetch(input, transfers, state_next);
             end case;

@@ -66,7 +66,8 @@ entity manual_timing is
 end manual_timing;
 
 architecture Behavioral of manual_timing is
-    signal state: manual_function_time;
+    type state_int is (MFT0, MFT0_WAIT, MFT1, MFT1_WAIT, MFT2, MFT2_WAIT, MFT3);
+    signal state: state_int;
     signal counter_timer: natural range 0 to num_cycles_pulse - 1;
     signal counter_deb: natural range 0 to num_cycles_deb - 1;
     signal mftp0: std_logic;
@@ -120,41 +121,52 @@ begin
     mftp <= '0';
 
     case state is
-        when MFT_NONE =>
+        when MFT0 =>
             if mftp0 = '1' then
                 -- a key was just activated
                 counter_timer <= 0;
                 mftp <= '1'; -- MFTP0
-                state <= MFT0;
+                state <= MFT0_WAIT;
             end if;
-        when MFT0 =>
-            if counter_timer < num_cycles_pulse - 1 then
-                counter_timer <= counter_timer + 1;
-            else
-                counter_timer <= 0;
-                mftp <= '1'; -- MFTP1
-                state <= MFT1;
-            end if;
+        when MFT0_WAIT =>
+            state <= MFT1;
         when MFT1 =>
             if counter_timer < num_cycles_pulse - 1 then
                 counter_timer <= counter_timer + 1;
             else
                 counter_timer <= 0;
-                mftp <= '1'; -- MFTP2
-                state <= MFT2;
+                mftp <= '1'; -- MFTP1
+                state <= MFT1_WAIT;
             end if;
+        when MFT1_WAIT =>
+            state <= MFT2;
         when MFT2 =>
-            if mfts0 = '0' then
-                state <= MFT_NONE;
+            if counter_timer < num_cycles_pulse - 1 then
+                counter_timer <= counter_timer + 1;
+            else
+                counter_timer <= 0;
+                mftp <= '1'; -- MFTP2
+                state <= MFT2_WAIT;
+            end if;
+        when MFT2_WAIT =>
+            state <= MFT3;
+        when MFT3 =>
+            if mfts0 = '0' and any_key_deb = '0' then
+                state <= MFT0;
             end if;
     end case;
-
+    
     if rst = '1' then
         counter_timer <= 0;
-        state <= MFT_NONE;
+        state <= MFT0;
     end if;
 end process;
 
-mft <= state;
+with state select mft <=
+    MFT0 when MFT0 | MFT0_WAIT,
+    MFT1 when MFT1 | MFT1_WAIT,
+    MFT2 when MFT2 | MFT2_WAIT,
+    MFT3 when MFT3,
+    MFT0 when others;
 
 end Behavioral;

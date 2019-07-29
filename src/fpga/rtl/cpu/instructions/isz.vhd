@@ -39,6 +39,7 @@ begin
                     null;
                 when TS2 =>
                     -- MEM + 1 -> MB
+                    -- SKIP -> 1 if addition overflows
                     transfers.mem_enable <= '1';
                     transfers.carry_insert <= '1';
                     transfers.skip_if_carry <= '1';
