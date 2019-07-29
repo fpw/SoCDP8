@@ -51,8 +51,10 @@ architecture Behavioral of pdp8 is
     -- This is shown in drawing D-BS-8I-0-2, region M113.E15 (C7)
     signal force_tp4: std_logic;
     
+    signal auto_index: std_logic;
+    
     -- The following signals are not fully implemented yet:
-    --- whether we are paused by peripherals
+    --- whether the system is paused by peripherals
     signal pause: std_logic;
 
     --- current major state
@@ -63,9 +65,7 @@ architecture Behavioral of pdp8 is
 
     --- interrupt on FF
     signal ion: std_logic;
-    
-    signal ac_zero: std_logic;
-    
+
     -- interconnect wires
     --- from manual timing generator
     signal mft: manual_function_time;
@@ -148,7 +148,6 @@ port map (
     inst_o => inst_cur,
     skip_o => skip
 );
-ac_zero <= '1' when ac = "000000000000" else '0';
 
 mem_control: entity work.memory_control
 generic map (
@@ -175,17 +174,17 @@ port map (
             state => state,
             time_div => ts,
             mb => mb,
-            ac_zero => ac_zero,
-            ac_neg => ac(11),
             link => link,
-            auto_index => '0',  -- TODO
+            auto_index => auto_index,
             skip => skip,
             brk_req => '0'      -- TODO
         ),
     transfers => reg_trans_inst,
     state_next => next_state_inst
 );
-    
+
+auto_index <= '1' when state = STATE_DEFER and ma(11 downto 3) = "000000001" else '0';
+
 time_state_pulses: process
 begin
     wait until rising_edge(clk);
@@ -225,6 +224,8 @@ begin
     -- in TS3 by SING STEP, SING INST or STOP. EX and DEP cannot be used because they only clear
     -- the run FF if the switches were pressed while run was initially clear (indicated by MFTS0).
 
+    -- To implement this, the system needs to keep track of two states simultaneously.
+
     case ts is
         -- the TS transfers are described in drawing D-FD-8I-0-1 (Auto Functions)
         when TS1 =>
@@ -234,27 +235,15 @@ begin
             end if;
             
             if tp = '1' then
-                if state = STATE_FETCH then
-                    -- we must implement fetch.TS1 here because the instruction is not known yet
-                    -- MA + 1 -> PC
-                    reg_trans.ma_enable <= '1';
-                    reg_trans.carry_insert <= '1';
-                    reg_trans.pc_load <= '1';
-                else
-                    reg_trans <= reg_trans_inst;
-                end if;
+                reg_trans <= reg_trans_inst;
             end if;
         when TS2 =>
             if tp = '1' then
-                if state = STATE_FETCH then
-                    -- we must implement fetch.TS2 here because the instruction register is not loaded yet
-                    -- MEM -> MB
-                    reg_trans.mem_enable <= '1';
-                    reg_trans.mb_load <= '1';
+                if state /= STATE_NONE then
+                    if state = STATE_FETCH then
+                        inst <= inst_cur;
+                    end if;
                     
-                    -- for the next cycles, the instruction register will be available
-                    inst <= inst_cur;
-                elsif state /= STATE_NONE then
                     reg_trans <= reg_trans_inst;
                 else
                     if mft = MFT3 and switches.dep = '1' then
@@ -262,7 +251,7 @@ begin
                         reg_trans.sr_enable <= '1';
                         reg_trans.mb_load <= '1';
                     else
-                        -- default: restore memory that was read
+                        -- default for switches: restore memory that was read
                         -- MEM -> MB
                         reg_trans.mem_enable <= '1';
                         reg_trans.mb_load <= '1';
@@ -271,9 +260,7 @@ begin
             end if;
         when TS3 =>
             if tp = '1' then
-                if state /= STATE_NONE then
-                    reg_trans <= reg_trans_inst;
-                end if;
+                reg_trans <= reg_trans_inst;
     
                 -- run is enabled by default...
                 run <= '1';

@@ -24,6 +24,10 @@ entity registers is
 
         -- register transfers, executed every cycle        
         transfers: in register_transfers;
+        
+        -- status
+        ac_zero: out std_logic;
+        ac_neg: out std_logic;
 
         -- direct output
         pc_o: out std_logic_vector(11 downto 0);
@@ -157,14 +161,24 @@ begin
         mem_buf <= input_bus(11 downto 0);
     end if;
     
+    skip <= transfers.reverse_skip;
+
     if transfers.skip_if_carry = '1' and input_bus(12) = '1' then
-        skip <= '1';
+        skip <= transfers.reverse_skip;
     end if;
 
-    if transfers.skip_set = '1' then
-        skip <= '1';
+    if transfers.skip_if_zero = '1' and input_bus(11 downto 0) = "000000000000" then
+        skip <= not transfers.reverse_skip;
+    end if;
+
+    if transfers.skip_if_neg = '1' and input_bus(11) = '1' then
+        skip <= not transfers.reverse_skip;
     end if;
     
+    if transfers.skip_if_link = '1' and link = '1' then
+        skip <= not transfers.reverse_skip;
+    end if;
+
     if transfers.initialize = '1' then
         ac <= (others => '0');
         link <= '0';

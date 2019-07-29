@@ -92,24 +92,52 @@ port map (
     state_next => state_next_opr
 );
 
-with inst select transfers <=
-    transfers_and when INST_AND,
-    transfers_tad when INST_TAD,
-    transfers_isz when INST_ISZ,
-    transfers_dca when INST_DCA,
-    transfers_jms when INST_JMS,
-    transfers_jmp when INST_JMP,
-    transfers_opr when INST_OPR,
-    nop_transfer when others;
+-- select the output of the currenct instruction
+mux_inst: process(all)
+begin
+    transfers <= nop_transfer;
 
-with inst select state_next <=
-    state_next_and when INST_AND,
-    state_next_tad when INST_TAD,
-    state_next_isz when INST_ISZ,
-    state_next_dca when INST_DCA,
-    state_next_jms when INST_JMS,
-    state_next_jmp when INST_JMP,
-    state_next_opr when INST_OPR,
-    STATE_NONE when others;
+    if input.state = STATE_FETCH and input.time_div = TS1 then
+        -- we must implement fetch.TS1 here because the instruction is not known yet
+        -- MA + 1 -> PC
+        transfers.ma_enable <= '1';
+        transfers.carry_insert <= '1';
+        transfers.pc_load <= '1';
+        state_next <= STATE_FETCH;
+    elsif input.state = STATE_FETCH and input.time_div = TS2 then
+        -- we must implement fetch.TS2 here because the instruction register is not loaded yet
+        -- MEM -> MB
+        transfers.mem_enable <= '1';
+        transfers.mb_load <= '1';
+        state_next <= STATE_FETCH;
+    else
+        case inst is
+            when INST_AND =>
+                transfers <= transfers_and;
+                state_next <= state_next_and;
+            when INST_TAD =>
+                transfers <= transfers_tad;
+                state_next <= state_next_tad;
+            when INST_ISZ =>
+                transfers <= transfers_isz;
+                state_next <= state_next_isz;
+            when INST_DCA =>
+                transfers <= transfers_dca;
+                state_next <= state_next_dca;
+            when INST_JMS =>
+                transfers <= transfers_jms;
+                state_next <= state_next_jms;
+            when INST_JMP =>
+                transfers <= transfers_jmp;
+                state_next <= state_next_jmp;
+            when INST_OPR =>
+                transfers <= transfers_opr;
+                state_next <= state_next_opr;
+            when others =>
+                transfers <= nop_transfer;
+                state_next <= STATE_FETCH;
+        end case;
+    end if;
+end process;
 
 end Behavioral;

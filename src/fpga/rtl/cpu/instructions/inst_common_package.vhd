@@ -13,8 +13,6 @@ package inst_common is
         state: major_state;
         time_div: computer_time_state;
         mb: std_logic_vector(11 downto 0);
-        ac_zero: std_logic;
-        ac_neg: std_logic;
         link: std_logic;
         auto_index: std_logic;
         skip: std_logic;
@@ -62,14 +60,11 @@ package body inst_common is
 
         case input.time_div is
             when TS1 =>
-                -- MA + 1 -> PC
-                transfers.ma_enable <= '1';
-                transfers.carry_insert <= '1';
-                transfers.pc_load <= '1';
+                -- fetch.TS1 happens in multiplexer
+                null;
             when TS2 =>
-                -- MEM -> MB
-                transfers.mem_enable <= '1';
-                transfers.mb_load <= '1';
+                -- fetch.TS2 happens in multiplexer
+                null;
             when TS3 =>
                 null;
             when TS4 =>
@@ -94,7 +89,7 @@ package body inst_common is
             when TS1 =>
                 null;
             when TS2 =>
-                -- This transfer will increase the actual content in memory
+                -- This transfer will increase the actual content in memory if auto-indexing
                 -- MEM -> MB (with auto index)
                 transfers.mem_enable <= '1';
                 transfers.carry_insert <= input.auto_index;
@@ -103,7 +98,7 @@ package body inst_common is
                 null;
             when TS4 =>
                 -- This transfer will increase the bus transfer again because the write-back is not
-                -- done yet and the instruction should use the incremented value.
+                -- done yet and the instruction should use the incremented value (auto-indexing).
                 -- MEM -> MA (with auto index)
                 transfers.mem_enable <= '1';
                 transfers.carry_insert <= input.auto_index;

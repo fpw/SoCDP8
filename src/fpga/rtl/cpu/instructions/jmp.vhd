@@ -39,14 +39,11 @@ begin
             
             case input.time_div is
                 when TS1 =>
-                    -- MA + 1 -> PC
-                    transfers.ma_enable <= '1';
-                    transfers.carry_insert <= '1';
-                    transfers.pc_load <= '1';
+                    -- fetch.TS1 happens in multiplexer
+                    null;
                 when TS2 =>
-                    -- MEM -> MB
-                    transfers.mem_enable <= '1';
-                    transfers.mb_load <= '1';
+                    -- fetch.TS2 happens in multiplexer
+                    null;
                 when TS3 =>
                     -- check indirect addressing
                     if input.mb(8) = '0' then

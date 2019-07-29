@@ -32,57 +32,42 @@ begin
             state_next <= STATE_FETCH;
             case input.time_div is
                 when TS1 =>
-                    -- MA + 1 -> PC
-                    transfers.ma_enable <= '1';
-                    transfers.carry_insert <= '1';
-                    transfers.pc_load <= '1';
+                    -- fetch.TS1 happens in multiplexer
+                    null;
                 when TS2 =>
-                    -- MEM -> MB
-                    transfers.mem_enable <= '1';
-                    transfers.mb_load <= '1';
+                    -- fetch.TS2 happens in multiplexer
+                    null;
                 when TS3 =>
                     if input.mb(8) = '0' then
                         -- Group 1
 
-                        -- no CLA and no CMA
                         if input.mb(7) = '0' and input.mb(5) = '0' then
+                            -- no CLA and no CMA
                             transfers.ac_enable <= '1';
-                        end if;
-                        
-                        -- no CLA but CMA
-                        if input.mb(7) = '0' and input.mb(5) = '1' then
+                        elsif input.mb(7) = '0' and input.mb(5) = '1' then
+                            -- no CLA but CMA
                             transfers.ac_comp_enable <= '1';
-                        end if;
-                        
-                        -- CLA but no CMA
-                        if input.mb(7) = '1' and input.mb(5) = '0' then
+                        elsif input.mb(7) = '1' and input.mb(5) = '0' then
+                            -- CLA but no CMA
                             -- 0 -> AC
-                        end if;
-                        
-                        -- CLA and CMA
-                        if input.mb(7) = '1' and input.mb(5) = '1' then
+                        elsif input.mb(7) = '1' and input.mb(5) = '1' then
+                            -- CLA and CMA
                             transfers.ac_enable <= '1';
                             transfers.ac_comp_enable <= '1';
                             transfers.ac_load <= '1';
                         end if;
                         
-                        -- no CLL and no CML
                         if input.mb(6) = '0' and input.mb(4) = '0' then
+                            -- no CLL and no CML
                             transfers.l_enable <= '1';
-                        end if;
-                        
-                        -- no CLL but CML
-                        if input.mb(6) = '0' and input.mb(4) = '1' then
+                        elsif input.mb(6) = '0' and input.mb(4) = '1' then
+                            -- no CLL but CML
                             transfers.l_comp_enable <= '1';
-                        end if;
-                        
-                        -- CLL but no CML
-                        if input.mb(6) = '1' and input.mb(4) = '0' then
+                        elsif input.mb(6) = '1' and input.mb(4) = '0' then
+                            -- CLL but no CML
                             -- 0 -> L
-                        end if;
-                        
-                        -- CLL and CML
-                        if input.mb(6) = '1' and input.mb(4) = '1' then
+                        elsif input.mb(6) = '1' and input.mb(4) = '1' then
+                            -- CLL and CML
                             transfers.l_enable <= '1';
                             transfers.l_comp_enable <= '1';
                         end if;
@@ -105,78 +90,43 @@ begin
                                 transfers.shift <= DOUBLE_LEFT_ROTATE;
                             end if;
                         end if;
-                        
+
                         -- IAC
                         if input.mb(0) = '1' then
                             transfers.carry_insert <= '1';
                         end if;
+
+                        transfers.ac_load <= '1';
                         transfers.l_load <= '1';
                     else
                         -- Group 2
-                        if input.mb(3) = '0' then
-                            -- SMA
-                            if input.mb(6) = '1' and input.ac_zero = '1' then
-                                transfers.skip_set <= '1';
-                            end if;
-                        
-                            -- SZA
-                            if input.mb(5) = '1' and input.ac_zero = '1' then
-                                transfers.skip_set <= '1';
-                            end if;
-    
-                            -- SNL
-                            if input.mb(4) = '1' and input.link = '1' then
-                                transfers.skip_set <= '1';
-                            end if;
-                        else
-                            -- SPA
-                            if input.mb(6) = '1' and input.ac_zero = '0' then
-                                transfers.skip_set <= '1';
-                            end if;
-                        
-                            -- SNA
-                            if input.mb(5) = '1' and input.ac_zero = '0' then
-                                transfers.skip_set <= '1';
-                            end if;
-    
-                            -- SZL
-                            if input.mb(4) = '1' and input.link = '0' then
-                                transfers.skip_set <= '1';
-                            end if;
+                        transfers.skip_if_neg <= input.mb(6); -- SMA / SPA
+                        transfers.skip_if_zero <= input.mb(5); -- SZA / SNA
+                        transfers.skip_if_link <= input.mb(4); -- SNL / SZL
+                        transfers.reverse_skip <= input.mb(3);
 
-                            -- SKP
-                            if input.mb(4) = '0' and input.mb(5) = '0' and input.mb(6) = '0' then
-                                transfers.skip_set <= '1';
-                            end if;
-                        end if;
-                        
                         -- HLT
                         if input.mb(1) = '1' then
                             transfers.clear_run <= '1';
                         end if;
                         
-                        -- no CLA and no OSR
                         if input.mb(7) = '0' and input.mb(2) = '0' then
+                            -- no CLA and no OSR
                             transfers.ac_enable <= '1';
-                        end if;
-                        
-                        -- no CLA but OSR
-                        if input.mb(7) = '0' and input.mb(2) = '1' then
+                        elsif input.mb(7) = '0' and input.mb(2) = '1' then
+                            -- no CLA but OSR
                             transfers.ac_enable <= '1';
                             transfers.sr_enable <= '1';
-                        end if;
-                        
-                        -- CLA but no OSR
-                        if input.mb(7) = '1' and input.mb(2) = '0' then
-                            -- nothing to do
-                        end if;
-                        
-                        -- CLA and OSR
-                        if input.mb(7) = '1' and input.mb(2) = '1' then
+                        elsif input.mb(7) = '1' and input.mb(2) = '0' then
+                            -- CLA but no OSR
+                            -- 0 -> AC
+                        elsif input.mb(7) = '1' and input.mb(2) = '1' then
+                            -- CLA and OSR
                             transfers.sr_enable <= '1';
                         end if;
+
+                        transfers.ac_load <= '1';
                     end if;
-                    transfers.ac_load <= '1';
                 when TS4 =>
                     ts4_back_to_fetch(input, transfers, state_next);
             end case;

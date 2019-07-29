@@ -71,7 +71,10 @@ package socdp8_package is
         
         -- set skip if no carry during operation
         skip_if_carry: std_logic;
-        skip_set: std_logic;
+        skip_if_zero: std_logic;
+        skip_if_neg: std_logic;
+        skip_if_link: std_logic;
+        reverse_skip: std_logic;
     end record;
     
     -- This constant describes a non-transfer, it can be used to initialize
@@ -95,8 +98,12 @@ package socdp8_package is
         carry_insert => '0',
         and_enable => '0',
         shift => NO_SHIFT,
+        
         skip_if_carry => '0',
-        skip_set => '0',
+        skip_if_zero => '0',
+        skip_if_neg => '0',
+        skip_if_link => '0',
+        reverse_skip => '0',
 
         ac_load => '0',
         pc_load => '0',
