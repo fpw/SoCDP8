@@ -121,7 +121,7 @@ mem_write <=
     "1100" when mem_write_buf = '1' and mem_addr_buf(0) = '1' else
     "0000";
 mem_en <= '1';
-mem_rst <= '0';
+mem_rst <= rst;
 
 -- Using IOBUFs to activate and deactive pullups at runtime
 --- Xilinx IOBUFs behave like this:

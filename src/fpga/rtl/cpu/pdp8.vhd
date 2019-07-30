@@ -419,9 +419,9 @@ begin
     end if;
 end process;
 
-io_out.iop(0) <= '1' when io_state = IO1 and mb(11) = '1' else '0';
-io_out.iop(1) <= '1' when io_state = IO2 and mb(10) = '1' else '0';
-io_out.iop(2) <= '1' when io_state = IO4 and mb(9) = '1' else '0';
+io_out.iop(0) <= '1' when io_state = IO1 and mb(0) = '1' else '0';
+io_out.iop(1) <= '1' when io_state = IO2 and mb(1) = '1' else '0';
+io_out.iop(2) <= '1' when io_state = IO4 and mb(2) = '1' else '0';
 io_out.ac <= ac;
 io_out.mb <= mb;
 

@@ -129,16 +129,16 @@ begin
     if transfers.ac_load = '1' then
         ac <= input_bus(11 downto 0);
         if transfers.shift = RIGHT_SHIFT then
-            ac <= link & input_bus(11 downto 1);
+            ac <= l_bus & input_bus(11 downto 1);
             link <= input_bus(0);
         elsif transfers.shift = DOUBLE_RIGHT_ROTATE then
-            ac <= input_bus(0) & link & input_bus(11 downto 2);
+            ac <= input_bus(0) & l_bus & input_bus(11 downto 2);
             link <= input_bus(1);
         elsif transfers.shift = LEFT_SHIFT then
-            ac <= input_bus(10 downto 0) & link;
+            ac <= input_bus(10 downto 0) & l_bus;
             link <= input_bus(11);
         elsif transfers.shift = DOUBLE_LEFT_ROTATE then
-            ac <= input_bus(9 downto 0) & link & input_bus(11);
+            ac <= input_bus(9 downto 0) & l_bus & input_bus(11);
             link <= input_bus(10);
         else
             if input_bus(12) = '1' then
@@ -147,7 +147,7 @@ begin
         end if;
     end if;
 
-    if transfers.l_load = '1' then
+    if transfers.l_load = '1' and transfers.shift = NO_SHIFT then
         link <= l_bus;
     end if;
 
