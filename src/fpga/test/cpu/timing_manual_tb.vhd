@@ -25,10 +25,10 @@ architecture Behavioral of manual_timing_tb is
     -- outputs
     signal mfts0: std_logic;
     signal mftp: std_logic;
-    signal mft: manual_function_time;
+    signal mft: time_state_manual;
 begin
 
-generator: entity work.manual_timing
+generator: entity work.timing_manual
 generic map ( 
     clk_frq => 50_000_000,
     num_cycles_deb => 100,

@@ -19,6 +19,8 @@ package socdp8_package is
                         STATE_FETCH, STATE_EXEC, STATE_DEFER,
                         STATE_COUNT, STATE_ADDR, STATE_BREAK
     );
+    
+    type io_state is (IO_NONE, IO1, IO2, IO4);
 
     -- external memory connections
     type ext_mem_out is record
@@ -49,6 +51,7 @@ package socdp8_package is
         mem_enable: std_logic;
         mem_enable_addr: std_logic; -- enable only the addr region of MEM (6 downto 0)
         sr_enable: std_logic;
+        bus_enable: std_logic;
         l_enable: std_logic;
         l_comp_enable: std_logic;
         clear_run: std_logic;
@@ -69,12 +72,12 @@ package socdp8_package is
         -- shift the register bus data when loading back into the register
         shift: shift_type;
         
-        -- set skip if no carry during operation
         skip_if_carry: std_logic;
         skip_if_zero: std_logic;
         skip_if_neg: std_logic;
         skip_if_link: std_logic;
         reverse_skip: std_logic;
+        skip_load: std_logic;
     end record;
     
     -- This constant describes a non-transfer, it can be used to initialize
@@ -91,6 +94,7 @@ package socdp8_package is
         mem_enable => '0',
         mem_enable_addr => '0',
         sr_enable => '0',
+        bus_enable => '0',
         l_enable => '0',
         l_comp_enable => '0',
         clear_run => '0',
@@ -100,17 +104,44 @@ package socdp8_package is
         shift => NO_SHIFT,
         
         skip_if_carry => '0',
+
         skip_if_zero => '0',
         skip_if_neg => '0',
         skip_if_link => '0',
         reverse_skip => '0',
-
+        skip_load => '0',
+        
         ac_load => '0',
         pc_load => '0',
         ma_load => '0',
         mb_load => '0',
         l_load => '0'
     );
+
+    -- I/O connections
+    type pdp8i_io_out is record
+        --- IOP4, IOP2, IOP1: Pulses. Duration 700 ns.
+        --- Set desired input signals within 400 ns and remove when IOP goes low.
+        iop: std_logic_vector(2 downto 0);
+        
+        --- Always contains current AC 
+        ac: std_logic_vector(11 downto 0);
+        
+        --- Always contains current MB during IOT inst, i.e. the IOT instruction code.
+        --- Use this signal to extract the target device ID.
+        mb: std_logic_vector(11 downto 0);
+    end record;
+    
+    type pdp8i_io_in is record
+        --- Bus input. Will be OR-ed with AC or overwrite AC if ac_clear is also set.
+        bus_in: std_logic_vector(11 downto 0);
+        
+        --- Whether to clear AC before OR-ing with bus_i
+        ac_clear: std_logic;
+        
+        --- If set, skips next instruction after IOT.
+        io_skip: std_logic;
+    end record;
 
     -- Console connections
     type pdp8i_leds is record

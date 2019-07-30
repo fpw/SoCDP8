@@ -39,6 +39,9 @@ architecture Behavioral of instruction_multiplexer is
     signal transfers_jmp: register_transfers;
     signal state_next_jmp: major_state;
 
+    signal transfers_iot: register_transfers;
+    signal state_next_iot: major_state;
+
     signal transfers_opr: register_transfers;
     signal state_next_opr: major_state;
 begin
@@ -83,6 +86,13 @@ port map (
     input => input,
     transfers => transfers_jmp,
     state_next => state_next_jmp
+);
+
+iot_instance: entity work.inst_iot
+port map (
+    input => input,
+    transfers => transfers_iot,
+    state_next => state_next_iot
 );
 
 opr_instance: entity work.inst_opr
@@ -130,6 +140,9 @@ begin
             when INST_JMP =>
                 transfers <= transfers_jmp;
                 state_next <= state_next_jmp;
+            when INST_IOT =>
+                transfers <= transfers_iot;
+                state_next <= state_next_iot;
             when INST_OPR =>
                 transfers <= transfers_opr;
                 state_next <= state_next_opr;

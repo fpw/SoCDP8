@@ -8,45 +8,37 @@ use IEEE.NUMERIC_STD.ALL;
 use work.socdp8_package.all;
 use work.inst_common.all;
 
--- This entity implements the mechanization chart for the ISZ instruction.
-entity inst_isz is
+-- This entity implements the mechanization chart for the IOT instruction.
+entity inst_iot is
     port (
         input: in inst_input;
         transfers: out register_transfers;
         state_next: out major_state
     );
-end inst_isz;
+end inst_iot;
 
-architecture Behavioral of inst_isz is
+architecture Behavioral of inst_iot is
 begin
 
 -- combinatorial process
-isz_inst: process(all)
+iot_inst: process(all)
 begin
     -- default output
     transfers <= nop_transfer;
-    state_next <= STATE_NONE;
+    state_next <= STATE_FETCH;
     
     case input.state is
         when STATE_FETCH =>
-            fetch_cycle_mri(input, transfers, state_next);
-        when STATE_DEFER =>
-            defer_cycle_not_jmp(input, transfers, state_next);
-        when STATE_EXEC =>
-            state_next <= STATE_FETCH;
             case input.time_div is
                 when TS1 =>
+                    -- fetch.TS1 happens in multiplexer
                     null;
                 when TS2 =>
-                    -- MEM + 1 -> MB
-                    transfers.mem_enable <= '1';
-                    transfers.carry_insert <= '1';
-                    transfers.mb_load <= '1';
-
-                    -- SKIP -> 1 if addition overflows
-                    transfers.skip_if_carry <= '1';
-                    transfers.skip_load <= '1';
+                    -- fetch.TS2 happens in multiplexer
+                    null;
                 when TS3 =>
+                    -- the CPU will do this
+                    null;
                 when TS4 =>
                     ts4_back_to_fetch(input, transfers, state_next);
             end case;

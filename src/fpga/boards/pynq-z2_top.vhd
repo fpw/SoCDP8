@@ -15,6 +15,14 @@ entity pynq_z2_top is
         clk_50: in std_logic;
         rst: in std_logic;
 
+        -- I/O connections, documentation in package
+        iop: out std_logic_vector(2 downto 0);
+        io_ac: out std_logic_vector(11 downto 0);
+        io_mb: out std_logic_vector(11 downto 0);
+        io_bus_in: in std_logic_vector(11 downto 0);
+        io_ac_clear: in std_logic;
+        io_skip: in std_logic;
+
         -- PiDP-8 front panel connections
         column: inout std_logic_vector(11 downto 0);
         switch_row: out std_logic_vector(2 downto 0);
@@ -53,10 +61,11 @@ architecture Behavioral of pynq_z2_top is
     signal col_t: std_logic;
 
     -- interconnection
+    --- console
     signal leds: pdp8i_leds;
     signal switches: pdp8i_switches;
 
-    -- interconnection
+    --- external memory
     signal mem_addr_buf: std_logic_vector(14 downto 0);
     signal mem_din_buf: std_logic_vector(11 downto 0);
     signal mem_dout_buf: std_logic_vector(11 downto 0);
@@ -88,6 +97,12 @@ generic map (
 port map (
     clk => clk_50,
     rst => rst,
+    io_in.bus_in => io_bus_in,
+    io_in.ac_clear => io_ac_clear,
+    io_in.io_skip => io_skip,
+    io_out.iop => iop,
+    io_out.ac => io_ac,
+    io_out.mb => io_mb,
     ext_mem_out.data => mem_din_buf,
     ext_mem_out.write => mem_write_buf,
     ext_mem_out.addr => mem_addr_buf,

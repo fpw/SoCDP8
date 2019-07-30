@@ -21,13 +21,11 @@ entity registers is
         sr: in std_logic_vector(11 downto 0);
         --- sense register
         sense: in std_logic_vector(11 downto 0);
+        --- I/O bus
+        io_bus: in std_logic_vector(11 downto 0);
 
         -- register transfers, executed every cycle        
         transfers: in register_transfers;
-        
-        -- status
-        ac_zero: out std_logic;
-        ac_neg: out std_logic;
 
         -- direct output
         pc_o: out std_logic_vector(11 downto 0);
@@ -72,6 +70,9 @@ begin
         elsif transfers.mem_enable = '1' then
             -- if both AC and MEM are enabled, do a sign-extended two's complement addition
             input_bus_tmp <= std_logic_vector(signed(ac(11) & ac) + signed(sense));
+        elsif transfers.bus_enable = '1' then
+            -- if both AC and IO BUS are enabled, OR them
+            input_bus_tmp <= '0' & (ac or io_bus);
         elsif transfers.sr_enable = '1' then
             -- if both AC and SR are enabled, OR them
             input_bus_tmp <= '0' & (ac or sr);
@@ -88,6 +89,8 @@ begin
         input_bus_tmp <= '0' & sense;
     elsif transfers.sr_enable = '1' then
         input_bus_tmp <= '0' & sr;
+    elsif transfers.bus_enable = '1' then
+        input_bus_tmp <= '0' & io_bus;
     else
         input_bus_tmp <= (others => '0');
     end if;
@@ -161,22 +164,24 @@ begin
         mem_buf <= input_bus(11 downto 0);
     end if;
     
-    skip <= transfers.reverse_skip;
-
-    if transfers.skip_if_carry = '1' and input_bus(12) = '1' then
+    if transfers.skip_load = '1' then
         skip <= transfers.reverse_skip;
-    end if;
-
-    if transfers.skip_if_zero = '1' and input_bus(11 downto 0) = "000000000000" then
-        skip <= not transfers.reverse_skip;
-    end if;
-
-    if transfers.skip_if_neg = '1' and input_bus(11) = '1' then
-        skip <= not transfers.reverse_skip;
-    end if;
     
-    if transfers.skip_if_link = '1' and link = '1' then
-        skip <= not transfers.reverse_skip;
+        if transfers.skip_if_carry = '1' and input_bus(12) = '1' then
+            skip <= not transfers.reverse_skip;
+        end if;
+    
+        if transfers.skip_if_zero = '1' and input_bus(11 downto 0) = "000000000000" then
+            skip <= not transfers.reverse_skip;
+        end if;
+    
+        if transfers.skip_if_neg = '1' and input_bus(11) = '1' then
+            skip <= not transfers.reverse_skip;
+        end if;
+        
+        if transfers.skip_if_link = '1' and link = '1' then
+            skip <= not transfers.reverse_skip;
+        end if;
     end if;
 
     if transfers.initialize = '1' then

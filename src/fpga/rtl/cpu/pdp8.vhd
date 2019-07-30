@@ -19,6 +19,10 @@ entity pdp8 is
         -- Console connection
         leds: out pdp8i_leds;
         switches: in pdp8i_switches;
+        
+        -- I/O connections
+        io_in: in pdp8i_io_in;
+        io_out: out pdp8i_io_out;
 
         -- to be connected to the external memory
         ext_mem_in: in ext_mem_in;
@@ -51,11 +55,13 @@ architecture Behavioral of pdp8 is
     -- This is shown in drawing D-BS-8I-0-2, region M113.E15 (C7)
     signal force_tp4: std_logic;
     
+    -- Combinatorial signal to decide whether auto-indexing is active in the current cycle
     signal auto_index: std_logic;
     
-    -- The following signals are not fully implemented yet:
-    --- whether the system is paused by peripherals
     signal pause: std_logic;
+    
+    signal io_on: std_logic;
+    signal io_start: std_logic;
 
     --- current major state
     signal state: major_state;
@@ -75,6 +81,9 @@ architecture Behavioral of pdp8 is
     signal ts: time_state_auto;
     signal tp: std_logic;
     signal mem_idle: std_logic;
+    signal io_state: io_state;
+    signal io_end: std_logic;
+    signal io_strobe: std_logic;
     --- from memory
     signal strobe: std_logic;
     signal sense: std_logic_vector(11 downto 0);
@@ -127,7 +136,12 @@ port map (
     
     ts => ts,
     tp => tp,
-    mem_idle_o => mem_idle
+    mem_idle_o => mem_idle,
+    
+    io_start => io_start,
+    io_state_o => io_state,
+    io_end => io_end,
+    io_strobe => io_strobe
 );
 
 regs: entity work.registers
@@ -137,6 +151,7 @@ port map (
     
     sr => switches.swr,
     sense => sense,
+    io_bus => io_in.bus_in,
 
     transfers => reg_trans,
 
@@ -198,6 +213,7 @@ begin
     
     -- timing
     force_tp4 <= '0';
+    io_start <= '0';
 
     --- registers
     reg_trans <= nop_transfer;
@@ -225,6 +241,15 @@ begin
     -- the run FF if the switches were pressed while run was initially clear (indicated by MFTS0).
 
     -- To implement this, the system needs to keep track of two states simultaneously.
+
+    if manual_preset = '1' then
+        state <= STATE_NONE;
+        io_on <= '0';
+    end if;
+    
+    if strobe = '1' then
+        pause <= '0';
+    end if;
 
     case ts is
         -- the TS transfers are described in drawing D-FD-8I-0-1 (Auto Functions)
@@ -285,6 +310,36 @@ begin
                 if reg_trans_inst.clear_run = '1' then
                     run <= '0';
                 end if;
+                
+                -- slow cycle
+                if state = STATE_FETCH and inst = INST_IOT then
+                    -- this is basically the IO START signal
+                    pause <= '1';
+                    io_start <= '1';
+                    io_on <= '1';
+                end if;
+            end if;
+            
+            -- I/O happens in TS3 and uses io_strobe instead of tp to activate transfers
+            if io_strobe = '1' and (or io_out.iop = '1') then
+                -- We will always read the bus into AC.
+                -- Therefore, if ac_clear is not desired, we enable
+                -- AC to OR the bus with AC. Otherwise, when clear
+                -- is desired, we won't load AC and thus overwrite it.
+                if io_in.ac_clear = '0' then
+                    reg_trans.ac_enable <= '1';
+                end if;
+                reg_trans.bus_enable <= '1';
+                reg_trans.ac_load <= '1';
+                
+                -- Enabling reverse-skip transfers 1 -> SKIP.
+                reg_trans.reverse_skip <= io_in.io_skip;
+                reg_trans.skip_load <= '1';
+            end if;
+            
+            if io_end = '1' then
+                io_on <= '0';
+                pause <= '0';
             end if;
         when TS4 =>
             -- If run was set to 0 in TS3, this pulse will not happen until CONT is pressed.
@@ -298,7 +353,7 @@ begin
                 end if;
             end if;
     end case;
-    
+
     case mft is
         when MFT0 =>
             if mftp = '1' then
@@ -309,7 +364,6 @@ begin
                 -- Originally, condition is switches.cont = '0' but this is more readable
                 if switches.start or switches.exam or switches.dep or switches.load then
                     manual_preset <= '1';
-                    state <= STATE_NONE;
                 end if;
             end if;
         -- the MFT transfers are described in drawing D-FD-8I-0-1 (Manual Functions)
@@ -361,8 +415,15 @@ begin
         run <= '0';
         pause <= '0';
         ion <= '0';
+        io_on <= '0';
     end if;
 end process;
+
+io_out.iop(0) <= '1' when io_state = IO1 and mb(11) = '1' else '0';
+io_out.iop(1) <= '1' when io_state = IO2 and mb(10) = '1' else '0';
+io_out.iop(2) <= '1' when io_state = IO4 and mb(9) = '1' else '0';
+io_out.ac <= ac;
+io_out.mb <= mb;
 
 leds.pc <= pc;
 leds.mem_addr <= ma;
@@ -374,5 +435,6 @@ leds.state <= state;
 leds.instruction <= inst;
 leds.ion <= ion;
 leds.run <= run;
+leds.pause <= pause;
 
 end Behavioral;

@@ -104,6 +104,7 @@ begin
                         transfers.skip_if_zero <= input.mb(5); -- SZA / SNA
                         transfers.skip_if_link <= input.mb(4); -- SNL / SZL
                         transfers.reverse_skip <= input.mb(3);
+                        transfers.skip_load <= '1';
 
                         -- HLT
                         if input.mb(1) = '1' then

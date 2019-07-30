@@ -35,7 +35,10 @@ entity timing_auto is
     generic (
         clk_frq: natural;
         -- pulse delay for automatic state transitions
-        num_cycles_pulse: natural := period_to_cycles(clk_frq, 250.0e-9)
+        num_cycles_pulse: natural := period_to_cycles(clk_frq, 250.0e-9);
+        num_cycles_io_pre: natural := period_to_cycles(clk_frq, 200.0e-9);
+        num_cycles_io_strobe: natural := period_to_cycles(clk_frq, 400.0e-9);
+        num_cycles_io_hold: natural := period_to_cycles(clk_frq, 300.0e-9)
     );
     port (
         clk: in std_logic;
@@ -53,7 +56,12 @@ entity timing_auto is
 
         ts: out time_state_auto;
         mem_idle_o: out std_logic;
-        tp: out std_logic
+        tp: out std_logic;
+        
+        io_start: in std_logic;
+        io_state_o: out io_state;
+        io_end: out std_logic;
+        io_strobe: out std_logic        
     );
 end timing_auto;
 
@@ -66,10 +74,15 @@ architecture Behavioral of timing_auto is
     -- synchronous design.
     -- For this reason, we delay the state change by one clock cycle so the pulse comes when the
     -- active TS phase is still the one matching the pulse.
-    type state_int is (TS1, TS1_WAIT, TS2, TS2_WAIT, TS3, TS3_WAIT, TS4, TS4_WAIT);
+    type state_int is (TS1, TS1_WAIT, TS2, TS2_WAIT, TS3, TS3_WAIT, TS3_WAIT_IO, TS4, TS4_WAIT);
     signal state: state_int;
     signal pulse: std_logic; 
+    
+    type iostate_int is (IO_IDLE, IO1_PRE, IO1_STROBE, IO1_HOLD, IO2_PRE, IO2_STROBE, IO2_HOLD, IO4_PRE, IO4_STROBE, IO4_HOLD);
+    signal io_state: iostate_int;
+    
     signal time_counter: natural range 0 to num_cycles_pulse - 1;
+    signal io_counter: natural range 0 to num_cycles_io_pre + num_cycles_io_strobe - 1;
     signal mem_idle: std_logic;
 begin
 
@@ -107,7 +120,12 @@ begin
                 state <= TS3_WAIT;
             end if;
         when TS3_WAIT =>
-            state <= TS4;
+            state <= TS3_WAIT_IO;
+        when TS3_WAIT_IO =>
+            -- delay TS3 if slow_cycle is active
+            if io_state = IO_IDLE and io_start = '0' then
+                state <= TS4;
+            end if;
         when TS4 =>
             if run = '1' and pause = '0' and mem_idle = '1' then
                 pulse <= '1'; -- TP4
@@ -146,13 +164,107 @@ begin
         mem_idle <= '1';
     end if;
 end process;
-
 mem_idle_o <= mem_idle;
+
+gen_io_state: process
+begin
+    wait until rising_edge(clk);
+
+    -- reset pulse signals to defaults
+    io_strobe <= '0';
+    io_end <= '0';
+
+    case io_state is
+        when IO_IDLE =>
+            if io_start = '1' then
+                io_counter <= 0;
+                io_state <= IO1_PRE;
+            end if;
+        when IO1_PRE =>
+            if io_counter < num_cycles_io_pre - 1 then
+                io_counter <= io_counter + 1;
+            else
+                io_counter <= 0;
+                io_state <= IO1_STROBE;
+            end if;
+        when IO1_STROBE =>
+            if io_counter < num_cycles_io_strobe - 1 then
+                io_counter <= io_counter + 1;
+            else
+                io_strobe <= '1';
+                io_counter <= 0;
+                io_state <= IO1_HOLD;
+            end if;
+        when IO1_HOLD =>
+            if io_counter < num_cycles_io_hold - 1 then
+                io_counter <= io_counter + 1;
+            else
+                io_counter <= 0;
+                io_state <= IO2_PRE;
+            end if;
+        when IO2_PRE =>
+            if io_counter < num_cycles_io_pre - 1 then
+                io_counter <= io_counter + 1;
+            else
+                io_counter <= 0;
+                io_state <= IO2_STROBE;
+            end if;
+        when IO2_STROBE =>
+            if io_counter < num_cycles_io_strobe - 1 then
+                io_counter <= io_counter + 1;
+            else
+                io_strobe <= '1';
+                io_counter <= 0;
+                io_state <= IO2_HOLD;
+            end if;
+        when IO2_HOLD =>
+            if io_counter < num_cycles_io_hold - 1 then
+                io_counter <= io_counter + 1;
+            else
+                io_counter <= 0;
+                io_state <= IO4_PRE;
+            end if;
+        when IO4_PRE =>
+            if io_counter < num_cycles_io_pre - 1 then
+                io_counter <= io_counter + 1;
+            else
+                io_counter <= 0;
+                io_state <= IO4_STROBE;
+            end if;
+        when IO4_STROBE =>
+            if io_counter < num_cycles_io_strobe - 1 then
+                io_counter <= io_counter + 1;
+            else
+                io_strobe <= '1';
+                io_counter <= 0;
+                io_state <= IO4_HOLD;
+            end if;
+        when IO4_HOLD =>
+            if io_counter < num_cycles_io_hold - 1 then
+                io_counter <= io_counter + 1;
+            else
+                io_end <= '1';
+                io_counter <= 0;
+                io_state <= IO_IDLE;
+            end if;
+    end case;
+    
+    if rst = '1' then
+        io_state <= IO_IDLE;
+        io_counter <= 0;
+    end if;
+end process;
+
+with io_state select io_state_o <=
+    IO1 when IO1_STROBE | IO1_HOLD,
+    IO2 when IO2_STROBE | IO2_HOLD,
+    IO4 when IO4_STROBE | IO4_HOLD,
+    IO_NONE when others;
 
 with state select ts <=
     TS1 when TS1 | TS1_WAIT,
     TS2 when TS2 | TS2_WAIT,
-    TS3 when TS3 | TS3_WAIT,
+    TS3 when TS3 | TS3_WAIT | TS3_WAIT_IO,
     TS4 when TS4 | TS4_WAIT,
     TS1 when others;
 tp <= pulse;
