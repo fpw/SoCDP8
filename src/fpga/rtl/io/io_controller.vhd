@@ -185,7 +185,7 @@ begin
             case to_integer(unsigned(device_addr)) is
                 when 0 => -- Status register
                     s_axi_rdata <= (
-                        3 => tty_reader_ready,
+                        3 => not tty_reader_ready,
                         4 => tty_punch_take_data,
                         others => '0'
                     );
@@ -197,9 +197,6 @@ begin
                     s_axi_rdata(31 downto 9) <= (others => '0');
                     s_axi_rdata(8) <= tty_punch_take_data;
                     s_axi_rdata(7 downto 0) <= tty_punch_data;
-                    if s_axi_rready = '1' then
-                        tty_punch_ack_data <= '1';
-                    end if;
                 when others =>
                     s_axi_rdata <= (others => '0');
             end case;
@@ -218,6 +215,12 @@ begin
                         tty_reader_data_offer <= s_axi_wdata(7 downto 0);
                         if s_axi_bready = '1' then
                             tty_reader_take_data <= '1';
+                        end if;
+                    end if;
+                when 4 => -- TTY punch
+                    if s_axi_wstrb(1) = '1' then
+                        if s_axi_bready = '1' then
+                            tty_punch_ack_data <= '1';
                         end if;
                     end if;
                 when others => null;
