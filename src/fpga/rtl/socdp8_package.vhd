@@ -42,7 +42,7 @@ package socdp8_package is
         initialize: std_logic;
     
         -- an enable signal puts the register data on the register bus
-        -- enabling multiple registers will cause an addition
+        -- enabling multiple registers will cause an addition or OR combination
         ac_enable: std_logic;
         ac_comp_enable: std_logic;
         pc_enable: std_logic;

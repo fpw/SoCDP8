@@ -311,12 +311,20 @@ begin
                     run <= '0';
                 end if;
                 
-                -- slow cycle
+                -- slow cycle unless internal address
                 if state = STATE_FETCH and inst = INST_IOT then
-                    -- this is basically the IO START signal
-                    pause <= '1';
-                    io_start <= '1';
-                    io_on <= '1';
+                    if mb(8 downto 3) = o"00" then
+                        if mb(0) = '1' then
+                            ion <= '1';
+                        elsif mb(1) = '1' then
+                            ion <= '0';
+                        end if;
+                    else
+                        -- this is basically the IO START signal
+                        pause <= '1';
+                        io_start <= '1';
+                        io_on <= '1';
+                    end if;
                 end if;
             end if;
             

@@ -66,10 +66,10 @@ enable_regs: process(all)
 begin
     if transfers.ac_enable = '1' then
         if transfers.ac_comp_enable = '1' then
-            input_bus_tmp <= std_logic_vector(signed(ac(11) & ac) + signed(not ac));
+            input_bus_tmp <= std_logic_vector(unsigned('0' & ac) + unsigned(not ac));
         elsif transfers.mem_enable = '1' then
             -- if both AC and MEM are enabled, do a sign-extended two's complement addition
-            input_bus_tmp <= std_logic_vector(signed(ac(11) & ac) + signed(sense));
+            input_bus_tmp <= std_logic_vector(unsigned('0' & ac) + unsigned(sense));
         elsif transfers.bus_enable = '1' then
             -- if both AC and IO BUS are enabled, OR them
             input_bus_tmp <= '0' & (ac or io_bus);
@@ -95,18 +95,6 @@ begin
         input_bus_tmp <= (others => '0');
     end if;
     
-    if transfers.l_enable = '1' then
-        if transfers.l_comp_enable = '1' then
-            l_bus <= '1';
-        else
-            l_bus <= link;
-        end if;
-    elsif transfers.l_comp_enable = '1' then
-        l_bus <= not link;
-    else
-        l_bus <= '0';
-    end if;
-
     if transfers.ma_enable_page = '1' then
         input_bus_tmp(11 downto 7) <= mem_addr(11 downto 7);
     end if;
@@ -118,7 +106,19 @@ begin
     if transfers.and_enable = '1' then
         input_bus <= '0' & (input_bus_tmp(11 downto 0) and mem_buf);  
     else
-        input_bus <= std_logic_vector(unsigned('0' & input_bus_tmp(11 downto 0)) + transfers.carry_insert); 
+        input_bus <= std_logic_vector(unsigned(input_bus_tmp) + transfers.carry_insert);
+    end if;
+
+    if transfers.l_enable = '1' then
+        if transfers.l_comp_enable = '1' then
+            l_bus <= '1';
+        else
+            l_bus <= link;
+        end if;
+    elsif transfers.l_comp_enable = '1' then
+        l_bus <= not link;
+    else
+        l_bus <= '0';
     end if;
 end process;
 
@@ -127,7 +127,6 @@ begin
     wait until rising_edge(clk);
 
     if transfers.ac_load = '1' then
-        ac <= input_bus(11 downto 0);
         if transfers.shift = RIGHT_SHIFT then
             ac <= l_bus & input_bus(11 downto 1);
             link <= input_bus(0);
@@ -141,6 +140,7 @@ begin
             ac <= input_bus(9 downto 0) & l_bus & input_bus(11);
             link <= input_bus(10);
         else
+            ac <= input_bus(11 downto 0);
             if input_bus(12) = '1' then
                 link <= not link;
             end if;
@@ -148,7 +148,11 @@ begin
     end if;
 
     if transfers.l_load = '1' and transfers.shift = NO_SHIFT then
-        link <= l_bus;
+        if transfers.ac_load = '1' and transfers.carry_insert = '1' then
+            link <= input_bus(12);
+        else
+            link <= l_bus;
+        end if;
     end if;
 
     if transfers.pc_load = '1' then

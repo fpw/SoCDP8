@@ -68,6 +68,7 @@ mem_ctrl: process begin
             end if;
         when SENS =>
             state <= INHIBIT;
+            sense <= ext_mem_in.data;
             counter <= num_cycles_500ns - 1;
         when INHIBIT =>
             if counter > 0 then
@@ -82,6 +83,7 @@ mem_ctrl: process begin
     if rst = '1' then
         state <= IDLE;
         counter <= 0;
+        sense <= (others => '0');
     end if;
 end process;
 
@@ -91,7 +93,6 @@ mem_comb: process(all) begin
     ext_mem_out.addr <= field & mem_addr;
     ext_mem_out.data <= mem_buf;
     ext_mem_out.write <= '0';
-    sense <= ext_mem_in.data;
     mem_done <= '0';
     strobe <= '0';
     
