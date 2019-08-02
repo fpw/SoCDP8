@@ -23,6 +23,9 @@ entity pdp8 is
         -- I/O connections
         io_in: in pdp8i_io_in;
         io_out: out pdp8i_io_out;
+        
+        -- Interrupt request
+        int_rqst: in std_logic;
 
         -- to be connected to the external memory
         ext_mem_in: in ext_mem_in;
@@ -69,8 +72,20 @@ architecture Behavioral of pdp8 is
     -- current instruction
     signal inst: pdp8_instruction;
 
-    --- interrupt on FF
-    signal ion: std_logic;
+    --- 'interrupt on' FF
+    signal int_enable: std_logic;
+    
+    -- synchronized interrupt request
+    signal int_sync: std_logic;
+    
+    -- whether the interrupt was accepted
+    signal int_ok: std_logic;
+    
+    -- used to enable interrupts one instruction later
+    signal int_delay: std_logic;
+    
+    -- TODO
+    signal int_inhibit: std_logic := '0';
 
     -- interconnect wires
     --- from manual timing generator
@@ -84,6 +99,7 @@ architecture Behavioral of pdp8 is
     signal io_state: io_state;
     signal io_end: std_logic;
     signal io_strobe: std_logic;
+    signal int_strobe: std_logic;
     --- from memory
     signal strobe: std_logic;
     signal sense: std_logic_vector(11 downto 0);
@@ -137,6 +153,8 @@ port map (
     ts => ts,
     tp => tp,
     mem_idle_o => mem_idle,
+    
+    int_strobe => int_strobe,
     
     io_start => io_start,
     io_state_o => io_state,
@@ -199,6 +217,7 @@ port map (
 );
 
 auto_index <= '1' when state = STATE_DEFER and ma(11 downto 3) = "000000001" else '0';
+int_ok <= int_sync and int_delay and not int_inhibit; 
 
 time_state_pulses: process
 begin
@@ -313,23 +332,15 @@ begin
                 
                 -- slow cycle unless internal address
                 if state = STATE_FETCH and inst = INST_IOT then
-                    if mb(8 downto 3) = o"00" then
-                        if mb(0) = '1' then
-                            ion <= '1';
-                        elsif mb(1) = '1' then
-                            ion <= '0';
-                        end if;
-                    else
-                        -- this is basically the IO START signal
-                        pause <= '1';
-                        io_start <= '1';
-                        io_on <= '1';
-                    end if;
+                    -- this is basically the IO START signal
+                    pause <= '1';
+                    io_start <= '1';
+                    io_on <= '1';
                 end if;
             end if;
             
             -- I/O happens in TS3 and uses io_strobe instead of tp to activate transfers
-            if io_strobe = '1' and (or io_out.iop = '1') then
+            if io_strobe = '1' and (io_out.iop /= "000") then
                 -- We will always read the bus into AC.
                 -- Therefore, if ac_clear is not desired, we enable
                 -- AC to OR the bus with AC. Otherwise, when clear
@@ -358,6 +369,14 @@ begin
                     state <= next_state_inst;
                 else
                     state <= STATE_FETCH;
+                end if;
+
+                if int_ok = '1' then
+                    -- 0 -> MA
+                    reg_trans <= nop_transfer;
+                    reg_trans.ma_load <= '1';
+                    inst <= INST_JMS;
+                    state <= STATE_EXEC;
                 end if;
             end if;
     end case;
@@ -392,7 +411,6 @@ begin
                 end if;
                 
                 if switches.start = '1' then
-                    ion <= '0';
                     state <= STATE_FETCH;
                 end if;
                 
@@ -422,8 +440,60 @@ begin
         inst <= INST_AND; -- all zero = AND
         run <= '0';
         pause <= '0';
-        ion <= '0';
         io_on <= '0';
+    end if;
+end process;
+
+interrupts: process
+    variable f_set: std_logic;
+    variable key_la_ex_dep: std_logic;
+    variable key_la_ex_dep_n: std_logic;
+begin
+    wait until rising_edge(clk);
+
+    f_set := '1' when next_state_inst = STATE_FETCH or state = STATE_NONE else '0';
+    key_la_ex_dep := switches.load or switches.exam or switches.dep;
+    key_la_ex_dep_n := key_la_ex_dep and not run;  
+    
+    -- this happens between TP3 and TP4
+    if int_strobe = '1' then
+        if key_la_ex_dep_n = '0' and f_set = '1' and int_rqst = '1' then
+            int_sync <= '1';
+        else
+            int_sync <= '0';
+        end if;
+        
+        if state = STATE_FETCH then
+            int_delay <= int_enable;
+            if inst = INST_IOT and mb(8 downto 3) = o"00" then
+                if mb(0) = '1' then
+                    int_enable <= '1';
+                elsif mb(1) = '1' then
+                    int_enable <= '0';
+                end if;
+            end if;
+        end if;
+    end if;
+
+    -- disable ION in the interrupt's fetch cycle
+    if ts = TS1 and tp = '1' then    
+        if int_ok = '1' then
+            int_enable <= '0';
+        end if;
+    end if;
+   
+    if int_enable = '0' then
+        int_delay <= '0';
+    end if;
+    
+    if manual_preset = '1' then
+        int_sync <= '0';
+    end if;
+    
+    if rst = '1' then
+        int_sync <= '0';
+        int_delay <= '0';
+        int_enable <= '0';
     end if;
 end process;
 
@@ -441,7 +511,7 @@ leds.link <= link;
 
 leds.state <= state;
 leds.instruction <= inst;
-leds.ion <= ion;
+leds.ion <= int_enable;
 leds.run <= run;
 leds.pause <= pause;
 

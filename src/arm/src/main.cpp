@@ -259,15 +259,15 @@ void setupIRQ(void *ptr) {
         return;
     }
 
-    if (XScuGic_Connect(&gic, XPAR_FABRIC_IO_CONTROLLER_IRQ_INTR, onIRQ, ptr) != XST_SUCCESS) {
+    if (XScuGic_Connect(&gic, XPAR_FABRIC_IO_CONTROLLER_SOC_IRQ_INTR, onIRQ, ptr) != XST_SUCCESS) {
         xil_printf("Couldn't connect IRQ handler\n");
         return;
     }
 
-    XScuGic_Enable(&gic, XPAR_FABRIC_IO_CONTROLLER_IRQ_INTR);
+    XScuGic_Enable(&gic, XPAR_FABRIC_IO_CONTROLLER_SOC_IRQ_INTR);
 
     // Set mid priority and rising-edge trigger
-    XScuGic_SetPriorityTriggerType(&gic, XPAR_FABRIC_IO_CONTROLLER_IRQ_INTR, 0, 3);
+    XScuGic_SetPriorityTriggerType(&gic, XPAR_FABRIC_IO_CONTROLLER_SOC_IRQ_INTR, 0xA0, 3);
 
     Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT, (Xil_ExceptionHandler) XScuGic_InterruptHandler, &gic);
     Xil_ExceptionEnable();
@@ -283,7 +283,7 @@ int main() {
 
     TeleType tty;
     tty.setReaderInput(maindec, sizeof(maindec));
-    //setupIRQ(&tty);
+    // setupIRQ(&tty);
 
     xil_printf("Ready\n");
 

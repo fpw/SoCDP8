@@ -55,9 +55,12 @@ entity io_controller is
         io_ac_clear: out std_logic;
         io_skip: out std_logic;
         
+        -- PDP-8 interrupt line
+        pdp_irq: out std_logic;
+        
         -- The I/O controller generates an interrupt whenever a device has a pending transfer.
         -- Address 0 can be read to see which of the devices is pending.
-        irq: out std_logic
+        soc_irq: out std_logic
     );
 
     constant clk_frq: natural := 50_000_000;
@@ -88,7 +91,7 @@ begin
     io_ac_clear <= '0';
     io_bus_out <= o"0000";
     
-    irq <= '0';
+    soc_irq <= '0';
 
     case to_integer(unsigned(io_mb(8 downto 3))) is
         when 3 =>
@@ -100,7 +103,7 @@ begin
                 -- IOP2: Clear ready flag and AC
                 tty_reader_ready <= '0';
                 io_ac_clear <= '1';
-                irq <= '1';
+                soc_irq <= '1';
             elsif iop(2) = '1' then
                 -- IOP4: Read data
                 io_bus_out(11 downto 8) <= "0000";
@@ -119,7 +122,7 @@ begin
                 if tty_punch_take_data = '0' then
                     tty_punch_data <= io_ac(7 downto 0);
                     tty_punch_take_data <= '1';
-                    irq <= '1';
+                    soc_irq <= '1';
                 end if;
             end if;
         when others =>
@@ -146,10 +149,13 @@ begin
     end if;
 end process;
 
+pdp_irq <= tty_reader_ready or tty_punch_done;
+
 axi_fsm: process
 begin
     wait until rising_edge(S_AXI_ACLK);
 
+    -- Defaults
     --- Address channels
     S_AXI_ARREADY <= '0';
     S_AXI_AWREADY <= '0';

@@ -57,6 +57,7 @@ entity timing_auto is
         ts: out time_state_auto;
         mem_idle_o: out std_logic;
         tp: out std_logic;
+        int_strobe: out std_logic;
         
         io_start: in std_logic;
         io_state_o: out io_state;
@@ -92,6 +93,7 @@ begin
     
     -- reset pulse signals
     pulse <= '0';
+    int_strobe <= '0';
     
     case state is
         when TS1 =>
@@ -124,6 +126,7 @@ begin
         when TS3_WAIT_IO =>
             -- delay TS3 if slow_cycle is active
             if io_state = IO_IDLE and io_start = '0' then
+                int_strobe <= '1';
                 state <= TS4;
             end if;
         when TS4 =>
