@@ -50,4 +50,3 @@ Unfortunately, I had to make a small modification to the PiDP-8/I hardware to su
 The base system is functional and passes the MAINDEC tests that can be loaded using the RIM loader. The following parts are missing:
 * EAE
 * Data breaks
-* Interrupts
