@@ -6,7 +6,6 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 use work.socdp8_package.all;
-use work.inst_common.all;
 
 entity pdp8 is
     generic (
@@ -72,21 +71,6 @@ architecture Behavioral of pdp8 is
     -- current instruction
     signal inst: pdp8_instruction;
 
-    --- 'interrupt on' FF
-    signal int_enable: std_logic;
-    
-    -- synchronized interrupt request
-    signal int_sync: std_logic;
-    
-    -- whether the interrupt was accepted
-    signal int_ok: std_logic;
-    
-    -- used to enable interrupts one instruction later
-    signal int_delay: std_logic;
-    
-    -- TODO
-    signal int_inhibit: std_logic := '0';
-
     -- interconnect wires
     --- from manual timing generator
     signal mft: time_state_manual;
@@ -110,9 +94,12 @@ architecture Behavioral of pdp8 is
     signal skip: std_logic;
     signal pc, ma, mb, ac, mem: std_logic_vector(11 downto 0);
     signal inst_cur: pdp8_instruction;
-    -- from transfer generator
+    --- from instruction mux
     signal reg_trans_inst: register_transfers;
     signal next_state_inst: major_state;
+    --- from interrupt controller
+    signal int_ok: std_logic;
+    signal int_enable: std_logic;
 begin
 
 manual_timing_inst: entity work.timing_manual
@@ -216,8 +203,30 @@ port map (
     state_next => next_state_inst
 );
 
+interrupt_instance: entity work.interrupt_controller
+port map (
+    clk => clk,
+    rst => rst,
+
+    int_rqst => int_rqst,
+    int_strobe => int_strobe,
+
+    manual_preset => manual_preset,
+    
+    int_enable => int_enable,
+    int_ok => int_ok,
+
+    ts => ts,
+    tp => tp,
+    run => run,
+    switches => switches,
+    state => state,
+    mb => mb,
+    inst => inst,
+    state_next => next_state_inst
+);
+
 auto_index <= '1' when state = STATE_DEFER and ma(11 downto 3) = "000000001" else '0';
-int_ok <= int_sync and int_delay and not int_inhibit; 
 
 time_state_pulses: process
 begin
@@ -441,59 +450,6 @@ begin
         run <= '0';
         pause <= '0';
         io_on <= '0';
-    end if;
-end process;
-
-interrupts: process
-    variable f_set: std_logic;
-    variable key_la_ex_dep: std_logic;
-    variable key_la_ex_dep_n: std_logic;
-begin
-    wait until rising_edge(clk);
-
-    f_set := '1' when next_state_inst = STATE_FETCH or state = STATE_NONE else '0';
-    key_la_ex_dep := switches.load or switches.exam or switches.dep;
-    key_la_ex_dep_n := key_la_ex_dep and not run;  
-    
-    -- this happens between TP3 and TP4
-    if int_strobe = '1' then
-        if key_la_ex_dep_n = '0' and f_set = '1' and int_rqst = '1' then
-            int_sync <= '1';
-        else
-            int_sync <= '0';
-        end if;
-        
-        if state = STATE_FETCH then
-            int_delay <= int_enable;
-            if inst = INST_IOT and mb(8 downto 3) = o"00" then
-                if mb(0) = '1' then
-                    int_enable <= '1';
-                elsif mb(1) = '1' then
-                    int_enable <= '0';
-                end if;
-            end if;
-        end if;
-    end if;
-
-    -- disable ION in the interrupt's fetch cycle
-    if ts = TS1 and tp = '1' then    
-        if int_ok = '1' then
-            int_enable <= '0';
-        end if;
-    end if;
-   
-    if int_enable = '0' then
-        int_delay <= '0';
-    end if;
-    
-    if manual_preset = '1' then
-        int_sync <= '0';
-    end if;
-    
-    if rst = '1' then
-        int_sync <= '0';
-        int_delay <= '0';
-        int_enable <= '0';
     end if;
 end process;
 
