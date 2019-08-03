@@ -206,12 +206,6 @@ uint8_t maindec[] = {
 
 class PDP8Memory {
 public:
-    PDP8Memory() {
-        for (int i = 0; i < 10; i++) {
-            xil_printf("%08X\n", mem[i]);
-        }
-    }
-
     void write(uint16_t addr, uint16_t value) {
         mem[addr] = value;
     }
