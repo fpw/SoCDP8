@@ -26,7 +26,7 @@ entity pdp8 is
         -- Interrupt request
         int_rqst: in std_logic;
 
-        -- to be connected to the external memory
+        -- to be connected to RAM
         ext_mem_in: in ext_mem_in;
         ext_mem_out: out ext_mem_out
     );

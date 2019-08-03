@@ -32,12 +32,10 @@ entity pynq_z2_top is
         led_row: out std_logic_vector(7 downto 0);
         
         -- external memory connections
-        mem_addr: out std_logic_vector(31 downto 0);
-        mem_din: out std_logic_vector(31 downto 0);
-        mem_dout: in std_logic_vector(31 downto 0);
-        mem_write: out std_logic_vector(3 downto 0);
-        mem_en: out std_logic;
-        mem_rst: out std_logic;
+        mem_addr: out std_logic_vector(14 downto 0);
+        mem_din: out std_logic_vector(11 downto 0);
+        mem_dout: in std_logic_vector(11 downto 0);
+        mem_write: out std_logic;
 
         -- Board features
         board_led: out std_logic_vector(3 downto 0);
@@ -67,12 +65,6 @@ architecture Behavioral of pynq_z2_top is
     --- console
     signal leds: pdp8i_leds;
     signal switches: pdp8i_switches;
-
-    --- external memory
-    signal mem_addr_buf: std_logic_vector(14 downto 0);
-    signal mem_din_buf: std_logic_vector(11 downto 0);
-    signal mem_dout_buf: std_logic_vector(11 downto 0);
-    signal mem_write_buf: std_logic;
 begin
 
 console_inst: entity work.pidp8_console
@@ -107,25 +99,13 @@ port map (
     io_out.ac => io_ac,
     io_out.mb => io_mb,
     int_rqst => int_rqst,
-    ext_mem_out.data => mem_din_buf,
-    ext_mem_out.write => mem_write_buf,
-    ext_mem_out.addr => mem_addr_buf,
-    ext_mem_in.data => mem_dout_buf,
+    ext_mem_out.data => mem_din,
+    ext_mem_out.write => mem_write,
+    ext_mem_out.addr => mem_addr,
+    ext_mem_in.data => mem_dout,
     leds => leds,
     switches => switches
 );
-
--- convert PDP memory to shared BRAM
-mem_addr(31 downto 16) <= (others => '0');
-mem_addr(15 downto 0) <= mem_addr_buf(14 downto 1) & "00";
-mem_din(31 downto 0) <= "0000" & mem_din_buf & "0000" & mem_din_buf;
-mem_dout_buf <= mem_dout(11 downto 0) when mem_addr_buf(0) = '0' else mem_dout(27 downto 16);
-mem_write <=
-    "0011" when mem_write_buf = '1' and mem_addr_buf(0) = '0' else
-    "1100" when mem_write_buf = '1' and mem_addr_buf(0) = '1' else
-    "0000";
-mem_en <= '1';
-mem_rst <= rst;
 
 -- Using IOBUFs to activate and deactive pullups at runtime
 --- Xilinx IOBUFs behave like this:

@@ -67,7 +67,7 @@ entity io_controller is
 end io_controller;
 
 architecture Behavioral of io_controller is
-    type axi_state is (IDLE, READ, WRITE);
+    type axi_state is (IDLE, READ, WRITE, WRITE_ACK);
     signal state: axi_state;
     
     signal device_addr: std_logic_vector(5 downto 0);
@@ -163,11 +163,11 @@ begin
 
     --- Read data channel
     S_AXI_RDATA <= (others => '0');
-    S_AXI_RRESP <= "10";
+    S_AXI_RRESP <= "00";
     S_AXI_RVALID <= '0';
    
     --- Write ack channel
-    S_AXI_BRESP <= "10";
+    S_AXI_BRESP <= "00";
     S_AXI_BVALID <= '0';
     
     --- TTY data
@@ -177,13 +177,12 @@ begin
     case state is
         when IDLE =>
             if s_axi_arvalid = '1' then
-                device_addr <= s_axi_araddr(C_S_AXI_ADDR_WIDTH - 1 downto 2);
                 s_axi_arready <= '1';
+                device_addr <= s_axi_araddr(C_S_AXI_ADDR_WIDTH - 1 downto 2);
                 state <= READ;
             elsif s_axi_awvalid = '1' and s_axi_wvalid = '1' then
-                device_addr <= s_axi_awaddr(C_S_AXI_ADDR_WIDTH - 1 downto 2);
                 s_axi_awready <= '1';
-                s_axi_wready <= '1';
+                device_addr <= s_axi_awaddr(C_S_AXI_ADDR_WIDTH - 1 downto 2);
                 state <= WRITE;
             end if;
         when READ =>
@@ -208,33 +207,27 @@ begin
             end case;
             s_axi_rresp <= "00";
             s_axi_rvalid <= '1';
-
-            -- check if answer received
             if s_axi_rready = '1' then
                 state <= IDLE;
             end if;
         when WRITE =>
-            -- accept data
             case to_integer(unsigned(device_addr)) is
                 when 3 => -- TTY reader
                     if s_axi_wstrb(0) = '1' then
                         tty_reader_data_offer <= s_axi_wdata(7 downto 0);
-                        if s_axi_bready = '1' then
-                            tty_reader_take_data <= '1';
-                        end if;
+                        tty_reader_take_data <= '1';
                     end if;
                 when 4 => -- TTY punch
                     if s_axi_wstrb(1) = '1' then
-                        if s_axi_bready = '1' then
-                            tty_punch_ack_data <= '1';
-                        end if;
+                        tty_punch_ack_data <= '1';
                     end if;
                 when others => null;
             end case;
+            s_axi_wready <= '1';
+            state <= WRITE_ACK;
+        when WRITE_ACK =>
             s_axi_bresp <= "00";
             s_axi_bvalid <= '1';
-            
-            -- check if transaction accepted
             if s_axi_bready = '1' then
                 state <= IDLE;
             end if;

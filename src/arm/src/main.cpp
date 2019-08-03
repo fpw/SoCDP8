@@ -1,5 +1,4 @@
 #include <cstdint>
-#include <xbram.h>
 #include <xscugic.h>
 #include <xil_printf.h>
 #include "xparameters.h"
@@ -207,12 +206,18 @@ uint8_t maindec[] = {
 
 class PDP8Memory {
 public:
+    PDP8Memory() {
+        for (int i = 0; i < 10; i++) {
+            xil_printf("%08X\n", mem[i]);
+        }
+    }
+
     void write(uint16_t addr, uint16_t value) {
         mem[addr] = value;
     }
 
 private:
-    uint16_t *mem = reinterpret_cast<uint16_t *>(XPAR_PDP8_BRAM_CTRL_S_AXI_BASEADDR);
+    uint32_t *mem = reinterpret_cast<uint32_t *>(XPAR_AXI_BRAM_BASEADDR);
 };
 
 void storeRIMLoader(PDP8Memory &mem) {
@@ -263,6 +268,7 @@ void setupIRQ(void *ptr) {
         xil_printf("Couldn't connect IRQ handler\n");
         return;
     }
+
 
     XScuGic_Enable(&gic, XPAR_FABRIC_IO_CONTROLLER_SOC_IRQ_INTR);
 

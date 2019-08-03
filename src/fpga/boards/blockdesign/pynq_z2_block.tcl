@@ -40,7 +40,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 
 # The design that will be created by this Tcl script contains the following 
 # module references:
-# io_controller, pynq_z2_top
+# axi_bram, io_controller, pynq_z2_top
 
 # Please add the sources of those modules before sourcing this Tcl script.
 
@@ -129,9 +129,6 @@ set bCheckIPsPassed 1
 set bCheckIPs 1
 if { $bCheckIPs == 1 } {
    set list_check_ips "\ 
-xilinx.com:ip:smartconnect:1.0\
-xilinx.com:ip:blk_mem_gen:8.4\
-xilinx.com:ip:axi_bram_ctrl:4.1\
 xilinx.com:ip:processing_system7:5.5\
 xilinx.com:ip:proc_sys_reset:5.0\
 "
@@ -159,6 +156,7 @@ xilinx.com:ip:proc_sys_reset:5.0\
 set bCheckModules 1
 if { $bCheckModules == 1 } {
    set list_check_mods "\ 
+axi_bram\
 io_controller\
 pynq_z2_top\
 "
@@ -243,13 +241,17 @@ proc create_root_design { parentCell } {
   set led_row [ create_bd_port -dir O -from 7 -to 0 led_row ]
   set switch_row [ create_bd_port -dir O -from 2 -to 0 switch_row ]
 
-  # Create instance: axi_smc, and set properties
-  set axi_smc [ create_bd_cell -type ip -vlnv xilinx.com:ip:smartconnect:1.0 axi_smc ]
-  set_property -dict [ list \
-   CONFIG.NUM_MI {2} \
-   CONFIG.NUM_SI {1} \
- ] $axi_smc
-
+  # Create instance: axi_bram, and set properties
+  set block_name axi_bram
+  set block_cell_name axi_bram
+  if { [catch {set axi_bram [create_bd_cell -type module -reference $block_name $block_cell_name] } errmsg] } {
+     catch {common::send_msg_id "BD_TCL-105" "ERROR" "Unable to add referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   } elseif { $axi_bram eq "" } {
+     catch {common::send_msg_id "BD_TCL-106" "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
+     return 1
+   }
+  
   # Create instance: io_controller, and set properties
   set block_name io_controller
   set block_cell_name io_controller
@@ -261,24 +263,6 @@ proc create_root_design { parentCell } {
      return 1
    }
   
-  # Create instance: pdp8_bram, and set properties
-  set pdp8_bram [ create_bd_cell -type ip -vlnv xilinx.com:ip:blk_mem_gen:8.4 pdp8_bram ]
-  set_property -dict [ list \
-   CONFIG.EN_SAFETY_CKT {false} \
-   CONFIG.Enable_B {Use_ENB_Pin} \
-   CONFIG.Memory_Type {True_Dual_Port_RAM} \
-   CONFIG.Port_B_Clock {100} \
-   CONFIG.Port_B_Enable_Rate {100} \
-   CONFIG.Port_B_Write_Rate {50} \
-   CONFIG.Use_RSTB_Pin {true} \
- ] $pdp8_bram
-
-  # Create instance: pdp8_bram_ctrl, and set properties
-  set pdp8_bram_ctrl [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_bram_ctrl:4.1 pdp8_bram_ctrl ]
-  set_property -dict [ list \
-   CONFIG.SINGLE_PORT_BRAM {1} \
- ] $pdp8_bram_ctrl
-
   # Create instance: processing_system7_0, and set properties
   set processing_system7_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0 ]
   set_property -dict [ list \
@@ -1052,6 +1036,12 @@ proc create_root_design { parentCell } {
    CONFIG.PCW_WDT_PERIPHERAL_FREQMHZ {133.333333} \
  ] $processing_system7_0
 
+  # Create instance: ps7_0_axi_periph, and set properties
+  set ps7_0_axi_periph [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_interconnect:2.1 ps7_0_axi_periph ]
+  set_property -dict [ list \
+   CONFIG.NUM_MI {2} \
+ ] $ps7_0_axi_periph
+
   # Create instance: pynq_z2_top, and set properties
   set block_name pynq_z2_top
   set block_cell_name pynq_z2_top
@@ -1067,22 +1057,23 @@ proc create_root_design { parentCell } {
   set reset_controller [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 reset_controller ]
 
   # Create interface connections
-  connect_bd_intf_net -intf_net axi_bram_ctrl_0_BRAM_PORTA [get_bd_intf_pins pdp8_bram/BRAM_PORTA] [get_bd_intf_pins pdp8_bram_ctrl/BRAM_PORTA]
-  connect_bd_intf_net -intf_net axi_smc_M00_AXI [get_bd_intf_pins axi_smc/M00_AXI] [get_bd_intf_pins pdp8_bram_ctrl/S_AXI]
-  connect_bd_intf_net -intf_net axi_smc_M01_AXI [get_bd_intf_pins axi_smc/M01_AXI] [get_bd_intf_pins io_controller/S_AXI]
   connect_bd_intf_net -intf_net processing_system7_0_DDR [get_bd_intf_ports DDR] [get_bd_intf_pins processing_system7_0/DDR]
   connect_bd_intf_net -intf_net processing_system7_0_FIXED_IO [get_bd_intf_ports FIXED_IO] [get_bd_intf_pins processing_system7_0/FIXED_IO]
-  connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP0 [get_bd_intf_pins axi_smc/S00_AXI] [get_bd_intf_pins processing_system7_0/M_AXI_GP0]
+  connect_bd_intf_net -intf_net processing_system7_0_M_AXI_GP0 [get_bd_intf_pins processing_system7_0/M_AXI_GP0] [get_bd_intf_pins ps7_0_axi_periph/S00_AXI]
+  connect_bd_intf_net -intf_net ps7_0_axi_periph_M00_AXI [get_bd_intf_pins io_controller/S_AXI] [get_bd_intf_pins ps7_0_axi_periph/M00_AXI]
+  connect_bd_intf_net -intf_net ps7_0_axi_periph_M01_AXI [get_bd_intf_pins axi_bram/S_AXI] [get_bd_intf_pins ps7_0_axi_periph/M01_AXI]
 
   # Create port connections
   connect_bd_net -net Net [get_bd_ports column] [get_bd_pins pynq_z2_top/column]
-  connect_bd_net -net blk_mem_gen_0_doutb [get_bd_pins pdp8_bram/doutb] [get_bd_pins pynq_z2_top/mem_dout]
+  connect_bd_net -net axi_bram_0_data_out [get_bd_pins axi_bram/data_out] [get_bd_pins pynq_z2_top/mem_dout]
   connect_bd_net -net board_btn_0_1 [get_bd_ports board_btn] [get_bd_pins pynq_z2_top/board_btn]
   connect_bd_net -net board_switch_0_1 [get_bd_ports board_switch] [get_bd_pins pynq_z2_top/board_switch]
   connect_bd_net -net io_controller_0_io_ac_clear [get_bd_pins io_controller/io_ac_clear] [get_bd_pins pynq_z2_top/io_ac_clear]
   connect_bd_net -net io_controller_0_io_bus_out [get_bd_pins io_controller/io_bus_out] [get_bd_pins pynq_z2_top/io_bus_in]
   connect_bd_net -net io_controller_0_io_skip [get_bd_pins io_controller/io_skip] [get_bd_pins pynq_z2_top/io_skip]
-  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins axi_smc/aclk] [get_bd_pins io_controller/S_AXI_ACLK] [get_bd_pins pdp8_bram/clkb] [get_bd_pins pdp8_bram_ctrl/s_axi_aclk] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins pynq_z2_top/clk_50] [get_bd_pins reset_controller/slowest_sync_clk]
+  connect_bd_net -net io_controller_irq [get_bd_pins io_controller/soc_irq] [get_bd_pins processing_system7_0/IRQ_F2P]
+  connect_bd_net -net io_controller_pdp_irq [get_bd_pins io_controller/pdp_irq] [get_bd_pins pynq_z2_top/int_rqst]
+  connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins axi_bram/S_AXI_ACLK] [get_bd_pins io_controller/S_AXI_ACLK] [get_bd_pins processing_system7_0/FCLK_CLK0] [get_bd_pins processing_system7_0/M_AXI_GP0_ACLK] [get_bd_pins ps7_0_axi_periph/ACLK] [get_bd_pins ps7_0_axi_periph/M00_ACLK] [get_bd_pins ps7_0_axi_periph/M01_ACLK] [get_bd_pins ps7_0_axi_periph/S00_ACLK] [get_bd_pins pynq_z2_top/clk_50] [get_bd_pins reset_controller/slowest_sync_clk]
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins processing_system7_0/FCLK_RESET0_N] [get_bd_pins reset_controller/ext_reset_in]
   connect_bd_net -net pynq_z2_top_board_led [get_bd_ports board_led] [get_bd_pins pynq_z2_top/board_led]
   connect_bd_net -net pynq_z2_top_board_led4_b [get_bd_ports board_led4_b] [get_bd_pins pynq_z2_top/board_led4_b]
@@ -1096,18 +1087,16 @@ proc create_root_design { parentCell } {
   connect_bd_net -net pynq_z2_top_io_mb [get_bd_pins io_controller/io_mb] [get_bd_pins pynq_z2_top/io_mb]
   connect_bd_net -net pynq_z2_top_iop [get_bd_pins io_controller/iop] [get_bd_pins pynq_z2_top/iop]
   connect_bd_net -net pynq_z2_top_led_row [get_bd_ports led_row] [get_bd_pins pynq_z2_top/led_row]
-  connect_bd_net -net pynq_z2_top_mem_addr [get_bd_pins pdp8_bram/addrb] [get_bd_pins pynq_z2_top/mem_addr]
-  connect_bd_net -net pynq_z2_top_mem_din [get_bd_pins pdp8_bram/dinb] [get_bd_pins pynq_z2_top/mem_din]
-  connect_bd_net -net pynq_z2_top_mem_en [get_bd_pins pdp8_bram/enb] [get_bd_pins pynq_z2_top/mem_en]
-  connect_bd_net -net pynq_z2_top_mem_rst [get_bd_pins pdp8_bram/rstb] [get_bd_pins pynq_z2_top/mem_rst]
-  connect_bd_net -net pynq_z2_top_mem_write [get_bd_pins pdp8_bram/web] [get_bd_pins pynq_z2_top/mem_write]
+  connect_bd_net -net pynq_z2_top_mem_addr [get_bd_pins axi_bram/addr] [get_bd_pins pynq_z2_top/mem_addr]
+  connect_bd_net -net pynq_z2_top_mem_din [get_bd_pins axi_bram/data_in] [get_bd_pins pynq_z2_top/mem_din]
+  connect_bd_net -net pynq_z2_top_mem_write [get_bd_pins axi_bram/write] [get_bd_pins pynq_z2_top/mem_write]
   connect_bd_net -net pynq_z2_top_switch_row [get_bd_ports switch_row] [get_bd_pins pynq_z2_top/switch_row]
-  connect_bd_net -net rst_ps7_0_50M_peripheral_aresetn [get_bd_pins axi_smc/aresetn] [get_bd_pins io_controller/S_AXI_ARESETN] [get_bd_pins pdp8_bram_ctrl/s_axi_aresetn] [get_bd_pins reset_controller/peripheral_aresetn]
+  connect_bd_net -net reset_controller_peripheral_aresetn [get_bd_pins axi_bram/S_AXI_ARESETN] [get_bd_pins io_controller/S_AXI_ARESETN] [get_bd_pins ps7_0_axi_periph/ARESETN] [get_bd_pins ps7_0_axi_periph/M00_ARESETN] [get_bd_pins ps7_0_axi_periph/M01_ARESETN] [get_bd_pins ps7_0_axi_periph/S00_ARESETN] [get_bd_pins reset_controller/peripheral_aresetn]
   connect_bd_net -net rst_ps7_0_50M_peripheral_reset [get_bd_pins pynq_z2_top/rst] [get_bd_pins reset_controller/peripheral_reset]
 
   # Create address segments
-  create_bd_addr_seg -range 0x00010000 -offset 0x40000000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs pdp8_bram_ctrl/S_AXI/Mem0] SEG_axi_bram_ctrl_0_Mem0
-  create_bd_addr_seg -range 0x00001000 -offset 0x60000000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs io_controller/S_AXI/reg0] SEG_io_controller_0_reg0
+  create_bd_addr_seg -range 0x00020000 -offset 0x43C20000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs axi_bram/S_AXI/reg0] SEG_axi_bram_reg0
+  create_bd_addr_seg -range 0x00010000 -offset 0x43C00000 [get_bd_addr_spaces processing_system7_0/Data] [get_bd_addr_segs io_controller/S_AXI/reg0] SEG_io_controller_reg0
 
 
   # Restore current instance
