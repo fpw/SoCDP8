@@ -60,16 +60,18 @@ architecture Behavioral of pdp8 is
     -- Combinatorial signal to decide whether auto-indexing is active in the current cycle
     signal auto_index: std_logic;
     
+    -- TS3 can be paused due to I/O or EAE
     signal pause: std_logic;
     
-    signal io_on: std_logic;
-    signal io_start: std_logic;
-
     --- current major state
     signal state: major_state;
 
     -- current instruction
     signal inst: pdp8_instruction;
+    signal eae_inst: eae_instruction;
+
+    -- EAE: currently normalized
+    signal norm: std_logic;
 
     -- interconnect wires
     --- from manual timing generator
@@ -80,10 +82,15 @@ architecture Behavioral of pdp8 is
     signal ts: time_state_auto;
     signal tp: std_logic;
     signal mem_idle: std_logic;
+    signal io_start: std_logic;
     signal io_state: io_state;
     signal io_end: std_logic;
     signal io_strobe: std_logic;
     signal int_strobe: std_logic;
+    signal eae_start: std_logic;
+    signal eae_end: std_logic;
+    signal eae_on: std_logic;
+    signal eae_tg: std_logic;
     --- from memory
     signal strobe: std_logic;
     signal sense: std_logic_vector(11 downto 0);
@@ -92,8 +99,10 @@ architecture Behavioral of pdp8 is
     signal reg_trans: register_transfers;
     signal link: std_logic;
     signal skip: std_logic;
-    signal pc, ma, mb, ac, mem: std_logic_vector(11 downto 0);
+    signal pc, ma, mb, ac, mem, mqr: std_logic_vector(11 downto 0);
+    signal sc: std_logic_vector(4 downto 0);
     signal inst_cur: pdp8_instruction;
+    signal eae_inst_cur: eae_instruction;
     --- from instruction mux
     signal reg_trans_inst: register_transfers;
     signal next_state_inst: major_state;
@@ -146,7 +155,12 @@ port map (
     io_start => io_start,
     io_state_o => io_state,
     io_end => io_end,
-    io_strobe => io_strobe
+    io_strobe => io_strobe,
+    
+    eae_start => eae_start,
+    eae_on => eae_on,
+    eae_tg => eae_tg,
+    eae_end => eae_end
 );
 
 regs: entity work.registers
@@ -164,9 +178,12 @@ port map (
     ma_o => ma,
     mb_o => mb,
     ac_o => ac,
+    mqr_o => mqr,
+    sc_o => sc,
     link_o => link,
     inst_o => inst_cur,
-    skip_o => skip
+    skip_o => skip,
+    eae_inst_o => eae_inst_cur
 );
 
 mem_control: entity work.memory_control
@@ -194,11 +211,17 @@ port map (
             state => state,
             time_div => ts,
             mb => mb,
+            mqr => mqr,
+            sc => sc,
             link => link,
             auto_index => auto_index,
             skip => skip,
-            brk_req => '0'      -- TODO
+            brk_req => '0',     -- TODO
+            norm => norm,
+            eae_inst => eae_inst
         ),
+    eae_on => eae_on,
+    eae_inst => eae_inst,
     transfers => reg_trans_inst,
     state_next => next_state_inst
 );
@@ -227,6 +250,7 @@ port map (
 );
 
 auto_index <= '1' when state = STATE_DEFER and ma(11 downto 3) = "000000001" else '0';
+norm <= '1' when (ac(11) /= ac(10)) or (mqr = o"0000" and ac(9 downto 0) = "0000000000") else '0';
 
 time_state_pulses: process
 begin
@@ -242,6 +266,8 @@ begin
     -- timing
     force_tp4 <= '0';
     io_start <= '0';
+    eae_start <= '0';
+    eae_end <= '0';
 
     --- registers
     reg_trans <= nop_transfer;
@@ -272,7 +298,6 @@ begin
 
     if manual_preset = '1' then
         state <= STATE_NONE;
-        io_on <= '0';
     end if;
     
     if strobe = '1' then
@@ -314,6 +339,9 @@ begin
         when TS3 =>
             if tp = '1' then
                 reg_trans <= reg_trans_inst;
+                if reg_trans_inst.load_eae_inst = '1' then
+                    eae_inst <= eae_inst_cur;
+                end if;
     
                 -- run is enabled by default...
                 run <= '1';
@@ -344,7 +372,11 @@ begin
                     -- this is basically the IO START signal
                     pause <= '1';
                     io_start <= '1';
-                    io_on <= '1';
+                end if;
+                
+                if reg_trans_inst.eae_set = '1' then
+                    pause <= '1';
+                    eae_start <= '1';
                 end if;
             end if;
             
@@ -366,8 +398,16 @@ begin
             end if;
             
             if io_end = '1' then
-                io_on <= '0';
                 pause <= '0';
+            end if;
+            
+            -- EAE instructions are also executed in TS3, clocked by eae_tg
+            if eae_on = '1' and eae_tg = '1' then
+                if reg_trans_inst.eae_end = '1' then
+                    eae_end <= '1';
+                    pause <= '0';
+                end if;
+                reg_trans <= reg_trans_inst;
             end if;
         when TS4 =>
             -- If run was set to 0 in TS3, this pulse will not happen until CONT is pressed.
@@ -447,9 +487,9 @@ begin
     if rst = '1' then
         state <= STATE_NONE;
         inst <= INST_AND; -- all zero = AND
+        eae_inst <= EAE_NONE;
         run <= '0';
         pause <= '0';
-        io_on <= '0';
     end if;
 end process;
 
@@ -462,8 +502,11 @@ io_out.mb <= mb;
 leds.pc <= pc;
 leds.mem_addr <= ma;
 leds.mem_buf <= mb;
-leds.accu <= ac;
 leds.link <= link;
+leds.accu <= ac;
+
+leds.mqr <= mqr;
+leds.step_counter <= sc;
 
 leds.state <= state;
 leds.instruction <= inst;

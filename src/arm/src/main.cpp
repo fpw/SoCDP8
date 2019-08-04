@@ -211,7 +211,7 @@ public:
     }
 
 private:
-    uint32_t *mem = reinterpret_cast<uint32_t *>(XPAR_AXI_BRAM_BASEADDR);
+    uint32_t *mem = reinterpret_cast<uint32_t *>(XPAR_SOCDP8_AXI_BRAM_BASEADDR);
 };
 
 void storeRIMLoader(PDP8Memory &mem) {
@@ -258,16 +258,15 @@ void setupIRQ(void *ptr) {
         return;
     }
 
-    if (XScuGic_Connect(&gic, XPAR_FABRIC_IO_CONTROLLER_SOC_IRQ_INTR, onIRQ, ptr) != XST_SUCCESS) {
+    if (XScuGic_Connect(&gic, XPAR_FABRIC_SOCDP8_IO_CONTROLLER_SOC_IRQ_INTR, onIRQ, ptr) != XST_SUCCESS) {
         xil_printf("Couldn't connect IRQ handler\n");
         return;
     }
 
-
-    XScuGic_Enable(&gic, XPAR_FABRIC_IO_CONTROLLER_SOC_IRQ_INTR);
+    XScuGic_Enable(&gic, XPAR_FABRIC_SOCDP8_IO_CONTROLLER_SOC_IRQ_INTR);
 
     // Set mid priority and rising-edge trigger
-    XScuGic_SetPriorityTriggerType(&gic, XPAR_FABRIC_IO_CONTROLLER_SOC_IRQ_INTR, 0xA0, 3);
+    XScuGic_SetPriorityTriggerType(&gic, XPAR_FABRIC_SOCDP8_IO_CONTROLLER_SOC_IRQ_INTR, 0xA0, 3);
 
     Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT, (Xil_ExceptionHandler) XScuGic_InterruptHandler, &gic);
     Xil_ExceptionEnable();
@@ -281,6 +280,15 @@ int main() {
     PDP8Memory mem;
     storeRIMLoader(mem);
 
+    mem.write(00000, 01007); // TAD 7
+    mem.write(00001, 07421); // MQL
+    mem.write(00002, 07405); // MUY
+    mem.write(00003, 456); // data
+    mem.write(00004, 07407); // DVI
+    mem.write(00005, 1); // data
+
+    mem.write(00007, 123); // data
+
     TeleType tty;
     tty.setReaderInput(maindec, sizeof(maindec));
     // setupIRQ(&tty);
@@ -288,6 +296,6 @@ int main() {
     xil_printf("Ready\n");
 
     while (true) {
-        tty.onInterrupt();
+        //tty.onInterrupt();
     }
 }

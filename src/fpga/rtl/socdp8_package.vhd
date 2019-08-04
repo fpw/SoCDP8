@@ -6,6 +6,9 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.MATH_REAL.ALL;
 
 package socdp8_package is
+    -- Configuration
+    constant enable_ext_eae: std_logic := '1';
+
     -- The manual function timing states (MFTS) and automatic timing states (TS)
     type time_state_auto is (TS1, TS2, TS3, TS4);
     type time_state_manual is (MFT0, MFT1, MFT2, MFT3);
@@ -13,6 +16,10 @@ package socdp8_package is
     type pdp8_instruction is (INST_AND, INST_TAD, INST_ISZ,
                               INST_DCA, INST_JMS, INST_JMP,
                               INST_IOT, INST_OPR
+    );
+    type eae_instruction is (EAE_NONE,
+                             EAE_SCL, EAE_MUY, EAE_DVI, EAE_NMI,
+                             EAE_SHL, EAE_ASR, EAE_LSR
     );
 
     type major_state is (STATE_NONE,
@@ -36,10 +43,15 @@ package socdp8_package is
     -- note that all shifts are actually rotations, but the original signal names are used here
     type shift_type is (NO_SHIFT, RIGHT_SHIFT, LEFT_SHIFT, DOUBLE_RIGHT_ROTATE, DOUBLE_LEFT_ROTATE);
     
+    -- The EAE has real shifts
+    type eae_shift_type is (EAE_NO_SHIFT, EAE_L_AC_MQ_RIGHT, EAE_L_AC_MQ_LEFT, EAE_SHIFT_DVI, EAE_SHIFT_ASR, EAE_SHIFT_LSR);
+    
     -- register transfers
     type register_transfers is record
         -- initialize clears AC and L
         initialize: std_logic;
+        eae_set: std_logic;
+        eae_end: std_logic;
     
         -- an enable signal puts the register data on the register bus
         -- enabling multiple registers will cause an addition or OR combination
@@ -49,6 +61,7 @@ package socdp8_package is
         ma_enable: std_logic;
         ma_enable_page: std_logic; -- enable only the page region of MA (original ma_enable_0_4)
         mem_enable: std_logic;
+        mem_comp_enable: std_logic;
         mem_enable_addr: std_logic; -- enable only the addr region of MEM (6 downto 0)
         sr_enable: std_logic;
         bus_enable: std_logic;
@@ -71,13 +84,24 @@ package socdp8_package is
         
         -- shift the register bus data when loading back into the register
         shift: shift_type;
+        eae_shift: eae_shift_type;
         
+        -- skip logic
         skip_if_carry: std_logic;
         skip_if_zero: std_logic;
         skip_if_neg: std_logic;
         skip_if_link: std_logic;
         reverse_skip: std_logic;
         skip_load: std_logic;
+        
+        -- EAE
+        load_eae_inst: std_logic;
+        mq_enable: std_logic;
+        mq_load: std_logic;
+        ac_mq_enable: std_logic;
+        sc_enable: std_logic;
+        sc_load: std_logic;
+        inc_sc: std_logic;
     end record;
     
     -- This constant describes a non-transfer, it can be used to initialize
@@ -86,12 +110,15 @@ package socdp8_package is
     -- code.
     constant nop_transfer: register_transfers := (
         initialize => '0',
+        eae_set => '0',
+        eae_end => '0',
         ac_enable => '0',
         ac_comp_enable => '0',
         pc_enable => '0',
         ma_enable => '0',
         ma_enable_page => '0',
         mem_enable => '0',
+        mem_comp_enable => '0',
         mem_enable_addr => '0',
         sr_enable => '0',
         bus_enable => '0',
@@ -102,6 +129,7 @@ package socdp8_package is
         carry_insert => '0',
         and_enable => '0',
         shift => NO_SHIFT,
+        eae_shift => EAE_NO_SHIFT,
         
         skip_if_carry => '0',
 
@@ -115,7 +143,15 @@ package socdp8_package is
         pc_load => '0',
         ma_load => '0',
         mb_load => '0',
-        l_load => '0'
+        l_load => '0',
+        
+        load_eae_inst => '0',
+        mq_enable => '0',
+        mq_load => '0',
+        sc_enable => '0',
+        ac_mq_enable => '0',
+        sc_load => '0',
+        inc_sc => '0'
     );
 
     -- I/O connections

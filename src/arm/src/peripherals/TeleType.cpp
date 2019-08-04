@@ -3,7 +3,7 @@
 #include "TeleType.h"
 
 TeleType::TeleType():
-    ioPtr((uint32_t *) (XPAR_IO_CONTROLLER_BASEADDR)),
+    ioPtr((uint32_t *) (XPAR_SOCDP8_IO_CONTROLLER_BASEADDR)),
     readerData(nullptr),
     readerLen(0),
     readerPos(0)

@@ -36,6 +36,19 @@ set_property -dict {PACKAGE_PIN V7 IOSTANDARD LVCMOS33}  [get_ports {led_row[7]}
 #set_property -dict { PACKAGE_PIN Y17   IOSTANDARD LVCMOS33 } [get_ports { rpio_sc_r }];        # GPIO01 - Pin 28 - Unconnected
 
 
+# HDMI Out
+#set_property -dict { PACKAGE_PIN G15   IOSTANDARD LVCMOS33 } [get_ports { hdmi_tx_cec }];
+#set_property -dict { PACKAGE_PIN L17   IOSTANDARD TMDS_33  } [get_ports { TMDS_clk_n }];
+#set_property -dict { PACKAGE_PIN L16   IOSTANDARD TMDS_33  } [get_ports { TMDS_clk_p }];
+#set_property -dict { PACKAGE_PIN K18   IOSTANDARD TMDS_33  } [get_ports { TMDS_data_n[0] }];
+#set_property -dict { PACKAGE_PIN K17   IOSTANDARD TMDS_33  } [get_ports { TMDS_data_p[0] }];
+#set_property -dict { PACKAGE_PIN J19   IOSTANDARD TMDS_33  } [get_ports { TMDS_data_n[1] }];
+#set_property -dict { PACKAGE_PIN K19   IOSTANDARD TMDS_33  } [get_ports { TMDS_data_p[1] }];
+#set_property -dict { PACKAGE_PIN H18   IOSTANDARD TMDS_33  } [get_ports { TMDS_data_n[2] }];
+#set_property -dict { PACKAGE_PIN J18   IOSTANDARD TMDS_33  } [get_ports { TMDS_data_p[2] }];
+#set_property -dict { PACKAGE_PIN R19   IOSTANDARD LVCMOS33 } [get_ports { hdmi_tx_hpdn }];
+
+
 # Board LEDs
 set_property -dict {PACKAGE_PIN R14 IOSTANDARD LVCMOS33} [get_ports {board_led[0]}];
 set_property -dict {PACKAGE_PIN P14 IOSTANDARD LVCMOS33} [get_ports {board_led[1]}];

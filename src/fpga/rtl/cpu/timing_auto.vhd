@@ -38,7 +38,8 @@ entity timing_auto is
         num_cycles_pulse: natural := period_to_cycles(clk_frq, 250.0e-9);
         num_cycles_io_pre: natural := period_to_cycles(clk_frq, 200.0e-9);
         num_cycles_io_strobe: natural := period_to_cycles(clk_frq, 400.0e-9);
-        num_cycles_io_hold: natural := period_to_cycles(clk_frq, 300.0e-9)
+        num_cycles_io_hold: natural := period_to_cycles(clk_frq, 300.0e-9);
+        num_cycles_eae: natural := period_to_cycles(clk_frq, 350.0e-9)
     );
     port (
         clk: in std_logic;
@@ -62,7 +63,12 @@ entity timing_auto is
         io_start: in std_logic;
         io_state_o: out io_state;
         io_end: out std_logic;
-        io_strobe: out std_logic        
+        io_strobe: out std_logic;
+        
+        eae_start: in std_logic;
+        eae_on: out std_logic;
+        eae_tg: out std_logic;
+        eae_end: in std_logic
     );
 end timing_auto;
 
@@ -85,6 +91,8 @@ architecture Behavioral of timing_auto is
     signal time_counter: natural range 0 to num_cycles_pulse - 1;
     signal io_counter: natural range 0 to num_cycles_io_pre + num_cycles_io_strobe - 1;
     signal mem_idle: std_logic;
+
+    signal eae_counter: natural range 0 to num_cycles_eae - 1;
 begin
 
 computer_time_generator: process
@@ -125,7 +133,7 @@ begin
             state <= TS3_WAIT_IO;
         when TS3_WAIT_IO =>
             -- delay TS3 if slow_cycle is active
-            if io_state = IO_IDLE and io_start = '0' then
+            if io_state = IO_IDLE and io_start = '0' and eae_start = '0' and eae_on = '0' then
                 int_strobe <= '1';
                 state <= TS4;
             end if;
@@ -255,6 +263,36 @@ begin
     if rst = '1' then
         io_state <= IO_IDLE;
         io_counter <= 0;
+    end if;
+end process;
+
+eae_timing: process
+begin
+    wait until rising_edge(clk);
+    
+    eae_tg <= '0';
+    
+    if eae_on = '1' then
+        if eae_counter < num_cycles_eae - 1 then
+            eae_counter <= eae_counter + 1;
+        else
+            eae_counter <= 0;
+            eae_tg <= '1';
+        end if;
+        
+        if eae_end = '1' then
+            eae_on <= '0';
+        end if;
+    else
+        if eae_start = '1' then
+            eae_counter <= 0;
+            eae_on <= '1';
+        end if;
+    end if;
+    
+    
+    if rst = '1' then
+        eae_on <= '0';
     end if;
 end process;
 

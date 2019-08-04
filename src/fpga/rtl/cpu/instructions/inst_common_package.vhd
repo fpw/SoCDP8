@@ -13,11 +13,14 @@ package inst_common is
         state: major_state;
         time_div: time_state_auto;
         mb: std_logic_vector(11 downto 0);
+        mqr: std_logic_vector(11 downto 0);
+        sc: std_logic_vector(4 downto 0);
         link: std_logic;
         auto_index: std_logic;
         skip: std_logic;
         brk_req: std_logic;
-        
+        norm: std_logic;
+        eae_inst: eae_instruction;
     end record;
     
     --- the fetch cycles is the same for TAD, ISZ, DCA and JMS

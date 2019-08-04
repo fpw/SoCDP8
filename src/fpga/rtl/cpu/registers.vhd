@@ -33,8 +33,13 @@ entity registers is
         mb_o: out std_logic_vector(11 downto 0);
         ac_o: out std_logic_vector(11 downto 0);
         link_o: out std_logic;
+        skip_o: out std_logic;
+        mqr_o: out std_logic_vector(11 downto 0);
+        sc_o: out std_logic_vector(4 downto 0);
+
+        -- instruction decoder (combinatorial)
         inst_o: out pdp8_instruction;
-        skip_o: out std_logic
+        eae_inst_o: out eae_instruction
     );
 end registers;
 
@@ -53,8 +58,14 @@ architecture Behavioral of registers is
     -- 4.1.6 sense: data read from memory, synonym: mem (external sense signal)
     -- 4.1.7 instruction register: operation code of the instruction currently being performed (combinatorial)
     -- 4.1.8 switch register: console switches (external sw signal)
-    
+
+    -- skip FF to remember whether to skip the next instruction    
     signal skip: std_logic;
+    
+    -- EAE extension
+    signal mqr: std_logic_vector(11 downto 0);
+    signal sc: std_logic_vector(4 downto 0);
+
     
     -- input register bus, with carry
     signal input_bus_tmp, input_bus: std_logic_vector(12 downto 0);
@@ -73,6 +84,12 @@ begin
         elsif transfers.bus_enable = '1' then
             -- if both AC and IO BUS are enabled, OR them
             input_bus_tmp <= '0' & (ac or io_bus);
+        elsif transfers.mq_enable = '1' then
+            -- if both AC and MQR are enabled, OR them
+            input_bus_tmp <= '0' & (ac or mqr);
+        elsif transfers.sc_enable = '1' then
+            -- if both AC and SC are enabled, OR them
+            input_bus_tmp <= '0' & (ac or ("0000000" & sc));
         elsif transfers.sr_enable = '1' then
             -- if both AC and SR are enabled, OR them
             input_bus_tmp <= '0' & (ac or sr);
@@ -80,17 +97,28 @@ begin
             input_bus_tmp <= '0' & ac;
         end if;
     elsif transfers.ac_comp_enable = '1' then
-        input_bus_tmp <= '0' & not ac;
+        if transfers.mem_enable = '1' then
+            -- if both AC and MEM are enabled, do a sign-extended two's complement addition
+            input_bus_tmp <= std_logic_vector(unsigned('0' & not ac) + unsigned(sense));
+        else
+            input_bus_tmp <= '0' & not ac;
+        end if;
     elsif transfers.pc_enable = '1' then
         input_bus_tmp <= '0' & pc;
     elsif transfers.ma_enable = '1' then
         input_bus_tmp <= '0' & mem_addr;
     elsif transfers.mem_enable = '1' then
         input_bus_tmp <= '0' & sense;
+    elsif transfers.mem_comp_enable = '1' then
+        input_bus_tmp <= '0' & not sense;
     elsif transfers.sr_enable = '1' then
         input_bus_tmp <= '0' & sr;
     elsif transfers.bus_enable = '1' then
         input_bus_tmp <= '0' & io_bus;
+    elsif transfers.mq_enable = '1' then
+        input_bus_tmp <= '0' & mqr;
+    elsif transfers.sc_enable = '1' then
+        input_bus_tmp <= '0' & "0000000" & sc;
     else
         input_bus_tmp <= (others => '0');
     end if;
@@ -102,7 +130,7 @@ begin
     if transfers.mem_enable_addr = '1' then
         input_bus_tmp(6 downto 0) <= sense(6 downto 0);
     end if;
-    
+
     if transfers.and_enable = '1' then
         input_bus <= '0' & (input_bus_tmp(11 downto 0) and mem_buf);  
     else
@@ -139,6 +167,25 @@ begin
         elsif transfers.shift = DOUBLE_LEFT_ROTATE then
             ac <= input_bus(9 downto 0) & l_bus & input_bus(11);
             link <= input_bus(10);
+        elsif transfers.eae_shift = EAE_L_AC_MQ_RIGHT then
+            link <= '0';
+            ac <= l_bus & input_bus(11 downto 1);
+            mqr <= input_bus(0) & mqr(11 downto 1); 
+        elsif transfers.eae_shift = EAE_L_AC_MQ_LEFT then
+            link <= input_bus(11);
+            ac <= input_bus(10 downto 0) & mqr(11);
+            mqr <= mqr(10 downto 0) & '0'; 
+        elsif transfers.eae_shift = EAE_SHIFT_ASR then
+            link <= ac(11);
+            ac <= ac(11) & ac(11 downto 1);
+            mqr <= ac(0) & mqr(11 downto 1); 
+        elsif transfers.eae_shift = EAE_SHIFT_LSR then
+            ac <= '0' & ac(11 downto 1);
+            mqr <= ac(0) & mqr(11 downto 1); 
+        elsif transfers.eae_shift = EAE_SHIFT_DVI then
+            link <= input_bus(11);
+            ac <= input_bus(10 downto 0) & mqr(11);
+            mqr <= mqr(10 downto 0) & not link; 
         else
             ac <= input_bus(11 downto 0);
             if input_bus(12) = '1' then
@@ -187,6 +234,22 @@ begin
             skip <= not transfers.reverse_skip;
         end if;
     end if;
+    
+    if transfers.mq_load = '1' then
+        if transfers.ac_mq_enable = '1' then
+            mqr <= ac;
+        else
+            mqr <= input_bus(11 downto 0);
+        end if;
+    end if;
+    
+    if transfers.sc_load = '1' then
+        sc <= input_bus(4 downto 0);
+    end if;
+    
+    if transfers.inc_sc = '1' then
+        sc <= std_logic_vector(unsigned(sc) + 1);
+    end if;
 
     if transfers.initialize = '1' then
         ac <= (others => '0');
@@ -200,6 +263,8 @@ begin
         pc <= (others => '0');
         mem_addr <= (others => '0');
         mem_buf <= (others => '0');
+        mqr <= (others => '0');
+        sc <= (others => '0');
     end if;
 end process;
 
@@ -209,6 +274,8 @@ link_o <= link;
 ma_o <= mem_addr;
 mb_o <= mem_buf;
 skip_o <= skip;
+mqr_o <= mqr;
+sc_o <= sc;
 
 with sense(11 downto 9) select inst_o <=
     INST_AND when "000",
@@ -220,5 +287,15 @@ with sense(11 downto 9) select inst_o <=
     INST_IOT when "110",
     INST_OPR when "111",
     INST_AND when others;
+
+with sense(3 downto 1) select eae_inst_o <=
+    EAE_SCL when "001",
+    EAE_MUY when "010",
+    EAE_DVI when "011",
+    EAE_NMI when "100",
+    EAE_SHL when "101",
+    EAE_ASR when "110",
+    EAE_LSR when "111",
+    EAE_NONE when others;
 
 end Behavioral;

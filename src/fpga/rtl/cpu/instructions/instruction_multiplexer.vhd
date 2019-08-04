@@ -15,6 +15,8 @@ entity instruction_multiplexer is
     port (
         inst: in pdp8_instruction;
         input: in inst_input;
+        eae_on: in std_logic;
+        eae_inst: in eae_instruction;
         transfers: out register_transfers;
         state_next: out major_state
     );
@@ -44,6 +46,13 @@ architecture Behavioral of instruction_multiplexer is
 
     signal transfers_opr: register_transfers;
     signal state_next_opr: major_state;
+
+    signal transfers_muy: register_transfers;
+    signal transfers_dvi: register_transfers;
+    signal transfers_nmi: register_transfers;
+    signal transfers_shl: register_transfers;
+    signal transfers_asr: register_transfers;
+    signal transfers_lsr: register_transfers;
 begin
 
 and_instance: entity work.inst_and
@@ -102,10 +111,47 @@ port map (
     state_next => state_next_opr
 );
 
+muy_instance: entity work.inst_muy
+port map (
+    input => input,
+    transfers => transfers_muy
+);
+
+dvi_instance: entity work.inst_dvi
+port map (
+    input => input,
+    transfers => transfers_dvi
+);
+
+nmi_instance: entity work.inst_nmi
+port map (
+    input => input,
+    transfers => transfers_nmi
+);
+
+shl_instance: entity work.inst_shl
+port map (
+    input => input,
+    transfers => transfers_shl
+);
+
+asr_instance: entity work.inst_asr
+port map (
+    input => input,
+    transfers => transfers_asr
+);
+
+lsr_instance: entity work.inst_lsr
+port map (
+    input => input,
+    transfers => transfers_lsr
+);
+
 -- select the output of the currenct instruction
 mux_inst: process(all)
 begin
     transfers <= nop_transfer;
+    state_next <= STATE_NONE;
 
     if input.state = STATE_FETCH and input.time_div = TS1 then
         -- we must implement fetch.TS1 here because the instruction is not known yet
@@ -119,6 +165,17 @@ begin
         -- MEM -> MB
         transfers.mem_enable <= '1';
         transfers.mb_load <= '1';
+        state_next <= STATE_FETCH;
+    elsif eae_on = '1' then
+        case eae_inst is
+            when EAE_MUY => transfers <= transfers_muy;
+            when EAE_DVI => transfers <= transfers_dvi;
+            when EAE_NMI => transfers <= transfers_nmi;
+            when EAE_SHL => transfers <= transfers_shl;
+            when EAE_ASR => transfers <= transfers_asr;
+            when EAE_LSR => transfers <= transfers_asr;
+            when others => transfers <= nop_transfer;
+        end case;
         state_next <= STATE_FETCH;
     else
         case inst is
