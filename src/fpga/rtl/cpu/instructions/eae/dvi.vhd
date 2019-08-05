@@ -26,12 +26,12 @@ begin
     transfers <= nop_transfer;
 
     if input.sc = "00000" or input.mqr(1) /= input.mqr(0) then
-        -- ~AC + MEM -> AC
+        -- AC COMP + MEM
         transfers.mem_enable <= '1';
         transfers.ac_comp_enable <= '1';
         transfers.ac_load <= '1';
     else
-        -- AC + MEM -> AC
+        -- AC + MEM
         transfers.mem_enable <= '1';
         transfers.ac_enable <= '1';
         transfers.ac_load <= '1';
@@ -45,12 +45,13 @@ begin
             transfers.shift <= LEFT_SHIFT;
         end if;
         
-        if input.sc = "01101" then
-            -- TODO: Correct AC
+        transfers.inc_sc <= '1';
+
+        if input.sc = "01100" then
+            if input.mqr(1) = '0' and input.mqr(0) = '0' then
+            end if;
             transfers.eae_end <= '1';
         end if;
-
-        transfers.inc_sc <= '1';
     end if; 
 end process;
 

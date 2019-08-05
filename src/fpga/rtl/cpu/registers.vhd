@@ -161,6 +161,14 @@ begin
         elsif transfers.shift = DOUBLE_RIGHT_ROTATE then
             ac <= input_bus(0) & l_bus & input_bus(11 downto 2);
             link <= input_bus(1);
+        elsif transfers.eae_shift = EAE_SHIFT_DVI then
+            if transfers.shift = LEFT_SHIFT then
+                link <= input_bus(11);
+                ac <= input_bus(10 downto 0) & mqr(11);
+                mqr <= mqr(10 downto 0) & not link; 
+            else
+                mqr <= mqr(10 downto 0) & not link;
+            end if;
         elsif transfers.shift = LEFT_SHIFT then
             ac <= input_bus(10 downto 0) & l_bus;
             link <= input_bus(11);
@@ -182,10 +190,6 @@ begin
         elsif transfers.eae_shift = EAE_SHIFT_LSR then
             ac <= '0' & ac(11 downto 1);
             mqr <= ac(0) & mqr(11 downto 1); 
-        elsif transfers.eae_shift = EAE_SHIFT_DVI then
-            link <= input_bus(11);
-            ac <= input_bus(10 downto 0) & mqr(11);
-            mqr <= mqr(10 downto 0) & not link; 
         else
             ac <= input_bus(11 downto 0);
             if input_bus(12) = '1' then

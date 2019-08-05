@@ -504,6 +504,8 @@ leds.mem_addr <= ma;
 leds.mem_buf <= mb;
 leds.link <= link;
 leds.accu <= ac;
+leds.inst_field <= "000";
+leds.data_field <= "000";
 
 leds.mqr <= mqr;
 leds.step_counter <= sc;

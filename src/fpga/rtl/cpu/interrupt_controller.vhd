@@ -45,18 +45,24 @@ architecture Behavioral of interrupt_controller is
     
     -- TODO
     signal int_inhibit: std_logic := '0';
+    
+    -- Whether the next state is STATE_FETCH
+    signal f_set: std_logic;
+    
+    -- Whether any of the LOAD, EX or DEP keys is pressed
+    signal key_la_ex_dep: std_logic;
+    
+    -- Whether any of the keys is pressed while run is not active
+    signal key_la_ex_dep_n: std_logic;
 begin
+
+f_set <= '1' when state_next = STATE_FETCH or state = STATE_NONE else '0';
+key_la_ex_dep <= switches.load or switches.exam or switches.dep;
+key_la_ex_dep_n <= key_la_ex_dep and not run;  
 
 interrupts: process
-    variable f_set: std_logic;
-    variable key_la_ex_dep: std_logic;
-    variable key_la_ex_dep_n: std_logic;
 begin
     wait until rising_edge(clk);
-
-    f_set := '1' when state_next = STATE_FETCH or state = STATE_NONE else '0';
-    key_la_ex_dep := switches.load or switches.exam or switches.dep;
-    key_la_ex_dep_n := key_la_ex_dep and not run;  
     
     -- this happens between TP3 and TP4
     if int_strobe = '1' then
