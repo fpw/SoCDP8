@@ -10,12 +10,11 @@ use work.pidp8_console_package.all;
 
 entity pidp8_console is
     generic (
-        clk_frq: natural;
-        simulate_lamps: std_logic;
+        config: pdp8_config;
         -- we want 50 us steps for the multiplexing, how far do we have to count?
-        cycles_max: natural := period_to_cycles(clk_frq, 50.0e-6);
+        cycles_max: natural := period_to_cycles(config.clk_frq, 50.0e-6);
         -- and a PWM delay of 1 us
-        pwm_cycles_max: natural := period_to_cycles(clk_frq, 1.0e-6)
+        pwm_cycles_max: natural := period_to_cycles(config.clk_frq, 1.0e-6)
     );
     port (
         clk: in std_logic;
@@ -124,11 +123,11 @@ switches.sing_inst <= switch_row3(7);
 col_in1 <= column_in when rising_edge(clk);
 col_in2 <= col_in1 when rising_edge(clk);
 
-gen_lamps: if simulate_lamps generate
+gen_lamps: if config.simulate_lamps generate
     -- simulate lamps by observing the state to output it via PWM
     lamps: entity work.lamp
     generic map (
-        clk_frq => clk_frq,
+        clk_frq => config.clk_frq,
         lamp_count => lamp_count,
         rise_time_ms => 100
     )
@@ -224,7 +223,7 @@ begin
             end if;
         when LED_OUT =>
             col_t_out <= '0';
-            if simulate_lamps = '0' then
+            if config.simulate_lamps = '0' then
                 col_out <= not led_row_data(cur_row);
             end if;
             if count_50us = 31 then

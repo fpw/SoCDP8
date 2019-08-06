@@ -15,9 +15,9 @@ use work.socdp8_package.all;
 -- This implementation models the description starting at page 4-13.
 entity memory_control is
     generic (
-        clk_frq: natural;
+        config: pdp8_config;
         -- memory timing requires 500 ns for read and write
-        num_cycles_500ns: natural := period_to_cycles(clk_frq, 500.0e-9)
+        num_cycles_mem: natural := period_to_cycles(config.clk_frq, config.memory_cycle_time)
     );
     port (
         clk: in std_logic;
@@ -48,7 +48,7 @@ architecture Behavioral of memory_control is
     type mem_state is (IDLE, READ, INHIBIT, WRITE, SENS);
     signal state: mem_state;
     
-    signal counter: natural range 0 to num_cycles_500ns - 1;
+    signal counter: natural range 0 to num_cycles_mem - 1;
 begin
 
 -- simulate the delay line of the mem_start pulse as described on page 4-15
@@ -58,7 +58,7 @@ mem_ctrl: process begin
         when IDLE =>
             if mem_start = '1' then
                 state <= READ;
-                counter <= num_cycles_500ns - 1;
+                counter <= num_cycles_mem - 1;
             end if;
         when READ =>
             if counter > 0 then
@@ -69,7 +69,7 @@ mem_ctrl: process begin
         when SENS =>
             state <= INHIBIT;
             sense <= ext_mem_in.data;
-            counter <= num_cycles_500ns - 1;
+            counter <= num_cycles_mem - 1;
         when INHIBIT =>
             if counter > 0 then
                 counter <= counter - 1;

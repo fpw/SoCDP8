@@ -7,7 +7,33 @@ use IEEE.MATH_REAL.ALL;
 
 package socdp8_package is
     -- Configuration
-    constant enable_ext_eae: std_logic := '1';
+    type pdp8_config is record
+        -- Clock frequency of the FPGA, only indirectly related to target speed!
+        -- This is used to calculate timings correctly. To change the performance,
+        -- change the actual delay values below.
+        clk_frq: natural;
+
+        -- Whether to simulate incandescent lamps
+        simulate_lamps: std_logic;
+
+        -- Whether an KE8/I EAE is present
+        enable_ext_eae: std_logic;
+        
+        -- switch debonunce time
+        debounce_time: real;
+
+        -- manual time pulses delay
+        manual_cycle_time: real;
+
+        -- memory cycle time
+        memory_cycle_time: real;
+        
+        -- duration of TS2 and TS3        
+        auto_cycle_time: real;
+        
+        -- duration between EAE pulses
+        eae_cycle_time: real;
+    end record;
 
     -- The manual function timing states (MFTS) and automatic timing states (TS)
     type time_state_auto is (TS1, TS2, TS3, TS4);

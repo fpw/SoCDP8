@@ -10,6 +10,10 @@ use work.inst_common.all;
 
 -- This entity implements the mechanization chart for the OPR instruction.
 entity inst_opr is
+    generic (
+        enable_ext_eae: std_logic
+    );
+
     port (
         input: in inst_input;
         transfers: out register_transfers;

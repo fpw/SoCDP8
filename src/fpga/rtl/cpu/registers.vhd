@@ -164,10 +164,19 @@ begin
         elsif transfers.eae_shift = EAE_SHIFT_DVI then
             if transfers.shift = LEFT_SHIFT then
                 link <= input_bus(11);
-                ac <= input_bus(10 downto 0) & mqr(11);
-                mqr <= mqr(10 downto 0) & not link; 
+                ac <= input_bus(10 downto 0) & '0';
+                mqr <= mqr(10 downto 0) & '0';
+                if mqr(11) /= mqr(0) then
+                    ac(0) <= '1';
+                end if;
+                
+                if (input_bus(12) /= mqr(0)) then
+                    mqr(0) <= '1';
+                end if;
             else
-                mqr <= mqr(10 downto 0) & not link;
+                -- only shift MQR
+                mqr <= mqr(10 downto 0) & '0';
+                ac <= input_bus(11 downto 0);
             end if;
         elsif transfers.shift = LEFT_SHIFT then
             ac <= input_bus(10 downto 0) & l_bus;

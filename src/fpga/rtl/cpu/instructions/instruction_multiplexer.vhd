@@ -12,6 +12,9 @@ use work.inst_common.all;
 -- It selects the signals for the register transfers based on the current
 -- instruction, major state and time division.
 entity instruction_multiplexer is
+    generic (
+        config: pdp8_config
+    );
     port (
         inst: in pdp8_instruction;
         input: in inst_input;
@@ -105,6 +108,9 @@ port map (
 );
 
 opr_instance: entity work.inst_opr
+generic map (
+    enable_ext_eae => config.enable_ext_eae
+)
 port map (
     input => input,
     transfers => transfers_opr,

@@ -9,7 +9,7 @@ use work.socdp8_package.all;
 
 entity pdp8 is
     generic (
-        clk_frq: natural
+        config: pdp8_config
     );
     port (
         clk: in std_logic;
@@ -113,7 +113,7 @@ begin
 
 manual_timing_inst: entity work.timing_manual
 generic map (
-    clk_frq => clk_frq
+    config => config
 )
 port map (
     clk => clk,
@@ -133,7 +133,7 @@ port map (
 
 computer_timing_inst: entity work.timing_auto
 generic map (
-    clk_frq => clk_frq
+    config => config
 )
 port map (
     clk => clk,
@@ -188,7 +188,7 @@ port map (
 
 mem_control: entity work.memory_control
 generic map (
-    clk_frq => clk_frq
+    config => config
 )
 port map (
     clk => clk,
@@ -205,6 +205,9 @@ port map (
 );
 
 inst_mux: entity work.instruction_multiplexer
+generic map (
+    config => config
+)
 port map (
     inst => inst,
     input => (
@@ -348,12 +351,12 @@ begin
                 
                 -- ...unless
                 --- a) the SING STEP switch always pauses run
-                if switches.sing_step then
+                if switches.sing_step = '1' then
                     run <= '0';
                 end if;
                 
                 --- b) the DEP and EXAM switches also keep run disabled for further EXAMs or DEPs
-                if mfts0 and (switches.exam or switches.dep) then
+                if mfts0 = '1' and (switches.exam = '1' or switches.dep = '1') then
                     run <= '0';
                 end if;
                 
@@ -438,14 +441,14 @@ begin
                 end if;
                 
                 -- Originally, condition is switches.cont = '0' but this is more readable
-                if switches.start or switches.exam or switches.dep or switches.load then
+                if switches.start = '1' or switches.exam = '1' or switches.dep = '1' or switches.load = '1' then
                     manual_preset <= '1';
                 end if;
             end if;
         -- the MFT transfers are described in drawing D-FD-8I-0-1 (Manual Functions)
         when MFT1 =>
             if mftp = '1' then
-                if switches.exam or switches.dep or switches.start then
+                if switches.exam = '1' or switches.dep = '1' or switches.start = '1' then
                     -- PC -> MA
                     reg_trans.pc_enable <= '1';
                     reg_trans.ma_load <= '1';
@@ -472,7 +475,7 @@ begin
             
                 -- Start a memory cycle if any of the following switches is pressed
                 -- Originally, the condition is switches.load = '0' but this is more readable:
-                if switches.start or switches.exam or switches.dep or switches.cont then
+                if switches.start = '1' or switches.exam = '1' or switches.dep = '1' or switches.cont = '1' then
                     mem_start <= '1';
                 end if;
     

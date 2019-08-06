@@ -33,13 +33,13 @@ use work.socdp8_package.all;
 
 entity timing_auto is
     generic (
-        clk_frq: natural;
+        config: pdp8_config;
         -- pulse delay for automatic state transitions
-        num_cycles_pulse: natural := period_to_cycles(clk_frq, 250.0e-9);
-        num_cycles_io_pre: natural := period_to_cycles(clk_frq, 200.0e-9);
-        num_cycles_io_strobe: natural := period_to_cycles(clk_frq, 400.0e-9);
-        num_cycles_io_hold: natural := period_to_cycles(clk_frq, 300.0e-9);
-        num_cycles_eae: natural := period_to_cycles(clk_frq, 350.0e-9)
+        num_cycles_pulse: natural := period_to_cycles(config.clk_frq, config.auto_cycle_time);
+        num_cycles_io_pre: natural := period_to_cycles(config.clk_frq, 200.0e-9);
+        num_cycles_io_strobe: natural := period_to_cycles(config.clk_frq, 400.0e-9);
+        num_cycles_io_hold: natural := period_to_cycles(config.clk_frq, 300.0e-9);
+        num_cycles_eae: natural := period_to_cycles(config.clk_frq, config.eae_cycle_time)
     );
     port (
         clk: in std_logic;

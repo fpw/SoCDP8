@@ -38,11 +38,11 @@ use work.socdp8_package.all;
  
 entity timing_manual is
     generic (
-        clk_frq: natural;
+        config: pdp8_config;
         -- the debouncer requires 100 ms, see page 4-21
-        num_cycles_deb: natural := period_to_cycles(clk_frq, 100.0e-3);
+        num_cycles_deb: natural := period_to_cycles(config.clk_frq, config.debounce_time);
         -- manual timing requires 2 us pulses
-        num_cycles_pulse: natural := period_to_cycles(clk_frq, 2.0e-6)
+        num_cycles_pulse: natural := period_to_cycles(config.clk_frq, config.manual_cycle_time)
     );
     port (
         clk: in std_logic;
