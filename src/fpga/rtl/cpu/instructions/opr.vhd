@@ -103,10 +103,19 @@ begin
                             end if;
                         end if;
                         
-                        if (input.mb(3) = '1' and input.mb(2) = '1') or (input.mb(3) = '0' and input.mb(2) = '0' and input.mb(1) = '1') then
-                            -- NOP and BSW (also NOP on PDP-8/I)
-                            transfers.shift <= NO_SHIFT;
+                        if input.mb(3) = '1' and input.mb(2) = '1' then
+                            -- Shift in both directions
+                            if input.mb(1) = '0' then
+                                transfers.shift <= SHIFT_BOTH;
+                            else
+                                transfers.shift <= DOUBLE_SHIFT_BOTH;
+                            end if;
                         end if; 
+                        
+                        if input.mb(3) = '0' and input.mb(2) = '0' and input.mb(1) = '1' then
+                            -- BSW: No effect on 8/I
+                        end if;
+                        
 
                         -- IAC
                         if input.mb(0) = '1' then

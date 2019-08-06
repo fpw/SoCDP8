@@ -41,7 +41,7 @@ package socdp8_package is
     end record;
    
     -- note that all shifts are actually rotations, but the original signal names are used here
-    type shift_type is (NO_SHIFT, RIGHT_SHIFT, LEFT_SHIFT, DOUBLE_RIGHT_ROTATE, DOUBLE_LEFT_ROTATE);
+    type shift_type is (NO_SHIFT, RIGHT_SHIFT, LEFT_SHIFT, DOUBLE_RIGHT_ROTATE, DOUBLE_LEFT_ROTATE, SHIFT_BOTH, DOUBLE_SHIFT_BOTH);
     
     -- The EAE has real shifts
     type eae_shift_type is (EAE_NO_SHIFT, EAE_L_AC_MQ_RIGHT, EAE_L_AC_MQ_LEFT, EAE_SHIFT_DVI, EAE_SHIFT_ASR, EAE_SHIFT_LSR);

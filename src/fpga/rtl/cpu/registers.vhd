@@ -190,6 +190,10 @@ begin
         elsif transfers.eae_shift = EAE_SHIFT_LSR then
             ac <= '0' & ac(11 downto 1);
             mqr <= ac(0) & mqr(11 downto 1); 
+        elsif transfers.shift = SHIFT_BOTH then
+            ac <= '0' & input_bus(10 downto 1) & '0';
+        elsif transfers.shift = DOUBLE_SHIFT_BOTH then
+            ac <= "00" & input_bus(9 downto 2) & "00";
         else
             ac <= input_bus(11 downto 0);
             if input_bus(12) = '1' then
@@ -226,14 +230,24 @@ begin
             skip <= not transfers.reverse_skip;
         end if;
     
-        if transfers.skip_if_zero = '1' and input_bus(11 downto 0) = "000000000000" then
-            skip <= not transfers.reverse_skip;
-        end if;
-    
-        if transfers.skip_if_neg = '1' and input_bus(11) = '1' then
-            skip <= not transfers.reverse_skip;
-        end if;
+        if transfers.ac_enable = '1' then
+            if transfers.skip_if_zero = '1' and input_bus(11 downto 0) = "000000000000" then
+                skip <= not transfers.reverse_skip;
+            end if;
         
+            if transfers.skip_if_neg = '1' and input_bus(11) = '1' then
+                skip <= not transfers.reverse_skip;
+            end if;
+        else
+            if transfers.skip_if_zero = '1' and ac(11 downto 0) = "000000000000" then
+                skip <= not transfers.reverse_skip;
+            end if;
+        
+            if transfers.skip_if_neg = '1' and ac(11) = '1' then
+                skip <= not transfers.reverse_skip;
+            end if;
+        end if;
+            
         if transfers.skip_if_link = '1' and link = '1' then
             skip <= not transfers.reverse_skip;
         end if;
