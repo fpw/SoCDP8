@@ -67,8 +67,6 @@ port map (
     
     ext_mem_in => ext_mem_in,
     ext_mem_out => ext_mem_out
-    
-
 );
 
 ram_sim: process
@@ -82,8 +80,8 @@ begin
     ext_mem_in.data <= ram(to_integer(unsigned(ext_mem_out.addr)));
 end process;
 
-rst <= '1', '0' after 20ns;
-clk <= not clk after 10ns;
+rst <= '1', '0' after 20 ns;
+clk <= not clk after 10 ns;
 
 tests: process
 begin
