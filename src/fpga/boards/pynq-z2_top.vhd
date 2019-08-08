@@ -12,7 +12,7 @@ use work.socdp8_package.all;
 
 entity pynq_z2_top is
     port (
-        clk_50: in std_logic;
+        clk: in std_logic;
         rst: in std_logic;
 
         -- I/O connections, documentation in package
@@ -50,10 +50,20 @@ entity pynq_z2_top is
         board_pmodb: out std_logic_vector(7 downto 0)
     );
 
-    constant clk_frq: natural := 50_000_000;
+    constant config: pdp8_config := (
+        clk_frq => 50_000_000,
+        enable_ext_eae => '1',
+        simulate_lamps => '0',
+        debounce_time => 100.0e-3,
+        manual_cycle_time => 2.0e-6,
+        memory_cycle_time => 500.0e-9,
+        auto_cycle_time => 250.0e-9,
+        eae_cycle_time => 350.0e-9
+    );
 end pynq_z2_top;
 
 architecture Behavioral of pynq_z2_top is
+
     -- IO buffer control
     signal switch_row_t: std_logic_vector(2 downto 0);
     signal led_row_buf: std_logic_vector(7 downto 0);
@@ -69,11 +79,10 @@ begin
 
 console_inst: entity work.pidp8_console
 generic map (
-    clk_frq => clk_frq,
-    simulate_lamps => '0'
+    config => config
 )
 port map (
-    clk => clk_50,
+    clk => clk,
     rst => rst,
     column_in => col_in_buf,
     column_out => col_out_buf,
@@ -87,10 +96,10 @@ port map (
 
 pdp8_inst: entity work.pdp8
 generic map (
-    clk_frq => clk_frq
+    config => config
 )
 port map (
-    clk => clk_50,
+    clk => clk,
     rst => rst,
     io_in.bus_in => io_bus_in,
     io_in.ac_clear => io_ac_clear,
