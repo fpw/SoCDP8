@@ -20,8 +20,15 @@
 
 #include <functional>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace hal {
+
+struct FileEntry {
+    std::string name;
+    bool isDirectory;
+};
 
 class HAL {
 public:
@@ -29,12 +36,18 @@ public:
 
     virtual void setup() = 0;
 
-    // Interrupts
-    virtual void setIOInterruptHandler(const InterruptHandler &handler) = 0;
-
-    // Memory
+    // PDP-8 Memory
     virtual void pokeMem(uint16_t addr, uint16_t value) = 0;
     virtual uint16_t peekMem(uint16_t addr) = 0;
+
+    // SoCDP8 I/O controller
+    virtual void setIOInterruptHandler(const InterruptHandler &handler) = 0;
+    virtual uint32_t peekIOMem(uint32_t addr) = 0;
+    virtual void pokeIOMem(uint32_t addr, uint32_t value) = 0;
+
+    // File access
+    virtual std::vector<FileEntry> listFiles() = 0;
+    virtual std::vector<uint8_t> readFile(const std::string &path) = 0;
 
     virtual ~HAL() = default;
 };

@@ -9,8 +9,10 @@ BEGIN OS
  PARAMETER SYSINTC_SPEC = *
  PARAMETER SYSTMR_DEV = *
  PARAMETER SYSTMR_SPEC = true
+ PARAMETER minimal_stack_size = 4096
  PARAMETER stdin = ps7_uart_0
  PARAMETER stdout = ps7_uart_0
+ PARAMETER total_heap_size = 20971520
 END
 
 
@@ -236,6 +238,8 @@ BEGIN LIBRARY
  PARAMETER LIBRARY_NAME = xilffs
  PARAMETER LIBRARY_VER = 4.1
  PARAMETER PROC_INSTANCE = ps7_cortexa9_0
+ PARAMETER enable_exfat = true
+ PARAMETER use_mkfs = false
 END
 
 

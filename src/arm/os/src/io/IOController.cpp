@@ -17,6 +17,7 @@
  */
 #include <FreeRTOS.h>
 #include <task.h>
+#include <timers.h>
 #include <stdio.h>
 #include "IOController.h"
 
@@ -39,8 +40,8 @@ IOController::IOController(std::shared_ptr<hal::HAL> hal):
 
 void IOController::taskLoop() {
     while (true) {
-        auto notify = ulTaskNotifyTake(pdFALSE, pdMS_TO_TICKS(100));
-        if (notify == 1) {
+        auto notify = ulTaskNotifyTake(pdFALSE, pdMS_TO_TICKS(TASK_DELAY_MS));
+        if (notify > 0) {
         }
     }
 }

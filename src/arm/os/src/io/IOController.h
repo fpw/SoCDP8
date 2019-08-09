@@ -28,7 +28,8 @@ public:
     void taskLoop();
     void onIOInterrupt();
 private:
-    TaskHandle_t taskHandle;
+    static constexpr uint32_t TASK_DELAY_MS = 5000;
+    TaskHandle_t taskHandle{};
     std::shared_ptr<hal::HAL> hal;
 };
 

@@ -18,6 +18,7 @@
 #ifndef SRC_HAL_ZYNQ_ZYNQHAL_H_
 #define SRC_HAL_ZYNQ_ZYNQHAL_H_
 
+#include <ff.h>
 #include "src/hal/HAL.h"
 
 namespace hal {
@@ -25,13 +26,22 @@ namespace hal {
 class ZynqHAL: public HAL {
 public:
     void setup() override;
+
     void setIOInterruptHandler(const InterruptHandler &handler) override;
+    uint32_t peekIOMem(uint32_t addr) override;
+    void pokeIOMem(uint32_t addr, uint32_t value) override;
 
     void pokeMem(uint16_t addr, uint16_t value) override;
     uint16_t peekMem(uint16_t addr) override;
 
+    std::vector<FileEntry> listFiles() override;
+    std::vector<uint8_t> readFile(const std::string &path) override;
+
+    ~ZynqHAL();
+
 private:
-    InterruptHandler ioIRQFunc;
+    InterruptHandler ioIRQFunc{};
+    FATFS fs{};
 
     void setupInterrupts();
 

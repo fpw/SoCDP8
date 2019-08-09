@@ -28,7 +28,7 @@ void storeRIMLoader(std::shared_ptr<hal::HAL> hal) {
     hal->pokeMem(07756, 06032); // KCC         / clear keyboard flag and ac
     hal->pokeMem(07757, 06031); // KSF         / skip if keyboard flag
     hal->pokeMem(07760, 05357); // JMP 7757    / jmp -1
-    hal->pokeMem(07761, 06036); // KRB         / clear ac, or AC with keyboard (8 bit), clear flag
+    hal->pokeMem(07761, 06036); // KRB         / clear ac, or AC with data (8 bit), clear flag
     hal->pokeMem(07762, 07106); // CLL RTL     / clear link, rotate left 2
     hal->pokeMem(07763, 07006); // RTL         / rotate left 2
     hal->pokeMem(07764, 07510); // SPA         / skip if ac > 0
@@ -39,7 +39,7 @@ void storeRIMLoader(std::shared_ptr<hal::HAL> hal) {
     hal->pokeMem(07771, 06034); // KRS         / or AC with keyboard (8 bit)
     hal->pokeMem(07772, 07420); // SNL         / skip if link
     hal->pokeMem(07773, 03776); // DCA I 7776  / store ac in [7776], clear ac
-    hal->pokeMem(07774, 03376); // DCA 7776    / store cleared ac in 7776
+    hal->pokeMem(07774, 03376); // DCA 7776    / store ac in 7776, clear ac
     hal->pokeMem(07775, 05356); // JMP 7756
     hal->pokeMem(07776, 00000); // address
 }
@@ -56,6 +56,9 @@ void run() {
     IOController ioCtrl(hal);
 
     std::cout << "Ready!" << std::endl;
+
+    auto data = hal->readFile("maindec1.rim");
+    printf("%d\n", data.size());
 
     vTaskStartScheduler();
 }
