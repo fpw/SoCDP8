@@ -47,6 +47,6 @@ For now, I am targeting the Zynq and will use the Pynq-Z2 board for development.
 ## Project Status
 Unfortunately, I had to make a small modification to the PiDP-8/I hardware to support the Zynq boards: The 1k resistors must be replaced by 220 Ohm resistors to support the different pullup resistance of the Zynq drivers. But at least 220 Ohm also work with the Raspberry Pi, so this modification is compatible.
 
-The base system is functional and passes the MAINDEC tests that can be loaded using the RIM loader. The following parts are missing:
-* EAE
+The base system including EAE, I/O and interrupts is functional and passes the MAINDEC tests that can be loaded using the RIM loader. The following parts are missing:
 * Data breaks
+* Memory fields
