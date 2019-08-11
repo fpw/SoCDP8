@@ -129,6 +129,17 @@ std::vector<uint8_t> ZynqHAL::readFile(const std::string& path) {
     return data;
 }
 
+void ZynqHAL::saveFile(const std::string& path, const std::vector<uint8_t>& data) {
+    FIL file;
+    if (f_open(&file, path.c_str(), FA_WRITE | FA_CREATE_ALWAYS) != FR_OK) {
+        throw std::runtime_error("Couldn't open file");
+    }
+
+    UINT size = data.size();
+    f_write(&file, data.data(), size, &size);
+    f_close(&file);
+}
+
 ZynqHAL::~ZynqHAL() {
     f_unmount("");
 }

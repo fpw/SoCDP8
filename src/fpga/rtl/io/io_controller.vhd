@@ -12,7 +12,7 @@ entity io_controller is
     generic(
         -- AXI parameters
         C_S_AXI_DATA_WIDTH: natural := 32;
-        C_S_AXI_ADDR_WIDTH: integer := 8
+        C_S_AXI_ADDR_WIDTH: integer := 9
     );
     port (
         -- AXI
@@ -67,89 +67,125 @@ entity io_controller is
 end io_controller;
 
 architecture Behavioral of io_controller is
-    type axi_state is (IDLE, READ, WRITE, WRITE_ACK);
+    type axi_state is (IDLE, READ, READ_WAIT, WRITE_WAIT, WRITE, WRITE_ACK);
     signal state: axi_state;
     
-    signal device_addr: std_logic_vector(5 downto 0);
+    type state_a is array(0 to 63) of std_logic_vector(31 downto 0);
+    signal dev_states: state_a;
+    signal dev_flags: std_logic_vector(63 downto 0);
     
-    signal tty_reader_data: std_logic_vector(7 downto 0);
-    signal tty_reader_ready: std_logic;
-    signal tty_reader_data_offer: std_logic_vector(7 downto 0);
-    signal tty_reader_take_data: std_logic;
+    signal iop_code: std_logic_vector(1 downto 0);
     
-    signal tty_punch_data: std_logic_vector(7 downto 0);
-    signal tty_punch_done: std_logic;
-    signal tty_punch_take_data: std_logic;
-    signal tty_punch_ack_data: std_logic;
+    signal ram_addr_io: std_logic_vector(5 downto 0);
+    signal ram_in_io: std_logic_vector(31 downto 0);
+    signal ram_write_io: std_logic;
+    signal ram_out_io: std_logic_vector(31 downto 0);
+
+    signal bus_addr: std_logic_vector(C_S_AXI_ADDR_WIDTH - 3 downto 0);
+
+    signal ram_addr_axi: std_logic_vector(5 downto 0);
+    signal ram_in_axi: std_logic_vector(31 downto 0);
+    signal ram_write_axi: std_logic;
+    signal ram_out_axi: std_logic_vector(31 downto 0);
 begin
 
-tty_reader: process
+io_ram_internal: process
+begin
+    wait until rising_edge(S_AXI_ACLK);
+    
+    if ram_write_io = '1' then
+        dev_states(to_integer(unsigned(ram_addr_io))) <= ram_in_io;
+    end if;
+    ram_out_io <= dev_states(to_integer(unsigned(ram_addr_io)));
+end process;
+
+io_ram_axi: process
+begin
+    wait until rising_edge(S_AXI_ACLK);
+    
+    if ram_write_axi = '1' then
+        dev_states(to_integer(unsigned(ram_addr_axi))) <= ram_in_axi;
+    end if;
+    ram_out_axi <= dev_states(to_integer(unsigned(ram_addr_axi)));
+end process;
+
+iop_code <= "01" when iop(0) = '1' else
+            "10" when iop(1) = '1' else
+            "11" when iop(2) = '1' else
+            "00";
+
+ram_addr_io <= io_mb(8 downto 3);
+
+io_proc: process
 begin
     wait until rising_edge(S_AXI_ACLK);
 
+    -- default bus output
     io_skip <= '0';
     io_ac_clear <= '0';
     io_bus_out <= o"0000";
     
+    ram_write_io <= '0';
+    
+    -- default IRQ state for SoC
     soc_irq <= '0';
 
-    case to_integer(unsigned(io_mb(8 downto 3))) is
-        when 3 =>
-            -- TTY reader
-            if iop(0) = '1' then
-                -- IOP1: Skip if ready
-                io_skip <= tty_reader_ready;
-            elsif iop(1) = '1' then
-                -- IOP2: Clear ready flag and AC
-                tty_reader_ready <= '0';
-                io_ac_clear <= '1';
-                soc_irq <= '1';
-            elsif iop(2) = '1' then
-                -- IOP4: Read data
-                io_bus_out(11 downto 8) <= "0000";
-                io_bus_out(7 downto 0) <= tty_reader_data;
-            end if;
-        when 4 =>
-            -- TTY punch
-            if iop(0) = '1' then
-                -- IOP1: Skip if ready
-                io_skip <= tty_punch_done;
-            elsif iop(1) = '1' then
-                -- IOP2: Clear done flag
-                tty_punch_done <= '0';
-            elsif iop(2) = '1' then
-                -- IOP4: Write data (unless already doing that)
-                if tty_punch_take_data = '0' then
-                    tty_punch_data <= io_ac(7 downto 0);
-                    tty_punch_take_data <= '1';
-                    soc_irq <= '1';
-                end if;
-            end if;
-        when others =>
-            null;
-    end case;
+    if iop_code /= "00" then
+        -- Request IRQ in current IOP (only one cycle)
+        if ram_out_io(26 downto 25) = iop_code then
+            soc_irq <= '1';
+        end if;
+        
+        -- Request AC -> REG in current IOP (only one cycle)
+        if ram_out_io(24 downto 23) = iop_code then
+            ram_in_io <= ram_out_io;
+            ram_in_io(27) <= '1';
+            ram_in_io(11 downto 0) <= io_ac;
+            ram_write_io <= '1';
+        end if;
+        
+        -- Request AC CLEAR in current IOP
+        if ram_out_io(22 downto 21) = iop_code then
+            io_ac_clear <= '1';
+        end if;
+        
+        -- Request REG -> AC in current IOP
+        if ram_out_io(20 downto 19) = iop_code then
+            io_bus_out <= ram_out_io(11 downto 0);
+        end if;
+        
+        -- Request flag set in current IOP
+        if ram_out_io(18 downto 17) = iop_code then
+            dev_flags(to_integer(unsigned(io_mb(8 downto 3)))) <= '1';
+        end if;
+        
+        -- Request flag clear in current IOP
+        if ram_out_io(16 downto 15) = iop_code then
+            dev_flags(to_integer(unsigned(io_mb(8 downto 3)))) <= '0';
+        end if;
+        
+        -- Request skip on flag in current IOP
+        if ram_out_io(14 downto 13) = iop_code then
+            io_skip <= dev_flags(to_integer(unsigned(io_mb(8 downto 3))));
+        end if;
+    end if;
 
-    if tty_reader_take_data = '1' then
-        tty_reader_data <= tty_reader_data_offer;
-        tty_reader_ready <= '1';
+    -- Set flag on AXI write if desired
+    if ram_write_axi = '1' then
+        if ram_addr_axi = O"0000" then
+            -- writing to address 0 clears the flag of the device ID that is written
+            dev_flags(to_integer(unsigned(ram_in_axi(5 downto 0)))) <= '0';
+        elsif ram_out_axi(12) = '1' then
+            dev_flags(to_integer(unsigned(ram_addr_axi))) <= '1';
+        end if;
     end if;
-    
-    if tty_punch_ack_data = '1' then
-        tty_punch_take_data <= '0';
-        tty_punch_done <= '1';
-    end if;
-    
+
     if s_axi_aresetn = '0' then
-        tty_reader_ready <= '0';
-        tty_reader_data <= (others => '0');
-
-        tty_punch_take_data <= '0';        
-        tty_punch_data <= (others => '0');
-        tty_punch_done <= '0';
+        dev_flags <= (others => '0');
     end if;
 end process;
 
-pdp_irq <= tty_reader_ready or tty_punch_done;
+pdp_irq <= '1' when to_integer(unsigned(dev_flags)) /= 0 else '0';
 
 axi_fsm: process
 begin
@@ -170,59 +206,61 @@ begin
     S_AXI_BRESP <= "00";
     S_AXI_BVALID <= '0';
     
-    --- TTY data
-    tty_reader_take_data <= '0';
-    tty_punch_ack_data <= '0';
-
+    ram_write_axi <= '0';
+    
     case state is
         when IDLE =>
             if s_axi_arvalid = '1' then
                 s_axi_arready <= '1';
-                device_addr <= s_axi_araddr(C_S_AXI_ADDR_WIDTH - 1 downto 2);
-                state <= READ;
+                bus_addr <= s_axi_araddr(C_S_AXI_ADDR_WIDTH - 1 downto 2);
+                ram_addr_axi <= s_axi_araddr(C_S_AXI_ADDR_WIDTH - 2 downto 2);
+                state <= READ_WAIT;
             elsif s_axi_awvalid = '1' and s_axi_wvalid = '1' then
                 s_axi_awready <= '1';
-                device_addr <= s_axi_awaddr(C_S_AXI_ADDR_WIDTH - 1 downto 2);
-                state <= WRITE;
+                bus_addr <= s_axi_awaddr(C_S_AXI_ADDR_WIDTH - 1 downto 2);
+                ram_addr_axi <= s_axi_awaddr(C_S_AXI_ADDR_WIDTH - 2 downto 2);
+                state <= WRITE_WAIT;
             end if;
+        when READ_WAIT =>
+            -- waiting for RAM to fill register
+            state <= READ;
         when READ =>
             -- write answer
-            case to_integer(unsigned(device_addr)) is
-                when 0 => -- Status register
-                    s_axi_rdata <= (
-                        3 => not tty_reader_ready,
-                        4 => tty_punch_take_data,
-                        others => '0'
-                    );
-                when 3 => -- TTY reader
-                    s_axi_rdata(31 downto 9) <= (others => '0');
-                    s_axi_rdata(8) <= tty_reader_ready;
-                    s_axi_rdata(7 downto 0) <= tty_reader_data;
-                when 4 => -- TTY punch
-                    s_axi_rdata(31 downto 9) <= (others => '0');
-                    s_axi_rdata(8) <= tty_punch_take_data;
-                    s_axi_rdata(7 downto 0) <= tty_punch_data;
-                when others =>
-                    s_axi_rdata <= (others => '0');
-            end case;
+            if to_integer(unsigned(bus_addr)) < 64 then
+                s_axi_rdata <= ram_out_axi;
+            elsif to_integer(unsigned(bus_addr)) = 64 then
+                s_axi_rdata <= dev_flags(31 downto 0);
+            elsif to_integer(unsigned(bus_addr)) = 65 then
+                s_axi_rdata <= dev_flags(63 downto 32);
+            else
+                s_axi_rdata <= (others => '0');
+            end if;
             s_axi_rresp <= "00";
             s_axi_rvalid <= '1';
             if s_axi_rready = '1' then
                 state <= IDLE;
             end if;
+        when WRITE_WAIT =>
+            -- waiting for RAM to fill register
+            state <= WRITE;
         when WRITE =>
-            case to_integer(unsigned(device_addr)) is
-                when 3 => -- TTY reader
-                    if s_axi_wstrb(0) = '1' then
-                        tty_reader_data_offer <= s_axi_wdata(7 downto 0);
-                        tty_reader_take_data <= '1';
-                    end if;
-                when 4 => -- TTY punch
-                    if s_axi_wstrb(1) = '1' then
-                        tty_punch_ack_data <= '1';
-                    end if;
-                when others => null;
-            end case;
+            ram_in_axi <= ram_out_axi;
+            if s_axi_wstrb(0) = '1' then
+                ram_in_axi(7 downto 0) <= s_axi_wdata(7 downto 0);
+            end if;
+            
+            if s_axi_wstrb(1) = '1' then
+                ram_in_axi(15 downto 8) <= s_axi_wdata(15 downto 8);
+            end if;
+            
+            if s_axi_wstrb(2) = '1' then
+                ram_in_axi(23 downto 16) <= s_axi_wdata(23 downto 16);
+            end if;
+            
+            if s_axi_wstrb(3) = '1' then
+                ram_in_axi(31 downto 24) <= s_axi_wdata(31 downto 24);
+            end if;
+            ram_write_axi <= '1';
             s_axi_wready <= '1';
             state <= WRITE_ACK;
         when WRITE_ACK =>
@@ -234,9 +272,9 @@ begin
     end case;
     
     if s_axi_aresetn = '0' then
+        bus_addr <= (others => '0');
+        ram_addr_axi <= (others => '0');
         state <= IDLE;
-        tty_reader_data_offer <= (others => '0');
-        tty_reader_take_data <= '0';
     end if;
 end process;
 

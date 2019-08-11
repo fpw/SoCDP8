@@ -48,6 +48,7 @@ public:
     // File access
     virtual std::vector<FileEntry> listFiles() = 0;
     virtual std::vector<uint8_t> readFile(const std::string &path) = 0;
+    virtual void saveFile(const std::string &path, const std::vector<uint8_t> &data) = 0;
 
     virtual ~HAL() = default;
 };

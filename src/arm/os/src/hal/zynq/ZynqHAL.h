@@ -36,6 +36,7 @@ public:
 
     std::vector<FileEntry> listFiles() override;
     std::vector<uint8_t> readFile(const std::string &path) override;
+    void saveFile(const std::string &path, const std::vector<uint8_t> &data) override;
 
     ~ZynqHAL();
 

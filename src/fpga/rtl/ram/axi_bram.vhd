@@ -61,7 +61,7 @@ architecture Behavioral of axi_bram is
     type ram_a is array(0 to 32767) of std_logic_vector(11 downto 0);
     signal ram: ram_a;
 
-    type axi_ram_state is (RAM_IDLE, RAM_READ, RAM_WRITE, RAM_WRITE_ACK);
+    type axi_ram_state is (RAM_IDLE, RAM_READ_WAIT, RAM_READ, RAM_WRITE, RAM_WRITE_ACK);
     signal state: axi_ram_state;
     
     signal axi_write: std_logic;
@@ -114,12 +114,15 @@ begin
             if s_axi_arvalid = '1' then
                 s_axi_arready <= '1';
                 axi_addr <= unsigned(s_axi_araddr(C_S_AXI_ADDR_WIDTH - 1 downto 2));
-                state <= RAM_READ;
+                state <= RAM_READ_WAIT;
             elsif s_axi_awvalid = '1' and s_axi_wvalid = '1' then
                 s_axi_awready <= '1';
                 axi_addr <= unsigned(s_axi_awaddr(C_S_AXI_ADDR_WIDTH - 1 downto 2));
                 state <= RAM_WRITE;
             end if;
+        when RAM_READ_WAIT =>
+            -- wait for RAM to load
+            state <= RAM_READ;
         when RAM_READ =>
             -- write answer
             s_axi_rdata(31 downto 12) <= (others => '0');
