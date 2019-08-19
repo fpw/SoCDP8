@@ -21,7 +21,7 @@ architecture Behavioral of inst_and is
 begin
 
 -- combinatorial process
-and_inst: process(all)
+and_inst: process(input)
 begin
     -- default output
     transfers <= nop_transfer;

@@ -20,7 +20,7 @@ architecture Behavioral of inst_asr is
 begin
 
 -- combinatorial process
-asr_inst: process(all)
+asr_inst: process(input)
 begin
     -- default output
     transfers <= nop_transfer;

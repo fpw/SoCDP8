@@ -21,7 +21,7 @@ architecture Behavioral of inst_jmp is
 begin
 
 -- combinatorial process
-jmp_inst: process(all)
+jmp_inst: process(input)
 begin
     -- default output
     transfers <= nop_transfer;

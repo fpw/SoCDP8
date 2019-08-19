@@ -13,7 +13,7 @@ use work.inst_common.all;
 -- instruction, major state and time division.
 entity instruction_multiplexer is
     generic (
-        config: pdp8_config
+        enable_ext_eae: boolean
     );
     port (
         inst: in pdp8_instruction;
@@ -109,7 +109,7 @@ port map (
 
 opr_instance: entity work.inst_opr
 generic map (
-    enable_ext_eae => config.enable_ext_eae
+    enable_ext_eae => enable_ext_eae
 )
 port map (
     input => input,
@@ -154,7 +154,8 @@ port map (
 );
 
 -- select the output of the currenct instruction
-mux_inst: process(all)
+mux_inst: process(input, transfers_muy, transfers_dvi, transfers_nmi, transfers_shl, transfers_asr, transfers_lsr,
+    transfers_and, transfers_tad, transfers_isz, transfers_dca, transfers_jms, transfers_jmp, transfers_iot, transfers_opr)
 begin
     transfers <= nop_transfer;
     state_next <= STATE_NONE;
@@ -179,7 +180,7 @@ begin
             when EAE_NMI => transfers <= transfers_nmi;
             when EAE_SHL => transfers <= transfers_shl;
             when EAE_ASR => transfers <= transfers_asr;
-            when EAE_LSR => transfers <= transfers_asr;
+            when EAE_LSR => transfers <= transfers_lsr;
             when others => transfers <= nop_transfer;
         end case;
         state_next <= STATE_FETCH;

@@ -21,7 +21,7 @@ architecture Behavioral of inst_isz is
 begin
 
 -- combinatorial process
-isz_inst: process(all)
+isz_inst: process(input)
 begin
     -- default output
     transfers <= nop_transfer;

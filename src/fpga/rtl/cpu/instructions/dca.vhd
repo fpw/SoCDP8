@@ -21,7 +21,7 @@ architecture Behavioral of inst_dca is
 begin
 
 -- combinatorial process
-dca_inst: process(all)
+dca_inst: process(input)
 begin
     -- default output
     transfers <= nop_transfer;

@@ -6,29 +6,78 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 use work.socdp8_package.all;
+use work.inst_common.all;
 
 entity pdp8 is
     generic (
-        config: pdp8_config
+        clk_frq: natural := 50_000_000;
+
+        -- Whether an KE8/I EAE is present
+        enable_ext_eae: boolean := true;
+        
+        -- switch debonunce time
+        debounce_time_ms: natural := 100;
+
+        -- manual time pulses delay
+        manual_cycle_time_us: natural := 2;
+
+        -- memory cycle time
+        memory_cycle_time_ns: natural := 500;
+        
+        -- duration of TS2 and TS3        
+        auto_cycle_time_ns: natural := 250;
+        
+        -- duration between EAE pulses
+        eae_cycle_time_ns: natural := 350
     );
     port (
         clk: in std_logic;
-        rst: in std_logic;
-        
-        -- Console connection
-        leds: out pdp8i_leds;
-        switches: in pdp8i_switches;
+        rstn: in std_logic;
         
         -- I/O connections
-        io_in: in pdp8i_io_in;
-        io_out: out pdp8i_io_out;
+        io_bus_in: in std_logic_vector(11 downto 0);
+        io_ac_clear: in std_logic;
+        io_skip: in std_logic;
+        io_iop: out std_logic_vector(2 downto 0);
+        io_ac: out std_logic_vector(11 downto 0);
+        io_mb: out std_logic_vector(11 downto 0);
         
         -- Interrupt request
         int_rqst: in std_logic;
 
         -- to be connected to RAM
-        ext_mem_in: in ext_mem_in;
-        ext_mem_out: out ext_mem_out
+        mem_out_addr: out std_logic_vector(14 downto 0);
+        mem_out_data: out std_logic_vector(11 downto 0);
+        mem_out_write: out std_logic;
+        mem_in_data: in std_logic_vector(11 downto 0);
+
+        -- Console connection
+        led_data_field: out std_logic_vector(2 downto 0);
+        led_inst_field: out std_logic_vector(2 downto 0);
+        led_pc: out std_logic_vector(11 downto 0);
+        led_mem_addr: out std_logic_vector(11 downto 0);
+        led_mem_buf: out std_logic_vector(11 downto 0);
+        led_link: out std_logic;
+        led_accu: out std_logic_vector(11 downto 0);
+        led_step_counter: out std_logic_vector(4 downto 0);
+        led_mqr: out std_logic_vector(11 downto 0);
+        led_instruction: out std_logic_vector(7 downto 0);
+        led_state: out std_logic_vector(5 downto 0);
+        led_ion: out std_logic;
+        led_pause: out std_logic;
+        led_run: out std_logic;
+
+        switch_data_field: in std_logic_vector(2 downto 0);
+        switch_inst_field: in std_logic_vector(2 downto 0);
+        switch_swr: in std_logic_vector(11 downto 0);
+        switch_start: in std_logic;
+        switch_load: in std_logic;
+        switch_dep: in std_logic;
+        switch_exam: in std_logic;
+        switch_cont: in std_logic;
+        switch_stop: in std_logic;
+        switch_sing_step: in std_logic;
+        switch_sing_inst: in std_logic
     );
 end pdp8;
 
@@ -72,6 +121,8 @@ architecture Behavioral of pdp8 is
 
     -- EAE: currently normalized
     signal norm: std_logic;
+    
+    signal io_iop_tmp: std_logic_vector(2 downto 0);
 
     -- interconnect wires
     --- from manual timing generator
@@ -104,6 +155,7 @@ architecture Behavioral of pdp8 is
     signal inst_cur: pdp8_instruction;
     signal eae_inst_cur: eae_instruction;
     --- from instruction mux
+    signal inst_mux_input: inst_input;
     signal reg_trans_inst: register_transfers;
     signal next_state_inst: major_state;
     --- from interrupt controller
@@ -113,18 +165,20 @@ begin
 
 manual_timing_inst: entity work.timing_manual
 generic map (
-    config => config
+    clk_frq => clk_frq,
+    debounce_time => real(debounce_time_ms) / 1.0e3,
+    manual_cycle_time => real(manual_cycle_time_us) / 1.0e6
 )
 port map (
     clk => clk,
-    rst => rst,
+    rstn => rstn,
     run => run,
     
-    key_load => switches.load,
-    key_start => switches.start,
-    key_ex => switches.exam,
-    key_dep => switches.dep,
-    key_cont => switches.cont,
+    key_load => switch_load,
+    key_start => switch_start,
+    key_ex => switch_exam,
+    key_dep => switch_dep,
+    key_cont => switch_cont,
     
     mfts0 => mfts0,
     mftp => mftp,
@@ -133,11 +187,13 @@ port map (
 
 computer_timing_inst: entity work.timing_auto
 generic map (
-    config => config
+    clk_frq => clk_frq,
+    auto_cycle_time => real(auto_cycle_time_ns) / 1.0e9,
+    eae_cycle_time => real(eae_cycle_time_ns) / 1.0e9
 )
 port map (
     clk => clk,
-    rst => rst,
+    rstn => rstn,
   
     strobe => strobe,
     mem_done => mem_done,
@@ -166,11 +222,11 @@ port map (
 regs: entity work.registers
 port map (
     clk => clk,
-    rst => rst,
+    rstn => rstn,
     
-    sr => switches.swr,
+    sr => switch_swr,
     sense => sense,
-    io_bus => io_in.bus_in,
+    io_bus => io_bus_in,
 
     transfers => reg_trans,
 
@@ -188,11 +244,12 @@ port map (
 
 mem_control: entity work.memory_control
 generic map (
-    config => config
+    clk_frq => clk_frq,
+    memory_cycle_time => real(memory_cycle_time_ns) / 1.0e9
 )
 port map (
     clk => clk,
-    rst => rst,
+    rstn => rstn,
     mem_addr => ma,
     field => "000",
     mem_start => mem_start,
@@ -200,29 +257,33 @@ port map (
     strobe => strobe,
     sense => sense,
     mem_buf => mb,
-    ext_mem_in => ext_mem_in,
-    ext_mem_out => ext_mem_out
+    mem_in_data => mem_in_data,
+    mem_out_addr => mem_out_addr,
+    mem_out_write => mem_out_write,
+    mem_out_data => mem_out_data
 );
+
+inst_mux_input <= (
+        state => state,
+        time_div => ts,
+        mb => mb,
+        mqr => mqr,
+        sc => sc,
+        link => link,
+        auto_index => auto_index,
+        skip => skip,
+        brk_req => '0',     -- TODO
+        norm => norm,
+        eae_inst => eae_inst
+    );
 
 inst_mux: entity work.instruction_multiplexer
 generic map (
-    config => config
+    enable_ext_eae => enable_ext_eae
 )
 port map (
     inst => inst,
-    input => (
-            state => state,
-            time_div => ts,
-            mb => mb,
-            mqr => mqr,
-            sc => sc,
-            link => link,
-            auto_index => auto_index,
-            skip => skip,
-            brk_req => '0',     -- TODO
-            norm => norm,
-            eae_inst => eae_inst
-        ),
+    input => inst_mux_input,
     eae_on => eae_on,
     eae_inst => eae_inst,
     transfers => reg_trans_inst,
@@ -232,7 +293,7 @@ port map (
 interrupt_instance: entity work.interrupt_controller
 port map (
     clk => clk,
-    rst => rst,
+    rstn => rstn,
 
     int_rqst => int_rqst,
     int_strobe => int_strobe,
@@ -245,7 +306,9 @@ port map (
     ts => ts,
     tp => tp,
     run => run,
-    switches => switches,
+    switch_load => switch_load,
+    switch_exam => switch_exam,
+    switch_dep => switch_dep,
     state => state,
     mb => mb,
     inst => inst,
@@ -327,7 +390,7 @@ begin
                     
                     reg_trans <= reg_trans_inst;
                 else
-                    if mft = MFT3 and switches.dep = '1' then
+                    if mft = MFT3 and switch_dep = '1' then
                         -- SR -> MB
                         reg_trans.sr_enable <= '1';
                         reg_trans.mb_load <= '1';
@@ -351,17 +414,17 @@ begin
                 
                 -- ...unless
                 --- a) the SING STEP switch always pauses run
-                if switches.sing_step = '1' then
+                if switch_sing_step = '1' then
                     run <= '0';
                 end if;
                 
                 --- b) the DEP and EXAM switches also keep run disabled for further EXAMs or DEPs
-                if mfts0 = '1' and (switches.exam = '1' or switches.dep = '1') then
+                if mfts0 = '1' and (switch_exam = '1' or switch_dep = '1') then
                     run <= '0';
                 end if;
                 
                 --- c) the STOP and SING INST switches disable run but only if the next cycle would be fetch
-                if (next_state_inst = STATE_FETCH or state = STATE_NONE) and (switches.sing_inst = '1' or switches.stop = '1') then
+                if (next_state_inst = STATE_FETCH or state = STATE_NONE) and (switch_sing_inst = '1' or switch_stop = '1') then
                     run <= '0';
                 end if;
                 
@@ -384,19 +447,19 @@ begin
             end if;
             
             -- I/O happens in TS3 and uses io_strobe instead of tp to activate transfers
-            if io_strobe = '1' and (io_out.iop /= "000") then
+            if io_strobe = '1' and (io_iop_tmp /= "000") then
                 -- We will always read the bus into AC.
                 -- Therefore, if ac_clear is not desired, we enable
                 -- AC to OR the bus with AC. Otherwise, when clear
                 -- is desired, we won't load AC and thus overwrite it.
-                if io_in.ac_clear = '0' then
+                if io_ac_clear = '0' then
                     reg_trans.ac_enable <= '1';
                 end if;
                 reg_trans.bus_enable <= '1';
                 reg_trans.ac_load <= '1';
                 
                 -- Enabling reverse-skip transfers 1 -> SKIP.
-                reg_trans.reverse_skip <= io_in.io_skip;
+                reg_trans.reverse_skip <= io_skip;
                 reg_trans.skip_load <= '1';
             end if;
             
@@ -436,19 +499,19 @@ begin
     case mft is
         when MFT0 =>
             if mftp = '1' then
-                if switches.start = '1' then
+                if switch_start = '1' then
                     reg_trans.initialize <= '1';
                 end if;
                 
                 -- Originally, condition is switches.cont = '0' but this is more readable
-                if switches.start = '1' or switches.exam = '1' or switches.dep = '1' or switches.load = '1' then
+                if switch_start = '1' or switch_exam = '1' or switch_dep = '1' or switch_load = '1' then
                     manual_preset <= '1';
                 end if;
             end if;
         -- the MFT transfers are described in drawing D-FD-8I-0-1 (Manual Functions)
         when MFT1 =>
             if mftp = '1' then
-                if switches.exam = '1' or switches.dep = '1' or switches.start = '1' then
+                if switch_exam = '1' or switch_dep = '1' or switch_start = '1' then
                     -- PC -> MA
                     reg_trans.pc_enable <= '1';
                     reg_trans.ma_load <= '1';
@@ -456,17 +519,17 @@ begin
             end if;
         when MFT2 =>
             if mftp = '1' then
-                if switches.load = '1' then
+                if switch_load = '1' then
                     -- SR -> PC
                     reg_trans.sr_enable <= '1';
                     reg_trans.pc_load <= '1';
                 end if;
                 
-                if switches.start = '1' then
+                if switch_start = '1' then
                     state <= STATE_FETCH;
                 end if;
                 
-                if switches.exam = '1' or switches.dep = '1' then
+                if switch_exam = '1' or switch_dep = '1' then
                     -- MA + 1 -> PC
                     reg_trans.ma_enable <= '1';
                     reg_trans.carry_insert <= '1';
@@ -475,11 +538,11 @@ begin
             
                 -- Start a memory cycle if any of the following switches is pressed
                 -- Originally, the condition is switches.load = '0' but this is more readable:
-                if switches.start = '1' or switches.exam = '1' or switches.dep = '1' or switches.cont = '1' then
+                if switch_start = '1' or switch_exam = '1' or switch_dep = '1' or switch_cont = '1' then
                     mem_start <= '1';
                 end if;
     
-                if switches.cont = '1' then
+                if switch_cont = '1' then
                     force_tp4 <= '1';
                 end if;
             end if;
@@ -487,7 +550,7 @@ begin
             null;
     end case;
 
-    if rst = '1' then
+    if rstn = '0' then
         state <= STATE_NONE;
         inst <= INST_AND; -- all zero = AND
         eae_inst <= EAE_NONE;
@@ -496,27 +559,44 @@ begin
     end if;
 end process;
 
-io_out.iop(0) <= '1' when io_state = IO1 and mb(0) = '1' else '0';
-io_out.iop(1) <= '1' when io_state = IO2 and mb(1) = '1' else '0';
-io_out.iop(2) <= '1' when io_state = IO4 and mb(2) = '1' else '0';
-io_out.ac <= ac;
-io_out.mb <= mb;
+io_iop_tmp(0) <= '1' when io_state = IO1 and mb(0) = '1' else '0';
+io_iop_tmp(1) <= '1' when io_state = IO2 and mb(1) = '1' else '0';
+io_iop_tmp(2) <= '1' when io_state = IO4 and mb(2) = '1' else '0';
+io_iop <= io_iop_tmp;
+io_ac <= ac;
+io_mb <= mb;
 
-leds.pc <= pc;
-leds.mem_addr <= ma;
-leds.mem_buf <= mb;
-leds.link <= link;
-leds.accu <= ac;
-leds.inst_field <= "000";
-leds.data_field <= "000";
+led_pc <= pc;
+led_mem_addr <= ma;
+led_mem_buf <= mb;
+led_link <= link;
+led_accu <= ac;
+led_inst_field <= "000";
+led_data_field <= "000";
+led_mqr <= mqr;
+led_step_counter <= sc;
+led_ion <= int_enable;
+led_run <= run;
+led_pause <= pause;
 
-leds.mqr <= mqr;
-leds.step_counter <= sc;
+with state select led_state <=
+    "000001" when STATE_FETCH,
+    "000010" when STATE_EXEC,
+    "000100" when STATE_DEFER,
+    "001000" when STATE_COUNT,
+    "010000" when STATE_ADDR,
+    "100000" when STATE_BREAK,
+    "000000" when others;
 
-leds.state <= state;
-leds.instruction <= inst;
-leds.ion <= int_enable;
-leds.run <= run;
-leds.pause <= pause;
+with inst select led_instruction <=
+    "00000001" when INST_AND,
+    "00000010" when INST_TAD,
+    "00000100" when INST_ISZ,
+    "00001000" when INST_DCA,
+    "00010000" when INST_JMS,
+    "00100000" when INST_JMP,
+    "01000000" when INST_IOT,
+    "10000000" when INST_OPR,
+    "00000000" when others;
 
 end Behavioral;

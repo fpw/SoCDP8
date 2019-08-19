@@ -20,7 +20,7 @@ architecture Behavioral of inst_lsr is
 begin
 
 -- combinatorial process
-lsr_inst: process(all)
+lsr_inst: process(input)
 begin
     -- default output
     transfers <= nop_transfer;

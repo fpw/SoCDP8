@@ -20,7 +20,7 @@ architecture Behavioral of inst_muy is
 begin
 
 -- combinatorial process
-muy_inst: process(all)
+muy_inst: process(input)
 begin
     -- default output
     transfers <= nop_transfer;

@@ -20,7 +20,7 @@ architecture Behavioral of inst_nmi is
 begin
 
 -- combinatorial process
-nmi_inst: process(all)
+nmi_inst: process(input)
 begin
     -- default output
     transfers <= nop_transfer;

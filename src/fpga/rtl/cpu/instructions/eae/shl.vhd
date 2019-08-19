@@ -20,7 +20,7 @@ architecture Behavioral of inst_shl is
 begin
 
 -- combinatorial process
-shl_inst: process(all)
+shl_inst: process(input)
 begin
     -- default output
     transfers <= nop_transfer;

@@ -21,7 +21,7 @@ architecture Behavioral of inst_jms is
 begin
 
 -- combinatorial process
-jms_inst: process(all)
+jms_inst: process(input)
 begin
     -- default output
     transfers <= nop_transfer;

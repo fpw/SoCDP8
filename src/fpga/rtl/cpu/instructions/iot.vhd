@@ -21,7 +21,7 @@ architecture Behavioral of inst_iot is
 begin
 
 -- combinatorial process
-iot_inst: process(all)
+iot_inst: process(input)
 begin
     -- default output
     transfers <= nop_transfer;

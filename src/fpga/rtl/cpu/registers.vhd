@@ -14,7 +14,7 @@ use work.socdp8_package.all;
 entity registers is
     port (
         clk: in std_logic;
-        rst: in std_logic;
+        rstn: in std_logic;
         
         -- connect external registers
         --- switch register
@@ -73,7 +73,7 @@ architecture Behavioral of registers is
 begin
 
 -- combinatorial process to select the input
-enable_regs: process(all)
+enable_regs: process(transfers, input_bus_tmp, mem_buf, sense, ac, io_bus, link, mqr, sr, mem_addr)
 begin
     if transfers.ac_enable = '1' then
         if transfers.ac_comp_enable = '1' then
@@ -134,7 +134,7 @@ begin
     if transfers.and_enable = '1' then
         input_bus <= '0' & (input_bus_tmp(11 downto 0) and mem_buf);  
     else
-        input_bus <= std_logic_vector(unsigned(input_bus_tmp) + transfers.carry_insert);
+        input_bus <= std_logic_vector(unsigned(input_bus_tmp) + (transfers.carry_insert & ""));
     end if;
 
     if transfers.l_enable = '1' then
@@ -283,7 +283,7 @@ begin
         link <= '0';
     end if;
     
-    if rst = '1' then
+    if rstn = '0' then
         ac <= (others => '0');
         skip <= '0';
         link <= '0';

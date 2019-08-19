@@ -20,7 +20,7 @@ architecture Behavioral of inst_dvi is
 begin
 
 -- combinatorial process
-dvi_inst: process(all)
+dvi_inst: process(input)
 begin
     -- default output
     transfers <= nop_transfer;

@@ -6,35 +6,6 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.MATH_REAL.ALL;
 
 package socdp8_package is
-    -- Configuration
-    type pdp8_config is record
-        -- Clock frequency of the FPGA, only indirectly related to target speed!
-        -- This is used to calculate timings correctly. To change the performance,
-        -- change the actual delay values below.
-        clk_frq: natural;
-
-        -- Whether to simulate incandescent lamps
-        simulate_lamps: std_logic;
-
-        -- Whether an KE8/I EAE is present
-        enable_ext_eae: std_logic;
-        
-        -- switch debonunce time
-        debounce_time: real;
-
-        -- manual time pulses delay
-        manual_cycle_time: real;
-
-        -- memory cycle time
-        memory_cycle_time: real;
-        
-        -- duration of TS2 and TS3        
-        auto_cycle_time: real;
-        
-        -- duration between EAE pulses
-        eae_cycle_time: real;
-    end record;
-
     -- The manual function timing states (MFTS) and automatic timing states (TS)
     type time_state_auto is (TS1, TS2, TS3, TS4);
     type time_state_manual is (MFT0, MFT1, MFT2, MFT3);
@@ -55,17 +26,6 @@ package socdp8_package is
     
     type io_state is (IO_NONE, IO1, IO2, IO4);
 
-    -- external memory connections
-    type ext_mem_out is record
-        addr: std_logic_vector(14 downto 0);
-        data: std_logic_vector(11 downto 0);
-        write: std_logic;
-    end record;
-
-    type ext_mem_in is record
-        data: std_logic_vector(11 downto 0);
-    end record;
-   
     -- note that all shifts are actually rotations, but the original signal names are used here
     type shift_type is (NO_SHIFT, RIGHT_SHIFT, LEFT_SHIFT, DOUBLE_RIGHT_ROTATE, DOUBLE_LEFT_ROTATE, SHIFT_BOTH, DOUBLE_SHIFT_BOTH);
     
@@ -180,65 +140,7 @@ package socdp8_package is
         inc_sc => '0'
     );
 
-    -- I/O connections
-    type pdp8i_io_out is record
-        --- IOP4, IOP2, IOP1: Pulses. Duration 700 ns.
-        --- Set desired input signals within 400 ns and remove when IOP goes low.
-        iop: std_logic_vector(2 downto 0);
-        
-        --- Always contains current AC 
-        ac: std_logic_vector(11 downto 0);
-        
-        --- Always contains current MB during IOT inst, i.e. the IOT instruction code.
-        --- Use this signal to extract the target device ID.
-        mb: std_logic_vector(11 downto 0);
-    end record;
-    
-    type pdp8i_io_in is record
-        --- Bus input. Will be OR-ed with AC or overwrite AC if ac_clear is also set.
-        bus_in: std_logic_vector(11 downto 0);
-        
-        --- Whether to clear AC before OR-ing with bus_i
-        ac_clear: std_logic;
-        
-        --- If set, skips next instruction after IOT.
-        io_skip: std_logic;
-    end record;
-
-    -- Console connections
-    type pdp8i_leds is record
-        data_field: std_logic_vector(2 downto 0);
-        inst_field: std_logic_vector(2 downto 0);
-        pc: std_logic_vector(11 downto 0);
-        mem_addr: std_logic_vector(11 downto 0);
-        mem_buf: std_logic_vector(11 downto 0);
-        link: std_logic;
-        accu: std_logic_vector(11 downto 0);
-        step_counter: std_logic_vector(4 downto 0);
-        mqr: std_logic_vector(11 downto 0);
-        instruction: pdp8_instruction;
-        state: major_state;
-        ion: std_logic;
-        pause: std_logic;
-        run: std_logic;
-    end record;
-
-    type pdp8i_switches is record
-        data_field: std_logic_vector(2 downto 0);
-        inst_field: std_logic_vector(2 downto 0);
-        swr: std_logic_vector(11 downto 0);
-        start: std_logic;
-        load: std_logic;
-        dep: std_logic;
-        exam: std_logic;
-        cont: std_logic;
-        stop: std_logic;
-        sing_step: std_logic;
-        sing_inst: std_logic;
-    end record;
-
     -- Utility functions
-    
     --- reverse input vector
     function reverse(x: in std_logic_vector) return std_logic_vector;
     

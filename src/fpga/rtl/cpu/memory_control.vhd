@@ -15,13 +15,12 @@ use work.socdp8_package.all;
 -- This implementation models the description starting at page 4-13.
 entity memory_control is
     generic (
-        config: pdp8_config;
-        -- memory timing requires 500 ns for read and write
-        num_cycles_mem: natural := period_to_cycles(config.clk_frq, config.memory_cycle_time)
+        clk_frq: natural;
+        memory_cycle_time: real
     );
     port (
         clk: in std_logic;
-        rst: in std_logic;
+        rstn: in std_logic;
 
         -- address and field selection
         signal mem_addr: in std_logic_vector(11 downto 0);
@@ -39,9 +38,13 @@ entity memory_control is
         signal mem_buf: in std_logic_vector(11 downto 0);
 
         -- to be connected to the actual memory
-        ext_mem_in: in ext_mem_in;
-        ext_mem_out: out ext_mem_out
+        mem_out_addr: out std_logic_vector(14 downto 0);
+        mem_out_data: out std_logic_vector(11 downto 0);
+        mem_out_write: out std_logic;
+        mem_in_data: in std_logic_vector(11 downto 0)
     );
+    -- memory timing requires 500 ns for read and write
+    constant num_cycles_mem: natural := period_to_cycles(clk_frq, memory_cycle_time);
 end memory_control;
 
 architecture Behavioral of memory_control is
@@ -68,7 +71,7 @@ mem_ctrl: process begin
             end if;
         when SENS =>
             state <= INHIBIT;
-            sense <= ext_mem_in.data;
+            sense <= mem_in_data;
             counter <= num_cycles_mem - 1;
         when INHIBIT =>
             if counter > 0 then
@@ -80,7 +83,7 @@ mem_ctrl: process begin
             state <= IDLE;
     end case;
     
-    if rst = '1' then
+    if rstn = '0' then
         state <= IDLE;
         counter <= 0;
         sense <= (others => '0');
@@ -88,11 +91,11 @@ mem_ctrl: process begin
 end process;
 
 -- combinatorial process
-mem_comb: process(all) begin
+mem_comb: process(field, mem_addr, mem_buf, state) begin
     -- defaults since this process is combinatorial
-    ext_mem_out.addr <= field & mem_addr;
-    ext_mem_out.data <= mem_buf;
-    ext_mem_out.write <= '0';
+    mem_out_addr <= field & mem_addr;
+    mem_out_data <= mem_buf;
+    mem_out_write <= '0';
     mem_done <= '0';
     strobe <= '0';
     
@@ -106,7 +109,7 @@ mem_comb: process(all) begin
         when INHIBIT =>
             -- let the external logic calculate the mem_buf signal
         when WRITE =>
-            ext_mem_out.write <= '1';
+            mem_out_write <= '1';
     end case;
 end process;
 

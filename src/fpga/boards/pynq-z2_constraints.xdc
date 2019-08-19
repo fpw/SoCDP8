@@ -50,38 +50,38 @@ set_property -dict {PACKAGE_PIN V7 IOSTANDARD LVCMOS33}  [get_ports {led_row[7]}
 
 
 # Board LEDs
-set_property -dict {PACKAGE_PIN R14 IOSTANDARD LVCMOS33} [get_ports {board_led[0]}];
-set_property -dict {PACKAGE_PIN P14 IOSTANDARD LVCMOS33} [get_ports {board_led[1]}];
-set_property -dict {PACKAGE_PIN N16 IOSTANDARD LVCMOS33} [get_ports {board_led[2]}];
-set_property -dict {PACKAGE_PIN M14 IOSTANDARD LVCMOS33} [get_ports {board_led[3]}];
+#set_property -dict {PACKAGE_PIN R14 IOSTANDARD LVCMOS33} [get_ports {board_led[0]}];
+#set_property -dict {PACKAGE_PIN P14 IOSTANDARD LVCMOS33} [get_ports {board_led[1]}];
+#set_property -dict {PACKAGE_PIN N16 IOSTANDARD LVCMOS33} [get_ports {board_led[2]}];
+#set_property -dict {PACKAGE_PIN M14 IOSTANDARD LVCMOS33} [get_ports {board_led[3]}];
 
 # Board switches
-set_property -dict { PACKAGE_PIN M20   IOSTANDARD LVCMOS33 } [get_ports { board_switch[0] }];
-set_property -dict { PACKAGE_PIN M19   IOSTANDARD LVCMOS33 } [get_ports { board_switch[1] }];
+#set_property -dict { PACKAGE_PIN M20   IOSTANDARD LVCMOS33 } [get_ports { board_switch[0] }];
+#set_property -dict { PACKAGE_PIN M19   IOSTANDARD LVCMOS33 } [get_ports { board_switch[1] }];
 
 # Board RGB LEDs
-set_property -dict { PACKAGE_PIN N15   IOSTANDARD LVCMOS33 } [get_ports { board_led4_r }];
-set_property -dict { PACKAGE_PIN G17   IOSTANDARD LVCMOS33 } [get_ports { board_led4_g }];
-set_property -dict { PACKAGE_PIN L15   IOSTANDARD LVCMOS33 } [get_ports { board_led4_b }];
-set_property -dict { PACKAGE_PIN M15   IOSTANDARD LVCMOS33 } [get_ports { board_led5_r }];
-set_property -dict { PACKAGE_PIN L14   IOSTANDARD LVCMOS33 } [get_ports { board_led5_g }];
-set_property -dict { PACKAGE_PIN G14   IOSTANDARD LVCMOS33 } [get_ports { board_led5_b }];
+#set_property -dict { PACKAGE_PIN N15   IOSTANDARD LVCMOS33 } [get_ports { board_led4_r }];
+#set_property -dict { PACKAGE_PIN G17   IOSTANDARD LVCMOS33 } [get_ports { board_led4_g }];
+#set_property -dict { PACKAGE_PIN L15   IOSTANDARD LVCMOS33 } [get_ports { board_led4_b }];
+#set_property -dict { PACKAGE_PIN M15   IOSTANDARD LVCMOS33 } [get_ports { board_led5_r }];
+#set_property -dict { PACKAGE_PIN L14   IOSTANDARD LVCMOS33 } [get_ports { board_led5_g }];
+#set_property -dict { PACKAGE_PIN G14   IOSTANDARD LVCMOS33 } [get_ports { board_led5_b }];
 
 # Board pushbuttons
-set_property -dict { PACKAGE_PIN D19   IOSTANDARD LVCMOS33 } [get_ports { board_btn[0] }];
-set_property -dict { PACKAGE_PIN D20   IOSTANDARD LVCMOS33 } [get_ports { board_btn[1] }];
-set_property -dict { PACKAGE_PIN L20   IOSTANDARD LVCMOS33 } [get_ports { board_btn[2] }];
-set_property -dict { PACKAGE_PIN L19   IOSTANDARD LVCMOS33 } [get_ports { board_btn[3] }];
+#set_property -dict { PACKAGE_PIN D19   IOSTANDARD LVCMOS33 } [get_ports { board_btn[0] }];
+#set_property -dict { PACKAGE_PIN D20   IOSTANDARD LVCMOS33 } [get_ports { board_btn[1] }];
+#set_property -dict { PACKAGE_PIN L20   IOSTANDARD LVCMOS33 } [get_ports { board_btn[2] }];
+#set_property -dict { PACKAGE_PIN L19   IOSTANDARD LVCMOS33 } [get_ports { board_btn[3] }];
 
 # PmodB
-set_property -dict { PACKAGE_PIN W14   IOSTANDARD LVCMOS33 } [get_ports { board_pmodb[0] }];
-set_property -dict { PACKAGE_PIN Y14   IOSTANDARD LVCMOS33 } [get_ports { board_pmodb[1] }];
-set_property -dict { PACKAGE_PIN T11   IOSTANDARD LVCMOS33 } [get_ports { board_pmodb[2] }];
-set_property -dict { PACKAGE_PIN T10   IOSTANDARD LVCMOS33 } [get_ports { board_pmodb[3] }];
-set_property -dict { PACKAGE_PIN V16   IOSTANDARD LVCMOS33 } [get_ports { board_pmodb[4] }];
-set_property -dict { PACKAGE_PIN W16   IOSTANDARD LVCMOS33 } [get_ports { board_pmodb[5] }];
-set_property -dict { PACKAGE_PIN V12   IOSTANDARD LVCMOS33 } [get_ports { board_pmodb[6] }];
-set_property -dict { PACKAGE_PIN W13   IOSTANDARD LVCMOS33 } [get_ports { board_pmodb[7] }];
+#set_property -dict { PACKAGE_PIN W14   IOSTANDARD LVCMOS33 } [get_ports { board_pmodb[0] }];
+#set_property -dict { PACKAGE_PIN Y14   IOSTANDARD LVCMOS33 } [get_ports { board_pmodb[1] }];
+#set_property -dict { PACKAGE_PIN T11   IOSTANDARD LVCMOS33 } [get_ports { board_pmodb[2] }];
+#set_property -dict { PACKAGE_PIN T10   IOSTANDARD LVCMOS33 } [get_ports { board_pmodb[3] }];
+#set_property -dict { PACKAGE_PIN V16   IOSTANDARD LVCMOS33 } [get_ports { board_pmodb[4] }];
+#set_property -dict { PACKAGE_PIN W16   IOSTANDARD LVCMOS33 } [get_ports { board_pmodb[5] }];
+#set_property -dict { PACKAGE_PIN V12   IOSTANDARD LVCMOS33 } [get_ports { board_pmodb[6] }];
+#set_property -dict { PACKAGE_PIN W13   IOSTANDARD LVCMOS33 } [get_ports { board_pmodb[7] }];
 
 # External clock
 #set_property -dict {PACKAGE_PIN H16 IOSTANDARD LVCMOS33} [get_ports clk_125];

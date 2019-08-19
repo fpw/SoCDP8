@@ -33,17 +33,13 @@ use work.socdp8_package.all;
 
 entity timing_auto is
     generic (
-        config: pdp8_config;
-        -- pulse delay for automatic state transitions
-        num_cycles_pulse: natural := period_to_cycles(config.clk_frq, config.auto_cycle_time);
-        num_cycles_io_pre: natural := period_to_cycles(config.clk_frq, 200.0e-9);
-        num_cycles_io_strobe: natural := period_to_cycles(config.clk_frq, 400.0e-9);
-        num_cycles_io_hold: natural := period_to_cycles(config.clk_frq, 300.0e-9);
-        num_cycles_eae: natural := period_to_cycles(config.clk_frq, config.eae_cycle_time)
+        clk_frq: natural;
+        auto_cycle_time: real;
+        eae_cycle_time: real
     );
     port (
         clk: in std_logic;
-        rst: in std_logic;
+        rstn: in std_logic;
         
         -- the auto time states depend on the memory signals
         strobe: in std_logic;
@@ -70,6 +66,12 @@ entity timing_auto is
         eae_tg: out std_logic;
         eae_end: in std_logic
     );
+    -- pulse delay for automatic state transitions
+    constant num_cycles_pulse: natural := period_to_cycles(clk_frq, auto_cycle_time);
+    constant num_cycles_io_pre: natural := period_to_cycles(clk_frq, 200.0e-9);
+    constant num_cycles_io_strobe: natural := period_to_cycles(clk_frq, 400.0e-9);
+    constant num_cycles_io_hold: natural := period_to_cycles(clk_frq, 300.0e-9);
+    constant num_cycles_eae: natural := period_to_cycles(clk_frq, eae_cycle_time);
 end timing_auto;
 
 architecture Behavioral of timing_auto is
@@ -84,6 +86,8 @@ architecture Behavioral of timing_auto is
     type state_int is (TS1, TS1_WAIT, TS2, TS2_WAIT, TS3, TS3_WAIT, TS3_WAIT_IO, TS4, TS4_WAIT);
     signal state: state_int;
     signal pulse: std_logic; 
+    
+    signal eae_on_int: std_logic;
     
     type iostate_int is (IO_IDLE, IO1_PRE, IO1_STROBE, IO1_HOLD, IO2_PRE, IO2_STROBE, IO2_HOLD, IO4_PRE, IO4_STROBE, IO4_HOLD);
     signal io_state: iostate_int;
@@ -133,7 +137,7 @@ begin
             state <= TS3_WAIT_IO;
         when TS3_WAIT_IO =>
             -- delay TS3 if slow_cycle is active
-            if io_state = IO_IDLE and io_start = '0' and eae_start = '0' and eae_on = '0' then
+            if io_state = IO_IDLE and io_start = '0' and eae_start = '0' and eae_on_int = '0' then
                 int_strobe <= '1';
                 state <= TS4;
             end if;
@@ -151,7 +155,7 @@ begin
         pulse <= '1';
     end if;
     
-    if rst = '1' then
+    if rstn = '0' then
         state <= TS1;
         pulse <= '0';
     end if;
@@ -171,7 +175,7 @@ begin
         mem_idle <= '1';
     end if;
     
-    if rst = '1' then
+    if rstn = '0' then
         mem_idle <= '1';
     end if;
 end process;
@@ -260,7 +264,7 @@ begin
             end if;
     end case;
     
-    if rst = '1' then
+    if rstn = '0' then
         io_state <= IO_IDLE;
         io_counter <= 0;
     end if;
@@ -272,7 +276,7 @@ begin
     
     eae_tg <= '0';
     
-    if eae_on = '1' then
+    if eae_on_int = '1' then
         if eae_counter < num_cycles_eae - 1 then
             eae_counter <= eae_counter + 1;
         else
@@ -281,18 +285,18 @@ begin
         end if;
         
         if eae_end = '1' then
-            eae_on <= '0';
+            eae_on_int <= '0';
         end if;
     else
         if eae_start = '1' then
             eae_counter <= 0;
-            eae_on <= '1';
+            eae_on_int <= '1';
         end if;
     end if;
     
     
-    if rst = '1' then
-        eae_on <= '0';
+    if rstn = '0' then
+        eae_on_int <= '0';
     end if;
 end process;
 
@@ -308,6 +312,8 @@ with state select ts <=
     TS3 when TS3 | TS3_WAIT | TS3_WAIT_IO,
     TS4 when TS4 | TS4_WAIT,
     TS1 when others;
+
 tp <= pulse;
+eae_on <= eae_on_int;
 
 end Behavioral;

@@ -11,7 +11,7 @@ use work.socdp8_package.all;
 entity interrupt_controller is
     port (
         clk: in std_logic;
-        rst: in std_logic;
+        rstn: in std_logic;
 
         -- Interrupt control signals
         int_rqst: in std_logic;
@@ -28,7 +28,9 @@ entity interrupt_controller is
         ts: in time_state_auto;
         tp: in std_logic;
         run: in std_logic;
-        switches: in pdp8i_switches;
+        switch_load: in std_logic;
+        switch_exam: in std_logic;
+        switch_dep: in std_logic;
         state: in major_state;
         mb: in std_logic_vector(11 downto 0);
         inst: in pdp8_instruction;
@@ -54,10 +56,13 @@ architecture Behavioral of interrupt_controller is
     
     -- Whether any of the keys is pressed while run is not active
     signal key_la_ex_dep_n: std_logic;
+    
+    signal int_enable_int: std_logic;
+    signal int_ok_int: std_logic;
 begin
 
 f_set <= '1' when state_next = STATE_FETCH or state = STATE_NONE else '0';
-key_la_ex_dep <= switches.load or switches.exam or switches.dep;
+key_la_ex_dep <= switch_load or switch_exam or switch_dep;
 key_la_ex_dep_n <= key_la_ex_dep and not run;  
 
 interrupts: process
@@ -73,12 +78,12 @@ begin
         end if;
         
         if state = STATE_FETCH then
-            int_delay <= int_enable;
+            int_delay <= int_enable_int;
             if inst = INST_IOT and mb(8 downto 3) = o"00" then
                 if mb(0) = '1' then
-                    int_enable <= '1';
+                    int_enable_int <= '1';
                 elsif mb(1) = '1' then
-                    int_enable <= '0';
+                    int_enable_int <= '0';
                 end if;
             end if;
         end if;
@@ -86,12 +91,12 @@ begin
 
     -- disable ION in the interrupt's fetch cycle
     if ts = TS1 and tp = '1' then    
-        if int_ok = '1' then
-            int_enable <= '0';
+        if int_ok_int = '1' then
+            int_enable_int <= '0';
         end if;
     end if;
    
-    if int_enable = '0' then
+    if int_enable_int = '0' then
         int_delay <= '0';
     end if;
     
@@ -99,13 +104,16 @@ begin
         int_sync <= '0';
     end if;
     
-    if rst = '1' then
+    if rstn = '0' then
         int_sync <= '0';
         int_delay <= '0';
-        int_enable <= '0';
+        int_enable_int <= '0';
     end if;
 end process;
 
-int_ok <= int_sync and int_delay and not int_inhibit; 
+int_ok_int <= int_sync and int_delay and not int_inhibit;
+int_ok <= int_ok_int;
+
+int_enable <= int_enable_int; 
 
 end Behavioral;

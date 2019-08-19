@@ -10,15 +10,12 @@ use work.pidp8_console_package.all;
 
 entity pidp8_console is
     generic (
-        config: pdp8_config;
-        -- we want 50 us steps for the multiplexing, how far do we have to count?
-        cycles_max: natural := period_to_cycles(config.clk_frq, 50.0e-6);
-        -- and a PWM delay of 1 us
-        pwm_cycles_max: natural := period_to_cycles(config.clk_frq, 1.0e-6)
+        clk_frq: natural;
+        simulate_lamps: boolean
     );
     port (
         clk: in std_logic;
-        rst: in std_logic;
+        rstn: in std_logic;
     
         -- GPIO connections
         led_row: out std_logic_vector(7 downto 0);
@@ -28,10 +25,39 @@ entity pidp8_console is
         switch_row: out std_logic_vector(2 downto 0);
     
         -- Actual console data
-        leds: in pdp8i_leds;
-        switches: out pdp8i_switches
+        -- Console connection
+        led_data_field: in std_logic_vector(2 downto 0);
+        led_inst_field: in std_logic_vector(2 downto 0);
+        led_pc: in std_logic_vector(11 downto 0);
+        led_mem_addr: in std_logic_vector(11 downto 0);
+        led_mem_buf: in std_logic_vector(11 downto 0);
+        led_link: in std_logic;
+        led_accu: in std_logic_vector(11 downto 0);
+        led_step_counter: in std_logic_vector(4 downto 0);
+        led_mqr: in std_logic_vector(11 downto 0);
+        led_instruction: in std_logic_vector(7 downto 0);
+        led_state: in std_logic_vector(5 downto 0);
+        led_ion: in std_logic;
+        led_pause: in std_logic;
+        led_run: in std_logic;
+
+        switch_data_field: out std_logic_vector(2 downto 0);
+        switch_inst_field: out std_logic_vector(2 downto 0);
+        switch_swr: out std_logic_vector(11 downto 0);
+        switch_start: out std_logic;
+        switch_load: out std_logic;
+        switch_dep: out std_logic;
+        switch_exam: out std_logic;
+        switch_cont: out std_logic;
+        switch_stop: out std_logic;
+        switch_sing_step: out std_logic;
+        switch_sing_inst: out std_logic
     );
     constant lamp_count: natural := 8 * 12;
+    -- we want 50 us steps for the multiplexing, how far do we have to count?
+    constant cycles_max: natural := period_to_cycles(clk_frq, 50.0e-6);
+    -- and a PWM delay of 1 us
+    constant pwm_cycles_max: natural := period_to_cycles(clk_frq, 1.0e-6);
 end pidp8_console;
 
 architecture Behavioral of pidp8_console is
@@ -52,7 +78,7 @@ architecture Behavioral of pidp8_console is
     signal step_50us: std_logic;
     signal cur_row: natural range 0 to 7;
 
-    type state_t is (RESET, LED_OUT, LED_PAUSE, COL_IN, COL_PAUSE);
+    type state_t is (RESET, LED_OUT, LED_WAIT, COL_IN, COL_PAUSE);
     signal state: state_t := RESET;
 
     signal switch_row1: std_logic_vector(11 downto 0);
@@ -70,52 +96,34 @@ begin
 -- Connect LED input to LED rows.
 -- Note that that the PDP-8 counts bits starting from 0 := MSB,
 -- so vectors need to be reversed.
-led_row_data(0) <= reverse(leds.pc);
-led_row_data(1) <= reverse(leds.mem_addr);
-led_row_data(2) <= reverse(leds.mem_buf);
-led_row_data(3) <= reverse(leds.accu);
-led_row_data(4) <= reverse(leds.mqr);
+led_row_data(0) <= reverse(led_pc);
+led_row_data(1) <= reverse(led_mem_addr);
+led_row_data(2) <= reverse(led_mem_buf);
+led_row_data(3) <= reverse(led_accu);
+led_row_data(4) <= reverse(led_mqr);
 
-with leds.state select led_row_data(5)(11 downto 8) <=
-    "0001" when STATE_FETCH,
-    "0010" when STATE_EXEC,
-    "0100" when STATE_DEFER,
-    "1000" when STATE_COUNT,
-    "0000" when others;
-with leds.instruction select led_row_data(5)(7 downto 0) <=
-    "00000001" when INST_AND,
-    "00000010" when INST_TAD,
-    "00000100" when INST_ISZ,
-    "00001000" when INST_DCA,
-    "00010000" when INST_JMS,
-    "00100000" when INST_JMP,
-    "01000000" when INST_IOT,
-    "10000000" when INST_OPR,
-    "00000000" when others;
-
+led_row_data(5)(11 downto 8) <= led_state(3 downto 0);
+led_row_data(5)(7 downto 0) <= led_instruction;
 led_row_data(6)(11 downto 2) <=
-     "00" & reverse(leds.step_counter) &
-     leds.run & leds.pause & leds.ion;
-with leds.state select led_row_data(6)(1 downto 0) <=
-    "01" when STATE_ADDR,
-    "10" when STATE_BREAK,
-    "00" when others;
+     "00" & reverse(led_step_counter) &
+     led_run & led_pause & led_ion;
+led_row_data(6)(1 downto 0) <= led_state(5 downto 4);
 
-led_row_data(7) <= "00000" & leds.link & reverse(leds.inst_field) & reverse(leds.data_field);
+led_row_data(7) <= "00000" & led_link & reverse(led_inst_field) & reverse(led_data_field);
 
 -- Connect switch register to switch output.
 -- Note that switches are from 0 := MSB in vectors.
-switches.swr <= reverse(switch_row1);
-switches.data_field <= reverse(switch_row2(2 downto 0));
-switches.inst_field <= reverse(switch_row2(5 downto 3));
-switches.start <= switch_row3(0);
-switches.load <= switch_row3(1);
-switches.dep <= switch_row3(2);
-switches.exam <= switch_row3(3);
-switches.cont <= switch_row3(4);
-switches.stop <= switch_row3(5);
-switches.sing_step <= switch_row3(6);
-switches.sing_inst <= switch_row3(7);
+switch_swr <= reverse(switch_row1);
+switch_data_field <= reverse(switch_row2(2 downto 0));
+switch_inst_field <= reverse(switch_row2(5 downto 3));
+switch_start <= switch_row3(0);
+switch_load <= switch_row3(1);
+switch_dep <= switch_row3(2);
+switch_exam <= switch_row3(3);
+switch_cont <= switch_row3(4);
+switch_stop <= switch_row3(5);
+switch_sing_step <= switch_row3(6);
+switch_sing_inst <= switch_row3(7);
 
 -- Note that the entire system only has one central debouncing circuit,
 -- so only synchronize the switch column signals here. The debouncer
@@ -123,17 +131,17 @@ switches.sing_inst <= switch_row3(7);
 col_in1 <= column_in when rising_edge(clk);
 col_in2 <= col_in1 when rising_edge(clk);
 
-gen_lamps: if config.simulate_lamps generate
+gen_lamps: if simulate_lamps generate
     -- simulate lamps by observing the state to output it via PWM
     lamps: entity work.lamp
     generic map (
-        clk_frq => config.clk_frq,
+        clk_frq => clk_frq,
         lamp_count => lamp_count,
         rise_time_ms => 100
     )
     port map (
         clk => clk,
-        rst => rst,
+        rstn => rstn,
         input(11 downto 0) => led_row_data(0),
         input(23 downto 12) => led_row_data(1),
         input(35 downto 24) => led_row_data(2),
@@ -176,7 +184,7 @@ gen_lamps: if config.simulate_lamps generate
             end if;
         end loop;
     
-        if rst = '1' then
+        if rstn = '0' then
             pwm_counter <= 0;
             duty_counter <= 0;
             col_out <= (others => '1');
@@ -197,7 +205,7 @@ begin
         step_50us <= '1';
     end if;
 
-    if rst = '1' then
+    if rstn = '0' then
         cycle_counter <= 0;
     end if;
 end process;
@@ -218,19 +226,19 @@ begin
             led_row_out <= "00000001";
             sw_row_out <= "111";
             col_t_out <= '1';
-            if rst = '0' then
+            if rstn = '1' then
                 state <= LED_OUT;
             end if;
         when LED_OUT =>
             col_t_out <= '0';
-            if config.simulate_lamps = '0' then
+            if not simulate_lamps then
                 col_out <= not led_row_data(cur_row);
             end if;
             if count_50us = 31 then
                 count_50us := 0;
-                state <= LED_PAUSE;
+                state <= LED_WAIT;
             end if;
-        when LED_PAUSE =>
+        when LED_WAIT =>
             col_t_out <= '1';
             if count_50us = 1 then
                 count_50us := 0;
@@ -276,7 +284,7 @@ begin
             end if;
     end case;
 
-    if rst = '1' then
+    if rstn = '0' then
         state <= RESET;
     end if;
 end process;

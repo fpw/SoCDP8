@@ -10,6 +10,7 @@ BEGIN OS
  PARAMETER SYSTMR_DEV = *
  PARAMETER SYSTMR_SPEC = true
  PARAMETER minimal_stack_size = 4096
+ PARAMETER num_thread_local_storage_pointers = 3
  PARAMETER stdin = ps7_uart_0
  PARAMETER stdout = ps7_uart_0
  PARAMETER total_heap_size = 20971520
@@ -224,22 +225,13 @@ END
 BEGIN DRIVER
  PARAMETER DRIVER_NAME = generic
  PARAMETER DRIVER_VER = 2.0
- PARAMETER HW_INSTANCE = socdp8_axi_bram
+ PARAMETER HW_INSTANCE = pdp8i_axi_bram
 END
 
 BEGIN DRIVER
  PARAMETER DRIVER_NAME = generic
  PARAMETER DRIVER_VER = 2.0
- PARAMETER HW_INSTANCE = socdp8_io_controller
-END
-
-
-BEGIN LIBRARY
- PARAMETER LIBRARY_NAME = xilffs
- PARAMETER LIBRARY_VER = 4.1
- PARAMETER PROC_INSTANCE = ps7_cortexa9_0
- PARAMETER enable_exfat = true
- PARAMETER use_mkfs = false
+ PARAMETER HW_INSTANCE = pdp8i_io_controller
 END
 
 

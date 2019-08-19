@@ -38,15 +38,13 @@ use work.socdp8_package.all;
  
 entity timing_manual is
     generic (
-        config: pdp8_config;
-        -- the debouncer requires 100 ms, see page 4-21
-        num_cycles_deb: natural := period_to_cycles(config.clk_frq, config.debounce_time);
-        -- manual timing requires 2 us pulses
-        num_cycles_pulse: natural := period_to_cycles(config.clk_frq, config.manual_cycle_time)
+        clk_frq: natural;
+        debounce_time: real;
+        manual_cycle_time: real
     );
     port (
         clk: in std_logic;
-        rst: in std_logic;
+        rstn: in std_logic;
         
         -- the manual timing depends on the run state
         run: in std_logic;
@@ -63,6 +61,10 @@ entity timing_manual is
         mft: out time_state_manual;
         mftp: out std_logic
     );
+    -- the debouncer requires 100 ms, see page 4-21
+    constant num_cycles_deb: natural := period_to_cycles(clk_frq, debounce_time);
+    -- manual timing requires 2 us pulses
+    constant num_cycles_pulse: natural := period_to_cycles(clk_frq, manual_cycle_time);
 end timing_manual;
 
 architecture Behavioral of timing_manual is
@@ -73,6 +75,7 @@ architecture Behavioral of timing_manual is
     signal mftp0: std_logic;
     signal any_key_cur, any_key_deb, any_key_0ms: std_logic;
     signal counter_deb_en: std_logic;
+    signal mfts0_int: std_logic;
     signal mfts0_last: std_logic;
 begin
 
@@ -100,9 +103,9 @@ begin
         end if;
     end if;
 
-    mfts0_last <= mfts0;
+    mfts0_last <= mfts0_int;
 
-    if rst = '1' then
+    if rstn = '0' then
         counter_deb_en <= '0';
         counter_deb <= 0;
         any_key_deb <= '0';
@@ -110,8 +113,9 @@ begin
     end if;
 end process;
 
-mfts0 <= any_key_deb and not run;
-mftp0 <= mfts0 and not mfts0_last;
+mfts0_int <= any_key_deb and not run;
+mfts0 <= mfts0_int;
+mftp0 <= mfts0_int and not mfts0_last;
 
 manual_generator: process
 begin
@@ -151,12 +155,12 @@ begin
         when MFT2_WAIT =>
             state <= MFT3;
         when MFT3 =>
-            if mfts0 = '0' and any_key_deb = '0' then
+            if mfts0_int = '0' and any_key_deb = '0' then
                 state <= MFT0;
             end if;
     end case;
     
-    if rst = '1' then
+    if rstn = '0' then
         counter_timer <= 0;
         state <= MFT0;
     end if;

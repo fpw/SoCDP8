@@ -21,7 +21,7 @@ architecture Behavioral of inst_tad is
 begin
 
 -- combinatorial process
-tad_inst: process(all)
+tad_inst: process(input)
 begin
     -- default output
     transfers <= nop_transfer;
