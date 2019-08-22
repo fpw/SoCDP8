@@ -155,6 +155,7 @@ port map (
 
 -- select the output of the currenct instruction
 mux_inst: process(input, inst, eae_inst, transfers_muy, transfers_dvi, transfers_nmi, transfers_shl, transfers_asr, transfers_lsr, eae_on,
+    state_next_and, state_next_tad, state_next_isz, state_next_dca, state_next_jms, state_next_jmp, state_next_iot, state_next_opr,
     transfers_and, transfers_tad, transfers_isz, transfers_dca, transfers_jms, transfers_jmp, transfers_iot, transfers_opr)
 begin
     transfers <= nop_transfer;

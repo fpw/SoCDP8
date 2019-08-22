@@ -32,7 +32,7 @@ need_exec_cycle <= '1' when enable_ext_eae and input.mb(8) = '1' and input.mb(0)
 
 
 -- combinatorial process
-opr_inst: process(input)
+opr_inst: process(input, need_exec_cycle)
 begin
     -- default output
     transfers <= nop_transfer;
