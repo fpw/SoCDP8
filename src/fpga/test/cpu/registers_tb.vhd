@@ -12,7 +12,7 @@ end registers_tb;
 
 architecture Behavioral of registers_tb is
     signal clk: std_logic := '0';
-    signal rst: std_logic;
+    signal rstn: std_logic;
     
     -- inputs
     signal transfers: register_transfers;
@@ -35,7 +35,7 @@ begin
 dut: entity work.registers
 port map (
     clk => clk,
-    rst => rst,
+    rstn => rstn,
 
     transfers => transfers,
     sr => sr,
@@ -51,7 +51,7 @@ port map (
     skip_o => skip
 );
 
-rst <= '1', '0' after 20ns;
+rstn <= '0', '1' after 20ns;
 clk <= not clk after clk_period / 2;
 
 tests: process
@@ -61,7 +61,7 @@ begin
     sense <= (others => '0');
     io_bus <= (others => '0');
     
-    wait until rst = '0' and falling_edge(clk);
+    wait until rstn = '1' and falling_edge(clk);
     transfers <= nop_transfer;
     
     -- Test SR -> AC

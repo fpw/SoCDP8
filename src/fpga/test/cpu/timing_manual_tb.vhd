@@ -12,7 +12,7 @@ end manual_timing_tb;
 
 architecture Behavioral of manual_timing_tb is
     signal clk: std_logic := '0';
-    signal rst: std_logic;
+    signal rstn: std_logic;
     
     -- inputs
     signal run: std_logic := '0';
@@ -31,12 +31,12 @@ begin
 generator: entity work.timing_manual
 generic map ( 
     clk_frq => 50_000_000,
-    num_cycles_deb => 100,
-    num_cycles_pulse => 5
+    debounce_time => 30.0e-9,
+    manual_cycle_time => 20.0e-9
 )
 port map (
     clk => clk,
-    rst => rst,
+    rstn => rstn,
     run => run,
     
     key_load => key_load,
@@ -50,7 +50,7 @@ port map (
     mft => mft
 );
 
-rst <= '1', '0' after 20ns;
+rstn <= '0', '1' after 20ns;
 clk <= not clk after 10 ns;
 
 key_load <= '0', '1' after 100ns, '0' after 3ms, '1' after 6 ms;

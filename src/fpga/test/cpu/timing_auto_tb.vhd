@@ -12,7 +12,7 @@ end auto_timing_tb;
 
 architecture Behavioral of auto_timing_tb is
     signal clk: std_logic := '0';
-    signal rst: std_logic;
+    signal rstn: std_logic;
     
     -- inputs
     signal run: std_logic := '1';
@@ -22,6 +22,8 @@ architecture Behavioral of auto_timing_tb is
     signal force_tp4: std_logic := '0';
     signal manual_preset: std_logic := '0';
     signal io_start: std_logic := '0';
+    signal eae_start: std_logic := '0';
+    signal eae_end: std_logic := '0';
     
     -- outputs
     signal ts: time_state_auto;
@@ -34,11 +36,13 @@ begin
 
 dut: entity work.timing_auto
 generic map (
-    clk_frq => 50_000_000
+    clk_frq => 50_000_000,
+    auto_cycle_time => 20.0e-9,
+    eae_cycle_time => 20.0e-9
 )
 port map (
     clk => clk,
-    rst => rst,
+    rstn => rstn,
   
     strobe => strobe,
     mem_done => mem_done,
@@ -54,7 +58,11 @@ port map (
     io_start => io_start,
     io_state_o => io_state,
     io_end => io_end,
-    io_strobe => io_strobe
+    io_strobe => io_strobe,
+    
+    eae_start => eae_start,
+    eae_end => eae_end
+    
 );
 
 sim_ext: process
@@ -87,7 +95,7 @@ begin
     
 end process;
 
-rst <= '1', '0' after 20ns;
+rstn <= '0', '1' after 20ns;
 clk <= not clk after 10 ns;
 
 end Behavioral;

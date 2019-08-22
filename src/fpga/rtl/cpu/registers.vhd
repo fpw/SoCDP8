@@ -73,7 +73,7 @@ architecture Behavioral of registers is
 begin
 
 -- combinatorial process to select the input
-enable_regs: process(transfers, input_bus_tmp, mem_buf, sense, ac, io_bus, link, mqr, sr, mem_addr)
+enable_regs: process(transfers, input_bus_tmp, mem_buf, sense, ac, io_bus, link, mqr, sr, mem_addr, sc)
 begin
     if transfers.ac_enable = '1' then
         if transfers.ac_comp_enable = '1' then

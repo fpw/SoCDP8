@@ -166,8 +166,8 @@ begin
 manual_timing_inst: entity work.timing_manual
 generic map (
     clk_frq => clk_frq,
-    debounce_time => real(debounce_time_ms) / 1.0e3,
-    manual_cycle_time => real(manual_cycle_time_us) / 1.0e6
+    debounce_time => real(debounce_time_ms) * 1.0e-3,
+    manual_cycle_time => real(manual_cycle_time_us) * 1.0e-6
 )
 port map (
     clk => clk,
@@ -188,8 +188,8 @@ port map (
 computer_timing_inst: entity work.timing_auto
 generic map (
     clk_frq => clk_frq,
-    auto_cycle_time => real(auto_cycle_time_ns) / 1.0e9,
-    eae_cycle_time => real(eae_cycle_time_ns) / 1.0e9
+    auto_cycle_time => real(auto_cycle_time_ns) * 1.0e-9,
+    eae_cycle_time => real(eae_cycle_time_ns) * 1.0e-9
 )
 port map (
     clk => clk,
@@ -245,7 +245,7 @@ port map (
 mem_control: entity work.memory_control
 generic map (
     clk_frq => clk_frq,
-    memory_cycle_time => real(memory_cycle_time_ns) / 1.0e9
+    memory_cycle_time => real(memory_cycle_time_ns) * 1.0e-9
 )
 port map (
     clk => clk,
