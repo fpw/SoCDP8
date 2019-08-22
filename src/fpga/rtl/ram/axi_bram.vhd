@@ -10,9 +10,6 @@ use IEEE.NUMERIC_STD.ALL;
 -- This uses way less resources than the IP blocks (BRAM + AXI BRAM controller).
 entity axi_bram is
     generic(
-        -- AXI parameters
-        C_S_AXI_DATA_WIDTH: natural := 32;
-        
         -- For simplicity, the words are offered as 32 bits,
         -- so we need 2 ** 15 * 4 addresses
         C_S_AXI_ADDR_WIDTH: integer := 17

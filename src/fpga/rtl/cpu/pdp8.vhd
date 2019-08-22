@@ -12,7 +12,7 @@ entity pdp8 is
     generic (
         clk_frq: natural := 50_000_000;
 
-        -- Whether an KE8/I EAE is present
+        -- Whether a KE8/I EAE is present
         enable_ext_eae: boolean := true;
         
         -- switch debonunce time

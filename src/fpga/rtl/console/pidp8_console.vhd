@@ -53,6 +53,7 @@ entity pidp8_console is
         switch_sing_step: out std_logic;
         switch_sing_inst: out std_logic
     );
+
     constant lamp_count: natural := 8 * 12;
     -- we want 50 us steps for the multiplexing, how far do we have to count?
     constant cycles_max: natural := period_to_cycles(clk_frq, 50.0e-6);

@@ -11,7 +11,6 @@ use work.socdp8_package.all;
 entity io_controller is
     generic(
         -- AXI parameters
-        C_S_AXI_DATA_WIDTH: natural := 32;
         C_S_AXI_ADDR_WIDTH: integer := 9
     );
     port (
@@ -25,7 +24,7 @@ entity io_controller is
         S_AXI_ARREADY: out std_logic; 
 
         --- Read data channel: Slave outputs data
-        S_AXI_RDATA: out std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
+        S_AXI_RDATA: out std_logic_vector(31 downto 0);
         S_AXI_RVALID: out std_logic;
         S_AXI_RREADY: in std_logic;
         S_AXI_RRESP: out std_logic_vector(1 downto 0); -- 00 := OKAY, 10 := RETRY
@@ -36,16 +35,15 @@ entity io_controller is
         S_AXI_AWREADY: out std_logic;
         
         --- Write data channel: Master writes data
-        S_AXI_WDATA: in std_logic_vector(C_S_AXI_DATA_WIDTH - 1 downto 0);
+        S_AXI_WDATA: in std_logic_vector(31 downto 0);
         S_AXI_WVALID: in std_logic;
         S_AXI_WREADY: out std_logic;
-        S_AXI_WSTRB: in std_logic_vector((C_S_AXI_DATA_WIDTH / 8) - 1 downto 0); -- byte select
+        S_AXI_WSTRB: in std_logic_vector(3 downto 0); -- byte select
         
         --- Write acknowledge channel: Slave acknowledges receipt
         S_AXI_BVALID: out std_logic;
         S_AXI_BREADY: in std_logic;
         S_AXI_BRESP: out std_logic_vector(1 downto 0); -- 00 := OKAY, 10 := RETRY
-        
 
         -- I/O connections to PDP-8
         iop: in std_logic_vector(2 downto 0);
