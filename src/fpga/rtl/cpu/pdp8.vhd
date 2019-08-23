@@ -15,6 +15,9 @@ entity pdp8 is
         -- Whether a KE8/I EAE is present
         enable_ext_eae: boolean := true;
         
+        -- Whether a MC8/I memory extension is present
+        enable_ext_mc8i: boolean := true;
+        
         -- switch debonunce time
         debounce_time_ms: natural := 100;
 
@@ -122,6 +125,9 @@ architecture Behavioral of pdp8 is
     -- EAE: currently normalized
     signal norm: std_logic;
     
+    signal int_inhibit: std_logic;
+    signal field: std_logic_vector(2 downto 0);
+    
     signal io_iop_tmp: std_logic_vector(2 downto 0);
 
     -- interconnect wires
@@ -154,6 +160,7 @@ architecture Behavioral of pdp8 is
     signal sc: std_logic_vector(4 downto 0);
     signal inst_cur: pdp8_instruction;
     signal eae_inst_cur: eae_instruction;
+    signal mc8_df, mc8_if: std_logic_vector(2 downto 0);
     --- from instruction mux
     signal inst_mux_input: inst_input;
     signal reg_trans_inst: register_transfers;
@@ -220,11 +227,16 @@ port map (
 );
 
 regs: entity work.registers
+generic map (
+    enable_ext_mc8i => enable_ext_mc8i
+)
 port map (
     clk => clk,
     rstn => rstn,
     
     sr => switch_swr,
+    sw_df => switch_data_field,
+    sw_if => switch_inst_field,
     sense => sense,
     io_bus => io_bus_in,
 
@@ -239,7 +251,9 @@ port map (
     link_o => link,
     inst_o => inst_cur,
     skip_o => skip,
-    eae_inst_o => eae_inst_cur
+    eae_inst_o => eae_inst_cur,
+    df_o => mc8_df,
+    if_o => mc8_if
 );
 
 mem_control: entity work.memory_control
@@ -251,7 +265,7 @@ port map (
     clk => clk,
     rstn => rstn,
     mem_addr => ma,
-    field => "000",
+    field => field,
     mem_start => mem_start,
     mem_done => mem_done,
     strobe => strobe,
@@ -297,6 +311,7 @@ port map (
 
     int_rqst => int_rqst,
     int_strobe => int_strobe,
+    int_inhibit => int_inhibit,
 
     manual_preset => manual_preset,
     
@@ -317,6 +332,7 @@ port map (
 
 auto_index <= '1' when state = STATE_DEFER and ma(11 downto 3) = "000000001" else '0';
 norm <= '1' when (ac(11) /= ac(10)) or (mqr = o"0000" and ac(9 downto 0) = "0000000000") else '0';
+field <= mc8_df when (state = STATE_DEFER and inst /= INST_JMS and inst /= INST_JMP) else mc8_if;
 
 time_state_pulses: process
 begin
@@ -475,6 +491,46 @@ begin
                 end if;
                 reg_trans <= reg_trans_inst;
             end if;
+            
+            -- So are MC8 instructions
+            if enable_ext_mc8i and state = STATE_FETCH and inst = INST_IOT and mb(8 downto 6) = o"2" then
+                if mb(2 downto 0) = o"4" then
+                    case mb(5 downto 3) is
+                        when o"1" =>
+                            -- RDF
+                            reg_trans.df_enable <= '1';
+                            reg_trans.ac_enable <= '1';
+                            reg_trans.ac_load <= '1';
+                        when o"2" =>
+                            -- RIF
+                            reg_trans.if_enable <= '1';
+                            reg_trans.ac_enable <= '1';
+                            reg_trans.ac_load <= '1';
+                        when o"3" =>
+                            -- RIB
+                            reg_trans.sf_enable <= '1';
+                            reg_trans.ac_enable <= '1';
+                            reg_trans.ac_load <= '1';
+                        when o"4" =>
+                            -- RMF
+                            reg_trans.restore_fields <= '1';
+                        when others =>
+                            null; 
+                    end case;
+                else
+                    -- CDF
+                    reg_trans.load_df <= mb(0);
+                    
+                    -- CIF
+                    int_inhibit <= mb(1);
+                    reg_trans.load_ib <= mb(1);
+                end if;
+            end if;
+            
+            if state = STATE_FETCH and (inst = INST_JMP or inst = INST_JMS) then
+                reg_trans.ib_to_if <= '1';
+                int_inhibit <= '0';
+            end if;
         when TS4 =>
             -- If run was set to 0 in TS3, this pulse will not happen until CONT is pressed.
             -- Pressing START will go to TS1 without this pulse! 
@@ -492,6 +548,10 @@ begin
                     reg_trans.ma_load <= '1';
                     inst <= INST_JMS;
                     state <= STATE_EXEC;
+                    
+                    -- MC8 fields
+                    reg_trans.save_fields <= '1';
+                    reg_trans.clear_fields <= '1';
                 end if;
             end if;
     end case;
@@ -551,6 +611,7 @@ begin
     end case;
 
     if rstn = '0' then
+        int_inhibit <= '0';
         state <= STATE_NONE;
         inst <= INST_AND; -- all zero = AND
         eae_inst <= EAE_NONE;
@@ -571,8 +632,8 @@ led_mem_addr <= ma;
 led_mem_buf <= mb;
 led_link <= link;
 led_accu <= ac;
-led_inst_field <= "000";
-led_data_field <= "000";
+led_inst_field <= mc8_if;
+led_data_field <= mc8_df;
 led_mqr <= mqr;
 led_step_counter <= sc;
 led_ion <= int_enable;

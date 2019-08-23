@@ -12,12 +12,17 @@ use work.socdp8_package.all;
 -- output signals that indicate which registers will receive the data on the bus.
 -- Additionally, the data can be modified during the transfer by an addition network and a rotate circuit.
 entity registers is
+    generic (
+        enable_ext_mc8i: boolean
+    );
     port (
         clk: in std_logic;
         rstn: in std_logic;
         
         -- connect external registers
         --- switch register
+        sw_df: in std_logic_vector(2 downto 0);
+        sw_if: in std_logic_vector(2 downto 0);
         sr: in std_logic_vector(11 downto 0);
         --- sense register
         sense: in std_logic_vector(11 downto 0);
@@ -36,6 +41,8 @@ entity registers is
         skip_o: out std_logic;
         mqr_o: out std_logic_vector(11 downto 0);
         sc_o: out std_logic_vector(4 downto 0);
+        df_o: out std_logic_vector(2 downto 0);
+        if_o: out std_logic_vector(2 downto 0);
 
         -- instruction decoder (combinatorial)
         inst_o: out pdp8_instruction;
@@ -66,6 +73,10 @@ architecture Behavioral of registers is
     signal mqr: std_logic_vector(11 downto 0);
     signal sc: std_logic_vector(4 downto 0);
 
+    -- MC8 extension
+    signal mc8_if, mc8_ib, mc8_df: std_logic_vector(2 downto 0);
+    signal mc8_sf: std_logic_vector(5 downto 0);
+
     
     -- input register bus, with carry
     signal input_bus_tmp, input_bus: std_logic_vector(12 downto 0);
@@ -73,7 +84,7 @@ architecture Behavioral of registers is
 begin
 
 -- combinatorial process to select the input
-enable_regs: process(transfers, input_bus_tmp, mem_buf, sense, pc, ac, io_bus, link, mqr, sr, mem_addr, sc)
+enable_regs: process(transfers, input_bus_tmp, mem_buf, sense, pc, ac, io_bus, link, mqr, sr, mem_addr, sc, mc8_sf, mc8_if, mc8_df)
 begin
     if transfers.ac_enable = '1' then
         if transfers.ac_comp_enable = '1' then
@@ -93,6 +104,15 @@ begin
         elsif transfers.sr_enable = '1' then
             -- if both AC and SR are enabled, OR them
             input_bus_tmp <= '0' & (ac or sr);
+        elsif transfers.sf_enable = '1' then
+            -- if both AC and SF are enabled, OR them
+            input_bus_tmp <= '0' & (ac or ("000000" & mc8_sf));
+        elsif transfers.if_enable = '1' then
+            -- if both AC and IF are enabled, OR them
+            input_bus_tmp <= '0' & (ac or ("000000" & mc8_if & "000"));
+        elsif transfers.if_enable = '1' then
+            -- if both AC and DF are enabled, OR them
+            input_bus_tmp <= '0' & (ac or ("000000" & "000" & mc8_df));
         else
             input_bus_tmp <= '0' & ac;
         end if;
@@ -222,8 +242,13 @@ begin
     if transfers.pc_load = '1' then
         pc <= input_bus(11 downto 0);
         skip <= '0';
+        if transfers.sr_enable = '1' then
+            mc8_if <= sw_if;
+            mc8_ib <= sw_if;
+            mc8_df <= sw_df;
+        end if;
     end if;
-    
+        
     if transfers.ma_load = '1' then
         mem_addr <= input_bus(11 downto 0);
     end if;
@@ -282,7 +307,36 @@ begin
         ac <= (others => '0');
         link <= '0';
     end if;
+
+    if enable_ext_mc8i then
+        if transfers.save_fields = '1' then
+            mc8_sf <= mc8_if & mc8_df;
+        end if;
     
+        if transfers.clear_fields = '1' then
+            mc8_if <= (others => '0');
+            mc8_ib <= (others => '0');
+            mc8_df <= (others => '0');
+        end if;
+        
+        if transfers.restore_fields = '1' then
+            mc8_ib <= mc8_sf(5 downto 3);
+            mc8_df <= mc8_sf(2 downto 0);
+        end if;
+        
+        if transfers.ib_to_if = '1' then
+            mc8_if <= mc8_ib;
+        end if;
+        
+        if transfers.load_ib = '1' then
+            mc8_ib <= sense(5 downto 3);
+        end if;
+    
+        if transfers.load_df = '1' then
+            mc8_df <= sense(5 downto 3);
+        end if;
+    end if;
+        
     if rstn = '0' then
         ac <= (others => '0');
         skip <= '0';
@@ -292,6 +346,10 @@ begin
         mem_buf <= (others => '0');
         mqr <= (others => '0');
         sc <= (others => '0');
+        mc8_if <= (others => '0');
+        mc8_ib <= (others => '0');
+        mc8_df <= (others => '0');
+        mc8_sf <= (others => '0');
     end if;
 end process;
 
@@ -303,6 +361,8 @@ mb_o <= mem_buf;
 skip_o <= skip;
 mqr_o <= mqr;
 sc_o <= sc;
+df_o <= mc8_df;
+if_o <= mc8_if;
 
 with sense(11 downto 9) select inst_o <=
     INST_AND when "000",

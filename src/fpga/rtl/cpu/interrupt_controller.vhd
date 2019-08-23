@@ -16,6 +16,7 @@ entity interrupt_controller is
         -- Interrupt control signals
         int_rqst: in std_logic;
         int_strobe: in std_logic;
+        int_inhibit: in std_logic;
 
         -- Internal reset
         manual_preset: in std_logic;
@@ -44,9 +45,6 @@ architecture Behavioral of interrupt_controller is
     
     -- used to enable interrupts one instruction later
     signal int_delay: std_logic;
-    
-    -- TODO
-    signal int_inhibit: std_logic := '0';
     
     -- Whether the next state is STATE_FETCH
     signal f_set: std_logic;

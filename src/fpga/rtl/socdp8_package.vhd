@@ -88,6 +88,17 @@ package socdp8_package is
         sc_enable: std_logic;
         sc_load: std_logic;
         inc_sc: std_logic;
+        
+        -- MC8
+        clear_fields: std_logic;
+        save_fields: std_logic;
+        restore_fields: std_logic;
+        ib_to_if: std_logic;
+        load_ib: std_logic;
+        load_df: std_logic;
+        if_enable: std_logic;
+        df_enable: std_logic;
+        sf_enable: std_logic;
     end record;
     
     -- This constant describes a non-transfer, it can be used to initialize
@@ -137,7 +148,17 @@ package socdp8_package is
         sc_enable => '0',
         ac_mq_enable => '0',
         sc_load => '0',
-        inc_sc => '0'
+        inc_sc => '0',
+        
+        clear_fields => '0',
+        save_fields => '0',
+        restore_fields => '0',
+        ib_to_if => '0',
+        load_ib => '0',
+        load_df => '0',
+        df_enable => '0',
+        if_enable => '0',
+        sf_enable => '0'
     );
 
     -- Utility functions
