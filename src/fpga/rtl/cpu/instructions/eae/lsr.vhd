@@ -30,6 +30,8 @@ begin
         transfers.ac_enable <= '1';
         transfers.ac_load <= '1';
         transfers.inc_sc <= '1';
+    else
+        transfers.eae_end <= '1';
     end if;
     
 end process;

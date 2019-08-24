@@ -58,17 +58,10 @@ architecture Behavioral of integration_tb is
     signal switch_sing_inst: std_logic;
         
     type ram_a is array (0 to 32767) of std_logic_vector(11 downto 0);
-    signal ram: ram_a := (
-        0 => o"1007",       -- TAD 7
-        1 => o"7421",       -- MQL
-        2 => o"7405",       -- MUY
-        3 => o"0005",       -- C5
-        4 => o"7407",       -- DVI
-        5 => o"0014",       -- C12
-        6 => o"7402",       -- HLT
-        7 => o"0035",       -- C29
-        others => o"0000"
-    );
+    signal ram, new_ram_data: ram_a := (others => (others => '0'));
+    signal load_ram: std_logic := '0';
+    signal stop_sim: boolean := false;
+
 begin
 
 dut: entity work.pdp8
@@ -128,9 +121,23 @@ port map (
     int_rqst => int_rqst
 );
 
+clk_gen: process
+begin
+    wait for 10 ns;
+    clk <= not clk;
+
+    if stop_sim then
+        wait;
+    end if;
+end process;
+
 ram_sim: process
 begin
     wait until rising_edge(clk);
+    
+    if load_ram = '1' then
+        ram <= new_ram_data;
+    end if;
     
     if mem_out_write = '1' then
         ram(to_integer(unsigned(mem_out_addr))) <= mem_out_data;
@@ -139,33 +146,100 @@ begin
     mem_in_data <= ram(to_integer(unsigned(mem_out_addr)));
 end process;
 
-rstn <= '0', '1' after 20 ns;
-clk <= not clk after 10 ns;
-
 tests: process
+    procedure test(ram_data: ram_a) is
+    begin
+        new_ram_data <= ram_data;
+        load_ram <= '1';
+        rstn <= '0';
+        wait until rising_edge(clk);
+        wait for 40 ns;
+
+        rstn <= '1';
+        load_ram <= '0';
+        wait until rising_edge(clk);
+        wait for 40 ns;
+
+        switch_start <= '1';
+        wait until led_run = '1';
+        switch_start <= '0';
+        
+        wait until led_run = '0';
+    end procedure;
 begin
+
     io_bus_in <= (others => '0');
     io_skip <= '0';
     io_ac_clear <= '0';
+
     switch_data_field <= (others => '0');
     switch_inst_field <= (others => '0');
     switch_swr <= (others => '0');
-    switch_start <= '0';
     switch_load <= '0';
     switch_exam <= '0';
     switch_dep <= '0';
     switch_cont <= '0';
+    switch_start <= '0';
     switch_stop <= '0';
     switch_sing_step <= '0';
     switch_sing_inst <= '0';
 
-    wait until rstn = '1';
-    
-    wait until rising_edge(clk);
+    -- Test MUY and DVI
+    test((
+        8#00000# => o"1007",        -- TAD 7
+        8#00001# => o"7421",        -- MQL
+        8#00002# => o"7405",        -- MUY
+        8#00003# => o"0005",        -- C5
+        8#00004# => o"7407",        -- DVI
+        8#00005# => o"0014",        -- C12
+        8#00006# => o"7402",        -- HLT
+        8#00007# => o"0035",        -- C29
+        others => o"7402")
+    );
+    assert led_accu = o"0001" and led_mqr = o"0014" and led_step_counter = "01101" report "MUY, DVI" severity failure;
 
-    switch_start <= '1';
+    -- Test DVI x / 0
+    test((
+        8#00000# => o"1007",        -- TAD 7
+        8#00001# => o"7407",        -- DVI
+        8#00002# => o"0000",        -- C12
+        8#00003# => o"7402",        -- HLT
+        8#00007# => o"0035",        -- C29
+        others => o"7402")
+    );
+    assert led_accu = o"0035" and led_mqr = o"0000" and led_step_counter = "00000" and led_link = '1' report "DVI x / 0" severity failure;
+
+    -- Test DVI 0 / x
+    test((
+        8#00000# => o"0000",        -- AND 0
+        8#00001# => o"7407",        -- DVI
+        8#00002# => o"0777",        -- C12
+        8#00003# => o"7402",        -- HLT
+        others => o"7402")
+    );
+    assert led_accu = o"0000" and led_mqr = o"0000" and led_step_counter = "01101" and led_link = '0' report "DVI 0 / x" severity failure;
+
+    -- Test writing and reading with fields
+    test((
+        8#00000# => o"6211",        -- CDF 1
+        8#00001# => o"1007",        -- TAD 7 -> AC = 7654
+        8#00002# => o"3400",        -- DCA I 0
+        8#00003# => o"1400",        -- TAD I 0
+        8#00004# => o"2400",        -- ISZ I 0
+        8#00005# => o"7402",        -- HLT
+        
+        8#00007# => o"7654",        -- data
+        8#10000# => o"0001",        -- C0
+        8#10001# => o"0000",        -- C0
+        others => o"7402")
+    );
+    assert led_accu = o"7654" and ram(8#10001#) = o"7655" report "Fail field" severity failure;
+    
+    report "End of tests";
+    stop_sim <= true;
     
     wait;
+
 end process;
 
 

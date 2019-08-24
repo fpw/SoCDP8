@@ -156,6 +156,7 @@ architecture Behavioral of pdp8 is
     --- from register network
     signal reg_trans: register_transfers;
     signal link: std_logic;
+    signal carry: std_logic;
     signal skip: std_logic;
     signal pc, ma, mb, ac, mem, mqr: std_logic_vector(11 downto 0);
     signal sc: std_logic_vector(4 downto 0);
@@ -250,6 +251,7 @@ port map (
     mqr_o => mqr,
     sc_o => sc,
     link_o => link,
+    carry_o => carry,
     inst_o => inst_cur,
     skip_o => skip,
     eae_inst_o => eae_inst_cur,
@@ -284,7 +286,7 @@ inst_mux_input <= (
         mb => mb,
         mqr => mqr,
         sc => sc,
-        link => link,
+        carry => carry,
         auto_index => auto_index,
         skip => skip,
         brk_req => '0',     -- TODO
@@ -381,6 +383,7 @@ begin
 
     if manual_preset = '1' then
         state <= STATE_NONE;
+        deferred <= '0';
     end if;
     
     if strobe = '1' then

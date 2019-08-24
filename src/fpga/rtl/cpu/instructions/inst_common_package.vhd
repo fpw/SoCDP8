@@ -15,7 +15,7 @@ package inst_common is
         mb: std_logic_vector(11 downto 0);
         mqr: std_logic_vector(11 downto 0);
         sc: std_logic_vector(4 downto 0);
-        link: std_logic;
+        carry: std_logic;
         auto_index: std_logic;
         skip: std_logic;
         brk_req: std_logic;

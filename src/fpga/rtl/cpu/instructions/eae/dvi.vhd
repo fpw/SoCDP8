@@ -30,22 +30,24 @@ begin
             -- AC COMP + MEM
             transfers.mem_enable <= '1';
             transfers.ac_comp_enable <= '1';
-            transfers.ac_load <= '1';
         else
             -- AC + MEM
             transfers.mem_enable <= '1';
             transfers.ac_enable <= '1';
-            transfers.ac_load <= '1';
         end if;
         
-        if input.sc = "00000" and input.link = '1' then
+        if input.sc = "00000" and input.carry = '1' then
             transfers.eae_end <= '1';
+            transfers.eae_shift <= EAE_SHIFT_DVI;
+            transfers.l_enable <= '1';
+            transfers.l_comp_enable <= '1';
+            transfers.l_load <= '1';
         else
             transfers.eae_shift <= EAE_SHIFT_DVI;
             if input.sc /= "01100" then
                 transfers.shift <= LEFT_SHIFT;
             end if;
-            
+            transfers.ac_load <= '1';
             transfers.inc_sc <= '1';
         end if; 
     else

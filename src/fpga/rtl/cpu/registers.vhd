@@ -38,6 +38,7 @@ entity registers is
         mb_o: out std_logic_vector(11 downto 0);
         ac_o: out std_logic_vector(11 downto 0);
         link_o: out std_logic;
+        carry_o: out std_logic; -- only for DVI
         skip_o: out std_logic;
         mqr_o: out std_logic_vector(11 downto 0);
         sc_o: out std_logic_vector(4 downto 0);
@@ -174,6 +175,13 @@ begin
     
 end process;
 
+dvi_carry: process(ac, sense)
+    variable sum: std_logic_vector(12 downto 0);
+begin
+    sum := std_logic_vector(unsigned('0' & not ac) + unsigned(sense));
+    carry_o <= sum(11);
+end process;
+
 regs: process
 begin
     wait until rising_edge(clk);
@@ -194,7 +202,7 @@ begin
                     ac(0) <= '1';
                 end if;
                 
-                if (input_bus(12) /= mqr(0)) then
+                if (l_bus /= mqr(0)) then
                     mqr(0) <= '1';
                 end if;
             else
