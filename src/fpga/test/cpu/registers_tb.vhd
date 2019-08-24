@@ -33,12 +33,17 @@ architecture Behavioral of registers_tb is
 begin
 
 dut: entity work.registers
+generic map (
+    enable_ext_mc8i => true
+)
 port map (
     clk => clk,
     rstn => rstn,
 
     transfers => transfers,
     sr => sr,
+    sw_df => "000",
+    sw_if => "000",
     sense => sense,
     io_bus => io_bus,
     
@@ -176,6 +181,76 @@ begin
     wait for clk_period;
     assert ac = o"7776" and link = '1' report "TAD overflow" severity failure;
     
+    -- Set AC 7776, L = 0
+    sr <= o"7776";
+    transfers <= nop_transfer;
+    transfers.sr_enable <= '1';
+    transfers.ac_load <= '1';
+    transfers.l_load <= '1';
+    wait for clk_period;
+    assert ac = o"7776" and link = '0' report "7776 -> AC" severity failure;
+    
+    -- Test CML IAC
+    transfers <= nop_transfer;
+    transfers.l_comp_enable <= '1';
+    transfers.ac_enable <= '1';
+    transfers.carry_insert <= '1';
+    transfers.l_load <= '1';
+    transfers.ac_load <= '1';
+    wait for clk_period;
+    assert ac = o"7777" and link = '1' report "CML IAC" severity failure;
+
+    -- Set AC 7776, L = 1
+    sr <= o"7776";
+    transfers <= nop_transfer;
+    transfers.sr_enable <= '1';
+    transfers.ac_load <= '1';
+    wait for clk_period;
+    assert ac = o"7776" and link = '1' report "7776 -> AC" severity failure;
+
+    -- Test CML IAC
+    transfers <= nop_transfer;
+    transfers.l_comp_enable <= '1';
+    transfers.ac_enable <= '1';
+    transfers.carry_insert <= '1';
+    transfers.l_load <= '1';
+    transfers.ac_load <= '1';
+    wait for clk_period;
+    assert ac = o"7777" and link = '0' report "CML IAC" severity failure;
+
+    -- Test CLA CMA CML IAC
+    transfers <= nop_transfer;
+    transfers.ac_comp_enable <= '1';
+    transfers.ac_enable <= '1';
+    transfers.l_comp_enable <= '1';
+    transfers.carry_insert <= '1';
+    transfers.ac_load <= '1';
+    transfers.l_load <= '1';
+    wait for clk_period;
+    assert ac = o"0000" and link = '0' report "CLA CMA CML IAC" severity failure;
+
+    -- Test CLA CMA CLL IAC
+    transfers <= nop_transfer;
+    transfers.ac_comp_enable <= '1';
+    transfers.ac_enable <= '1';
+    transfers.carry_insert <= '1';
+    transfers.ac_load <= '1';
+    transfers.l_load <= '1';
+    wait for clk_period;
+    assert ac = o"0000" and link = '1' report "CLA CMA CLL IAC" severity failure;
+
+    -- Test CLA CMA CLL CML IAC
+    transfers <= nop_transfer;
+    transfers.ac_comp_enable <= '1';
+    transfers.ac_enable <= '1';
+    transfers.l_enable <= '1';
+    transfers.l_comp_enable <= '1';
+    transfers.carry_insert <= '1';
+    transfers.ac_load <= '1';
+    transfers.l_load <= '1';
+    wait for clk_period;
+    assert ac = o"0000" and link = '0' report "CLA CMA CLL CML IAC" severity failure;
+
     report "End of tests";
     transfers <= nop_transfer;
     wait;

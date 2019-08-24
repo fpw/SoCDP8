@@ -121,6 +121,7 @@ architecture Behavioral of pdp8 is
     -- current instruction
     signal inst: pdp8_instruction;
     signal eae_inst: eae_instruction;
+    signal deferred: std_logic;
 
     -- EAE: currently normalized
     signal norm: std_logic;
@@ -332,7 +333,7 @@ port map (
 
 auto_index <= '1' when state = STATE_DEFER and ma(11 downto 3) = "000000001" else '0';
 norm <= '1' when (ac(11) /= ac(10)) or (mqr = o"0000" and ac(9 downto 0) = "0000000000") else '0';
-field <= mc8_df when (state = STATE_DEFER and inst /= INST_JMS and inst /= INST_JMP) else mc8_if;
+field <= mc8_df when (deferred = '1' and inst /= INST_JMS and inst /= INST_JMP) else mc8_if;
 
 time_state_pulses: process
 begin
@@ -398,6 +399,7 @@ begin
                 reg_trans <= reg_trans_inst;
             end if;
         when TS2 =>
+            -- the memory cycle is done, MB will be written back to memory
             if tp = '1' then
                 if state /= STATE_NONE then
                     if state = STATE_FETCH then
@@ -460,6 +462,46 @@ begin
                     pause <= '1';
                     eae_start <= '1';
                 end if;
+                
+                -- MC8 are part of TS3
+                if enable_ext_mc8i and state = STATE_FETCH and inst = INST_IOT and mb(8 downto 6) = o"2" then
+                    if mb(2 downto 0) = o"4" then
+                        case mb(5 downto 3) is
+                            when o"1" =>
+                                -- RDF
+                                reg_trans.df_enable <= '1';
+                                reg_trans.ac_enable <= '1';
+                                reg_trans.ac_load <= '1';
+                            when o"2" =>
+                                -- RIF
+                                reg_trans.if_enable <= '1';
+                                reg_trans.ac_enable <= '1';
+                                reg_trans.ac_load <= '1';
+                            when o"3" =>
+                                -- RIB
+                                reg_trans.sf_enable <= '1';
+                                reg_trans.ac_enable <= '1';
+                                reg_trans.ac_load <= '1';
+                            when o"4" =>
+                                -- RMF
+                                reg_trans.restore_fields <= '1';
+                            when others =>
+                                null; 
+                        end case;
+                    else
+                        -- CDF
+                        reg_trans.load_df <= mb(0);
+                        
+                        -- CIF
+                        int_inhibit <= mb(1);
+                        reg_trans.load_ib <= mb(1);
+                    end if;
+                end if;
+                
+                if state = STATE_FETCH and (inst = INST_JMP or inst = INST_JMS) then
+                    reg_trans.ib_to_if <= '1';
+                    int_inhibit <= '0';
+                end if;
             end if;
             
             -- I/O happens in TS3 and uses io_strobe instead of tp to activate transfers
@@ -491,46 +533,6 @@ begin
                 end if;
                 reg_trans <= reg_trans_inst;
             end if;
-            
-            -- So are MC8 instructions
-            if enable_ext_mc8i and state = STATE_FETCH and inst = INST_IOT and mb(8 downto 6) = o"2" then
-                if mb(2 downto 0) = o"4" then
-                    case mb(5 downto 3) is
-                        when o"1" =>
-                            -- RDF
-                            reg_trans.df_enable <= '1';
-                            reg_trans.ac_enable <= '1';
-                            reg_trans.ac_load <= '1';
-                        when o"2" =>
-                            -- RIF
-                            reg_trans.if_enable <= '1';
-                            reg_trans.ac_enable <= '1';
-                            reg_trans.ac_load <= '1';
-                        when o"3" =>
-                            -- RIB
-                            reg_trans.sf_enable <= '1';
-                            reg_trans.ac_enable <= '1';
-                            reg_trans.ac_load <= '1';
-                        when o"4" =>
-                            -- RMF
-                            reg_trans.restore_fields <= '1';
-                        when others =>
-                            null; 
-                    end case;
-                else
-                    -- CDF
-                    reg_trans.load_df <= mb(0);
-                    
-                    -- CIF
-                    int_inhibit <= mb(1);
-                    reg_trans.load_ib <= mb(1);
-                end if;
-            end if;
-            
-            if state = STATE_FETCH and (inst = INST_JMP or inst = INST_JMS) then
-                reg_trans.ib_to_if <= '1';
-                int_inhibit <= '0';
-            end if;
         when TS4 =>
             -- If run was set to 0 in TS3, this pulse will not happen until CONT is pressed.
             -- Pressing START will go to TS1 without this pulse! 
@@ -538,6 +540,12 @@ begin
                 if state /= STATE_NONE then
                     reg_trans <= reg_trans_inst;
                     state <= next_state_inst;
+                    if next_state_inst /= STATE_EXEC then
+                        deferred <= '0';
+                    end if;
+                    if next_state_inst = STATE_DEFER then
+                        deferred <= '1';
+                    end if;
                 else
                     state <= STATE_FETCH;
                 end if;
@@ -611,9 +619,10 @@ begin
     end case;
 
     if rstn = '0' then
-        int_inhibit <= '0';
         state <= STATE_NONE;
         inst <= INST_AND; -- all zero = AND
+        deferred <= '0';
+        int_inhibit <= '0';
         eae_inst <= EAE_NONE;
         run <= '0';
         pause <= '0';

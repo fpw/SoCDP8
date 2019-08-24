@@ -119,7 +119,6 @@ begin
                         if input.mb(3) = '0' and input.mb(2) = '0' and input.mb(1) = '1' then
                             -- BSW: No effect on 8/I
                         end if;
-                        
 
                         -- IAC
                         if input.mb(0) = '1' then

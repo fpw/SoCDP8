@@ -75,6 +75,7 @@ dut: entity work.pdp8
 generic map (
     clk_frq => 50_000_000,
     enable_ext_eae => true,
+    enable_ext_mc8i => true,
     debounce_time_ms => 1,
     manual_cycle_time_us => 1,
     memory_cycle_time_ns => 100,

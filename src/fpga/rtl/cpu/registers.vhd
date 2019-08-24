@@ -79,95 +79,99 @@ architecture Behavioral of registers is
 
     
     -- input register bus, with carry
-    signal input_bus_tmp, input_bus: std_logic_vector(12 downto 0);
+    signal input_bus: std_logic_vector(12 downto 0);
     signal l_bus: std_logic;
 begin
 
 -- combinatorial process to select the input
-enable_regs: process(transfers, input_bus_tmp, mem_buf, sense, pc, ac, io_bus, link, mqr, sr, mem_addr, sc, mc8_sf, mc8_if, mc8_df)
+enable_regs: process(transfers, mem_buf, sense, pc, ac, io_bus, link, mqr, sr, mem_addr, sc, mc8_sf, mc8_if, mc8_df)
+    variable input_bus_tmp: std_logic_vector(12 downto 0);
 begin
     if transfers.ac_enable = '1' then
         if transfers.ac_comp_enable = '1' then
-            input_bus_tmp <= std_logic_vector(unsigned('0' & ac) + unsigned(not ac));
+            input_bus_tmp := std_logic_vector(unsigned('0' & ac) + unsigned(not ac));
         elsif transfers.mem_enable = '1' then
             -- if both AC and MEM are enabled, do a sign-extended two's complement addition
-            input_bus_tmp <= std_logic_vector(unsigned('0' & ac) + unsigned(sense));
+            input_bus_tmp := std_logic_vector(unsigned('0' & ac) + unsigned(sense));
         elsif transfers.bus_enable = '1' then
             -- if both AC and IO BUS are enabled, OR them
-            input_bus_tmp <= '0' & (ac or io_bus);
+            input_bus_tmp := '0' & (ac or io_bus);
         elsif transfers.mq_enable = '1' then
             -- if both AC and MQR are enabled, OR them
-            input_bus_tmp <= '0' & (ac or mqr);
+            input_bus_tmp := '0' & (ac or mqr);
         elsif transfers.sc_enable = '1' then
             -- if both AC and SC are enabled, OR them
-            input_bus_tmp <= '0' & (ac or ("0000000" & sc));
+            input_bus_tmp := '0' & (ac or ("0000000" & sc));
         elsif transfers.sr_enable = '1' then
             -- if both AC and SR are enabled, OR them
-            input_bus_tmp <= '0' & (ac or sr);
+            input_bus_tmp := '0' & (ac or sr);
         elsif transfers.sf_enable = '1' then
             -- if both AC and SF are enabled, OR them
-            input_bus_tmp <= '0' & (ac or ("000000" & mc8_sf));
+            input_bus_tmp := '0' & (ac or ("000000" & mc8_sf));
         elsif transfers.if_enable = '1' then
             -- if both AC and IF are enabled, OR them
-            input_bus_tmp <= '0' & (ac or ("000000" & mc8_if & "000"));
-        elsif transfers.if_enable = '1' then
+            input_bus_tmp := '0' & (ac or ("000000" & mc8_if & "000"));
+        elsif transfers.df_enable = '1' then
             -- if both AC and DF are enabled, OR them
-            input_bus_tmp <= '0' & (ac or ("000000" & "000" & mc8_df));
+            input_bus_tmp := '0' & (ac or ("000000" & mc8_df & "000"));
         else
-            input_bus_tmp <= '0' & ac;
+            input_bus_tmp := '0' & ac;
         end if;
     elsif transfers.ac_comp_enable = '1' then
         if transfers.mem_enable = '1' then
             -- if both AC and MEM are enabled, do a sign-extended two's complement addition
-            input_bus_tmp <= std_logic_vector(unsigned('0' & not ac) + unsigned(sense));
+            input_bus_tmp := std_logic_vector(unsigned('0' & not ac) + unsigned(sense));
         else
-            input_bus_tmp <= '0' & not ac;
+            input_bus_tmp := '0' & not ac;
         end if;
     elsif transfers.pc_enable = '1' then
-        input_bus_tmp <= '0' & pc;
+        input_bus_tmp := '0' & pc;
     elsif transfers.ma_enable = '1' then
-        input_bus_tmp <= '0' & mem_addr;
+        input_bus_tmp := '0' & mem_addr;
     elsif transfers.mem_enable = '1' then
-        input_bus_tmp <= '0' & sense;
+        input_bus_tmp := '0' & sense;
     elsif transfers.mem_comp_enable = '1' then
-        input_bus_tmp <= '0' & not sense;
+        input_bus_tmp := '0' & not sense;
     elsif transfers.sr_enable = '1' then
-        input_bus_tmp <= '0' & sr;
+        input_bus_tmp := '0' & sr;
     elsif transfers.bus_enable = '1' then
-        input_bus_tmp <= '0' & io_bus;
+        input_bus_tmp := '0' & io_bus;
     elsif transfers.mq_enable = '1' then
-        input_bus_tmp <= '0' & mqr;
+        input_bus_tmp := '0' & mqr;
     elsif transfers.sc_enable = '1' then
-        input_bus_tmp <= '0' & "0000000" & sc;
+        input_bus_tmp := '0' & "0000000" & sc;
     else
-        input_bus_tmp <= (others => '0');
+        input_bus_tmp := (others => '0');
     end if;
     
     if transfers.ma_enable_page = '1' then
-        input_bus_tmp(11 downto 7) <= mem_addr(11 downto 7);
+        input_bus_tmp(11 downto 7) := mem_addr(11 downto 7);
     end if;
 
     if transfers.mem_enable_addr = '1' then
-        input_bus_tmp(6 downto 0) <= sense(6 downto 0);
+        input_bus_tmp(6 downto 0) := sense(6 downto 0);
     end if;
 
     if transfers.and_enable = '1' then
-        input_bus <= '0' & (input_bus_tmp(11 downto 0) and mem_buf);  
+        input_bus_tmp := '0' & (input_bus_tmp(11 downto 0) and mem_buf);  
     else
-        input_bus <= std_logic_vector(unsigned(input_bus_tmp) + (transfers.carry_insert & ""));
+        input_bus_tmp := std_logic_vector(unsigned(input_bus_tmp) + (transfers.carry_insert & ""));
     end if;
+
+    input_bus <= input_bus_tmp;
 
     if transfers.l_enable = '1' then
         if transfers.l_comp_enable = '1' then
-            l_bus <= '1';
+            l_bus <= not input_bus_tmp(12);
         else
-            l_bus <= link;
+            l_bus <= link xor input_bus_tmp(12);
         end if;
     elsif transfers.l_comp_enable = '1' then
-        l_bus <= not link;
+        l_bus <= (not link) xor input_bus_tmp(12);
     else
-        l_bus <= '0';
+        l_bus <= input_bus_tmp(12);
     end if;
+    
 end process;
 
 regs: process
@@ -232,11 +236,7 @@ begin
     end if;
 
     if transfers.l_load = '1' and transfers.shift = NO_SHIFT then
-        if transfers.ac_load = '1' and transfers.carry_insert = '1' then
-            link <= input_bus(12);
-        else
-            link <= l_bus;
-        end if;
+        link <= l_bus;
     end if;
 
     if transfers.pc_load = '1' then
@@ -260,28 +260,18 @@ begin
     if transfers.skip_load = '1' then
         skip <= transfers.reverse_skip;
     
-        if transfers.skip_if_carry = '1' and input_bus(12) = '1' then
+        if transfers.skip_if_carry = '1' and l_bus = '1' then
             skip <= not transfers.reverse_skip;
         end if;
     
-        if transfers.ac_enable = '1' then
-            if transfers.skip_if_zero = '1' and input_bus(11 downto 0) = "000000000000" then
-                skip <= not transfers.reverse_skip;
-            end if;
-        
-            if transfers.skip_if_neg = '1' and input_bus(11) = '1' then
-                skip <= not transfers.reverse_skip;
-            end if;
-        else
-            if transfers.skip_if_zero = '1' and ac(11 downto 0) = "000000000000" then
-                skip <= not transfers.reverse_skip;
-            end if;
-        
-            if transfers.skip_if_neg = '1' and ac(11) = '1' then
-                skip <= not transfers.reverse_skip;
-            end if;
+        if transfers.skip_if_zero = '1' and ac(11 downto 0) = "000000000000" then
+            skip <= not transfers.reverse_skip;
         end if;
-            
+
+        if transfers.skip_if_neg = '1' and ac(11) = '1' then
+            skip <= not transfers.reverse_skip;
+        end if;
+
         if transfers.skip_if_link = '1' and link = '1' then
             skip <= not transfers.reverse_skip;
         end if;
