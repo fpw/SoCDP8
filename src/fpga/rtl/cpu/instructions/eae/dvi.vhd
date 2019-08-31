@@ -26,7 +26,7 @@ begin
     transfers <= nop_transfer;
 
     if input.sc /= "01101" then
-        if input.sc = "00000" or input.mqr(1) /= input.mqr(0) then
+        if input.mqr(1) /= input.mqr(0) or input.sc = "00000" or input.sc = "00001" then
             -- AC COMP + MEM
             transfers.mem_enable <= '1';
             transfers.ac_comp_enable <= '1';
@@ -51,7 +51,6 @@ begin
             transfers.inc_sc <= '1';
         end if; 
     else
-        transfers.l_load <= '1';
         if input.mqr(1) = '0' and input.mqr(0) = '0' then
             transfers.mem_enable <= '1';
             transfers.ac_enable <= '1';
@@ -67,6 +66,8 @@ begin
             transfers.ac_comp_enable <= '1';
             transfers.ac_load <= '1';
         end if;
+        transfers.l_disable <= '1';
+        transfers.l_load <= '1';
         transfers.eae_end <= '1';
     end if;
 end process;

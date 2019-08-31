@@ -166,6 +166,27 @@ tests: process
         
         wait until led_run = '0';
     end procedure;
+    
+    procedure test_div(a: natural; b: positive; res: natural; remain: natural) is
+    begin
+        test((
+            8#00000# => o"1007",        -- TAD 7: lower -> AC
+            8#00001# => o"7421",        -- MQL: lower -> MQL
+            8#00002# => o"1006",        -- TAD 6: upper -> AC
+            8#00003# => o"7407",        -- DVI
+            8#00004# => std_logic_vector(to_unsigned(b, 12)),
+            8#00005# => o"7402",        -- HLT
+            8#00006# => std_logic_vector(to_unsigned(a, 24)(23 downto 12)),
+            8#00007# => std_logic_vector(to_unsigned(a, 24)(11 downto 0)),
+            others => o"7402")
+        );
+        assert led_accu = std_logic_vector(to_unsigned(remain, 12)) and led_mqr = std_logic_vector(to_unsigned(res, 12))
+               and led_step_counter = "01101" and led_link = '0'
+                    report integer'image(a) & " div " & integer'image(b) & " = " &
+                           integer'image(to_integer(unsigned(led_mqr))) & " rem " &
+                           integer'image(to_integer(unsigned(led_accu)))
+                    severity failure;
+    end procedure;
 begin
 
     io_bus_in <= (others => '0');
@@ -209,15 +230,10 @@ begin
     );
     assert led_accu = o"0035" and led_mqr = o"0000" and led_step_counter = "00000" and led_link = '1' report "DVI x / 0" severity failure;
 
-    -- Test DVI 0 / x
-    test((
-        8#00000# => o"0000",        -- AND 0
-        8#00001# => o"7407",        -- DVI
-        8#00002# => o"0777",        -- C12
-        8#00003# => o"7402",        -- HLT
-        others => o"7402")
-    );
-    assert led_accu = o"0000" and led_mqr = o"0000" and led_step_counter = "01101" and led_link = '0' report "DVI 0 / x" severity failure;
+    test_div(12, 6, 2, 0);
+    test_div(145, 12, 12, 1);
+    test_div(0, 511, 0, 0);
+    test_div(2738385, 1234, 2219, 139);
 
     -- Test writing and reading with fields
     test((

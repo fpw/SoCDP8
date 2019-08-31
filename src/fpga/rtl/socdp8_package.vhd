@@ -99,6 +99,7 @@ package socdp8_package is
         if_enable: std_logic;
         df_enable: std_logic;
         sf_enable: std_logic;
+        l_disable: std_logic;
     end record;
     
     -- This constant describes a non-transfer, it can be used to initialize
@@ -158,7 +159,8 @@ package socdp8_package is
         load_df => '0',
         df_enable => '0',
         if_enable => '0',
-        sf_enable => '0'
+        sf_enable => '0',
+        l_disable => '0'
     );
 
     -- Utility functions

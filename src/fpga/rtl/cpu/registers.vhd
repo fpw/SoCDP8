@@ -196,19 +196,30 @@ begin
         elsif transfers.eae_shift = EAE_SHIFT_DVI then
             if transfers.shift = LEFT_SHIFT then
                 link <= input_bus(11);
+
                 ac <= input_bus(10 downto 0) & '0';
-                mqr <= mqr(10 downto 0) & '0';
-                if mqr(11) /= mqr(0) then
-                    ac(0) <= '1';
+                if sc = "00000" then
+                    if mqr(11) = '0' then
+                        ac(0) <= '1';
+                    end if;
+                else
+                    if mqr(11) /= mqr(0) then
+                        ac(0) <= '1';
+                    end if;
                 end if;
-                
-                if (l_bus /= mqr(0)) then
+
+                mqr <= mqr(10 downto 0) & '0';
+                if l_bus /= mqr(0) and sc /= "00000" then
                     mqr(0) <= '1';
                 end if;
             else
                 -- only shift MQR
                 mqr <= mqr(10 downto 0) & '0';
+                if l_bus /= mqr(0) and sc /= "00000" then
+                    mqr(0) <= '1';
+                end if;
                 ac <= input_bus(11 downto 0);
+                link <= l_bus;
             end if;
         elsif transfers.shift = LEFT_SHIFT then
             ac <= input_bus(10 downto 0) & l_bus;
@@ -244,7 +255,11 @@ begin
     end if;
 
     if transfers.l_load = '1' and transfers.shift = NO_SHIFT then
-        link <= l_bus;
+        if transfers.l_disable = '0' then
+            link <= l_bus;
+        else 
+            link <= '0';
+        end if;
     end if;
 
     if transfers.pc_load = '1' then
