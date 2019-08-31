@@ -219,6 +219,16 @@ begin
     );
     assert led_accu = o"0001" and led_mqr = o"0014" and led_step_counter = "01101" report "MUY, DVI" severity failure;
 
+    -- Test DVI 0 / x
+    test((
+        8#00000# => o"0000",        -- AND 0
+        8#00001# => o"7407",        -- DVI
+        8#00002# => o"0777",        -- C12
+        8#00003# => o"7402",        -- HLT
+        others => o"7402")
+    );
+    assert led_accu = o"0000" and led_mqr = o"0000" and led_step_counter = "01101" and led_link = '0' report "DVI 0 / x" severity failure;
+
     -- Test DVI x / 0
     test((
         8#00000# => o"1007",        -- TAD 7
@@ -228,8 +238,22 @@ begin
         8#00007# => o"0035",        -- C29
         others => o"7402")
     );
-    assert led_accu = o"0035" and led_mqr = o"0000" and led_step_counter = "00000" and led_link = '1' report "DVI x / 0" severity failure;
+    assert led_accu = o"0035" and led_mqr = o"0001" and led_step_counter = "00000" and led_link = '1' report "DVI x / 0" severity failure;
 
+    -- Test DVI overflow 10777 / 1
+    test((
+        8#00000# => o"1007",        -- TAD 7: lower -> AC
+        8#00001# => o"7421",        -- MQL: lower -> MQL
+        8#00002# => o"1006",        -- TAD 6: upper -> AC
+        8#00003# => o"7407",        -- DVI
+        8#00004# => o"0001",
+        8#00005# => o"7402",        -- HLT
+        8#00006# => o"0001",
+        8#00007# => o"0777",
+        others => o"7402")
+    );
+    assert led_accu = o"0001" and led_mqr = o"1777" and led_step_counter = "00000" and led_link = '1' report "DVI overflow" severity failure;
+    
     test_div(12, 6, 2, 0);
     test_div(145, 12, 12, 1);
     test_div(0, 511, 0, 0);

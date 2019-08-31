@@ -253,7 +253,11 @@ begin
             end if;
         end if;
     end if;
-
+    
+    if transfers.ac_load = '0' and transfers.eae_shift = EAE_SHIFT_DVI then
+        mqr <= mqr(10 downto 0) & '1';
+    end if;
+    
     if transfers.l_load = '1' and transfers.shift = NO_SHIFT then
         if transfers.l_disable = '0' then
             link <= l_bus;
