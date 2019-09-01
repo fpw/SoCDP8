@@ -78,7 +78,6 @@ architecture Behavioral of registers is
     -- MC8 extension
     signal mc8_if, mc8_ib, mc8_df: std_logic_vector(2 downto 0);
     signal mc8_sf: std_logic_vector(5 downto 0);
-
     
     -- input register bus, with carry
     signal input_bus: std_logic_vector(12 downto 0);

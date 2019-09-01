@@ -335,7 +335,7 @@ port map (
 
 auto_index <= '1' when state = STATE_DEFER and ma(11 downto 3) = "000000001" else '0';
 norm <= '1' when (ac(11) /= ac(10)) or (mqr = o"0000" and ac(9 downto 0) = "0000000000") else '0';
-field <= mc8_df when (deferred = '1' and inst /= INST_JMS and inst /= INST_JMP) else mc8_if;
+field <= mc8_df when (deferred = '1' and state = STATE_EXEC and inst /= INST_JMS and inst /= INST_JMP) else mc8_if;
 
 time_state_pulses: process
 begin

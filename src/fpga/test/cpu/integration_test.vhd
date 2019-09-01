@@ -235,17 +235,36 @@ begin
     test((
         8#00000# => o"6211",        -- CDF 1
         8#00001# => o"1007",        -- TAD 7 -> AC = 7654
-        8#00002# => o"3400",        -- DCA I 0
-        8#00003# => o"1400",        -- TAD I 0
-        8#00004# => o"2400",        -- ISZ I 0
+        8#00002# => o"3406",        -- DCA I 6
+        8#00003# => o"1406",        -- TAD I 6
+        8#00004# => o"2406",        -- ISZ I 6
         8#00005# => o"7402",        -- HLT
-        
+        8#00006# => o"0001",        -- idx
         8#00007# => o"7654",        -- data
-        8#10000# => o"0001",        -- C0
+
         8#10001# => o"0000",        -- C0
         others => o"7402")
     );
     assert led_accu = o"7654" and ram(8#10001#) = o"7655" report "Fail field" severity failure;
+
+    -- Test CIF
+    test((
+        8#00000# => o"6212",        -- CIF 1
+        others => o"7402")
+    );
+    assert led_inst_field = o"0" report "Fail CIF" severity failure;
+
+    -- Test CIF and jump
+    test((
+        8#00000# => o"6212",        -- CIF 1
+        8#00001# => o"5000",        -- JMP 0
+        8#10000# => o"1003",        -- TAD 3
+        8#10001# => o"3004",        -- DCA 4
+        8#10002# => o"7402",        -- HLT
+        8#10003# => o"1234",        -- Data
+        others => o"7402")
+    );
+    assert led_inst_field = o"1" and led_accu = o"0000" and ram(8#10004#) = o"1234" report "Fail CIF JMP" severity failure;
     
     report "End of tests";
     stop_sim <= true;
