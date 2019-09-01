@@ -25,7 +25,17 @@ begin
     -- default output
     transfers <= nop_transfer;
 
-    if input.sc /= "01101" then
+    if input.sc = "00000" and input.carry = '1' then
+        -- Overflow
+        transfers.ac_comp_enable <= '1';
+        transfers.mem_enable <= '1';
+        transfers.ac_load <= '1';
+        
+        transfers.l_comp_enable <= '1';
+        transfers.l_load <= '1';
+        
+        transfers.eae_end <= '1';
+    elsif input.sc /= "01101" then
         if input.mqr(1) /= input.mqr(0) or input.sc = "00000" or input.sc = "00001" then
             -- AC COMP + MEM
             transfers.mem_enable <= '1';
@@ -36,21 +46,13 @@ begin
             transfers.ac_enable <= '1';
         end if;
         
-        if input.sc = "00000" and input.carry = '1' then
-            transfers.eae_end <= '1';
-            transfers.eae_shift <= EAE_SHIFT_DVI;
-            transfers.l_enable <= '1';
-            transfers.l_comp_enable <= '1';
-            transfers.l_load <= '1';
-        else
-            transfers.eae_shift <= EAE_SHIFT_DVI;
-            if input.sc /= "01100" then
-                transfers.shift <= LEFT_SHIFT;
-            end if;
-            transfers.ac_load <= '1';
-            transfers.inc_sc <= '1';
-        end if; 
-    else
+        transfers.eae_shift <= EAE_SHIFT_DVI;
+        if input.sc /= "01100" then
+            transfers.shift <= LEFT_SHIFT;
+        end if;
+        transfers.ac_load <= '1';
+        transfers.inc_sc <= '1';
+    else 
         if input.mqr(1) = '0' and input.mqr(0) = '0' then
             transfers.mem_enable <= '1';
             transfers.ac_enable <= '1';
@@ -66,6 +68,7 @@ begin
             transfers.ac_comp_enable <= '1';
             transfers.ac_load <= '1';
         end if;
+
         transfers.l_disable <= '1';
         transfers.l_load <= '1';
         transfers.eae_end <= '1';

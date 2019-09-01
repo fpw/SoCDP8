@@ -167,7 +167,7 @@ tests: process
         wait until led_run = '0';
     end procedure;
     
-    procedure test_div(a: natural; b: positive; res: natural; remain: natural) is
+    procedure test_div(a: natural; b: natural; res: natural; remain: natural; ex_sc: natural; ex_l: std_logic) is
     begin
         test((
             8#00000# => o"1007",        -- TAD 7: lower -> AC
@@ -181,7 +181,7 @@ tests: process
             others => o"7402")
         );
         assert led_accu = std_logic_vector(to_unsigned(remain, 12)) and led_mqr = std_logic_vector(to_unsigned(res, 12))
-               and led_step_counter = "01101" and led_link = '0'
+               and led_step_counter = std_logic_vector(to_unsigned(ex_sc, 5)) and led_link = ex_l
                     report integer'image(a) & " div " & integer'image(b) & " = " &
                            integer'image(to_integer(unsigned(led_mqr))) & " rem " &
                            integer'image(to_integer(unsigned(led_accu)))
@@ -219,45 +219,17 @@ begin
     );
     assert led_accu = o"0001" and led_mqr = o"0014" and led_step_counter = "01101" report "MUY, DVI" severity failure;
 
-    -- Test DVI 0 / x
-    test((
-        8#00000# => o"0000",        -- AND 0
-        8#00001# => o"7407",        -- DVI
-        8#00002# => o"0777",        -- C12
-        8#00003# => o"7402",        -- HLT
-        others => o"7402")
-    );
-    assert led_accu = o"0000" and led_mqr = o"0000" and led_step_counter = "01101" and led_link = '0' report "DVI 0 / x" severity failure;
-
-    -- Test DVI x / 0
-    test((
-        8#00000# => o"1007",        -- TAD 7
-        8#00001# => o"7407",        -- DVI
-        8#00002# => o"0000",        -- C12
-        8#00003# => o"7402",        -- HLT
-        8#00007# => o"0035",        -- C29
-        others => o"7402")
-    );
-    assert led_accu = o"0035" and led_mqr = o"0001" and led_step_counter = "00000" and led_link = '1' report "DVI x / 0" severity failure;
-
-    -- Test DVI overflow 10777 / 1
-    test((
-        8#00000# => o"1007",        -- TAD 7: lower -> AC
-        8#00001# => o"7421",        -- MQL: lower -> MQL
-        8#00002# => o"1006",        -- TAD 6: upper -> AC
-        8#00003# => o"7407",        -- DVI
-        8#00004# => o"0001",
-        8#00005# => o"7402",        -- HLT
-        8#00006# => o"0001",
-        8#00007# => o"0777",
-        others => o"7402")
-    );
-    assert led_accu = o"0001" and led_mqr = o"1777" and led_step_counter = "00000" and led_link = '1' report "DVI overflow" severity failure;
-    
-    test_div(12, 6, 2, 0);
-    test_div(145, 12, 12, 1);
-    test_div(0, 511, 0, 0);
-    test_div(2738385, 1234, 2219, 139);
+    -- (A, B, ex MQR, ex AC, ex SC, ex L)
+    test_div(12, 6, 2, 0, 13, '0');
+    test_div(145, 12, 12, 1, 13, '0');
+    test_div(0, 511, 0, 0, 13, '0');
+    test_div(2738385, 1234, 2219, 139, 13, '0');
+    test_div(12076159, 3021, 3997, 1222, 13, '0');
+    test_div(719918, 2835, 253, 2663, 13, '0');
+    test_div(3, 4095, 0, 3, 13, '0');
+    -- Overflows
+    test_div(0, 0, 0, 4095, 0, '1');
+    test_div(16773120, 4095, 0, 4095, 0, '1');
 
     -- Test writing and reading with fields
     test((

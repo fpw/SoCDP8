@@ -73,6 +73,7 @@ architecture Behavioral of registers is
     -- EAE extension
     signal mqr: std_logic_vector(11 downto 0);
     signal sc: std_logic_vector(4 downto 0);
+    signal adderLn: std_logic;
 
     -- MC8 extension
     signal mc8_if, mc8_ib, mc8_df: std_logic_vector(2 downto 0);
@@ -175,11 +176,19 @@ begin
     
 end process;
 
-dvi_carry: process(ac, sense)
+dvi_carry: process(ac, sense, adderLn, link, sc, mqr)
     variable sum: std_logic_vector(12 downto 0);
+    variable tmpA: std_logic;
 begin
-    sum := std_logic_vector(unsigned('0' & not ac) + unsigned(sense));
-    carry_o <= sum(11);
+    if sc = "00000" or sc = "00001" or mqr(1) /= mqr(0) then
+        sum := std_logic_vector(unsigned('0' & not ac) + unsigned(sense));
+        tmpA := link;
+    else
+        sum := std_logic_vector(unsigned('0' & ac) + unsigned(sense));
+        tmpA := not link;
+    end if;
+    adderLn <= tmpA xor sum(12);
+    carry_o <= not adderLn;
 end process;
 
 regs: process
@@ -209,17 +218,17 @@ begin
                 end if;
 
                 mqr <= mqr(10 downto 0) & '0';
-                if l_bus /= mqr(0) and sc /= "00000" then
+                if adderLn /= mqr(0) and sc /= "00000" then
                     mqr(0) <= '1';
                 end if;
             else
                 -- only shift MQR
                 mqr <= mqr(10 downto 0) & '0';
-                if l_bus /= mqr(0) and sc /= "00000" then
+                if adderLn /= mqr(0) and sc /= "00000" then
                     mqr(0) <= '1';
                 end if;
                 ac <= input_bus(11 downto 0);
-                link <= l_bus;
+                link <= not adderLn;
             end if;
         elsif transfers.shift = LEFT_SHIFT then
             ac <= input_bus(10 downto 0) & l_bus;
@@ -252,10 +261,6 @@ begin
                 link <= not link;
             end if;
         end if;
-    end if;
-    
-    if transfers.ac_load = '0' and transfers.eae_shift = EAE_SHIFT_DVI then
-        mqr <= mqr(10 downto 0) & '1';
     end if;
     
     if transfers.l_load = '1' and transfers.shift = NO_SHIFT then
