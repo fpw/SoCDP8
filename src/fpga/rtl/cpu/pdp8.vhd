@@ -333,7 +333,7 @@ port map (
     state_next => next_state_inst
 );
 
-auto_index <= '1' when state = STATE_DEFER and ma(11 downto 3) = "000000001" else '0';
+auto_index <= '1' when state = STATE_DEFER and ma(11 downto 3) = o"001" else '0';
 norm <= '1' when (ac(11) /= ac(10)) or (mqr = o"0000" and ac(9 downto 0) = "0000000000") else '0';
 field <= mc8_df when (deferred = '1' and state = STATE_EXEC and inst /= INST_JMS and inst /= INST_JMP) else mc8_if;
 
@@ -455,7 +455,7 @@ begin
                 end if;
                 
                 -- slow cycle unless internal address
-                if state = STATE_FETCH and inst = INST_IOT then
+                if state = STATE_FETCH and inst = INST_IOT and mb(8 downto 6) /= o"2" and mb(8 downto 3) /= o"00" then
                     -- this is basically the IO START signal
                     pause <= '1';
                     io_start <= '1';
@@ -501,7 +501,7 @@ begin
                     end if;
                 end if;
                 
-                if state = STATE_FETCH and (inst = INST_JMP or inst = INST_JMS) then
+                if (inst = INST_JMP or inst = INST_JMS) and reg_trans_inst.pc_load = '1' then
                     reg_trans.ib_to_if <= '1';
                     int_inhibit <= '0';
                 end if;

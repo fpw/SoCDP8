@@ -256,15 +256,34 @@ begin
 
     -- Test CIF and jump
     test((
-        8#00000# => o"6212",        -- CIF 1
-        8#00001# => o"5000",        -- JMP 0
-        8#10000# => o"1003",        -- TAD 3
-        8#10001# => o"3004",        -- DCA 4
-        8#10002# => o"7402",        -- HLT
-        8#10003# => o"1234",        -- Data
+        8#00000# => o"6221",        -- CDF 2
+        8#00001# => o"6212",        -- CIF 1
+        8#00002# => o"5000",        -- JMP 0
+        8#10000# => o"1410",        -- TAD I 10
+        8#10001# => o"7402",        -- HLT
+        8#10010# => o"7777",        -- Data
+        8#20000# => o"1234",        -- TAD I 10
         others => o"7402")
     );
-    assert led_inst_field = o"1" and led_accu = o"0000" and ram(8#10004#) = o"1234" report "Fail CIF JMP" severity failure;
+    assert led_inst_field = o"1" and led_data_field = o"2" and led_accu = o"1234" and ram(8#10010#) = o"0000" report "Fail CIF JMP" severity failure;
+
+    -- Test IR
+    int_rqst <= '1';
+    test((
+        8#00000# => o"0003",        -- int addr
+        8#00001# => o"6244",        -- RMF
+        8#00002# => o"5400",        -- JMP I 0
+        8#00003# => o"6213",        -- CDF CIF 1
+        8#00004# => o"5000",        -- JMP 0
+        
+        8#10000# => o"6001",        -- ION
+        8#10001# => o"0000",
+        8#10002# => o"0000",
+        8#10003# => o"0000",
+        others => o"7402")
+    );
+    int_rqst <= '0';
+    assert led_data_field = o"1" and led_inst_field = o"1" and led_pc = o"0005" and ram(8#00000#) /= o"0003" report "Fail IR" severity failure;
     
     report "End of tests";
     stop_sim <= true;
