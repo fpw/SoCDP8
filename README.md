@@ -19,7 +19,7 @@ Peripherals are implemented on the ARM CPU of the SoC. This allows an easy imple
 ## Project Vision
 * Provide a simple replacement for the Raspberry Pi: Ideally, the project runs on a SoC board that snaps into the PiDP-8/I console in the same way as the Raspberry Pi.
 * Implement the system as close as possible to the maintenance manual and engineering drawings.
-* Visualize peripherals using an HDMI touch screen that fits into the same type of box as the PiDP-8/I to build a nice stack.
+* Operate the system through a browser, i.e. the ARM will run a web server that can communicate with the PDP-8 on the FPGA so that web sockets can be used to control the system through a browser.
 
 ## Supported SoC Boards
 I evaluated a few SoC boards:
@@ -47,6 +47,6 @@ For now, I am targeting the Zynq and will use the Pynq-Z2 board for development.
 ## Project Status
 Unfortunately, I had to make a small modification to the PiDP-8/I hardware to support the Zynq boards: The 1k resistors must be replaced by 220 Ohm resistors to support the different pullup resistance of the Zynq drivers. But at least 220 Ohm also work with the Raspberry Pi, so this modification is compatible.
 
-The base system including EAE, I/O and interrupts is functional and passes the MAINDEC tests that can be loaded using the RIM loader. The following parts are missing:
+The base system including EAE, I/O and interrupts is functional and passes the MAINDEC tests that can be loaded using the RIM and BIN loaders. It can also run Focal69. The following parts are missing:
 * Data breaks
-* Memory fields
+* Time sharing option
