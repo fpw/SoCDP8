@@ -1,0 +1,198 @@
+/*
+ *  Copyright (C) 2011 - 2014 Xilinx
+ *  Copyright (C) 2012 National Instruments Corp.
+ *
+ * This software is licensed under the terms of the GNU General Public
+ * License version 2, as published by the Free Software Foundation, and
+ * may be copied, distributed, and modified under those terms.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+/dts-v1/;
+/include/ "zynq-7000.dtsi"
+
+/ {
+	model = "Zynqberry TE0726 Board";
+	compatible = "xlnx,zynqberry", "xlnx,zynq-7000";
+
+	cpus {
+		cpu@0 {
+			operating-points = <666666 1000000 333333 1000000>;
+		};
+	};
+
+	aliases {
+		serial0 = &uart1;
+                serial1 = &uart0;
+		spi0 = &qspi;
+                spi1 = &spi1;
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x0 0x20000000>;
+	};
+
+	chosen {
+		bootargs = "";
+		stdout-path = "serial0:115200n8";
+	};
+
+	usb_phy0: usb_phy@0 {
+		compatible = "ulpi-phy";
+		#phy-cells = <0>;
+		reg = <0xe0002000 0x1000>;
+		view-port = <0x0170>;
+		drv-vbus;
+	};
+
+};
+
+&gpio0 {
+	emio-gpio-width = <15>;
+	gpio-mask-high = <0x0>;
+	gpio-mask-low = <0x5600>;
+};
+
+&i2c0 {
+	clock-frequency = <400000>;
+	status = "okay";
+};
+
+&i2c1 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	clock-frequency = <400000>;
+	status = "okay";
+
+	i2cmux0: i2cmux@70  {
+		compatible = "nxp,pca9544";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0x70>;
+
+
+		i2c1@0 {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0>;
+
+			id_eeprom@50 {
+				compatible = "atmel,24c32";
+				reg = <0x50>;
+			};
+
+		};
+		i2c1@1 {	// Display Interface Connector
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <1>;
+		};
+		i2c1@2 {	// HDMI Interface Connector
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <2>;
+		};
+		i2c1@3 {	// Camera Interface Connector
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <3>;
+		};
+	};
+
+};
+
+&intc {
+	num_cpus = <2>;
+	num_interrupts = <96>;
+};
+
+&qspi {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+	flash0: flash@0 {
+		compatible = "spansion,s25fl128s";
+		reg = <0x0>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		spi-max-frequency = <50000000>;
+		partition@0x00000000 {
+			label = "boot";
+			reg = <0x00000000 0x00500000>;
+		};
+		partition@0x00500000 {
+			label = "bootenv";
+			reg = <0x00500000 0x00020000>;
+		};
+		partition@0x00520000 {
+			label = "kernel";
+			reg = <0x00520000 0x00a80000>;
+		};
+		partition@0x00fa0000 {
+			label = "spare";
+			reg = <0x00fa0000 0x00000000>;
+		};
+	};
+};
+
+&sdhci1 {
+	status = "okay";
+	xlnx,has-cd = <0x1>;
+	xlnx,has-power = <0x0>;
+	xlnx,has-wp = <0x0>;
+};
+
+&spi1 {
+	is-decoded-cs = <0>;
+	num-cs = <3>;
+	status = "okay";
+        
+        mpu:spidev@0{
+            compatible = "spidev";
+            reg = <0x0>;
+            #address-cells = <0x1>;
+            #size-cells = <0x0>;
+            spi-max-frequency = <0x7a120>; 
+        };
+ 
+        baro:spidev@1{
+            compatible = "spidev";
+            reg = <0x1>;
+            #address-cells = <0x1>;
+            #size-cells = <0x0>;
+            spi-max-frequency = <0x7a120>;
+        };
+
+};
+
+&uart0 {
+	current-speed = <115200>;
+	device_type = "serial";
+	port-number = <0>;
+	status = "okay";
+};
+
+&uart1 {
+	current-speed = <115200>;
+	device_type = "serial";
+	port-number = <1>;
+	status = "okay";
+};
+
+&usb0 {
+	dr_mode = "host";
+	phy_type = "ulpi";
+	status = "okay";
+	usb-reset = <&gpio0 7 0>;
+        usb-phy = <&usb_phy0>;
+};
+
+&clkc {
+	fclk-enable = <0xf>;
+	ps-clk-frequency = <33333333>;
+};
+
