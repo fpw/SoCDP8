@@ -5,25 +5,40 @@
 #include "zynq-7000.dtsi"
 
 / {
-	model = "Zynq PYNQ-Z2 Development Board";
-	compatible = "digilent,zynq-artyz", "xlnx,zynq-7000";
+    model = "Zynq PYNQ-Z2 Development Board";
+    compatible = "digilent,zynq-artyz", "xlnx,zynq-7000";
 
-	aliases {
-		ethernet0 = &gem0;
-		serial0 = &uart0;
-		spi0 = &qspi;
-		mmc0 = &sdhci0;
-	};
+    aliases {
+        ethernet0 = &gem0;
+        serial0 = &uart0;
+        spi0 = &qspi;
+        mmc0 = &sdhci0;
+    };
 
-	memory {
-		device_type = "memory";
-		reg = <0x0 0x20000000>;
-	};
+    memory {
+        device_type = "memory";
+        reg = <0x0 0x20000000>;
+    };
+    
+    socdp8_console {
+        compatible = "socdp8,console";
+        reg = <0x43C10000 0x1000>;
+    };
 
-	chosen {
-		bootargs = "";
-		stdout-path = "serial0:115200n8";
-	};
+    socdp8_core {
+        compatible = "socdp8,core";
+        reg = <0x43C20000 0x2000>;
+    };
+
+    socdp8_io {
+        compatible = "socdp8,io";
+        reg = <0x43C00000 0x1000>;
+    };
+
+    chosen {
+        bootargs = "";
+        stdout-path = "serial0:115200n8";
+    };
 
     usb_phy0: phy0 {
         compatible = "ulpi-phy";
@@ -35,36 +50,36 @@
 };
 
 &clkc {
-	ps-clk-frequency = <50000000>;
+    ps-clk-frequency = <50000000>;
 };
 
 &gem0 {
-	status = "okay";
-	phy-mode = "rgmii-id";
-	phy-handle = <&ethernet_phy>;
+    status = "okay";
+    phy-mode = "rgmii-id";
+    phy-handle = <&ethernet_phy>;
 
-	ethernet_phy: ethernet-phy@0 { /* rtl8211e-vl */
-		reg = <1>;
-	};
+    ethernet_phy: ethernet-phy@0 { /* rtl8211e-vl */
+        reg = <1>;
+    };
 };
 
 &qspi {
-	u-boot,dm-pre-reloc;
-	status = "okay";
+    u-boot,dm-pre-reloc;
+    status = "okay";
 };
 
 &sdhci0 {
-	u-boot,dm-pre-reloc;
-	status = "okay";
+    u-boot,dm-pre-reloc;
+    status = "okay";
 };
 
 &uart0 {
-	u-boot,dm-pre-reloc;
-	status = "okay";
+    u-boot,dm-pre-reloc;
+    status = "okay";
 };
 
 &usb0 {
-	status = "okay";
-	dr_mode = "host";
-	usb-phy = <&usb_phy0>;
+    status = "okay";
+    dr_mode = "host";
+    usb-phy = <&usb_phy0>;
 };

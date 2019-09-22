@@ -2,9 +2,14 @@ SUMMARY = "SoCDP-8 image"
 DESCRIPTION = "SoCD-8 image"
 LICENSE = "GPLv2+"
 
-IMAGE_FEATURES = "ssh-server-openssh package-management"
+IMAGE_FEATURES = "ssh-server-dropbear package-management"
 
-IMAGE_INSTALL = "packagegroup-core-boot packagegroup-base-wifi openssh-sftp-server linux-firmware nodejs nodejs-npm"
+IMAGE_INSTALL = "packagegroup-core-boot \
+    packagegroup-base-wifi linux-firmware \
+    devmem2 \
+    socdp8-pidp8i-mod socdp8-core-mem-mod socdp8-io-mod \
+    nginx \
+    "
 
 DISTRO_FEATURES = "wifi"
 
