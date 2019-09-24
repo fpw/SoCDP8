@@ -8,10 +8,10 @@ IMAGE_INSTALL = "packagegroup-core-boot \
     packagegroup-base-wifi linux-firmware \
     openssh-sftp-server \
     devmem2 \
-    socdp8-pidp8i-mod socdp8-core-mem-mod socdp8-io-mod \
-    nodejs nodejs-npm \
+    socdp8-startup \
+    nodejs nodejs-npm mmap-io \
     "
-
+    
 DISTRO_FEATURES = "wifi"
 
 IMAGE_ROOTFS_SIZE = "32768"

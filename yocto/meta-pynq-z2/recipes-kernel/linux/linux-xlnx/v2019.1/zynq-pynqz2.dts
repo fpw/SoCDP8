@@ -21,18 +21,21 @@
     };
     
     socdp8_console {
-        compatible = "socdp8,console";
+        compatible = "generic-uio";
         reg = <0x43C10000 0x1000>;
+        reg-names = "socdp8_console";
     };
 
     socdp8_core {
-        compatible = "socdp8,core";
+        compatible = "generic-uio";
         reg = <0x43C20000 0x2000>;
+        reg-names = "socdp8_core_mem";
     };
 
     socdp8_io {
-        compatible = "socdp8,io";
+        compatible = "generic-uio";
         reg = <0x43C00000 0x1000>;
+        reg-names = "socdp8_io_ctrl";
     };
 
     chosen {

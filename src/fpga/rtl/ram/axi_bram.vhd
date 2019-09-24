@@ -58,7 +58,7 @@ architecture Behavioral of axi_bram is
     type ram_a is array(0 to 32767) of std_logic_vector(11 downto 0);
     signal ram: ram_a;
 
-    type axi_ram_state is (RAM_IDLE, RAM_READ_WAIT, RAM_READ, RAM_WRITE, RAM_WRITE_ACK);
+    type axi_ram_state is (RAM_IDLE, RAM_READ_WAIT, RAM_READ, RAM_WRITE_WAIT, RAM_WRITE, RAM_WRITE_ACK);
     signal state: axi_ram_state;
     
     signal axi_write: std_logic;
@@ -115,7 +115,7 @@ begin
             elsif s_axi_awvalid = '1' and s_axi_wvalid = '1' then
                 s_axi_awready <= '1';
                 axi_addr <= unsigned(s_axi_awaddr(C_S_AXI_ADDR_WIDTH - 1 downto 2));
-                state <= RAM_WRITE;
+                state <= RAM_WRITE_WAIT;
             end if;
         when RAM_READ_WAIT =>
             -- wait for RAM to load
@@ -129,9 +129,12 @@ begin
             if s_axi_rready = '1' then
                 state <= RAM_IDLE;
             end if;
+        when RAM_WRITE_WAIT =>
+            -- wait for RAM to load
+            state <= RAM_WRITE;
         when RAM_WRITE =>
             -- Since 32 bit data are used, only strobes of type 00xx make sense
-            axi_din <= (others => '0');
+            axi_din <= axi_dout;
             if s_axi_wstrb(0) = '1' then
                 axi_din(7 downto 0) <= s_axi_wdata(7 downto 0);
                 axi_write <= '1';
