@@ -1,0 +1,17 @@
+#! /bin/bash
+
+case "$1" in
+  start)
+    if [ ! -f /lib/modules/`uname -r`/modules.dep ]; then
+        depmod
+    fi
+    modprobe uio_pdrv_genirq of_id="generic-uio"
+    ;;
+  stop)
+    ;;
+  *)
+    exit 1
+    ;;
+esac
+
+exit 0

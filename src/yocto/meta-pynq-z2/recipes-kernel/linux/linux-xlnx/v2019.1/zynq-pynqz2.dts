@@ -1,0 +1,88 @@
+/*
+ * TUL Pynq-Z2 board DTS
+ */
+/dts-v1/;
+#include "zynq-7000.dtsi"
+
+/ {
+    model = "Zynq PYNQ-Z2 Development Board";
+    compatible = "digilent,zynq-artyz", "xlnx,zynq-7000";
+
+    aliases {
+        ethernet0 = &gem0;
+        serial0 = &uart0;
+        spi0 = &qspi;
+        mmc0 = &sdhci0;
+    };
+
+    memory {
+        device_type = "memory";
+        reg = <0x0 0x20000000>;
+    };
+    
+    socdp8_console {
+        compatible = "generic-uio";
+        reg = <0x43C10000 0x10000>;
+        reg-names = "socdp8_console";
+    };
+
+    socdp8_core {
+        compatible = "generic-uio";
+        reg = <0x43C20000 0x20000>;
+        reg-names = "socdp8_core_mem";
+    };
+
+    socdp8_io {
+        compatible = "generic-uio";
+        reg = <0x43C00000 0x10000>;
+        reg-names = "socdp8_io_ctrl";
+    };
+
+    chosen {
+        bootargs = "";
+        stdout-path = "serial0:115200n8";
+    };
+
+    usb_phy0: phy0 {
+        compatible = "ulpi-phy";
+        #phy-cells = <0>;
+        reg = <0xe0002000 0x1000>;
+        view-port = <0x170>;
+        drv-vbus;
+    };
+};
+
+&clkc {
+    ps-clk-frequency = <50000000>;
+};
+
+&gem0 {
+    status = "okay";
+    phy-mode = "rgmii-id";
+    phy-handle = <&ethernet_phy>;
+
+    ethernet_phy: ethernet-phy@0 { /* rtl8211e-vl */
+        reg = <1>;
+    };
+};
+
+&qspi {
+    u-boot,dm-pre-reloc;
+    status = "okay";
+};
+
+&sdhci0 {
+    u-boot,dm-pre-reloc;
+    status = "okay";
+};
+
+&uart0 {
+    u-boot,dm-pre-reloc;
+    status = "okay";
+};
+
+&usb0 {
+    status = "okay";
+    dr_mode = "host";
+    usb-phy = <&usb_phy0>;
+};
