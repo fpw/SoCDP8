@@ -1,2 +1,0 @@
-KERNEL=="uio*", MODE="666"
-
