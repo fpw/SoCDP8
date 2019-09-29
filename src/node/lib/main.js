@@ -28,11 +28,13 @@ const socketio_1 = __importDefault(require("@feathersjs/socketio"));
 console.log("SoCDP8 starting...");
 const pdp8 = new SoCDP8_1.SoCDP8();
 class CoreMemoryService {
-    async get(id, params) {
-        const data = {
-            dump: Array.from(pdp8.readCoreDump())
-        };
-        return data;
+    async find() {
+        return Array.from(pdp8.readCoreDump());
+    }
+}
+class ConsoleService {
+    async find() {
+        return pdp8.readConsoleState();
     }
 }
 const app = express_1.default(feathers_1.default());
@@ -42,6 +44,7 @@ app.use(express_1.default.static(__dirname + '/static'));
 app.configure(express_1.default.rest());
 app.configure(socketio_1.default());
 app.use('/core-memory', new CoreMemoryService());
+app.use('/console', new ConsoleService());
 app.use(express_1.default.errorHandler());
 app.on('connection', connection => {
     app.channel('everybody').join(connection);

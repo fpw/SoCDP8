@@ -35,6 +35,15 @@ class SoCDP8 {
     readCoreDump() {
         return this.mem.dumpCore();
     }
+    readConsoleState() {
+        let state = {
+            leds: this.cons.readLEDs(),
+            ledOverride: this.cons.isLEDOverridden(),
+            switches: this.cons.readSwitches(),
+            switchOverride: this.cons.isSwitchOverridden()
+        };
+        return state;
+    }
     async run() {
         let asr = new ASR33_1.ASR33(this.io);
         await this.io.runDeviceLoop();

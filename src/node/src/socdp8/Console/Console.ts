@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- export enum LED {
+ enum LED {
     DATA_FIELD =    1,
     INST_FIELD =    2,
     PC =            3,
@@ -33,7 +33,7 @@
     RUN =           14,
 }
 
-export enum Switch {
+enum Switch {
     DATA_FIELD =    15,
     INST_FIELD =    16,
     SWR =           17,
@@ -49,6 +49,37 @@ export enum Switch {
 
 const LED_OVERRIDE_MASK = 2;
 const SW_OVERRIDE_MASK = 1;
+
+export interface LEDState {
+    dataField: number;
+    instField: number;
+    pc: number;
+    memAddr: number;
+    memBuf: number;
+    link: number;
+    ac: number;
+    stepCounter: number;
+    mqr: number;
+    instruction: number;
+    state: number;
+    ion: number;
+    pause: number;
+    run: number;
+}
+
+export interface SwitchState {
+    dataField: number;
+    instField: number;
+    swr: number;
+    start: number;
+    load: number;
+    dep: number;
+    exam: number;
+    cont: number;
+    stop: number;
+    singStep: number;
+    singInst: number;
+}
 
 export class Console {
     private map: Buffer;
@@ -87,19 +118,56 @@ export class Console {
         this.map.writeUInt8(ovr, 0);
     }
 
-    public readLED(led: LED): number {
+    public readLEDs(): LEDState {
+        let state: LEDState = {
+            dataField: this.readLED(LED.DATA_FIELD),
+            instField: this.readLED(LED.INST_FIELD),
+            pc: this.readLED(LED.PC),
+            memAddr: this.readLED(LED.MEM_ADDR),
+            memBuf: this.readLED(LED.MEM_BUF),
+            link: this.readLED(LED.LINK),
+            ac: this.readLED(LED.AC),
+            stepCounter: this.readLED(LED.STEP_COUNTER),
+            mqr: this.readLED(LED.MQR),
+            instruction: this.readLED(LED.INSTRUCTION),
+            state: this.readLED(LED.STATE),
+            ion: this.readLED(LED.ION),
+            pause: this.readLED(LED.PAUSE),
+            run: this.readLED(LED.RUN)
+        }
+        return state;
+    }
+
+    public readSwitches(): SwitchState {
+        let state: SwitchState = {
+            dataField: this.readSwitch(Switch.DATA_FIELD),
+            instField: this.readSwitch(Switch.INST_FIELD),
+            swr: this.readSwitch(Switch.SWR),
+            start: this.readSwitch(Switch.START),
+            load: this.readSwitch(Switch.LOAD),
+            dep: this.readSwitch(Switch.DEP),
+            exam: this.readSwitch(Switch.EXAM),
+            cont: this.readSwitch(Switch.CONT),
+            stop: this.readSwitch(Switch.STOP),
+            singStep: this.readSwitch(Switch.SING_STEP),
+            singInst: this.readSwitch(Switch.SING_INST)
+        }        
+        return state;
+    }
+
+    private readLED(led: LED): number {
         return this.map.readUInt16LE(led * 4);
     }
 
-    public writeLED(led: LED, value: number): void {
+    private writeLED(led: LED, value: number): void {
         this.map.writeUInt16LE(value, led * 4);
     }
 
-    public readSwitch(sw: Switch) {
+    private readSwitch(sw: Switch) {
         return this.map.readUInt16LE(sw * 4);
     }
 
-    public writeSwitch(sw: Switch, value: number): void {
+    private writeSwitch(sw: Switch, value: number): void {
         this.map.writeUInt16LE(value, sw * 4);
     }
 }

@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { SoCDP8 } from "./socdp8/SoCDP8";
+import { SoCDP8, ConsoleState } from './socdp8/SoCDP8';
 import feathers, { Id } from '@feathersjs/feathers'
 import '@feathersjs/transport-commons';
 import express from '@feathersjs/express';
@@ -27,16 +27,16 @@ console.log("SoCDP8 starting...");
 
 const pdp8 = new SoCDP8();
 
+
 class CoreMemoryService {
-    async get(id: Id, params: Params) {
-        interface CoreMemoryData {
-            dump: number[];
-        }
-        
-        const data: CoreMemoryData = {
-            dump: Array.from(pdp8.readCoreDump())
-        };
-        return data;
+    async find(): Promise<number[]> {
+        return Array.from(pdp8.readCoreDump())
+    }
+}
+
+class ConsoleService {
+    async find(): Promise<ConsoleState> {
+        return pdp8.readConsoleState();
     }
 }
 
@@ -49,6 +49,7 @@ app.configure(express.rest());
 app.configure(socketio());
 
 app.use('/core-memory', new CoreMemoryService());
+app.use('/console', new ConsoleService());
 app.use(express.errorHandler());
 
 app.on('connection', connection => {
