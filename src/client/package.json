@@ -1,0 +1,25 @@
+{
+  "name": "socdp8-client",
+  "description": "SoCDP8 client application",
+  "version": "0.0.1",
+  "author": "Folke Will <folko@solhost.org>",
+  "license": "AGPL-3.0-or-later",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "npx webpack && cp -av static/* /nfsroot/home/socdp8/lib/static && cp -v dist/main.js /nfsroot/home/socdp8/lib/static/"
+  },
+  "dependencies": {
+    "react": "^16.10.1",
+    "react-dom": "^16.10.1"
+  },
+  "devDependencies": {
+    "@types/react": "^16.9.4",
+    "@types/react-dom": "^16.9.1",
+    "source-map-loader": "^0.2.4",
+    "ts-loader": "^6.2.0",
+    "typescript": "^3.6.3",
+    "webpack": "^4.41.0",
+    "webpack-cli": "^3.3.9"
+  }
+}
