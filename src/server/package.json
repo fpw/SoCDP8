@@ -8,11 +8,12 @@
     "@feathersjs/express": "^4.3.3",
     "@feathersjs/feathers": "^4.3.3",
     "@feathersjs/socketio": "^4.3.3",
-    "mmap-io": "^1.1.7"
+    "mmap-io": "^1.1.7",
+    "socket-io": "^1.0.0"
   },
   "devDependencies": {
-    "@types/feathersjs__feathers": "^3.1.5",
     "@types/feathersjs__express": "^1.1.6",
+    "@types/feathersjs__feathers": "^3.1.5",
     "@types/feathersjs__socketio": "^3.0.7",
     "@types/node": "^12.7.8",
     "typescript": "^3.6.3"

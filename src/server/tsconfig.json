@@ -1,11 +1,11 @@
  {
      "compilerOptions": {
-         "lib": ["es2017"],
-         "target": "es2017",
+         "lib": ["es6"],
+         "target": "es6",
          "module": "commonjs",
-         "declaration": false,
          "outDir": "./lib",
          "strict": true,
+         "noImplicitAny": true,
          "esModuleInterop": true
      },
      "include": ["src"],
