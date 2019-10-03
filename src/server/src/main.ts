@@ -17,7 +17,7 @@
  */
 
 import { SoCDP8, ConsoleState } from './socdp8/SoCDP8';
-import feathers, { Id } from '@feathersjs/feathers'
+import feathers, { Id, NullableId } from '@feathersjs/feathers'
 import '@feathersjs/transport-commons';
 import express from '@feathersjs/express';
 import socketio from '@feathersjs/socketio'
@@ -37,6 +37,12 @@ class CoreMemoryService {
 class ConsoleService {
     async find(): Promise<ConsoleState> {
         return pdp8.readConsoleState();
+    }
+
+    async update(id: NullableId, data: any, params: Params) {
+        switch (id) {
+            case "ac": 
+        }
     }
 }
 
@@ -61,3 +67,7 @@ app.publish(data => app.channel('everybody'));
 app.listen(8000).on('listening', () => {
     console.log('Service started');
 });
+
+setInterval(() => {
+
+}, 100);

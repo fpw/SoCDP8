@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- enum LED {
+ enum Lamp {
     DATA_FIELD =    1,
     INST_FIELD =    2,
     PC =            3,
@@ -47,10 +47,10 @@ enum Switch {
     SING_INST =     25,
 }
 
-const LED_OVERRIDE_MASK = 2;
+const LAMP_OVERRIDE_MASK = 2;
 const SW_OVERRIDE_MASK = 1;
 
-export interface LEDState {
+export interface LampState {
     dataField: number;
     instField: number;
     pc: number;
@@ -93,17 +93,17 @@ export class Console {
         return (ovr & SW_OVERRIDE_MASK) != 0;
     }
 
-    public isLEDOverridden(): boolean {
+    public isLampOverridden(): boolean {
         let ovr = this.map.readUInt8(0);
-        return (ovr & LED_OVERRIDE_MASK) != 0;
+        return (ovr & LAMP_OVERRIDE_MASK) != 0;
     }
 
-    public setLEDOverride(override: boolean): void {
+    public setLampOverride(override: boolean): void {
         let ovr = this.map.readUInt8(0);
         if (override) {
-            ovr |= LED_OVERRIDE_MASK;
+            ovr |= LAMP_OVERRIDE_MASK;
         } else {
-            ovr &= ~LED_OVERRIDE_MASK;
+            ovr &= ~LAMP_OVERRIDE_MASK;
         }
         this.map.writeUInt8(ovr, 0);
     }
@@ -118,22 +118,22 @@ export class Console {
         this.map.writeUInt8(ovr, 0);
     }
 
-    public readLEDs(): LEDState {
-        let state: LEDState = {
-            dataField: this.readLED(LED.DATA_FIELD),
-            instField: this.readLED(LED.INST_FIELD),
-            pc: this.readLED(LED.PC),
-            memAddr: this.readLED(LED.MEM_ADDR),
-            memBuf: this.readLED(LED.MEM_BUF),
-            link: this.readLED(LED.LINK),
-            ac: this.readLED(LED.AC),
-            stepCounter: this.readLED(LED.STEP_COUNTER),
-            mqr: this.readLED(LED.MQR),
-            instruction: this.readLED(LED.INSTRUCTION),
-            state: this.readLED(LED.STATE),
-            ion: this.readLED(LED.ION),
-            pause: this.readLED(LED.PAUSE),
-            run: this.readLED(LED.RUN)
+    public readLamps(): LampState {
+        let state: LampState = {
+            dataField: this.readLamp(Lamp.DATA_FIELD),
+            instField: this.readLamp(Lamp.INST_FIELD),
+            pc: this.readLamp(Lamp.PC),
+            memAddr: this.readLamp(Lamp.MEM_ADDR),
+            memBuf: this.readLamp(Lamp.MEM_BUF),
+            link: this.readLamp(Lamp.LINK),
+            ac: this.readLamp(Lamp.AC),
+            stepCounter: this.readLamp(Lamp.STEP_COUNTER),
+            mqr: this.readLamp(Lamp.MQR),
+            instruction: this.readLamp(Lamp.INSTRUCTION),
+            state: this.readLamp(Lamp.STATE),
+            ion: this.readLamp(Lamp.ION),
+            pause: this.readLamp(Lamp.PAUSE),
+            run: this.readLamp(Lamp.RUN)
         }
         return state;
     }
@@ -155,12 +155,12 @@ export class Console {
         return state;
     }
 
-    private readLED(led: LED): number {
-        return this.map.readUInt16LE(led * 4);
+    private readLamp(lamp: Lamp): number {
+        return this.map.readUInt16LE(lamp * 4);
     }
 
-    private writeLED(led: LED, value: number): void {
-        this.map.writeUInt16LE(value, led * 4);
+    private writeLamp(lamp: Lamp, value: number): void {
+        this.map.writeUInt16LE(value, lamp * 4);
     }
 
     private readSwitch(sw: Switch) {

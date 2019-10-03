@@ -6,7 +6,8 @@
          "sourceMap": true,
          "strict": true,
          "noImplicitAny": true,
-         "jsx": "react"
+         "jsx": "react",
+         "esModuleInterop": true
      },
      "include": ["src"],
      "exclude": ["node_modules", "**/__tests__/*"]

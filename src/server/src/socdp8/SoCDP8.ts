@@ -17,14 +17,14 @@
  */
 
 import { UIOMapper } from '../UIO/UIOMapper';
-import { Console, LEDState, SwitchState } from './Console/Console';
+import { Console, LampState, SwitchState } from './Console/Console';
 import { CoreMemory } from "./CoreMemory/CoreMemory";
 import { IOController } from './IO/IOController';
 import { ASR33 } from './IO/Peripherals/ASR33';
 
 export interface ConsoleState {
-    leds: LEDState;
-    ledOverride: boolean;
+    lamps: LampState;
+    lampOverride: boolean;
     
     switches: SwitchState;
     switchOverride: boolean;
@@ -52,8 +52,8 @@ export class SoCDP8 {
 
     public readConsoleState(): ConsoleState {
         let state: ConsoleState = {
-            ledOverride: this.cons.isLEDOverridden(),
-            leds: this.cons.readLEDs(),
+            lampOverride: this.cons.isLampOverridden(),
+            lamps: this.cons.readLamps(),
 
             switchOverride: this.cons.isSwitchOverridden(),
             switches: this.cons.readSwitches()

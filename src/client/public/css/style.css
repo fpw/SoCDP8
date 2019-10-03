@@ -15,26 +15,3 @@
  *   You should have received a copy of the GNU Affero General Public License
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
- import * as React from "react";
-import * as ReactDOM from "react-dom";
-import { PDP8Console, LampState, SwitchState } from './components/PDP8Console/PDP8Console';
-import io from 'socket.io-client';
-import feathers from "@feathersjs/feathers";
-import socketio from "@feathersjs/socketio-client";
-
-async function main() {
-    let socket = io();
-    let app = feathers();
-    app.configure(socketio(socket));
-    
-    let state = await app.service('console').find();
-
-    let lamps: LampState = state.lamps;
-    let switches: SwitchState = state.switches;
-    
-    let cons = <PDP8Console lamps={lamps} switches={switches} />;
-    ReactDOM.render(cons, document.getElementById("main"));
-}
-
-main();

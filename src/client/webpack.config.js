@@ -28,6 +28,9 @@ module.exports = {
 
     externals: {
         "react": "React",
-        "react-dom": "ReactDOM"
+        "react-dom": "ReactDOM",
+        "@feathersjs/feathers": "feathers",
+        "@feathersjs/socketio-client": "feathers.socketio",
+        "socket.io-client": "io"
     }
-};
+}
