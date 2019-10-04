@@ -16,12 +16,12 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import * as React from "react";
-import { PDP8Console } from './PDP8Console';
-import io from 'socket.io-client';
-import feathers from "@feathersjs/feathers";
-import socketio from "@feathersjs/socketio-client";
+import * as React from 'react';
+import * as io from 'socket.io-client'
+import { FrontPanel } from './FrontPanel';
 import { LampState, SwitchState } from '../models/FrontPanelState';
+require('../../public/index.html')
+require('../../public/css/style.css')
 
 interface AppProps {
 }
@@ -32,23 +32,21 @@ interface AppState {
 }
 
 export class App extends React.Component<AppProps, AppState> {
-    private app: feathers.Application<{}> | null = null;
+    private socket: SocketIOClient.Socket;
 
     constructor(props: AppProps) {
         super(props);
+        this.socket = io.connect();
     }
 
     public async componentDidMount(): Promise<void> {
-        let socket = io();
-        this.app = feathers();
-        this.app.configure(socketio(socket));
-
-        let state = await this.app.service('console').find();
-        let lamps: LampState = state.lamps;
-        let switches: SwitchState = state.switches;
-        this.setState({
-            lamps: lamps,
-            switches: switches
+        this.socket.on('console-state', (state: any) => {
+            let lamps: LampState = state.lamps;
+            let switches: SwitchState = state.switches;
+            this.setState({
+                lamps: lamps,
+                switches: switches
+            });
         });
     }
 
@@ -57,6 +55,10 @@ export class App extends React.Component<AppProps, AppState> {
             return <div>Loading...</div>;
         }
 
-        return <PDP8Console lamps={this.state.lamps} switches={this.state.switches} />;
+        return <FrontPanel lamps={this.state.lamps} switches={this.state.switches} onSwitch={(s) => this.onConsoleSwitch(s)} />;
+    }
+
+    public onConsoleSwitch(sw: string): void {
+        this.socket.emit('console-switch', {'switch': sw});
     }
 }

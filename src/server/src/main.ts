@@ -17,57 +17,29 @@
  */
 
 import { SoCDP8, ConsoleState } from './socdp8/SoCDP8';
-import feathers, { Id, NullableId } from '@feathersjs/feathers'
-import '@feathersjs/transport-commons';
-import express from '@feathersjs/express';
-import socketio from '@feathersjs/socketio'
-import { Params } from "express-serve-static-core";
+import * as express from 'express';
+import * as io from 'socket.io';
+import { Server } from 'http';
 
 console.log("SoCDP8 starting...");
 
 const pdp8 = new SoCDP8();
 
+const app = express();
+const server = new Server(app);
+const sockServer = io(server);
 
-class CoreMemoryService {
-    async find(): Promise<number[]> {
-        return Array.from(pdp8.readCoreDump())
-    }
-}
+app.use(express.static('public'));
 
-class ConsoleService {
-    async find(): Promise<ConsoleState> {
-        return pdp8.readConsoleState();
-    }
-
-    async update(id: NullableId, data: any, params: Params) {
-        switch (id) {
-            case "ac": 
-        }
-    }
-}
-
-const app = express(feathers());
-app.use(express.json());
-app.use(express.urlencoded({'extended': true}));
-app.use(express.static(__dirname + '/static'));
-
-app.configure(express.rest());
-app.configure(socketio());
-
-app.use('/core-memory', new CoreMemoryService());
-app.use('/console', new ConsoleService());
-app.use(express.errorHandler());
-
-app.on('connection', connection => {
-    app.channel('everybody').join(connection);
+sockServer.on('connection', (client: io.Socket) => {
+    client.on('console-switch', (data: any) => {
+        console.log('Switch input: ' + data.switch);
+    });
+    console.log('Connection from ' + client.id);
 });
 
-app.publish(data => app.channel('everybody'));
-
-app.listen(8000).on('listening', () => {
-    console.log('Service started');
-});
+server.listen(8000);
 
 setInterval(() => {
-
+    sockServer.emit('console-state', pdp8.readConsoleState());
 }, 100);

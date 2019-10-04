@@ -7,22 +7,19 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "npx webpack && cp -av public/* /nfsroot/home/socdp8/lib/static && cp -v dist/main.js /nfsroot/home/socdp8/lib/static/"
+    "deploy": "npx webpack && cp -av dist/public/. /nfsroot/home/socdp8/app/public && cp -v dist/main.js* /nfsroot/home/socdp8/app/public"
   },
   "dependencies": {
     "react": "^16.10.1",
     "react-dom": "^16.10.1",
-    "socket.io-client": "^2.3.0",
-    "@feathersjs/feathers": "^4.3.4",
-    "@feathersjs/socketio-client": "^4.3.4"
+    "socket.io-client": "^2.3.0"
   },
   "devDependencies": {
-    "@feathersjs/client": "^4.3.4",
-    "@types/feathersjs__feathers": "^3.1.5",
-    "@types/feathersjs__socketio-client": "^1.0.3",
+    "@types/node": "^12.7.11",
     "@types/react": "^16.9.4",
     "@types/react-dom": "^16.9.1",
     "@types/socket.io-client": "^1.4.32",
+    "file-loader": "^4.2.0",
     "source-map-loader": "^0.2.4",
     "ts-loader": "^6.2.0",
     "typescript": "^3.6.3",

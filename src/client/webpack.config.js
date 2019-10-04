@@ -1,14 +1,33 @@
+var path = require('path');
+
 module.exports = {
     mode: "production",
 
     devtool: "source-map",
 
     resolve: {
-        extensions: [".ts", ".tsx"]
+        extensions: [".ts", ".tsx"],
+        alias: {
+            'socket.io-client': path.join( __dirname, 'node_modules', 'socket.io-client', 'dist', 'socket.io.js')
+        }
     },
 
     module: {
         rules: [
+            {
+                enforce: "pre",
+                test: /\.js$/,
+                loader: "source-map-loader"
+            },
+            {
+                test: /\.svg$|\.html$|\.css$/,
+                use: {
+                    loader: 'file-loader',
+                    options: {
+                        name: '[path][name].[ext]'
+                    }
+                }
+            },
             {
                 test: /\.ts(x?)$/,
                 exclude: /node_modules/,
@@ -17,20 +36,11 @@ module.exports = {
                         loader: "ts-loader"
                     }
                 ]
-            },
-            {
-                enforce: "pre",
-                test: /\.js$/,
-                loader: "source-map-loader"
             }
         ]
     },
 
     externals: {
-        "react": "React",
-        "react-dom": "ReactDOM",
-        "@feathersjs/feathers": "feathers",
-        "@feathersjs/socketio-client": "feathers.socketio",
-        "socket.io-client": "io"
+        "object-assign": "Object.assign"
     }
 }

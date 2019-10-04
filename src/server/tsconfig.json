@@ -5,8 +5,7 @@
          "module": "commonjs",
          "outDir": "./lib",
          "strict": true,
-         "noImplicitAny": true,
-         "esModuleInterop": true
+         "noImplicitAny": true
      },
      "include": ["src"],
      "exclude": ["node_modules", "**/__tests__/*"]
