@@ -20,8 +20,8 @@ import * as React from 'react';
 import * as io from 'socket.io-client'
 import { FrontPanel } from './FrontPanel';
 import { LampState, SwitchState } from '../models/FrontPanelState';
-require('../../public/index.html')
-require('../../public/css/style.css')
+require('public/index.html')
+require('public/css/style.css')
 
 interface AppProps {
 }

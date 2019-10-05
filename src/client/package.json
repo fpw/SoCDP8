@@ -7,7 +7,7 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "npx webpack && cp -av dist/public/. /nfsroot/home/socdp8/app/public && cp -v dist/main.js* /nfsroot/home/socdp8/app/public"
+    "deploy": "npx webpack && cp -av dist/. /nfsroot/home/socdp8/app/public"
   },
   "dependencies": {
     "react": "^16.10.1",

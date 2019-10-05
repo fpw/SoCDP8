@@ -37,7 +37,7 @@ export class FrontPanel extends React.Component<FrontPanelProps, {}> {
     }
 
     public render(): JSX.Element {
-        return <object ref={this.ref} type="image/svg+xml" data={require('../../public/img/front_panel.svg')}></object>;
+        return <object ref={this.ref} type="image/svg+xml" data={require('public/img/front_panel.svg')}></object>;
     }
 
     public componentDidMount(): void {

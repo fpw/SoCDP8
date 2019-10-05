@@ -1,13 +1,15 @@
 var path = require('path');
 
 module.exports = {
-    mode: "production",
+    mode: 'production',
+    target: 'web',
 
-    devtool: "source-map",
+    devtool: 'source-map',
 
     resolve: {
-        extensions: [".ts", ".tsx"],
+        extensions: ['.ts', '.tsx'],
         alias: {
+            public: path.resolve(__dirname, 'public'),
             'socket.io-client': path.join( __dirname, 'node_modules', 'socket.io-client', 'dist', 'socket.io.js')
         }
     },
@@ -15,16 +17,17 @@ module.exports = {
     module: {
         rules: [
             {
-                enforce: "pre",
+                enforce: 'pre',
                 test: /\.js$/,
-                loader: "source-map-loader"
+                loader: 'source-map-loader'
             },
             {
                 test: /\.svg$|\.html$|\.css$/,
                 use: {
                     loader: 'file-loader',
                     options: {
-                        name: '[path][name].[ext]'
+                        name: '[path][name].[ext]',
+                        context: 'public'
                     }
                 }
             },
@@ -33,7 +36,7 @@ module.exports = {
                 exclude: /node_modules/,
                 use: [
                     {
-                        loader: "ts-loader"
+                        loader: 'ts-loader'
                     }
                 ]
             }
@@ -41,6 +44,6 @@ module.exports = {
     },
 
     externals: {
-        "object-assign": "Object.assign"
+        'object-assign': 'Object.assign'
     }
 }
