@@ -16,12 +16,12 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { SoCDP8, ConsoleState } from './socdp8/SoCDP8';
+import { SoCDP8 } from './socdp8/SoCDP8';
 import * as express from 'express';
 import * as io from 'socket.io';
 import { Server } from 'http';
 
-console.log("SoCDP8 starting...");
+console.log('SoCDP8 starting...');
 
 const pdp8 = new SoCDP8();
 
@@ -29,17 +29,49 @@ const app = express();
 const server = new Server(app);
 const sockServer = io(server);
 
-app.use(express.static('public'));
+app.use(express.static('./public'));
 
 sockServer.on('connection', (client: io.Socket) => {
+    const addr = client.handshake.address;
+    console.log(`Connection ${client.id} from ${addr}`);
+
     client.on('console-switch', (data: any) => {
-        console.log('Switch input: ' + data.switch);
+        console.log(`${addr}: Setting switch ${data.switch} to ${data.state ? '1' : '0'}`);
+        pdp8.setSwitch(data.switch, data.state);
+        if (['start', 'load', 'dep', 'exam', 'cont', 'stop'].includes(data.switch)) {
+            setTimeout(() => {
+                pdp8.setSwitch(data.switch, false);
+            }, 110);
+        }
     });
-    console.log('Connection from ' + client.id);
+
+    client.on('load-asr33-tape', (data: ArrayBuffer) => {
+        console.log(`${addr}: Set ASR33 tape: ${data.byteLength}`);
+        pdp8.setTapeInput(data);
+    });
+
+    client.on('load-pr8-tape', (data: ArrayBuffer) => {
+        console.log(`${addr}: Set PR8 tape: ${data.byteLength}`);
+        pdp8.setHighTapeInput(data);
+    });
+
+    client.on('clear-flags', () => {
+        console.log(`${addr}: Clear`);
+        pdp8.clearFlags();
+    });
 });
 
 server.listen(8000);
 
+pdp8.setOnPunch((data: number) => {
+    sockServer.emit('punch', data);
+    return Promise.resolve();
+});
+
 setInterval(() => {
     sockServer.emit('console-state', pdp8.readConsoleState());
 }, 100);
+
+setImmediate(async () => {
+    await pdp8.run();
+});

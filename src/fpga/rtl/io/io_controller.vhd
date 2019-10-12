@@ -85,6 +85,8 @@ architecture Behavioral of io_controller is
     signal ram_in_axi: std_logic_vector(31 downto 0);
     signal ram_write_axi: std_logic;
     signal ram_out_axi: std_logic_vector(31 downto 0);
+    
+    signal ram_write_strb: std_logic_vector(3 downto 0);
 begin
 
 io_ram_internal: process
@@ -170,10 +172,10 @@ begin
 
     -- Set flag on AXI write if desired
     if ram_write_axi = '1' then
-        if ram_addr_axi = O"0000" then
+        if ram_addr_axi = o"00" and ram_write_strb(0) = '1' then
             -- writing to address 0 clears the flag of the device ID that is written
             dev_flags(to_integer(unsigned(ram_in_axi(5 downto 0)))) <= '0';
-        elsif ram_out_axi(12) = '1' then
+        elsif ram_out_axi(12) = '1' and ram_write_strb(0) = '1' then
             dev_flags(to_integer(unsigned(ram_addr_axi))) <= '1';
         end if;
     end if;
@@ -258,6 +260,7 @@ begin
             if s_axi_wstrb(3) = '1' then
                 ram_in_axi(31 downto 24) <= s_axi_wdata(31 downto 24);
             end if;
+            ram_write_strb <= s_axi_wstrb;
             ram_write_axi <= '1';
             s_axi_wready <= '1';
             state <= WRITE_ACK;
@@ -272,6 +275,7 @@ begin
     if s_axi_aresetn = '0' then
         bus_addr <= (others => '0');
         ram_addr_axi <= (others => '0');
+        ram_write_strb <= (others => '0');
         state <= IDLE;
     end if;
 end process;

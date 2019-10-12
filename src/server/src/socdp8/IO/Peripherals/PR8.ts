@@ -19,9 +19,9 @@
 import { IOController } from '../IOController';
 import { IOConfigEntry } from '../IOConfigEntry';
 
-export class ASR33 {
-    private readonly READER_ID = 3;
-    private readonly PUNCH_ID = 4;
+export class PR8 {
+    private readonly READER_ID = 1;
+    private readonly PUNCH_ID = 2;
     private lastReadAt: bigint = 0n;
     private lastPunchAt: bigint = 0n;
     private io: IOController;
@@ -49,14 +49,13 @@ export class ASR33 {
         // IOP1 for reader: Skip if flag is set
         readerEntry.iopForSkipFlag = 1;
 
-        // IOP2 for reader: Clear AC, Clear Flag, generate IRQ so we can reload and request to call us
-        readerEntry.iopForACClear = 2;
+        // IOP2 for reader
+        readerEntry.iopForACLoad = 2;
         readerEntry.iopForFlagClear = 2;
-        readerEntry.iopForInterrupt = 2;
         readerEntry.onFlagUnset = () => this.onReaderFlagReset();
 
-        // IOP4 for reader: Load AC with register
-        readerEntry.iopForACLoad = 3;
+        // IOP4 for reader
+        readerEntry.iopForInterrupt = 3;
 
         // Writing data to register should set the flag
         readerEntry.setFlagOnWrite = true;
@@ -70,12 +69,12 @@ export class ASR33 {
         // IOP1 for punch: Skip if flag is set
         punchEntry.iopForSkipFlag = 1;
 
-        // IOP2 for punch: Clear Flag, generate IRQ so we can retrieve the data
+        // IOP2 for reader: Clear Flag, generate IRQ so we can retrieve the data
         punchEntry.iopForFlagClear = 2;
         punchEntry.iopForInterrupt = 2;
         punchEntry.onFlagUnset = () => this.onPunchFlagReset();
 
-        // IOP4 for punch: Load register with AC
+        // IOP4 for reader: Load register with AC
         punchEntry.iopForRegisterLoad = 3;
 
         // Writing data to register should set the flag
@@ -91,7 +90,7 @@ export class ASR33 {
     private async onReaderFlagReset(): Promise<void> {
         // current word was retrieved, get next
         const now = this.readSteadyClock();
-        if (now - this.lastReadAt > 100e6) {
+        if (now - this.lastReadAt > 3e6) {
             if (this.readerGenerator) {
                 const data = await this.readerGenerator.next();
                 if (!data.done) {
@@ -107,7 +106,7 @@ export class ASR33 {
     private async onPunchFlagReset(): Promise<void> {
         // new word ready
         const now = this.readSteadyClock();
-        if (now - this.lastPunchAt > 100e6) {
+        if (now - this.lastPunchAt > 3e6) {
             let [data, isNew] = this.io.readDeviceRegister(this.PUNCH_ID);
             if (isNew) {
                 if (this.onPunch) {

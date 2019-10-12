@@ -47,10 +47,10 @@ export class IOConfigEntry {
     public setFlagOnWrite: boolean = false;
 
     // Call I/O function when flag is set
-    public onFlagSet: () => void = () => {};
+    public onFlagSet?: () => Promise<void>;
 
     // Call I/O function when flag is not set
-    public onFlagUnset: () => void = () => {};
+    public onFlagUnset?: () => Promise<void>;
 
     constructor(id: number) {
         this.devId = id;

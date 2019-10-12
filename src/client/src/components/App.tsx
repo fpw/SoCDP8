@@ -20,6 +20,8 @@ import * as React from 'react';
 import * as io from 'socket.io-client'
 import { FrontPanel } from './FrontPanel';
 import { LampState, SwitchState } from '../models/FrontPanelState';
+import { ASR33 } from './ASR33';
+import { PR8 } from './PR8';
 require('public/index.html')
 require('public/css/style.css')
 
@@ -27,8 +29,10 @@ interface AppProps {
 }
 
 interface AppState {
+    loaded: boolean;
     lamps: LampState;
     switches: SwitchState;
+    punchInput: string;
 }
 
 export class App extends React.Component<AppProps, AppState> {
@@ -37,6 +41,7 @@ export class App extends React.Component<AppProps, AppState> {
     constructor(props: AppProps) {
         super(props);
         this.socket = io.connect();
+        this.setState({loaded: false});
     }
 
     public async componentDidMount(): Promise<void> {
@@ -44,21 +49,56 @@ export class App extends React.Component<AppProps, AppState> {
             let lamps: LampState = state.lamps;
             let switches: SwitchState = state.switches;
             this.setState({
+                loaded: true,
                 lamps: lamps,
                 switches: switches
             });
         });
+
+        this.socket.on('punch', (data: number) => {
+            const chr = String.fromCharCode(data & 0x7F);
+            let old = this.state.punchInput;
+            if (!old) {
+                old = '';
+            }
+            this.setState({punchInput: old + chr});
+        });
     }
 
     public render(): JSX.Element {
-        if (!this.state) {
+        if (!this.state || !this.state.loaded) {
             return <div>Loading...</div>;
         }
 
-        return <FrontPanel lamps={this.state.lamps} switches={this.state.switches} onSwitch={(s) => this.onConsoleSwitch(s)} />;
+        return (
+            <div>
+                <FrontPanel lamps={this.state.lamps} switches={this.state.switches} onSwitch={(sw, st) => this.onConsoleSwitch(sw, st)} />
+                <ASR33 onTapeLoad={(data: ArrayBuffer) => this.loadTape(data)} punchData={this.state.punchInput} onPunch={(chr) => this.onPunch(chr)} onClear={() => this.onClear()} />
+                <PR8 onTapeLoad={(data: ArrayBuffer) => this.loadHighTape(data)}/>
+            </div>
+        );
     }
 
-    public onConsoleSwitch(sw: string): void {
-        this.socket.emit('console-switch', {'switch': sw});
+    private onConsoleSwitch(sw: string, state: boolean): void {
+        this.socket.emit('console-switch', {'switch': sw, 'state': state});
+    }
+
+    private loadTape(data: ArrayBuffer) {
+        this.socket.emit('load-asr33-tape', data);
+    }
+
+    private loadHighTape(data: ArrayBuffer) {
+        this.socket.emit('load-pr8-tape', data);
+    }
+
+    private onPunch(key: string) {
+        const buf = new ArrayBuffer(1);
+        let view = new Uint8Array(buf);
+        view[0] = key.charCodeAt(0) | 0x80;
+        this.socket.emit('load-asr33-tape', buf);
+    }
+
+    private onClear(): void {
+        this.socket.emit('clear-flags');
     }
 }

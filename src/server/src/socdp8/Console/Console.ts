@@ -83,9 +83,12 @@ export interface SwitchState {
 
 export class Console {
     private map: Buffer;
+    private overridenSwitches: SwitchState;
 
     public constructor(map: Buffer) {
         this.map = map;
+        this.setSwitchOverride(false);
+        this.overridenSwitches = this.readSwitches();
     }
 
     public isSwitchOverridden(): boolean {
@@ -139,6 +142,10 @@ export class Console {
     }
 
     public readSwitches(): SwitchState {
+        if (this.isSwitchOverridden()) {
+            return this.overridenSwitches;
+        }
+        
         let state: SwitchState = {
             dataField: this.readSwitch(Switch.DATA_FIELD),
             instField: this.readSwitch(Switch.INST_FIELD),
@@ -153,6 +160,21 @@ export class Console {
             singInst: this.readSwitch(Switch.SING_INST)
         }        
         return state;
+    }
+
+    public writeSwitches(switches: SwitchState): void {
+        this.writeSwitch(Switch.DATA_FIELD, switches.dataField);
+        this.writeSwitch(Switch.INST_FIELD, switches.instField);
+        this.writeSwitch(Switch.SWR, switches.swr);
+        this.writeSwitch(Switch.START, switches.start);
+        this.writeSwitch(Switch.LOAD, switches.load);
+        this.writeSwitch(Switch.DEP, switches.dep);
+        this.writeSwitch(Switch.EXAM, switches.exam);
+        this.writeSwitch(Switch.CONT, switches.cont);
+        this.writeSwitch(Switch.STOP, switches.stop);
+        this.writeSwitch(Switch.SING_STEP, switches.singStep);
+        this.writeSwitch(Switch.SING_INST, switches.singInst);
+        this.overridenSwitches = switches;
     }
 
     private readLamp(lamp: Lamp): number {

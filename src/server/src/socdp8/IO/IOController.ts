@@ -46,6 +46,7 @@ export class IOController {
         config |= entry.iopForInterrupt << 25;
 
         this.ioMem.writeUInt32LE(config, entry.devId * 4);
+        this.clearDeviceFlag(entry.devId);
     }
 
     public writeDeviceRegister(devId: number, data: number): void {
@@ -53,7 +54,13 @@ export class IOController {
         reg &= ~0o7777; // clear current data
         reg &= ~(1 << 27); // clear new data flag
         reg |= data & 0o7777; // set new data
-        this.ioMem.writeUInt32LE(reg, devId * 4);
+
+        // it is very important to write the least significant byte last,
+        // this isn't defined for writeUInt32LE
+        this.ioMem.writeUInt8((reg >> 24) & 0xFF, devId * 4 + 3);
+        this.ioMem.writeUInt8((reg >> 16) & 0xFF, devId * 4 + 2);
+        this.ioMem.writeUInt8((reg >>  8) & 0xFF, devId * 4 + 1);
+        this.ioMem.writeUInt8((reg >>  0) & 0xFF, devId * 4 + 0);
     }
 
     public readDeviceRegister(devId: number): [number, boolean] {
@@ -63,7 +70,7 @@ export class IOController {
     }
 
     public clearDeviceFlag(devId: number): void {
-        this.ioMem.writeUInt32BE(devId, this.DEV_ID_CLEAR_FLAG);
+        this.ioMem.writeUInt8(devId, this.DEV_ID_CLEAR_FLAG * 4);
     }
 
     public async runDeviceLoop(): Promise<void> {
@@ -79,10 +86,10 @@ export class IOController {
                     flagSet = ((flagsHi & (1 << (entry.devId - 32))) != 0);
                 }
 
-                if (flagSet) {
-                    entry.onFlagSet();
-                } else {
-                    entry.onFlagUnset();
+                if (flagSet && entry.onFlagSet) {
+                    await entry.onFlagSet();
+                } else if (!flagSet && entry.onFlagUnset) {
+                    await entry.onFlagUnset();
                 }
             }
             await sleep(this.DELAY_MS);

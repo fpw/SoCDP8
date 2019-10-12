@@ -27,19 +27,34 @@ export class CoreMemory {
         return this.buf.length / 4;
     }
 
+    public peekWord(addr: number): number {
+        return this.buf.readUInt16LE(addr * 4);
+    }
+
+    public pokeWord(addr: number, value: number): void {
+        this.buf.writeUInt16LE(value, addr * 4);
+    }
+
     public dumpCore(): Uint16Array {
-        const numWords = this.buf.length / 4;
+        const numWords = this.getWordCount()
         let res = new Uint16Array(numWords);
         for (let i = 0; i < numWords; i++) {
-            res[i] = this.buf.readUInt16LE(i * 4);
+            res[i] = this.peekWord(i);
         }
         return res;
     }
 
     public loadCore(data: Uint16Array): void {
-        const numWords = Math.min(data.length, this.buf.length / 4);
+        const numWords = Math.min(data.length, this.getWordCount());
         for (let i = 0; i < numWords; i++) {
-            this.buf.writeUInt16LE(data[i], i * 4);
+            this.pokeWord(data[i], i);
+        }
+    }
+
+    public clear(): void {
+        const numWords = this.getWordCount();
+        for (let i = 0; i < numWords; i++) {
+            this.pokeWord(0, i);
         }
     }
 }

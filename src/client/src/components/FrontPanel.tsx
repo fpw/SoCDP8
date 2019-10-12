@@ -22,7 +22,7 @@ import { LampState, SwitchState } from '../models/FrontPanelState';
 export interface FrontPanelProps {
     lamps: LampState;
     switches: SwitchState;
-    onSwitch: (sw: string) => void;
+    onSwitch: (sw: string, state: boolean) => void;
 }
 
 export class FrontPanel extends React.Component<FrontPanelProps, {}> {
@@ -62,8 +62,13 @@ export class FrontPanel extends React.Component<FrontPanelProps, {}> {
     }
 
     public componentDidUpdate(prevProps: Readonly<FrontPanelProps>): void {
-        this.updateLamps(this.props.lamps);
-        this.updateSwitches(this.props.switches);
+        if (this.props.lamps) {
+            this.updateLamps(this.props.lamps);
+        }
+
+        if (this.props.switches) {
+            this.updateSwitches(this.props.switches);
+        }
     }
 
     private findElements(svg: SVGSVGElement) {
@@ -78,32 +83,44 @@ export class FrontPanel extends React.Component<FrontPanelProps, {}> {
     }
 
     private connectSwitches(): void {
-        this.connectSwitch('pdp8_sw_df0', () => this.props.onSwitch('df0'));
-        this.connectSwitch('pdp8_sw_df1', () => this.props.onSwitch('df1'));
-        this.connectSwitch('pdp8_sw_df2', () => this.props.onSwitch('df2'));
+        this.connectSwitch('pdp8_sw_df0');
+        this.connectSwitch('pdp8_sw_df1');
+        this.connectSwitch('pdp8_sw_df2');
 
-        this.connectSwitch('pdp8_sw_if0', () => this.props.onSwitch('if0'));
-        this.connectSwitch('pdp8_sw_if1', () => this.props.onSwitch('if1'));
-        this.connectSwitch('pdp8_sw_if2', () => this.props.onSwitch('if2'));
+        this.connectSwitch('pdp8_sw_if0');
+        this.connectSwitch('pdp8_sw_if1');
+        this.connectSwitch('pdp8_sw_if2');
 
         for (let i = 0; i < 12; i++) {
-            this.connectSwitch('pdp8_sw_swr' + i, () => this.props.onSwitch('swr' + i));
+            this.connectSwitch('pdp8_sw_swr' + i);
         }
 
-        this.connectSwitch('pdp8_sw_start', () => this.props.onSwitch('start'));
-        this.connectSwitch('pdp8_sw_load', () => this.props.onSwitch('load'));
-        this.connectSwitch('pdp8_sw_dep', () => this.props.onSwitch('dep'));
-        this.connectSwitch('pdp8_sw_exam', () => this.props.onSwitch('exam'));
-        this.connectSwitch('pdp8_sw_cont', () => this.props.onSwitch('cont'));
-        this.connectSwitch('pdp8_sw_stop', () => this.props.onSwitch('stop'));
-        this.connectSwitch('pdp8_sw_sing_step', () => this.props.onSwitch('sing_step'));
-        this.connectSwitch('pdp8_sw_sing_inst', () => this.props.onSwitch('sing_inst'));
+        this.connectMomentarySwitch('pdp8_sw_start');
+        this.connectMomentarySwitch('pdp8_sw_load');
+        this.connectMomentarySwitch('pdp8_sw_dep');
+        this.connectMomentarySwitch('pdp8_sw_exam');
+        this.connectMomentarySwitch('pdp8_sw_cont');
+        this.connectMomentarySwitch('pdp8_sw_stop');
+        this.connectSwitch('pdp8_sw_sing_step');
+        this.connectSwitch('pdp8_sw_sing_inst');
     }
 
-    private connectSwitch(id: string, f: () => void): void {
+    private connectSwitch(id: string): void {
         let elem = this.switches[id];
         if (elem) {
-            elem.onclick = f;
+            elem.onclick = () => {
+                let curState = this.isSwitchSet(elem);
+                this.props.onSwitch(id.replace('pdp8_sw_', ''), !curState);
+            }
+        }
+    }
+
+    private connectMomentarySwitch(id: string): void {
+        let elem = this.switches[id];
+        if (elem) {
+            elem.onmousedown = () => {
+                this.props.onSwitch(id.replace('pdp8_sw_', ''), true);
+            }
         }
     }
 
@@ -162,6 +179,7 @@ export class FrontPanel extends React.Component<FrontPanelProps, {}> {
 
     private setLamp(id: string, lit: boolean): void {
         let elem = this.lamps[id];
+
         if (elem) {
             elem.style.fill = (lit ? '#dad103ff' : '#222222');
         }
@@ -173,22 +191,28 @@ export class FrontPanel extends React.Component<FrontPanelProps, {}> {
         }
     }
 
+    private getSwitchRotationIndex(sw: SVGSVGElement): number | null {
+        let transformations = sw.transform.baseVal;
+        for (let i = 0; i < transformations.numberOfItems; i++) {
+            if (transformations.getItem(i).type == SVGTransform.SVG_TRANSFORM_ROTATE) {
+                return i;
+            }
+        }
+        return null;
+    }
+
+    private isSwitchSet(sw: SVGSVGElement): boolean {
+        return (this.getSwitchRotationIndex(sw) != null);
+    }
+
     private setSwitch(id: string, on: boolean): void {
         let elem = this.switches[id];
         if (!elem || !this.svgRoot) {
             return;
         }
 
-        let transformations = elem.transform.baseVal;
-
         // find existing rotation, if any
-        let rotationIndex = null;
-        for (let i = 0; i < transformations.numberOfItems; i++) {
-            if (transformations.getItem(i).type == SVGTransform.SVG_TRANSFORM_ROTATE) {
-                rotationIndex = i;
-                break;
-            }
-        }
+        let rotationIndex = this.getSwitchRotationIndex(elem);
 
         if (on) {
             // nothing to do if rotation already present
@@ -204,6 +228,7 @@ export class FrontPanel extends React.Component<FrontPanelProps, {}> {
         } else {
             // nothing to do if no rotation present
             if (rotationIndex) {
+                let transformations = elem.transform.baseVal;
                 transformations.removeItem(rotationIndex);
             }
         }
