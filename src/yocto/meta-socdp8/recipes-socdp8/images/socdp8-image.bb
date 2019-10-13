@@ -14,8 +14,6 @@ IMAGE_INSTALL = "packagegroup-core-boot \
     
 DISTRO_FEATURES = "wifi"
 
-IMAGE_ROOTFS_SIZE = "32768"
-
 inherit core-image
 inherit extrausers
 
