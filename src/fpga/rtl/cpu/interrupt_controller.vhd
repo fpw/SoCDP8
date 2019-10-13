@@ -100,6 +100,7 @@ begin
     
     if manual_preset = '1' then
         int_sync <= '0';
+        int_enable_int <= '0';
     end if;
     
     if rstn = '0' then
@@ -109,7 +110,7 @@ begin
     end if;
 end process;
 
-int_ok_int <= int_sync and int_delay and not int_inhibit;
+int_ok_int <= int_sync and int_delay and int_enable_int and not int_inhibit;
 int_ok <= int_ok_int;
 
 int_enable <= int_enable_int; 
