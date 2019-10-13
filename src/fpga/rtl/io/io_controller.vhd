@@ -65,7 +65,7 @@ entity io_controller is
 end io_controller;
 
 architecture Behavioral of io_controller is
-    type axi_state is (IDLE, READ, READ_WAIT, WRITE_WAIT, WRITE, WRITE_ACK);
+    type axi_state is (IDLE, READ, READ_WAIT, WRITE, WRITE_ACK);
     signal state: axi_state;
     
     type state_a is array(0 to 63) of std_logic_vector(31 downto 0);
@@ -85,8 +85,11 @@ architecture Behavioral of io_controller is
     signal ram_in_axi: std_logic_vector(31 downto 0);
     signal ram_write_axi: std_logic;
     signal ram_out_axi: std_logic_vector(31 downto 0);
-    
-    signal ram_write_strb: std_logic_vector(3 downto 0);
+
+    signal write_pending: std_logic;
+    signal write_dev_id: std_logic_vector(5 downto 0);
+    signal write_word: std_logic_vector(31 downto 0);    
+    signal write_done: std_logic;
 begin
 
 io_ram_internal: process
@@ -114,8 +117,6 @@ iop_code <= "01" when iop(0) = '1' else
             "11" when iop(2) = '1' else
             "00";
 
-ram_addr_io <= io_mb(8 downto 3);
-
 io_proc: process
 begin
     wait until rising_edge(S_AXI_ACLK);
@@ -126,11 +127,14 @@ begin
     io_bus_out <= o"0000";
     
     ram_write_io <= '0';
+    ram_write_axi <= '0';
     
     -- default IRQ state for SoC
     soc_irq <= '0';
 
-    if iop_code /= "00" then
+    ram_addr_io <= io_mb(8 downto 3);
+
+    if iop_code /= "00" and write_pending = '0' and ram_addr_io = io_mb(8 downto 3) then
         -- Request IRQ in current IOP (only one cycle)
         if ram_out_io(26 downto 25) = iop_code then
             soc_irq <= '1';
@@ -168,20 +172,31 @@ begin
         if ram_out_io(14 downto 13) = iop_code then
             io_skip <= dev_flags(to_integer(unsigned(io_mb(8 downto 3))));
         end if;
+    else
+        if write_pending = '1' and write_done = '0' then
+            if write_dev_id = o"00" then
+                -- writing to address 0 clears the flag of the device ID that is written
+                dev_flags(to_integer(unsigned(write_word(5 downto 0)))) <= '0';
+            else
+                if write_word(12) = '1' then
+                    dev_flags(to_integer(unsigned(write_dev_id))) <= '1';
+                end if;
+                ram_addr_io <= write_dev_id;
+                ram_in_io <= write_word;
+                ram_write_io <= '1'; 
+            end if;
+            write_done <= '1';
+        end if;
     end if;
 
-    -- Set flag on AXI write if desired
-    if ram_write_axi = '1' then
-        if ram_addr_axi = o"00" and ram_write_strb(0) = '1' then
-            -- writing to address 0 clears the flag of the device ID that is written
-            dev_flags(to_integer(unsigned(ram_in_axi(5 downto 0)))) <= '0';
-        elsif ram_out_axi(12) = '1' and ram_write_strb(0) = '1' then
-            dev_flags(to_integer(unsigned(ram_addr_axi))) <= '1';
-        end if;
+    if write_pending = '0' then
+        write_done <= '0';
     end if;
 
     if s_axi_aresetn = '0' then
         dev_flags <= (others => '0');
+        write_done <= '0';
+        ram_in_axi <= (others => '0');
     end if;
 end process;
 
@@ -205,9 +220,11 @@ begin
     --- Write ack channel
     S_AXI_BRESP <= "00";
     S_AXI_BVALID <= '0';
-    
-    ram_write_axi <= '0';
-    
+
+    if write_done = '1' then
+        write_pending <= '0';
+    end if;
+
     case state is
         when IDLE =>
             if s_axi_arvalid = '1' then
@@ -215,11 +232,10 @@ begin
                 bus_addr <= s_axi_araddr(C_S_AXI_ADDR_WIDTH - 1 downto 2);
                 ram_addr_axi <= s_axi_araddr(C_S_AXI_ADDR_WIDTH - 2 downto 2);
                 state <= READ_WAIT;
-            elsif s_axi_awvalid = '1' and s_axi_wvalid = '1' then
+            elsif s_axi_awvalid = '1' and s_axi_wvalid = '1' and write_pending = '0' then
                 s_axi_awready <= '1';
                 bus_addr <= s_axi_awaddr(C_S_AXI_ADDR_WIDTH - 1 downto 2);
-                ram_addr_axi <= s_axi_awaddr(C_S_AXI_ADDR_WIDTH - 2 downto 2);
-                state <= WRITE_WAIT;
+                state <= WRITE;
             end if;
         when READ_WAIT =>
             -- waiting for RAM to fill register
@@ -232,6 +248,8 @@ begin
                 s_axi_rdata <= dev_flags(31 downto 0);
             elsif to_integer(unsigned(bus_addr)) = 65 then
                 s_axi_rdata <= dev_flags(63 downto 32);
+            elsif to_integer(unsigned(bus_addr)) = 66 then
+                s_axi_rdata(0) <= write_pending;
             else
                 s_axi_rdata <= (others => '0');
             end if;
@@ -240,28 +258,32 @@ begin
             if s_axi_rready = '1' then
                 state <= IDLE;
             end if;
-        when WRITE_WAIT =>
-            -- waiting for RAM to fill register
-            state <= WRITE;
         when WRITE =>
-            ram_in_axi <= ram_out_axi;
-            if s_axi_wstrb(0) = '1' then
-                ram_in_axi(7 downto 0) <= s_axi_wdata(7 downto 0);
+            if to_integer(unsigned(bus_addr)) = 66 then
+                if s_axi_wdata(0) = '1' then
+                    write_word <= (others => '0');
+                else
+                    write_pending <= '1';
+                end if;
+            else
+                write_dev_id <= bus_addr(5 downto 0);
+
+                if s_axi_wstrb(0) = '1' then
+                    write_word(7 downto 0) <= s_axi_wdata(7 downto 0);
+                end if;
+                
+                if s_axi_wstrb(1) = '1' then
+                    write_word(15 downto 8) <= s_axi_wdata(15 downto 8);
+                end if;
+                
+                if s_axi_wstrb(2) = '1' then
+                    write_word(23 downto 16) <= s_axi_wdata(23 downto 16);
+                end if;
+                
+                if s_axi_wstrb(3) = '1' then
+                    write_word(31 downto 24) <= s_axi_wdata(31 downto 24);
+                end if;
             end if;
-            
-            if s_axi_wstrb(1) = '1' then
-                ram_in_axi(15 downto 8) <= s_axi_wdata(15 downto 8);
-            end if;
-            
-            if s_axi_wstrb(2) = '1' then
-                ram_in_axi(23 downto 16) <= s_axi_wdata(23 downto 16);
-            end if;
-            
-            if s_axi_wstrb(3) = '1' then
-                ram_in_axi(31 downto 24) <= s_axi_wdata(31 downto 24);
-            end if;
-            ram_write_strb <= s_axi_wstrb;
-            ram_write_axi <= '1';
             s_axi_wready <= '1';
             state <= WRITE_ACK;
         when WRITE_ACK =>
@@ -275,7 +297,9 @@ begin
     if s_axi_aresetn = '0' then
         bus_addr <= (others => '0');
         ram_addr_axi <= (others => '0');
-        ram_write_strb <= (others => '0');
+        write_pending <= '0';
+        write_dev_id <= (others => '0');
+        write_word <= (others => '0');
         state <= IDLE;
     end if;
 end process;

@@ -19,9 +19,10 @@
 import { IOConfigEntry } from './IOConfigEntry';
 
 export class IOController {
-    private DELAY_MS: number = 10;
+    private DELAY_MS: number = 1;
     private DEV_ID_CLEAR_FLAG = 0;
     private DEV_ID_FLAGS = 64;
+    private DEV_ID_TRANSACT = 66;
     private ioMem: Buffer;
     private configEntries: IOConfigEntry[] = [];
 
@@ -45,8 +46,24 @@ export class IOController {
         config |= entry.iopForRegisterLoad << 23;
         config |= entry.iopForInterrupt << 25;
 
-        this.ioMem.writeUInt32LE(config, entry.devId * 4);
+        this.runInTransaction(() => {
+            this.ioMem.writeUInt32LE(config, entry.devId * 4);
+        });
         this.clearDeviceFlag(entry.devId);
+    }
+
+    private runInTransaction(f: () => void) {
+        let busy = 0;
+        do {
+            busy = this.ioMem.readUInt8(this.DEV_ID_TRANSACT * 4);
+            if (busy) {
+                console.log('busy');
+            }
+        } while (busy);
+
+        this.ioMem.writeUInt8(1, this.DEV_ID_TRANSACT * 4);
+        f();
+        this.ioMem.writeUInt8(0, this.DEV_ID_TRANSACT * 4);
     }
 
     public writeDeviceRegister(devId: number, data: number): void {
@@ -54,13 +71,9 @@ export class IOController {
         reg &= ~0o7777; // clear current data
         reg &= ~(1 << 27); // clear new data flag
         reg |= data & 0o7777; // set new data
-
-        // it is very important to write the least significant byte last,
-        // this isn't defined for writeUInt32LE
-        this.ioMem.writeUInt8((reg >> 24) & 0xFF, devId * 4 + 3);
-        this.ioMem.writeUInt8((reg >> 16) & 0xFF, devId * 4 + 2);
-        this.ioMem.writeUInt8((reg >>  8) & 0xFF, devId * 4 + 1);
-        this.ioMem.writeUInt8((reg >>  0) & 0xFF, devId * 4 + 0);
+        this.runInTransaction(() => {
+            this.ioMem.writeUInt32LE(reg, devId * 4);
+        });
     }
 
     public readDeviceRegister(devId: number): [number, boolean] {
@@ -70,7 +83,9 @@ export class IOController {
     }
 
     public clearDeviceFlag(devId: number): void {
-        this.ioMem.writeUInt8(devId, this.DEV_ID_CLEAR_FLAG * 4);
+        this.runInTransaction(() => {
+            this.ioMem.writeUInt8(devId, this.DEV_ID_CLEAR_FLAG * 4);
+        });
     }
 
     public async runDeviceLoop(): Promise<void> {

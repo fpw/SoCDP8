@@ -91,7 +91,7 @@ export class ASR33 {
     private async onReaderFlagReset(): Promise<void> {
         // current word was retrieved, get next
         const now = this.readSteadyClock();
-        if (now - this.lastReadAt > 100e6) {
+        if (now - this.lastReadAt > 0.100e9) {
             if (this.readerGenerator) {
                 const data = await this.readerGenerator.next();
                 if (!data.done) {
@@ -107,7 +107,7 @@ export class ASR33 {
     private async onPunchFlagReset(): Promise<void> {
         // new word ready
         const now = this.readSteadyClock();
-        if (now - this.lastPunchAt > 100e6) {
+        if (now - this.lastPunchAt > 0.100e9) {
             let [data, isNew] = this.io.readDeviceRegister(this.PUNCH_ID);
             if (isNew) {
                 if (this.onPunch) {

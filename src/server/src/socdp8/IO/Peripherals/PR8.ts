@@ -90,12 +90,12 @@ export class PR8 {
     private async onReaderFlagReset(): Promise<void> {
         // current word was retrieved, get next
         const now = this.readSteadyClock();
-        if (now - this.lastReadAt > 3e6) {
+        if (now - this.lastReadAt > (1.0 / 300) * 1e9) {
             if (this.readerGenerator) {
                 const data = await this.readerGenerator.next();
                 if (!data.done) {
                     this.io.writeDeviceRegister(this.READER_ID, data.value);
-                    this.lastReadAt = now;
+                    this.lastReadAt = this.readSteadyClock();
                 } else {
                     this.readerGenerator = undefined;
                 }
@@ -106,7 +106,7 @@ export class PR8 {
     private async onPunchFlagReset(): Promise<void> {
         // new word ready
         const now = this.readSteadyClock();
-        if (now - this.lastPunchAt > 3e6) {
+        if (now - this.lastPunchAt > 0.020e9) {
             let [data, isNew] = this.io.readDeviceRegister(this.PUNCH_ID);
             if (isNew) {
                 if (this.onPunch) {

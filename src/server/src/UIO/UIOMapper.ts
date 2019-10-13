@@ -17,6 +17,7 @@
  */
 
  import { readdirSync, readFileSync, openSync, closeSync } from 'fs';
+import { O_SYNC, O_RDWR } from 'constants';
 const mmap = require("mmap-io");
 
 export class UIOMapper {
@@ -64,7 +65,7 @@ export class UIOMapper {
     }
 
     private openMap(uioName: string, size: number): Buffer {
-        let fd = openSync('/dev/' + uioName, 'r+');
+        let fd = openSync('/dev/' + uioName, O_SYNC | O_RDWR);
         let buf = mmap.map(size, mmap.PROT_READ | mmap.PROT_WRITE, mmap.MAP_SHARED, fd, 0);
         closeSync(fd);
         return buf;
