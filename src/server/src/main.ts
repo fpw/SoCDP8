@@ -54,11 +54,6 @@ sockServer.on('connection', (client: io.Socket) => {
         console.log(`${addr}: Set PR8 tape: ${data.byteLength}`);
         pdp8.setHighTapeInput(data);
     });
-
-    client.on('clear-flags', () => {
-        console.log(`${addr}: Clear`);
-        pdp8.clearFlags();
-    });
 });
 
 server.listen(8000);

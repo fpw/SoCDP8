@@ -154,11 +154,4 @@ export class SoCDP8 {
     public async run(): Promise<void> {
         await this.io.runDeviceLoop();
     }
-
-    public clearFlags() {
-        console.log(`Old flags: ${this.io.readDeviceRegister(64)}`);
-        this.asr33.clearFlags();
-        this.pr8.clearFlags();
-        console.log(`New flags: ${this.io.readDeviceRegister(64)}`);
-    }
 }

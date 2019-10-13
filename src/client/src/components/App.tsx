@@ -99,6 +99,6 @@ export class App extends React.Component<AppProps, AppState> {
     }
 
     private onClear(): void {
-        this.socket.emit('clear-flags');
+        this.setState({punchInput: ''});
     }
 }

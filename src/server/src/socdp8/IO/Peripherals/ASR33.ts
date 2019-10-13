@@ -118,9 +118,4 @@ export class ASR33 {
             }
         }
     }
-
-    public clearFlags() {
-        this.io.clearDeviceFlag(this.READER_ID);
-        this.io.clearDeviceFlag(this.PUNCH_ID);
-    }
 }
