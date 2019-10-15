@@ -1,6 +1,10 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
-SRC_URI += " file://ps7_init_gpl.h file://ps7_init_gpl.c file://zynqberry_defconfig file://zynqberry.h file://zynqberry.dts"
+SRC_URI += " file://ps7_init_gpl.h \
+             file://ps7_init_gpl.c \
+             file://zynqberry_defconfig \
+             file://zynqberry.h \
+             file://zynqberry.dts"
 
 HAS_PLATFORM_INIT += "zynqberry_config"
 

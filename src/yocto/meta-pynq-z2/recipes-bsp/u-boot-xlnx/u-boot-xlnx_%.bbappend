@@ -1,7 +1,11 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
 
-SRC_URI += " file://ps7_init_gpl.h file://ps7_init_gpl.c file://pynq_z2_defconfig file://pynq-z2.h file://pynq-z2.dts"
-SRC_URI += " file://read_mac.patch"
+SRC_URI += " file://read_mac.patch \
+             file://ps7_init_gpl.h \
+             file://ps7_init_gpl.c \
+             file://pynq_z2_defconfig \
+             file://pynq-z2.h \
+             file://pynq-z2.dts"
 
 HAS_PLATFORM_INIT += "pynq_z2_config"
 
