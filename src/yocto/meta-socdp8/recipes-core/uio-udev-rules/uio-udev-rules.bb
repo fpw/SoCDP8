@@ -18,4 +18,4 @@ do_install () {
 FILES_${PN} += " /etc/udev/rules.d/20-socdp8.rules"
 
 PACKAGES = "${PN}"
-PROVIDES = "socdp8-udev-rules"
+PROVIDES = "uio-udev-rules"

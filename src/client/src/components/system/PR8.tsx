@@ -19,46 +19,33 @@
 import * as React from "react";
 
 export interface PR8Props {
-    onTapeLoad(data: ArrayBuffer): void;
+    socket: SocketIOClient.Socket;
 }
 
 export class PR8 extends React.Component<PR8Props, {}> {
+    private socket: SocketIOClient.Socket;
+
     constructor(props: PR8Props) {
         super(props);
+        this.socket = props.socket;
     }
 
     public render(): JSX.Element {
         return (
-            <div>
-                <Puncher />
-                <Reader onTapeLoad={this.props.onTapeLoad} />
-            </div>
-        );
-    }
-
-    public componentDidUpdate(prevProps: Readonly<PR8Props>): void {
-    }
-}
-
-class Puncher extends React.Component<{}, {}> {
-    public render(): JSX.Element {
-        return <div>Puncher</div>;
-    }
-}
-
-interface ReaderProps {
-    onTapeLoad(data: ArrayBuffer): void;
-}
-
-class Reader extends React.Component<PR8Props, {}> {
-    public render(): JSX.Element {
-        return (
-            <div>
-                <label>
-                    Load Tape
-                    <input type='file' onChange={(ev: React.ChangeEvent) => this.onLoadFile(ev)} />
-                </label>
-            </div>
+            <section>
+                <div className='field has-addons'>
+                    <div className='file'>
+                        <label className='file-label'>
+                            <input className='file-input' type='file' onChange={(ev: React.ChangeEvent) => this.onLoadFile(ev)} />
+                            <span className='file-cta'>
+                                <span className='file-label'>
+                                    Attach Tape
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+            </section>
         );
     }
 
@@ -71,7 +58,7 @@ class Reader extends React.Component<PR8Props, {}> {
         const reader = new FileReader();
         reader.onload = () => {
             let data = reader.result as ArrayBuffer;
-            this.props.onTapeLoad(data);
+            this.socket.emit('load-pr8-tape', data);
         };
         reader.readAsArrayBuffer(target.files[0]);
     }

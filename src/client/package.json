@@ -7,9 +7,10 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "npx webpack && cp -av dist/. /nfsroot/home/socdp8/app/public"
+    "deploy": "npx webpack && cp -av dist/. /home/folko/fuse/app/public"
   },
   "dependencies": {
+    "bulma": "^0.7.5",
     "react": "^16.10.1",
     "react-dom": "^16.10.1",
     "socket.io-client": "^2.3.0"

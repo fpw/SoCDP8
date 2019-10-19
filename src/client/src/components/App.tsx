@@ -18,21 +18,14 @@
 
 import * as React from 'react';
 import * as io from 'socket.io-client'
-import { FrontPanel } from './FrontPanel';
-import { LampState, SwitchState } from '../models/FrontPanelState';
-import { ASR33 } from './ASR33';
-import { PR8 } from './PR8';
+import { PDP8 } from './system/PDP8';
 require('public/index.html')
-require('public/css/style.css')
+require('bulma/css/bulma.css')
 
 interface AppProps {
 }
 
 interface AppState {
-    loaded: boolean;
-    lamps: LampState;
-    switches: SwitchState;
-    punchInput: string;
 }
 
 export class App extends React.Component<AppProps, AppState> {
@@ -41,64 +34,55 @@ export class App extends React.Component<AppProps, AppState> {
     constructor(props: AppProps) {
         super(props);
         this.socket = io.connect();
-        this.setState({loaded: false});
-    }
-
-    public async componentDidMount(): Promise<void> {
-        this.socket.on('console-state', (state: any) => {
-            let lamps: LampState = state.lamps;
-            let switches: SwitchState = state.switches;
-            this.setState({
-                loaded: true,
-                lamps: lamps,
-                switches: switches
-            });
-        });
-
-        this.socket.on('punch', (data: number) => {
-            const chr = String.fromCharCode(data & 0x7F);
-            let old = this.state.punchInput;
-            if (!old) {
-                old = '';
-            }
-            this.setState({punchInput: old + chr});
-        });
     }
 
     public render(): JSX.Element {
-        if (!this.state || !this.state.loaded) {
-            return <div>Loading...</div>;
-        }
-
         return (
-            <div>
-                <FrontPanel lamps={this.state.lamps} switches={this.state.switches} onSwitch={(sw, st) => this.onConsoleSwitch(sw, st)} />
-                <ASR33 onTapeLoad={(data: ArrayBuffer) => this.loadTape(data)} punchData={this.state.punchInput} onPunch={(chr) => this.onPunch(chr)} onClear={() => this.onClear()} />
-                <PR8 onTapeLoad={(data: ArrayBuffer) => this.loadHighTape(data)}/>
-            </div>
+            <React.Fragment>
+                <header>
+                    <div className='hero is-primary'>
+                        <div className='hero-body'>
+                            <h1 className='title'>SoCDP-8</h1>
+                            <h2 className='subtitle'>A PDP-8/I on a chip</h2>
+                        </div>
+                    </div>
+                    <nav className='navbar is-dark' role='navigation'>
+                        <div className='navbar-menu'>
+                            <div className='navbar-start'>
+                                <a className='navbar-item'>
+                                    Test
+                                </a>
+                            </div>
+                        </div>
+                    </nav>
+                </header>
+
+                <main>
+                    <PDP8 socket={this.socket} />
+                </main>
+                
+                <footer className='footer'>
+                    <div className='content has-text-centered'>
+                        <p>
+                            Copyright 2019 by Folke Will
+                        </p>
+                    </div>
+                </footer>
+            </React.Fragment>
         );
     }
 
-    private onConsoleSwitch(sw: string, state: boolean): void {
-        this.socket.emit('console-switch', {'switch': sw, 'state': state});
-    }
-
-    private loadTape(data: ArrayBuffer) {
-        this.socket.emit('load-asr33-tape', data);
-    }
-
-    private loadHighTape(data: ArrayBuffer) {
-        this.socket.emit('load-pr8-tape', data);
-    }
-
-    private onPunch(key: string) {
-        const buf = new ArrayBuffer(1);
-        let view = new Uint8Array(buf);
-        view[0] = key.charCodeAt(0) | 0x80;
-        this.socket.emit('load-asr33-tape', buf);
-    }
-
-    private onClear(): void {
-        this.setState({punchInput: ''});
-    }
+    /*
+    <kbd>keyboard stroke</kbd>
+    <samp>output</samp>
+    <code>code</code>
+    <var>variable</var>
+    <mark>marked</mark>
+    <data value="01234">word</data>
+    <dfn>definition</dfn>
+    <div>test</div>
+    <progress></progress>
+    <meter min='0' max='100' value='50'>50%</meter>
+    <footer></footer>
+    */
 }

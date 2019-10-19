@@ -18,6 +18,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "deploy": "npm run build && cp -Rv lib/. /nfsroot/home/socdp8/app"
+    "deploy": "npm run build && cp -Rv lib/. /home/folko/fuse/app"
   }
 }

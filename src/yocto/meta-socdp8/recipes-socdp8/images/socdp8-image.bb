@@ -5,13 +5,17 @@ LICENSE = "GPLv2+"
 # add read-only-rootfs for release
 IMAGE_FEATURES = "ssh-server-openssh package-management"
 
+IMAGE_FSTYPES = "wic"
+
 # add linux-firmware for WiFi firmware files
 
 IMAGE_INSTALL = "packagegroup-core-boot kernel-modules \
     packagegroup-base-wifi \
     openssh-sftp-server \
+    sudo \
+    socat \
     devmem2 \
-    socdp8-udev-rules \
+    uio-udev-rules \
     nodejs nodejs-npm mmap-io \
     "
     
@@ -22,5 +26,5 @@ inherit extrausers
 
 EXTRA_USERS_PARAMS = "\
     useradd -P socdp8 socdp8; \
-    usermod -P socdp8 root; \
+    usermod -aG sudo socdp8; \
     "

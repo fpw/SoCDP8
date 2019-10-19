@@ -17,15 +17,19 @@
  */
 
 import * as React from "react";
-import { LampState, SwitchState } from '../models/FrontPanelState';
+import { LampState, SwitchState } from '../../models/FrontPanelState';
 
 export interface FrontPanelProps {
-    lamps: LampState;
-    switches: SwitchState;
-    onSwitch: (sw: string, state: boolean) => void;
+    socket: SocketIOClient.Socket;
 }
 
-export class FrontPanel extends React.Component<FrontPanelProps, {}> {
+interface FrontPanelState {
+    lamps: LampState;
+    switches: SwitchState;
+}
+
+export class FrontPanel extends React.Component<FrontPanelProps, FrontPanelState> {
+    private socket: SocketIOClient.Socket;
     private ref: React.RefObject<HTMLObjectElement>;
     private svgRoot: SVGSVGElement | null = null;
     private lamps: Record<string, SVGSVGElement> = {};
@@ -33,7 +37,17 @@ export class FrontPanel extends React.Component<FrontPanelProps, {}> {
 
     constructor(props: FrontPanelProps) {
         super(props);
+        this.socket = props.socket;
         this.ref = React.createRef<HTMLObjectElement>();
+
+        this.socket.on('console-state', (state: any) => {
+            let lamps: LampState = state.lamps;
+            let switches: SwitchState = state.switches;
+            this.setState({
+                lamps: lamps,
+                switches: switches
+            });
+        });
     }
 
     public render(): JSX.Element {
@@ -47,7 +61,6 @@ export class FrontPanel extends React.Component<FrontPanelProps, {}> {
         }
 
         let objElem = cons;
-
         cons.addEventListener("load", () => {
             let doc = objElem.contentDocument;
             if (!doc) {
@@ -62,12 +75,16 @@ export class FrontPanel extends React.Component<FrontPanelProps, {}> {
     }
 
     public componentDidUpdate(prevProps: Readonly<FrontPanelProps>): void {
-        if (this.props.lamps) {
-            this.updateLamps(this.props.lamps);
+        if (!this.state) {
+            return;
         }
 
-        if (this.props.switches) {
-            this.updateSwitches(this.props.switches);
+        if (this.state.lamps) {
+            this.updateLamps(this.state.lamps);
+        }
+
+        if (this.state.switches) {
+            this.updateSwitches(this.state.switches);
         }
     }
 
@@ -110,7 +127,7 @@ export class FrontPanel extends React.Component<FrontPanelProps, {}> {
         if (elem) {
             elem.onclick = () => {
                 let curState = this.isSwitchSet(elem);
-                this.props.onSwitch(id.replace('pdp8_sw_', ''), !curState);
+                this.onConsoleSwitch(id.replace('pdp8_sw_', ''), !curState);
             }
         }
     }
@@ -119,7 +136,7 @@ export class FrontPanel extends React.Component<FrontPanelProps, {}> {
         let elem = this.switches[id];
         if (elem) {
             elem.onmousedown = () => {
-                this.props.onSwitch(id.replace('pdp8_sw_', ''), true);
+                this.onConsoleSwitch(id.replace('pdp8_sw_', ''), true);
             }
         }
     }
@@ -232,5 +249,9 @@ export class FrontPanel extends React.Component<FrontPanelProps, {}> {
                 transformations.removeItem(rotationIndex);
             }
         }
+    }
+
+    private onConsoleSwitch(sw: string, state: boolean): void {
+        this.socket.emit('console-switch', {'switch': sw, 'state': state});
     }
 }

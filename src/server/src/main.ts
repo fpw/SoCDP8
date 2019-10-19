@@ -23,12 +23,11 @@ import { Server } from 'http';
 
 console.log('SoCDP8 starting...');
 
-const pdp8 = new SoCDP8();
-
 const app = express();
 const server = new Server(app);
 const sockServer = io(server);
 
+const pdp8 = new SoCDP8();
 app.use(express.static('./public'));
 
 sockServer.on('connection', (client: io.Socket) => {
