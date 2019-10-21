@@ -44,13 +44,20 @@ sockServer.on('connection', (client: io.Socket) => {
         }
     });
 
-    client.on('load-asr33-tape', (data: ArrayBuffer) => {
-        console.log(`${addr}: Set ASR33 tape: ${data.byteLength}`);
-        pdp8.setTapeInput(data);
+    client.on('clear-asr33-tape', () => {
+        console.log(`${addr}: Clear ASR33 tape`);
+        pdp8.clearTapeInput();
     });
 
-    client.on('load-pr8-tape', (data: ArrayBuffer) => {
-        console.log(`${addr}: Set PR8 tape: ${data.byteLength}`);
+    client.on('append-asr33-tape', (buffer: ArrayBuffer) => {
+        console.log(`${addr}: Append to ASR33 tape: ${buffer.byteLength}`);
+        const data: number[] = Array.from(new Uint8Array(buffer));
+        pdp8.appendTapeInput(data);
+    });
+
+    client.on('load-pr8-tape', (buffer: ArrayBuffer) => {
+        console.log(`${addr}: Set PR8 tape: ${buffer.byteLength}`);
+        const data: number[] = Array.from(new Uint8Array(buffer));
         pdp8.setHighTapeInput(data);
     });
 });

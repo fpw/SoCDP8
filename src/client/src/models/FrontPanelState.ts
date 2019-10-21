@@ -16,6 +16,11 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+export interface FrontPanelState {
+    lamps: LampState;
+    switches: SwitchState;
+};
+
 export interface LampState {
     dataField: number;
     instField: number;
@@ -46,3 +51,36 @@ export interface SwitchState {
     singStep: number;
     singInst: number;
 }
+
+export const FrontPanelDefaultState: FrontPanelState = {
+    lamps: {
+        dataField: 0,
+        instField: 0,
+        pc: 0,
+        memAddr: 0,
+        memBuf: 0,
+        link: 0,
+        ac: 0,
+        stepCounter: 0,
+        mqr: 0,
+        instruction: 0,
+        state: 0,
+        ion: 0,
+        pause: 0,
+        run: 0,
+    },
+
+    switches: {
+        dataField: 0,
+        instField: 0,
+        swr: 0,
+        start: 0,
+        load: 0,
+        dep: 0,
+        exam: 0,
+        cont: 0,
+        stop: 0,
+        singStep: 0,
+        singInst: 0,
+    }
+};

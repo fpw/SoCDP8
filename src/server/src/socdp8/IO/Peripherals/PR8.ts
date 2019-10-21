@@ -26,7 +26,7 @@ export class PR8 {
     private lastPunchAt: bigint = 0n;
     private io: IOController;
     private onPunch?: (data: number) => Promise<void>;
-    private readerGenerator?: AsyncGenerator<number>;
+    private readerData: number[] = [];
 
     public constructor(io: IOController) {
         this.io = io;
@@ -38,8 +38,8 @@ export class PR8 {
         this.onPunch = callback;
     }
 
-    public setReaderGenerator(generator: AsyncGenerator<number>) {
-        this.readerGenerator = generator;
+    public setReaderData(data: number[]) {
+        this.readerData = data;
         this.lastReadAt = this.readSteadyClock();
     }
 
@@ -91,15 +91,11 @@ export class PR8 {
         // current word was retrieved, get next
         const now = this.readSteadyClock();
         if (now - this.lastReadAt > (1.0 / 300) * 1e9) {
-            if (this.readerGenerator) {
-                const data = await this.readerGenerator.next();
-                if (!data.done) {
-                    this.io.writeDeviceRegister(this.READER_ID, data.value);
-                    this.lastReadAt = this.readSteadyClock();
-                } else {
-                    this.readerGenerator = undefined;
-                }
+            const data = this.readerData.shift();
+            if (data) {
+                this.io.writeDeviceRegister(this.READER_ID, data);
             }
+            this.lastReadAt = this.readSteadyClock();
         }
     }
 

@@ -134,21 +134,16 @@ export class SoCDP8 {
         this.asr33.setOnPunch(callback);
     }
 
-    private async *readerGenerator(buf: ArrayBuffer): AsyncGenerator<number> {
-        let view = new Uint8Array(buf);
-        let i = 0;
-        for (let num of view) {
-            yield num;
-            console.log(`Tape position ${++i} / ${view.byteLength} -> ${num}`);
-        }
+    public clearTapeInput() {
+        this.asr33.clearReaderData();
     }
 
-    public setTapeInput(data: ArrayBuffer) {
-        this.asr33.setReaderGenerator(this.readerGenerator(data));
+    public appendTapeInput(data: number[]) {
+        this.asr33.appendReaderData(data);
     }
 
-    public setHighTapeInput(data: ArrayBuffer) {
-        this.pr8.setReaderGenerator(this.readerGenerator(data));
+    public setHighTapeInput(data: number[]) {
+        this.pr8.setReaderData(data);
     }
 
     public async run(): Promise<void> {

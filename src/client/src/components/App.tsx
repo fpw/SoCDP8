@@ -17,72 +17,58 @@
  */
 
 import * as React from 'react';
-import * as io from 'socket.io-client'
 import { PDP8 } from './system/PDP8';
-require('public/index.html')
 require('bulma/css/bulma.css')
 
-interface AppProps {
-}
-
-interface AppState {
-}
-
-export class App extends React.Component<AppProps, AppState> {
-    private socket: SocketIOClient.Socket;
-
-    constructor(props: AppProps) {
-        super(props);
-        this.socket = io.connect();
-    }
-
+export class App extends React.PureComponent {
     public render(): JSX.Element {
         return (
             <React.Fragment>
-                <header>
-                    <div className='hero is-primary'>
-                        <div className='hero-body'>
-                            <h1 className='title'>SoCDP-8</h1>
-                            <h2 className='subtitle'>A PDP-8/I on a chip</h2>
-                        </div>
-                    </div>
-                    <nav className='navbar is-dark' role='navigation'>
-                        <div className='navbar-menu'>
-                            <div className='navbar-start'>
-                                <a className='navbar-item'>
-                                    Test
-                                </a>
-                            </div>
-                        </div>
-                    </nav>
-                </header>
+                <Header />
 
                 <main>
-                    <PDP8 socket={this.socket} />
+                    <PDP8 />
                 </main>
-                
-                <footer className='footer'>
-                    <div className='content has-text-centered'>
-                        <p>
-                            Copyright 2019 by Folke Will
-                        </p>
-                    </div>
-                </footer>
+
+                <Footer />
             </React.Fragment>
         );
     }
+}
 
-    /*
-    <kbd>keyboard stroke</kbd>
-    <samp>output</samp>
-    <code>code</code>
-    <var>variable</var>
-    <mark>marked</mark>
-    <data value="01234">word</data>
-    <dfn>definition</dfn>
-    <div>test</div>
-    <progress></progress>
-    <meter min='0' max='100' value='50'>50%</meter>
-    <footer></footer>
-    */
+function Header(): JSX.Element {
+    return (
+        <header>
+            <div className='hero is-primary is-small'>
+                <div className='hero-body'>
+                    <h1 className='title'>SoCDP-8</h1>
+                    <h2 className='subtitle'>A PDP-8/I on a chip</h2>
+                </div>
+            </div>
+            <nav className='navbar is-dark' role='navigation'>
+                <div className='navbar-menu'>
+                    <div className='navbar-start'>
+                        <a className='navbar-item'>
+                            Test
+                        </a>
+                        <a className='navbar-item'>
+                            Test
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </header>
+    );
+}
+
+function Footer(): JSX.Element {
+    return (
+        <footer className='footer'>
+            <div className='content has-text-centered'>
+                <p>
+                    Copyright 2019 by Folke Will
+                </p>
+            </div>
+        </footer>
+    ); 
 }

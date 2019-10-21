@@ -26,7 +26,7 @@ export class ASR33 {
     private lastPunchAt: bigint = 0n;
     private io: IOController;
     private onPunch?: (data: number) => Promise<void>;
-    private readerGenerator?: AsyncGenerator<number>;
+    private readerData: number[] = [];
 
     public constructor(io: IOController) {
         this.io = io;
@@ -38,8 +38,12 @@ export class ASR33 {
         this.onPunch = callback;
     }
 
-    public setReaderGenerator(generator: AsyncGenerator<number>) {
-        this.readerGenerator = generator;
+    public appendReaderData(data: number[]) {
+        this.readerData.push(...data);
+    }
+
+    public clearReaderData() {
+        this.readerData = [];
         this.lastReadAt = this.readSteadyClock();
     }
 
@@ -92,15 +96,11 @@ export class ASR33 {
         // current word was retrieved, get next
         const now = this.readSteadyClock();
         if (now - this.lastReadAt > 0.100e9) {
-            if (this.readerGenerator) {
-                const data = await this.readerGenerator.next();
-                if (!data.done) {
-                    this.io.writeDeviceRegister(this.READER_ID, data.value);
-                    this.lastReadAt = now;
-                } else {
-                    this.readerGenerator = undefined;
-                }
+            const data = this.readerData.shift();
+            if (data) {
+                this.io.writeDeviceRegister(this.READER_ID, data);
             }
+            this.lastReadAt = now;
         }
     }
 

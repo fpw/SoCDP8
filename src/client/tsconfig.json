@@ -1,11 +1,14 @@
  {
      "compilerOptions": {
-         "target": "es6",
+         "moduleResolution": "node",
+         "target": "es5",
          "module": "commonjs",
          "outDir": "dist",
          "sourceMap": true,
          "strict": true,
+         "experimentalDecorators": true,
          "noImplicitAny": true,
+         "esModuleInterop": true,
          "jsx": "react"
      },
      "include": ["src"],

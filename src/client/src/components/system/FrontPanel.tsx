@@ -20,16 +20,12 @@ import * as React from "react";
 import { LampState, SwitchState } from '../../models/FrontPanelState';
 
 export interface FrontPanelProps {
-    socket: SocketIOClient.Socket;
-}
-
-interface FrontPanelState {
     lamps: LampState;
     switches: SwitchState;
+    onSwitch(sw: string, state: boolean): void;
 }
 
-export class FrontPanel extends React.Component<FrontPanelProps, FrontPanelState> {
-    private socket: SocketIOClient.Socket;
+export class FrontPanel extends React.PureComponent<FrontPanelProps, {}> {
     private ref: React.RefObject<HTMLObjectElement>;
     private svgRoot: SVGSVGElement | null = null;
     private lamps: Record<string, SVGSVGElement> = {};
@@ -37,17 +33,7 @@ export class FrontPanel extends React.Component<FrontPanelProps, FrontPanelState
 
     constructor(props: FrontPanelProps) {
         super(props);
-        this.socket = props.socket;
         this.ref = React.createRef<HTMLObjectElement>();
-
-        this.socket.on('console-state', (state: any) => {
-            let lamps: LampState = state.lamps;
-            let switches: SwitchState = state.switches;
-            this.setState({
-                lamps: lamps,
-                switches: switches
-            });
-        });
     }
 
     public render(): JSX.Element {
@@ -75,28 +61,19 @@ export class FrontPanel extends React.Component<FrontPanelProps, FrontPanelState
     }
 
     public componentDidUpdate(prevProps: Readonly<FrontPanelProps>): void {
-        if (!this.state) {
-            return;
-        }
-
-        if (this.state.lamps) {
-            this.updateLamps(this.state.lamps);
-        }
-
-        if (this.state.switches) {
-            this.updateSwitches(this.state.switches);
-        }
+        this.updateLamps(this.props.lamps);
+        this.updateSwitches(this.props.switches);
     }
 
     private findElements(svg: SVGSVGElement) {
         let elems = svg.querySelectorAll('[id');
-        for (let elem of elems) {
+        elems.forEach(elem => {
             if (elem.id.startsWith('pdp8_lamp_')) {
                 this.lamps[elem.id] = elem as SVGSVGElement;
             } else if (elem.id.startsWith('pdp8_sw_')) {
                 this.switches[elem.id] = elem as SVGSVGElement;
             }
-        }
+        });
     }
 
     private connectSwitches(): void {
@@ -127,7 +104,7 @@ export class FrontPanel extends React.Component<FrontPanelProps, FrontPanelState
         if (elem) {
             elem.onclick = () => {
                 let curState = this.isSwitchSet(elem);
-                this.onConsoleSwitch(id.replace('pdp8_sw_', ''), !curState);
+                this.props.onSwitch(id.replace('pdp8_sw_', ''), !curState);
             }
         }
     }
@@ -136,7 +113,7 @@ export class FrontPanel extends React.Component<FrontPanelProps, FrontPanelState
         let elem = this.switches[id];
         if (elem) {
             elem.onmousedown = () => {
-                this.onConsoleSwitch(id.replace('pdp8_sw_', ''), true);
+                this.props.onSwitch(id.replace('pdp8_sw_', ''), true);
             }
         }
     }
@@ -249,9 +226,5 @@ export class FrontPanel extends React.Component<FrontPanelProps, FrontPanelState
                 transformations.removeItem(rotationIndex);
             }
         }
-    }
-
-    private onConsoleSwitch(sw: string, state: boolean): void {
-        this.socket.emit('console-switch', {'switch': sw, 'state': state});
     }
 }

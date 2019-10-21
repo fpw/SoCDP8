@@ -19,5 +19,13 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { App } from "./components/App";
+import { PDP8Model } from './models/PDP8Model';
+import { Provider } from 'mobx-react'
 
-ReactDOM.render(<App />, document.getElementById("app"));
+const pdp8 = new PDP8Model();
+
+ReactDOM.render((
+    <Provider pdp8={pdp8}>
+        <App />
+    </Provider>
+), document.getElementById("app"));
