@@ -48,43 +48,16 @@ export class ASR33 {
     }
 
     private setupReader(): void {
-        let readerEntry = new IOConfigEntry(this.READER_ID);
+        let readerEntry = new IOConfigEntry(this.READER_ID, 1);
+        readerEntry.onTick = () => this.onReaderTick();
 
-        // IOP1 for reader: Skip if flag is set
-        readerEntry.iopForSkipFlag = 1;
-
-        // IOP2 for reader: Clear AC, Clear Flag, generate IRQ so we can reload and request to call us
-        readerEntry.iopForACClear = 2;
-        readerEntry.iopForFlagClear = 2;
-        readerEntry.iopForInterrupt = 2;
-        readerEntry.onFlagUnset = () => this.onReaderFlagReset();
-
-        // IOP4 for reader: Load AC with register
-        readerEntry.iopForACLoad = 3;
-
-        // Writing data to register should set the flag
-        readerEntry.setFlagOnWrite = true;
 
         this.io.registerDevice(readerEntry);
     }
 
     private setupPunch(): void {
-        let punchEntry = new IOConfigEntry(this.PUNCH_ID);
-
-        // IOP1 for punch: Skip if flag is set
-        punchEntry.iopForSkipFlag = 1;
-
-        // IOP2 for punch: Clear Flag, generate IRQ so we can retrieve the data
-        punchEntry.iopForFlagClear = 2;
-        punchEntry.iopForInterrupt = 2;
-        punchEntry.onFlagUnset = () => this.onPunchFlagReset();
-
-        // IOP4 for punch: Load register with AC
-        punchEntry.iopForRegisterLoad = 3;
-
-        // Writing data to register should set the flag
-        punchEntry.setFlagOnWrite = true;
-
+        let punchEntry = new IOConfigEntry(this.PUNCH_ID, 2);
+        punchEntry.onTick = () => this.onPunchTick();
         this.io.registerDevice(punchEntry);
     }
 
@@ -92,29 +65,39 @@ export class ASR33 {
         return process.hrtime.bigint();
     }
 
-    private async onReaderFlagReset(): Promise<void> {
+    private async onReaderTick(): Promise<void> {
+        if (this.io.readDeviceRegister(this.READER_ID, 2) == 1) {
+            // data not taken yet
+            return;
+        }
+
         // current word was retrieved, get next
         const now = this.readSteadyClock();
         if (now - this.lastReadAt > 0.100e9) {
             const data = this.readerData.shift();
-            if (data) {
-                this.io.writeDeviceRegister(this.READER_ID, data);
+            if (data != undefined) {
+                console.log(`Next ${data}, ${this.readerData.length} remaining`);
+                this.io.writeDeviceRegister(this.READER_ID, 1, data);
+                this.io.writeDeviceRegister(this.READER_ID, 2, 1);
             }
-            this.lastReadAt = now;
+            this.lastReadAt = this.readSteadyClock();
         }
     }
 
-    private async onPunchFlagReset(): Promise<void> {
+    private async onPunchTick(): Promise<void> {
+        if (this.io.readDeviceRegister(this.PUNCH_ID, 2) != 1) {
+            // no new data yet
+            return;
+        }
+
         // new word ready
         const now = this.readSteadyClock();
         if (now - this.lastPunchAt > 0.100e9) {
-            let [data, isNew] = this.io.readDeviceRegister(this.PUNCH_ID);
-            if (isNew) {
-                if (this.onPunch) {
-                    this.io.writeDeviceRegister(this.PUNCH_ID, 0);
-                    this.lastPunchAt = now;
-                    await this.onPunch(data);
-                }
+            let data = this.io.readDeviceRegister(this.PUNCH_ID, 1);
+            if (this.onPunch) {
+                this.io.writeDeviceRegister(this.PUNCH_ID, 2, 2); // ack data
+                this.lastPunchAt = now;
+                await this.onPunch(data);
             }
         }
     }

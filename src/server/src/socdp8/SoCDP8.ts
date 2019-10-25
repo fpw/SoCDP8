@@ -22,6 +22,7 @@ import { CoreMemory } from "./CoreMemory/CoreMemory";
 import { IOController } from './IO/IOController';
 import { ASR33 } from './IO/Peripherals/ASR33';
 import { PR8 } from './IO/Peripherals/PR8';
+import { promisify } from 'util';
 
 export interface ConsoleState {
     lamps: LampState;
@@ -147,6 +148,11 @@ export class SoCDP8 {
     }
 
     public async run(): Promise<void> {
-        await this.io.runDeviceLoop();
+        const sleepMs = promisify(setTimeout);
+
+        while (true) {
+            await this.io.checkDevices();
+            await sleepMs(1);
+        }
     }
 }

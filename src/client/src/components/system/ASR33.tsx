@@ -41,7 +41,7 @@ export class ASR33 extends React.PureComponent<ASR33Props> {
                 </div>
 
                 <div className='control'>
-                    <input className='input' onKeyPress={this.onKeyPress} onKeyDown={this.onKeyDown} />
+                    <input className='input' onKeyUp={this.onKey} />
                 </div>
 
                 <div className='field has-addons'>
@@ -73,18 +73,14 @@ export class ASR33 extends React.PureComponent<ASR33Props> {
         textArea.scrollTop = textArea.scrollHeight;
     }
 
-    private readonly onKeyPress = (ev: React.KeyboardEvent): void => {
+    private readonly onKey = (ev: React.KeyboardEvent): void => {
         if (ev.key == 'Enter') {
             (ev.target as HTMLInputElement).value = '';
             this.onPunch('\r');
-        } else {
-            this.onPunch(ev.key);
-        }
-    }
-
-    private readonly onKeyDown = (ev: React.KeyboardEvent) => {
-        if (ev.key == 'Backspace') {
+        } else if (ev.key == 'Backspace') {
             this.onPunch('\x7F');
+        } else if (ev.key.length == 1) {
+            this.onPunch(ev.key);
         }
     }
 

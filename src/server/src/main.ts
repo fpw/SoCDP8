@@ -60,6 +60,8 @@ sockServer.on('connection', (client: io.Socket) => {
         const data: number[] = Array.from(new Uint8Array(buffer));
         pdp8.setHighTapeInput(data);
     });
+
+    sockServer.emit('console-state', pdp8.readConsoleState());
 });
 
 server.listen(8000);

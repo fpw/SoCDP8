@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- import { readdirSync, readFileSync, openSync, closeSync } from 'fs';
+import { readdirSync, readFileSync, openSync, closeSync } from 'fs';
 import { O_SYNC, O_RDWR } from 'constants';
 const mmap = require("mmap-io");
 

@@ -16,7 +16,8 @@
    inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
    width="1034.6456"
    height="496.06293"
-   viewBox="0 0 1034.6456 496.06293">
+   viewBox="0 0 1034.6456 496.06293"
+   sodipodi:docname="front_panel_inkscape.svg">
   <style
      id="style5605">
 .lamp {
@@ -88,21 +89,21 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="3.0148474"
-     inkscape:cx="512.96541"
-     inkscape:cy="195.41585"
-     inkscape:current-layer="layer5"
+     inkscape:zoom="2"
+     inkscape:cx="386.85058"
+     inkscape:cy="281.69298"
+     inkscape:current-layer="layer2"
      showgrid="true"
      units="px"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:window-width="3840"
-     inkscape:window-height="2093"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
-     inkscape:window-maximized="1"
+     inkscape:window-width="2656"
+     inkscape:window-height="1301"
+     inkscape:window-x="1083"
+     inkscape:window-y="185"
+     inkscape:window-maximized="0"
      inkscape:snap-global="true"
      inkscape:snap-to-guides="false"
      objecttolerance="20"
@@ -710,7 +711,8 @@
      inkscape:groupmode="layer"
      id="layer5"
      inkscape:label="Lamps and Switches"
-     style="display:inline">
+     style="display:inline"
+     sodipodi:insensitive="true">
     <rect
        class="lamp"
        inkscape:label="#rect7680"
@@ -2375,16 +2377,15 @@
          x="319.37726"
          id="tspan1164"
          sodipodi:role="line">8/I</tspan></text>
-    <g
-       transform="translate(-3.5563849e-6,-559.84247)"
-       style="display:inline"
-       id="g7540"
-       inkscape:label="pdp_8i">
-      <path
-         inkscape:connector-curvature="0"
-         id="rect6882-3"
-         d="m 304.8681,587.88098 h 13.67285 v 2.87101 H 304.8681 Z"
-         style="display:inline;fill:#f2eedf;fill-opacity:1;stroke:none" />
-    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:expanded;font-size:34px;line-height:1.25;font-family:'Microgramma D OT';-inkscape-font-specification:'Microgramma D OT, Medium Expanded';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-feature-settings:normal;text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#f2eedf;fill-opacity:1;stroke:none"
+       x="305.01065"
+       y="37.450558"
+       id="text4839"><tspan
+         sodipodi:role="line"
+         id="tspan4837"
+         x="305.01065"
+         y="37.450558">-</tspan></text>
   </g>
 </svg>

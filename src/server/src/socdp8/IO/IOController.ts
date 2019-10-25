@@ -19,10 +19,6 @@
 import { IOConfigEntry } from './IOConfigEntry';
 
 export class IOController {
-    private DELAY_MS: number = 1;
-    private DEV_ID_CLEAR_FLAG = 0;
-    private DEV_ID_FLAGS = 64;
-    private DEV_ID_TRANSACT = 66;
     private ioMem: Buffer;
     private configEntries: IOConfigEntry[] = [];
 
@@ -33,81 +29,27 @@ export class IOController {
     public registerDevice(entry: IOConfigEntry): void {
         this.configEntries.push(entry);
 
-        let config: number = 0;
-
-        if (entry.setFlagOnWrite) {
-            config |= 1 << 12;
-        }
-        config |= entry.iopForSkipFlag << 13;
-        config |= entry.iopForFlagClear << 15;
-        config |= entry.iopForFlagSet << 17;
-        config |= entry.iopForACLoad << 19;
-        config |= entry.iopForACClear << 21;
-        config |= entry.iopForRegisterLoad << 23;
-        config |= entry.iopForInterrupt << 25;
-
-        this.runInTransaction(() => {
-            this.ioMem.writeUInt32LE(config, entry.devId * 4);
-        });
-        this.clearDeviceFlag(entry.devId);
+        this.ioMem.writeUInt16LE(entry.type, this.getRegAddr(entry.id, 0));
     }
 
-    private runInTransaction(f: () => void) {
-        let busy = 0;
-        do {
-            busy = this.ioMem.readUInt8(this.DEV_ID_TRANSACT * 4);
-            if (busy) {
-                console.log('busy');
+    private getRegAddr(devId: number, devReg: number): number {
+        // each device has 16 registers with 2 byte each (aligned to 4 byte boundaries)
+        return devId * (16 * 4) + devReg * 4;
+    }
+
+    public writeDeviceRegister(devId: number, reg: number,  data: number): void {
+        this.ioMem.writeUInt16LE(data, this.getRegAddr(devId, reg));
+    }
+
+    public readDeviceRegister(devId: number, reg: number): number {
+        return this.ioMem.readUInt16LE(this.getRegAddr(devId, reg));
+    }
+
+    public async checkDevices(): Promise<void> {
+        for (let entry of this.configEntries) {
+            if (entry.onTick) {
+                await entry.onTick();
             }
-        } while (busy);
-
-        this.ioMem.writeUInt8(1, this.DEV_ID_TRANSACT * 4);
-        f();
-        this.ioMem.writeUInt8(0, this.DEV_ID_TRANSACT * 4);
-    }
-
-    public writeDeviceRegister(devId: number, data: number): void {
-        let reg = this.ioMem.readUInt32LE(devId * 4);
-        reg &= ~0o7777; // clear current data
-        reg &= ~(1 << 27); // clear new data flag
-        reg |= data & 0o7777; // set new data
-        this.runInTransaction(() => {
-            this.ioMem.writeUInt32LE(reg, devId * 4);
-        });
-    }
-
-    public readDeviceRegister(devId: number): [number, boolean] {
-        let reg = this.ioMem.readUInt32LE(devId * 4);
-        let isNewData = (reg & (1 << 27)) != 0;
-        return [reg & 0o7777, isNewData];
-    }
-
-    public clearDeviceFlag(devId: number): void {
-        this.runInTransaction(() => {
-            this.ioMem.writeUInt8(devId, this.DEV_ID_CLEAR_FLAG * 4);
-        });
-    }
-
-    public async runDeviceLoop(): Promise<void> {
-        let sleep = require('util').promisify(setTimeout);
-        while (true) {
-            let flagsLo = this.ioMem.readUInt32LE(this.DEV_ID_FLAGS * 4);
-            let flagsHi = this.ioMem.readUInt32LE((this.DEV_ID_FLAGS + 1) * 4);
-            for (let entry of this.configEntries) {
-                let flagSet = false;
-                if (entry.devId < 32) {
-                    flagSet = ((flagsLo & (1 << entry.devId)) != 0);
-                } else {
-                    flagSet = ((flagsHi & (1 << (entry.devId - 32))) != 0);
-                }
-
-                if (flagSet && entry.onFlagSet) {
-                    await entry.onFlagSet();
-                } else if (!flagSet && entry.onFlagUnset) {
-                    await entry.onFlagUnset();
-                }
-            }
-            await sleep(this.DELAY_MS);
         }
     }
 }

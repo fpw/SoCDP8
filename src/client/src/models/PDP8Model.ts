@@ -30,7 +30,7 @@ export class PDP8Model {
     private punchData: string = '';
 
     constructor() {
-        this.socket = io.connect();
+        this.socket = io.connect('http://192.168.178.65:8000');
 
         this.socket.on('console-state', (state: FrontPanelState) => {
             this.onFrontPanelChange(state);

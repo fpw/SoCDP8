@@ -17,42 +17,9 @@
  */
 
 export class IOConfigEntry {
-    // The IOP pulses should be 1 for IOP1, 2 for IOP2 and 3 for IOP4
+    // Callback function to do device transactions
+    public onTick?: () => Promise<void>;
 
-    // bus ID
-    public devId: number = 0;
-
-    // Which IOP pulse should generate an interrupt in the IOController
-    public iopForInterrupt: number = 0;
-
-    // Which IOP pulse should load the device register
-    public iopForRegisterLoad: number = 0;
-
-    // Which IOP pulse should clear the AC
-    public iopForACClear: number = 0;
-
-    // Which IOP pulse should load the AC from the register
-    public iopForACLoad: number = 0;
-
-    // Which IOP pulse should set the device flag
-    public iopForFlagSet: number = 0;
-
-    // Which IOP pulse should clear the device flag
-    public iopForFlagClear: number = 0;
-
-    // Which IOP pulse should skip if flag is set
-    public iopForSkipFlag: number = 0;
-    
-    // Whether to set the flag on write access
-    public setFlagOnWrite: boolean = false;
-
-    // Call I/O function when flag is set
-    public onFlagSet?: () => Promise<void>;
-
-    // Call I/O function when flag is not set
-    public onFlagUnset?: () => Promise<void>;
-
-    constructor(id: number) {
-        this.devId = id;
+    constructor(public id: number, public type: number) {
     }
 }

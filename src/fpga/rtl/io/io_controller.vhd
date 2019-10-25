@@ -11,7 +11,8 @@ use work.socdp8_package.all;
 entity io_controller is
     generic(
         -- AXI parameters
-        C_S_AXI_ADDR_WIDTH: integer := 9
+        C_S_AXI_ADDR_WIDTH: integer := 12;
+        MAX_DEVICES: natural := 8
     );
     port (
         -- AXI
@@ -65,142 +66,99 @@ entity io_controller is
 end io_controller;
 
 architecture Behavioral of io_controller is
-    type axi_state is (IDLE, READ, READ_WAIT, WRITE, WRITE_ACK);
+    type axi_state is (IDLE, READ_WAIT, READ, WRITE_WAIT, WRITE, WRITE_ACK);
     signal state: axi_state;
-    
-    type state_a is array(0 to 63) of std_logic_vector(31 downto 0);
-    signal dev_states: state_a;
-    signal dev_flags: std_logic_vector(63 downto 0);
-    
-    signal iop_code: std_logic_vector(1 downto 0);
-    
-    signal ram_addr_io: std_logic_vector(5 downto 0);
-    signal ram_in_io: std_logic_vector(31 downto 0);
-    signal ram_write_io: std_logic;
-    signal ram_out_io: std_logic_vector(31 downto 0);
+    signal axi_dev_id: integer range 0 to 63;
+    signal axi_dev_reg: integer range 0 to 15;
 
-    signal bus_addr: std_logic_vector(C_S_AXI_ADDR_WIDTH - 3 downto 0);
+    signal perph_reg_sel: std_logic_vector(3 downto 0);
+    signal perph_reg_in: std_logic_vector(15 downto 0);
+    signal perph_reg_write: std_logic_vector(63 downto 0);
 
-    signal ram_addr_axi: std_logic_vector(5 downto 0);
-    signal ram_in_axi: std_logic_vector(31 downto 0);
-    signal ram_write_axi: std_logic;
-    signal ram_out_axi: std_logic_vector(31 downto 0);
+    signal iop_code: io_state;
+    signal cur_dev_id: integer range 0 to 63;
+    signal dev_active: std_logic_vector(63 downto 0);
+    signal dev_interrupts: std_logic_vector(63 downto 0);
 
-    signal write_pending: std_logic;
-    signal write_dev_id: std_logic_vector(5 downto 0);
-    signal write_word: std_logic_vector(31 downto 0);    
-    signal write_done: std_logic;
+    type dev_types_a is array(0 to 63) of std_logic_vector(15 downto 0);
+    signal dev_types: dev_types_a;
+
+    type peripheral_out_rec is record
+        io_skip: std_logic;
+        io_ac_clear: std_logic;
+        io_bus_out: std_logic_vector(11 downto 0);
+        reg_out: std_logic_vector(15 downto 0);
+    end record;
+    type peripheral_out_a is array(0 to 63) of peripheral_out_rec;
+    
+    signal peripheral_out: peripheral_out_a;
+
+    function to_dev_id(addr: std_logic_vector(9 downto 0)) return integer is
+    begin
+        return to_integer(unsigned(addr(9 downto 4)));
+    end function;
+
+    function to_dev_reg(addr: std_logic_vector(9 downto 0)) return integer is
+    begin
+        return to_integer(unsigned(addr(3 downto 0)));
+    end function;
 begin
 
-io_ram_internal: process
-begin
-    wait until rising_edge(S_AXI_ACLK);
-    
-    if ram_write_io = '1' then
-        dev_states(to_integer(unsigned(ram_addr_io))) <= ram_in_io;
-    end if;
-    ram_out_io <= dev_states(to_integer(unsigned(ram_addr_io)));
-end process;
+iop_code <= IO1 when iop(0) = '1' else
+            IO2 when iop(1) = '1' else
+            IO4 when iop(2) = '1' else
+            IO_NONE;
 
-io_ram_axi: process
-begin
-    wait until rising_edge(S_AXI_ACLK);
-    
-    if ram_write_axi = '1' then
-        dev_states(to_integer(unsigned(ram_addr_axi))) <= ram_in_axi;
-    end if;
-    ram_out_axi <= dev_states(to_integer(unsigned(ram_addr_axi)));
-end process;
+pdp_irq <= '1' when to_integer(unsigned(dev_interrupts)) /= 0 else '0';
+cur_dev_id <= to_integer(unsigned(io_mb(8 downto 3)));
+io_skip <= peripheral_out(cur_dev_id).io_skip;
+io_ac_clear <= peripheral_out(cur_dev_id).io_ac_clear;
+io_bus_out <= peripheral_out(cur_dev_id).io_bus_out;
 
-iop_code <= "01" when iop(0) = '1' else
-            "10" when iop(1) = '1' else
-            "11" when iop(2) = '1' else
-            "00";
+gen_peripherals: for i in 0 to 63 generate
+    perph: entity work.peripheral
+    generic map (
+        clk_frq => clk_frq,
+        dev_index => i
+    )
+    port map (
+        clk => S_AXI_ACLK,
+        rstn => s_axi_aresetn,
+        
+        dev_type => dev_types(i),
+        
+        reg_sel => perph_reg_sel,
+        reg_out => peripheral_out(i).reg_out,
+        reg_in => perph_reg_in,
+        reg_write => perph_reg_write(i),
+        
+        enable => dev_active(i),
+        iop => iop_code,
+        io_mb => io_mb,
+        io_ac => io_ac,
+        
+        io_skip => peripheral_out(i).io_skip,
+        io_ac_clear => peripheral_out(i).io_ac_clear,
+        io_bus_out => peripheral_out(i).io_bus_out,
+        
+        pdp8_irq => dev_interrupts(i)
+    );
+end generate;
 
 io_proc: process
 begin
     wait until rising_edge(S_AXI_ACLK);
 
-    -- default bus output
-    io_skip <= '0';
-    io_ac_clear <= '0';
-    io_bus_out <= o"0000";
-    
-    ram_write_io <= '0';
-    ram_write_axi <= '0';
-    
-    -- default IRQ state for SoC
+    -- default signals
     soc_irq <= '0';
+    dev_active <= (others => '0');
 
-    ram_addr_io <= io_mb(8 downto 3);
-
-    if iop_code /= "00" and write_pending = '0' and ram_addr_io = io_mb(8 downto 3) then
-        -- Request IRQ in current IOP (only one cycle)
-        if ram_out_io(26 downto 25) = iop_code then
-            soc_irq <= '1';
-        end if;
-        
-        -- Request AC -> REG in current IOP (only one cycle)
-        if ram_out_io(24 downto 23) = iop_code then
-            ram_in_io <= ram_out_io;
-            ram_in_io(27) <= '1';
-            ram_in_io(11 downto 0) <= io_ac;
-            ram_write_io <= '1';
-        end if;
-        
-        -- Request AC CLEAR in current IOP
-        if ram_out_io(22 downto 21) = iop_code then
-            io_ac_clear <= '1';
-        end if;
-        
-        -- Request REG -> AC in current IOP
-        if ram_out_io(20 downto 19) = iop_code then
-            io_bus_out <= ram_out_io(11 downto 0);
-        end if;
-        
-        -- Request flag set in current IOP
-        if ram_out_io(18 downto 17) = iop_code then
-            dev_flags(to_integer(unsigned(io_mb(8 downto 3)))) <= '1';
-        end if;
-        
-        -- Request flag clear in current IOP
-        if ram_out_io(16 downto 15) = iop_code then
-            dev_flags(to_integer(unsigned(io_mb(8 downto 3)))) <= '0';
-        end if;
-        
-        -- Request skip on flag in current IOP
-        if ram_out_io(14 downto 13) = iop_code then
-            io_skip <= dev_flags(to_integer(unsigned(io_mb(8 downto 3))));
-        end if;
-    else
-        if write_pending = '1' and write_done = '0' then
-            if write_dev_id = o"00" then
-                -- writing to address 0 clears the flag of the device ID that is written
-                dev_flags(to_integer(unsigned(write_word(5 downto 0)))) <= '0';
-            else
-                if write_word(12) = '1' then
-                    dev_flags(to_integer(unsigned(write_dev_id))) <= '1';
-                end if;
-                ram_addr_io <= write_dev_id;
-                ram_in_io <= write_word;
-                ram_write_io <= '1'; 
-            end if;
-            write_done <= '1';
-        end if;
-    end if;
-
-    if write_pending = '0' then
-        write_done <= '0';
-    end if;
-
-    if s_axi_aresetn = '0' then
-        dev_flags <= (others => '0');
-        write_done <= '0';
-        ram_in_axi <= (others => '0');
+    if iop_code /= IO_NONE then
+        dev_active(cur_dev_id) <= '1';
     end if;
 end process;
 
-pdp_irq <= '1' when to_integer(unsigned(dev_flags)) /= 0 else '0';
+perph_reg_sel <= std_logic_vector(to_unsigned(axi_dev_reg, 4));
 
 axi_fsm: process
 begin
@@ -220,70 +178,71 @@ begin
     --- Write ack channel
     S_AXI_BRESP <= "00";
     S_AXI_BVALID <= '0';
-
-    if write_done = '1' then
-        write_pending <= '0';
-    end if;
+    
+    perph_reg_write <= (others => '0');
 
     case state is
         when IDLE =>
             if s_axi_arvalid = '1' then
                 s_axi_arready <= '1';
-                bus_addr <= s_axi_araddr(C_S_AXI_ADDR_WIDTH - 1 downto 2);
-                ram_addr_axi <= s_axi_araddr(C_S_AXI_ADDR_WIDTH - 2 downto 2);
+                axi_dev_id <= to_dev_id(s_axi_araddr(11 downto 2));
+                axi_dev_reg <= to_dev_reg(s_axi_araddr(11 downto 2));
                 state <= READ_WAIT;
-            elsif s_axi_awvalid = '1' and s_axi_wvalid = '1' and write_pending = '0' then
+            elsif s_axi_awvalid = '1' and s_axi_wvalid = '1' then
                 s_axi_awready <= '1';
-                bus_addr <= s_axi_awaddr(C_S_AXI_ADDR_WIDTH - 1 downto 2);
-                state <= WRITE;
+                axi_dev_id <= to_dev_id(s_axi_awaddr(11 downto 2));
+                axi_dev_reg <= to_dev_reg(s_axi_awaddr(11 downto 2));
+                state <= WRITE_WAIT;
             end if;
         when READ_WAIT =>
-            -- waiting for RAM to fill register
             state <= READ;
         when READ =>
             -- write answer
-            if to_integer(unsigned(bus_addr)) < 64 then
-                s_axi_rdata <= ram_out_axi;
-            elsif to_integer(unsigned(bus_addr)) = 64 then
-                s_axi_rdata <= dev_flags(31 downto 0);
-            elsif to_integer(unsigned(bus_addr)) = 65 then
-                s_axi_rdata <= dev_flags(63 downto 32);
-            elsif to_integer(unsigned(bus_addr)) = 66 then
-                s_axi_rdata(0) <= write_pending;
+            s_axi_rdata <= (others => '0');
+
+            if axi_dev_id = 0 then
+                case axi_dev_reg is
+                    when 0 => s_axi_rdata <= dev_interrupts(31 downto 0); 
+                    when 1 => s_axi_rdata <= dev_interrupts(63 downto 32);
+                    when others => s_axi_rdata <= (others => '0');
+                end case;
             else
-                s_axi_rdata <= (others => '0');
+                if axi_dev_reg = 0 then
+                    s_axi_rdata(15 downto 0) <= dev_types(axi_dev_id);
+                else
+                    s_axi_rdata(15 downto 0) <= peripheral_out(axi_dev_id).reg_out;
+                end if;
             end if;
             s_axi_rresp <= "00";
             s_axi_rvalid <= '1';
             if s_axi_rready = '1' then
                 state <= IDLE;
             end if;
+        when WRITE_WAIT =>
+            if axi_dev_id /= cur_dev_id or iop_code = IO_NONE then
+                state <= WRITE;
+            end if;
         when WRITE =>
-            if to_integer(unsigned(bus_addr)) = 66 then
-                if s_axi_wdata(0) = '1' then
-                    write_word <= (others => '0');
-                else
-                    write_pending <= '1';
+            if axi_dev_reg = 0 then
+                if s_axi_wstrb(0) = '1' then
+                    dev_types(axi_dev_id)(7 downto 0) <= s_axi_wdata(7 downto 0);
+                end if;
+    
+                if s_axi_wstrb(1) = '1' then
+                    dev_types(axi_dev_id)(15 downto 8) <= s_axi_wdata(15 downto 8);
                 end if;
             else
-                write_dev_id <= bus_addr(5 downto 0);
-
+                perph_reg_in <= peripheral_out(axi_dev_id).reg_out;
                 if s_axi_wstrb(0) = '1' then
-                    write_word(7 downto 0) <= s_axi_wdata(7 downto 0);
+                    perph_reg_in(7 downto 0) <= s_axi_wdata(7 downto 0);
                 end if;
-                
+    
                 if s_axi_wstrb(1) = '1' then
-                    write_word(15 downto 8) <= s_axi_wdata(15 downto 8);
+                    perph_reg_in(15 downto 8) <= s_axi_wdata(15 downto 8);
                 end if;
-                
-                if s_axi_wstrb(2) = '1' then
-                    write_word(23 downto 16) <= s_axi_wdata(23 downto 16);
-                end if;
-                
-                if s_axi_wstrb(3) = '1' then
-                    write_word(31 downto 24) <= s_axi_wdata(31 downto 24);
-                end if;
+                perph_reg_write(axi_dev_id) <= '1';
             end if;
+
             s_axi_wready <= '1';
             state <= WRITE_ACK;
         when WRITE_ACK =>
@@ -295,12 +254,8 @@ begin
     end case;
     
     if s_axi_aresetn = '0' then
-        bus_addr <= (others => '0');
-        ram_addr_axi <= (others => '0');
-        write_pending <= '0';
-        write_dev_id <= (others => '0');
-        write_word <= (others => '0');
         state <= IDLE;
+        dev_types <= (others => (others => '0'));
     end if;
 end process;
 
