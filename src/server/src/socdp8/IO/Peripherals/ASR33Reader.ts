@@ -16,49 +16,49 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { IOController } from '../IOController';
-import { IOConfigEntry } from '../IOConfigEntry';
+import { Peripheral, DeviceRegister, DeviceType, IOContext } from './Peripheral';
 
-export class PR8 {
-    private readonly READER_ID = 1;
+export class ASR33Reader extends Peripheral {
     private lastReadAt: bigint = 0n;
-    private io: IOController;
     private readerData: number[] = [];
 
-    public constructor(io: IOController) {
-        this.io = io;
-        this.setupReader();
+    constructor(private busNum: number) {
+        super();
     }
 
-    public setReaderData(data: number[]) {
-        this.readerData = data;
+    public getType(): DeviceType {
+        return DeviceType.ASR33_READER;
+    }
+
+    public getBusConnections(): Map<number, number> {
+        const map = new Map<number, number>();
+        map.set(this.busNum, 0);
+        return map;
+    }
+
+    public appendReaderData(data: number[]) {
+        this.readerData.push(...data);
+    }
+
+    public clearReaderData() {
+        this.readerData = [];
         this.lastReadAt = this.readSteadyClock();
     }
 
-    private setupReader(): void {
-        let readerEntry = new IOConfigEntry(this.READER_ID, 3);
-        readerEntry.onTick = () => this.onReaderTick();
-        this.io.registerDevice(readerEntry);
-    }
-
-    private readSteadyClock(): bigint {
-        return process.hrtime.bigint();
-    }
-
-    private async onReaderTick(): Promise<void> {
-        if (this.io.readDeviceRegister(this.READER_ID, 2) == 1) {
+    public async onTick(io: IOContext): Promise<void> {
+        if (io.readRegister(DeviceRegister.REG_B) == 1) {
             // data not taken yet
             return;
         }
 
         // current word was retrieved, get next
         const now = this.readSteadyClock();
-        if (now - this.lastReadAt > (1.0 / 300) * 1e9) {
+        if (now - this.lastReadAt > 0.100e9) {
             const data = this.readerData.shift();
             if (data != undefined) {
                 console.log(`Next ${data}, ${this.readerData.length} remaining`);
-                this.io.writeDeviceRegister(this.READER_ID, 1, data);
-                this.io.writeDeviceRegister(this.READER_ID, 2, 1);
+                io.writeRegister(DeviceRegister.REG_A, data);
+                io.writeRegister(DeviceRegister.REG_B, 1);
             }
             this.lastReadAt = this.readSteadyClock();
         }

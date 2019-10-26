@@ -16,40 +16,75 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { IOConfigEntry } from './IOConfigEntry';
+import { Peripheral } from './Peripherals/Peripheral';
+import { NullPeripheral } from './Peripherals/NullPeripheral';
 
 export class IOController {
     private ioMem: Buffer;
-    private configEntries: IOConfigEntry[] = [];
+    private readonly maxDevices: number;
+    private peripherals: Peripheral[] = [];
 
     public constructor(ioBuf: Buffer) {
         this.ioMem = ioBuf;
+        this.maxDevices = this.readSystemRegister(1);
+        this.peripherals.push(new NullPeripheral());
+        this.clear();
     }
 
-    public registerDevice(entry: IOConfigEntry): void {
-        this.configEntries.push(entry);
-
-        this.ioMem.writeUInt16LE(entry.type, this.getRegAddr(entry.id, 0));
+    private clear(): void {
+        for (let i = 0; i < this.maxDevices; i++) {
+            for (let reg = 0; reg < 16; reg++) {
+                this.writePeripheralReg(i, reg, 0);
+            }
+            this.writeMappingTable(i, 0, 0);
+            this.writeMappingTable(i, 1, 0);
+        }
     }
 
-    private getRegAddr(devId: number, devReg: number): number {
-        // each device has 16 registers with 2 byte each (aligned to 4 byte boundaries)
-        return devId * (16 * 4) + devReg * 4;
+    public registerPeripheral(perph: Peripheral): void {
+        const devId = this.peripherals.push(perph) - 1;
+
+        // set peripheral type
+        this.writePeripheralReg(devId, 0, perph.getType());
+
+        // connect peripheral to bus at desired locations
+        const mapping = perph.getBusConnections();
+        for (let [id, subType] of mapping.entries()) {
+            this.writeMappingTable(id, 0, devId);
+            this.writeMappingTable(id, 1, subType);
+        }
     }
 
-    public writeDeviceRegister(devId: number, reg: number,  data: number): void {
-        this.ioMem.writeUInt16LE(data, this.getRegAddr(devId, reg));
+    private readSystemRegister(reg: number) {
+        return this.getMappingTableAddr(0, reg);
     }
 
-    public readDeviceRegister(devId: number, reg: number): number {
-        return this.ioMem.readUInt16LE(this.getRegAddr(devId, reg));
+    private writeMappingTable(busId: number, reg: number, val: number) {
+        this.ioMem.writeUInt16LE(val, this.getMappingTableAddr(busId, reg));
+    }
+
+    private readPeripheralReg(devId: number, reg: number): number {
+        return this.ioMem.readUInt16LE(this.getPeripheralRegAddr(devId, reg));
+    }
+
+    private writePeripheralReg(devId: number, reg: number,  data: number): void {
+        this.ioMem.writeUInt16LE(data, this.getPeripheralRegAddr(devId, reg));
+    }
+
+    private getPeripheralRegAddr(devId: number, devReg: number): number {
+        return (1 << 12) | (devId * (16 * 4) + devReg * 4);
+    }
+
+    private getMappingTableAddr(busId: number, reg: number): number {
+        return busId * (16 * 4) + reg * 4;
     }
 
     public async checkDevices(): Promise<void> {
-        for (let entry of this.configEntries) {
-            if (entry.onTick) {
-                await entry.onTick();
-            }
+        for (const [devId, perph] of this.peripherals.entries()) {
+            await perph.onTick({
+                readRegister: reg => this.readPeripheralReg(devId, reg),
+                writeRegister: (reg, val) => this.writePeripheralReg(devId, reg, val)
+            });
         }
     }
 }

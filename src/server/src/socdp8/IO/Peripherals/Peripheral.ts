@@ -16,10 +16,36 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export class IOConfigEntry {
-    // Callback function to do device transactions
-    public onTick?: () => Promise<void>;
+ // musst match dev_type in peripheral.vhd
+export enum DeviceType {
+    NULL            = 0,
+    ASR33_READER    = 1,
+    ASR33_WRITER    = 2,
+    PR8_READER      = 3,
+    PR8_WRITER      = 4,
+    TC08            = 5,
+}
 
-    constructor(public id: number, public type: number) {
+export enum DeviceRegister {
+    REG_A           = 1,
+    REG_B           = 2,
+    REG_C           = 3,
+    REG_D           = 4,
+}
+
+export interface IOContext {
+    readRegister(reg: DeviceRegister): number;
+    writeRegister(reg: DeviceRegister, value: number): void;
+}
+
+export abstract class Peripheral {
+    public abstract getType(): DeviceType;
+
+    public abstract getBusConnections(): Map<number, number>;
+
+    public abstract onTick(io: IOContext): Promise<void>;
+
+    protected readSteadyClock(): bigint {
+        return process.hrtime.bigint();
     }
 }

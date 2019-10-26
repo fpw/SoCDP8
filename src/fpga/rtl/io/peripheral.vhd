@@ -17,6 +17,7 @@ entity peripheral is
         rstn: in std_logic;
 
         signal dev_type: in std_logic_vector(15 downto 0);
+        signal sub_type: in std_logic_vector(3 downto 0);
 
         signal reg_sel: in std_logic_vector(3 downto 0);
         signal reg_out: out std_logic_vector(15 downto 0);
@@ -32,7 +33,8 @@ entity peripheral is
         signal io_ac_clear: out std_logic;
         signal io_bus_out: out std_logic_vector(11 downto 0);
         
-        signal pdp8_irq: out std_logic
+        signal pdp8_irq: out std_logic;
+        signal soc_attention: out std_logic
     );
 end peripheral;
 
@@ -61,6 +63,7 @@ action: process
     begin
         -- Interface: Write new data into regA and then set regB to 1
         pdp8_irq_buf <= regB(0);
+        soc_attention <= not regB(0);
         if enable = '1' then
             case iop is
                 when IO1 =>
@@ -82,6 +85,7 @@ action: process
     begin
         -- Interface: Check regB = 1 to see if new data, take from regA and set regB to 2 to ack
         pdp8_irq_buf <= regB(1);
+        soc_attention <= not regB(1);
         if enable = '1' then
             case iop is
                 when IO1 =>
@@ -101,19 +105,91 @@ action: process
 
     procedure pr8_reader is
     begin
-        -- Interface: Write new data into regA and then set regB to 1
-        pdp8_irq_buf <= regB(0);
+        -- Interface: Write new data into regA if regB & 1,then set regB to 2
+        pdp8_irq_buf <= regB(1);
+        soc_attention <= regB(0);
         if enable = '1' then
             case iop is
                 when IO1 =>
                     -- Set skip if new data
-                    io_skip <= regB(0);
+                    io_skip <= regB(1);
                 when IO2 => 
                     -- Clear new data flag, put data on bus
                     io_bus_out <= regA(11 downto 0);
-                    regB(0) <= '0';
+                    regB(1) <= '0';
                 when IO4 =>
-                    null; 
+                    -- Clear flag, request new data
+                    regB(0) <= '1';
+                    regB(1) <= '0';
+                when others => null;
+            end case;
+        end if;
+    end procedure;
+
+    procedure tc08_dectape is
+    begin
+        if unsigned(regB) /= 0 and regA(2) = '1' then
+            pdp8_irq_buf <= '1';
+        else
+            pdp8_irq_buf <= '0';
+        end if;
+
+        if enable = '1' and sub_type = x"0" then
+            -- status register A:
+            -- 11 downto 9: transport unit
+            --           8: motion, 0 = forward, 1 = reverse
+            --           7: motion, 0 = stop, 1 = start
+            --           6: mode, 0 = normal, 1 = continuous
+            --  5 downto 3: function, 0 = move, 1 = search, 2 = read, 3 = read all, 4 = write, 5 = write all, 6 = write timing, 7 = unused
+            --           2: enable interrupt, 0 = disable interrupt, 1 = enable interrupt
+            --           1: error clear, 0 = clear all error flags, 1 = leave error flags
+            --           0: dectape clear, 0 = clear dectape flag, 1 = leave dectape flag 
+            case iop is
+                when IO1 =>
+                    -- DTRA: Put status register A on bus
+                    io_bus_out <= regA(11 downto 0);
+                when IO2 => 
+                    -- DTCA: Clear status register A
+                    regA <= (others => '0');
+                when IO4 =>
+                    -- DTXA: xor status register A (0 to 9 in DEC bit order)
+                    regA(11 downto 2) <= regA(11 downto 2) xor io_ac(11 downto 2);
+                    
+                    if io_ac(1) = '0' then
+                        -- clear error flags
+                        regB(11 downto 1) <= (others => '0');
+                    end if;
+                    
+                    if io_ac(0) = '0' then
+                        -- clear DECtape flag
+                        regB(0) <= '0';
+                    end if;
+                when others => null;
+            end case;
+        elsif enable = '1' and sub_type = x"1" then
+            -- status register B
+            -- 11: error flag (EF)
+            -- 10: mark track error (MK TRK)
+            --  9: end of tape (END)
+            --  8: select errror (SE)
+            --  7: parity error (PE)
+            --  6: timing error (TIM)
+            --  5 downto 3: memory field (MF)
+            --  2 downto 1: unused
+            --  0: dectape flag (DTF)
+            case iop is
+                when IO1 =>
+                    -- DTSF: Skip on flags
+                    if unsigned(regB) /= 0 then
+                        io_skip <= '1';
+                    end if;
+                when IO2 => 
+                    -- DTRB: Read status register B
+                    io_bus_out <= regB(11 downto 0);
+                when IO4 =>
+                    -- DTLB: Load memory field
+                    io_ac_clear <= '1';
+                    regB(5 downto 3) <= io_ac(5 downto 3);
                 when others => null;
             end case;
         end if;
@@ -134,11 +210,15 @@ begin
     io_skip <= '0';
     io_ac_clear <= '0';
     io_bus_out <= (others => '0');
+    pdp8_irq_buf <= '0';
+    soc_attention <= '0';
     
     case dev_type is
         when x"0001" => asr33_reader;
         when x"0002" => asr33_writer;
         when x"0003" => pr8_reader;
+        when x"0004" => asr33_writer; -- same semantics as PR8 writer
+        when x"0005" => tc08_dectape;
         when others => null;
     end case;
 

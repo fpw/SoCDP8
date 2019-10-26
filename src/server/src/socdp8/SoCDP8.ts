@@ -1,3 +1,4 @@
+import { ASR33Reader } from './IO/Peripherals/ASR33Reader';
 /*
  *   SoCDP8 - A PDP-8/I implementation on a SoC
  *   Copyright (C) 2019 Folke Will <folko@solhost.org>
@@ -20,9 +21,9 @@ import { UIOMapper } from '../UIO/UIOMapper';
 import { Console, LampState, SwitchState } from './Console/Console';
 import { CoreMemory } from "./CoreMemory/CoreMemory";
 import { IOController } from './IO/IOController';
-import { ASR33 } from './IO/Peripherals/ASR33';
-import { PR8 } from './IO/Peripherals/PR8';
 import { promisify } from 'util';
+import { ASR33Writer } from './IO/Peripherals/ASR33Writer';
+import { PR8Reader } from './IO/Peripherals/PR8Reader';
 
 export interface ConsoleState {
     lamps: LampState;
@@ -36,8 +37,9 @@ export class SoCDP8 {
     private cons: Console;
     private mem: CoreMemory;
     private io: IOController;
-    private asr33: ASR33;
-    private pr8: PR8;
+    private asr33reader: ASR33Reader;
+    private asr33writer: ASR33Writer;
+    private pr8Reader: PR8Reader;
 
     public constructor() {
         let uio = new UIOMapper();
@@ -49,9 +51,14 @@ export class SoCDP8 {
         this.mem = new CoreMemory(memBuf);
         this.io = new IOController(ioBuf);
 
-        this.asr33 = new ASR33(this.io);
+        this.pr8Reader = new PR8Reader(1);
+        this.asr33reader = new ASR33Reader(3);
+        this.asr33writer = new ASR33Writer(4);
 
-        this.pr8 = new PR8(this.io);
+        this.io.registerPeripheral(this.asr33reader);
+        this.io.registerPeripheral(this.asr33writer);
+        this.io.registerPeripheral(this.pr8Reader);
+
         this.storeRIMLoader();
     }
 
@@ -132,19 +139,20 @@ export class SoCDP8 {
     }
 
     public setOnPunch(callback: (data: number) => Promise<void>) {
-        this.asr33.setOnPunch(callback);
+        this.asr33writer.setOnPunch(callback);
     }
 
     public clearTapeInput() {
-        this.asr33.clearReaderData();
+        this.asr33reader.clearReaderData();
     }
 
     public appendTapeInput(data: number[]) {
-        this.asr33.appendReaderData(data);
+        this.asr33reader.appendReaderData(data);
     }
 
     public setHighTapeInput(data: number[]) {
-        this.pr8.setReaderData(data);
+        this.pr8Reader.clearReaderData();
+        this.pr8Reader.appendReaderData(data);
     }
 
     public async run(): Promise<void> {
