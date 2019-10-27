@@ -19,6 +19,10 @@ package inst_common is
         auto_index: std_logic;
         skip: std_logic;
         brk_req: std_logic;
+        brk_three_cyc: std_logic;
+        brk_ca_inc: std_logic;
+        brk_data_in: std_logic;
+        brk_mb_inc: std_logic;
         norm: std_logic;
         eae_inst: eae_instruction;
     end record;
@@ -39,6 +43,24 @@ package inst_common is
     
     -- TS4 is identical for many cycles, the part that starts with the BRK REQ check
     procedure ts4_back_to_fetch (
+        signal input: in inst_input;
+        signal transfers: out register_transfers;
+        signal state_next: out major_state
+    );
+
+    procedure word_count_cycle (
+        signal input: in inst_input;
+        signal transfers: out register_transfers;
+        signal state_next: out major_state
+    );
+
+    procedure current_addr_cycle (
+        signal input: in inst_input;
+        signal transfers: out register_transfers;
+        signal state_next: out major_state
+    );
+
+    procedure break_cycle (
         signal input: in inst_input;
         signal transfers: out register_transfers;
         signal state_next: out major_state
@@ -124,7 +146,102 @@ package body inst_common is
             transfers.carry_insert <= input.skip;
             transfers.ma_load <= '1';
         else
-            -- TODO data breaks
+            transfers.data_add_enable <= '1';
+            transfers.ma_load <= '1';
+            if input.brk_three_cyc = '1' then
+                state_next <= STATE_COUNT;
+            else
+                state_next <= STATE_BREAK;
+            end if;
         end if;
+    end;
+
+    procedure word_count_cycle (
+        signal input: in inst_input;
+        signal transfers: out register_transfers;
+        signal state_next: out major_state
+    ) is
+    begin
+        transfers <= nop_transfer;
+        state_next <= STATE_ADDR;
+
+        case input.time_div is
+            when TS1 =>
+                null;
+            when TS2 =>
+                -- MEM + 1 -> MB, this increments the word count
+                transfers.mem_enable <= '1';
+                transfers.carry_insert <= '1';
+                transfers.mb_load <= '1';
+                transfers.wc_ovf_load <= '1';
+            when TS3 =>
+                null;
+            when TS4 =>
+                -- MA + 1 -> MA, this sets MA to the address after the word count word
+                transfers.ma_enable <= '1';
+                transfers.carry_insert <= '1';
+                transfers.ma_load <= '1';
+        end case;
+    end;
+
+    procedure current_addr_cycle (
+        signal input: in inst_input;
+        signal transfers: out register_transfers;
+        signal state_next: out major_state
+    ) is
+    begin
+        transfers <= nop_transfer;
+        state_next <= STATE_BREAK;
+
+        case input.time_div is
+            when TS1 =>
+                null;
+            when TS2 =>
+                -- MEM [+ 1] -> MB, this increments the CA word
+                transfers.carry_insert <= input.brk_ca_inc;
+                transfers.mem_enable <= '1';
+                transfers.mb_load <= '1';
+            when TS3 =>
+                null;
+            when TS4 =>
+                -- MEM [+ 1] -> MA, this loads the incremented CA word for the break cycle
+                transfers.carry_insert <= input.brk_ca_inc;
+                transfers.mem_enable <= '1';
+                transfers.ma_load <= '1';
+        end case;
+    end;
+
+    procedure break_cycle (
+        signal input: in inst_input;
+        signal transfers: out register_transfers;
+        signal state_next: out major_state
+    ) is
+    begin
+        transfers <= nop_transfer;
+        state_next <= STATE_FETCH;
+
+        case input.time_div is
+            when TS1 =>
+                null;
+            when TS2 =>
+                if input.brk_data_in = '1' then
+                    -- DATA -> MB
+                    transfers.data_enable <= '1';
+                    transfers.mb_load <= '1';
+                elsif input.brk_mb_inc = '1' then
+                    -- MEM + 1 -> MB
+                    transfers.mem_enable <= '1';
+                    transfers.carry_insert <= '1';
+                    transfers.mb_load <= '1';
+                else
+                    -- MEM -> MB
+                    transfers.mem_enable <= '1';
+                    transfers.mb_load <= '1';
+                end if;
+            when TS3 =>
+                null;
+            when TS4 =>
+                ts4_back_to_fetch(input, transfers, state_next);
+        end case;
     end;
 end package body;

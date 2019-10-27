@@ -48,6 +48,29 @@ entity pdp8 is
         -- Interrupt request
         int_rqst: in std_logic;
 
+        -- Data break connections
+        -- Three cycle break:
+        -- 1) Read brk_data_add into MA, e.g. 7754
+        -- 2) WC: Increment that address in WC, e.g. [7754]++ and set wc_overflow if that overflows. Now load MA + 1 -> MA, e.g. 7755
+        -- 3) CA: If ca_inc is set, increment [MA], e.g. [7755] and load the result to, e.g. [7755] + 1 -> MA or [7755] -> MA if not incremented
+        -- 4) Goto normal break
+        --
+        -- Normal break:
+        -- 1) Read brk_data_add into MA, will be [[brk_data_add + 1] + 1] for 3 cycle
+        -- 2) if brk_data_in: Store brk_data in [MA]
+        -- 3) if not brk_data_in: Restore [MA] -> MB but inc by one if brk_mb_inc is set, result can be observed on MB
+        brk_rqst: in std_logic;
+        brk_three_cycle: in std_logic;
+        brk_ca_inc: in std_logic;
+        brk_mb_inc: in std_logic;
+        brk_wc_overflow: out std_logic;
+        brk_data_in: in std_logic;                      -- direction of data break (out: read io_mb)
+        brk_data_add: in std_logic_vector(11 downto 0); -- address for data break
+        brk_data_ext: in std_logic_vector(2 downto 0);  -- memory field for data break
+        brk_data: in std_logic_vector(11 downto 0);     -- value to write in data break
+        brk_ack: out std_logic;
+        brk_done: out std_logic;
+
         -- to be connected to RAM
         mem_out_addr: out std_logic_vector(14 downto 0);
         mem_out_data: out std_logic_vector(11 downto 0);
@@ -125,10 +148,13 @@ architecture Behavioral of pdp8 is
 
     -- EAE: currently normalized
     signal norm: std_logic;
-    
     signal int_inhibit: std_logic;
     signal field: std_logic_vector(2 downto 0);
-    
+
+    -- data break
+    signal brk_sync: std_logic;
+
+    -- buffer signals for output    
     signal io_iop_tmp: std_logic_vector(2 downto 0);
 
     -- interconnect wires
@@ -240,6 +266,8 @@ port map (
     sw_df => switch_data_field,
     sw_if => switch_inst_field,
     sense => sense,
+    brk_data_add => brk_data_add,
+    brk_data => brk_data,
     io_bus => io_bus_in,
 
     transfers => reg_trans,
@@ -256,7 +284,8 @@ port map (
     skip_o => skip,
     eae_inst_o => eae_inst_cur,
     df_o => mc8_df,
-    if_o => mc8_if
+    if_o => mc8_if,
+    wc_ovf_o => brk_wc_overflow
 );
 
 mem_control: entity work.memory_control
@@ -289,7 +318,11 @@ inst_mux_input <= (
         carry => carry,
         auto_index => auto_index,
         skip => skip,
-        brk_req => '0',     -- TODO
+        brk_req => brk_sync,
+        brk_three_cyc => brk_three_cycle,
+        brk_ca_inc => brk_ca_inc,
+        brk_mb_inc => brk_mb_inc,
+        brk_data_in => brk_data_in,
         norm => norm,
         eae_inst => eae_inst
     );
@@ -335,7 +368,11 @@ port map (
 
 auto_index <= '1' when state = STATE_DEFER and ma(11 downto 3) = o"001" else '0';
 norm <= '1' when (ac(11) /= ac(10)) or (mqr = o"0000" and ac(9 downto 0) = "0000000000") else '0';
-field <= mc8_df when (deferred = '1' and state = STATE_EXEC and inst /= INST_JMS and inst /= INST_JMP) else mc8_if;
+brk_ack <= brk_sync;
+brk_done <= '1' when STATE = STATE_BREAK and ts = TS2 and tp = '1' else '0';
+field <= mc8_df when (deferred = '1' and state = STATE_EXEC and inst /= INST_JMS and inst /= INST_JMP) else
+         mc8_if when state /= STATE_BREAK else
+         brk_data_ext;
 
 time_state_pulses: process
 begin
@@ -384,6 +421,7 @@ begin
     if manual_preset = '1' then
         state <= STATE_NONE;
         deferred <= '0';
+        brk_sync <= '0';
     end if;
     
     if strobe = '1' then
@@ -400,6 +438,7 @@ begin
             
             if tp = '1' then
                 reg_trans <= reg_trans_inst;
+                brk_sync <= brk_rqst;
             end if;
         when TS2 =>
             -- the memory cycle is done, MB will be written back to memory
@@ -629,6 +668,7 @@ begin
         eae_inst <= EAE_NONE;
         run <= '0';
         pause <= '0';
+        brk_sync <= '0';
     end if;
 end process;
 

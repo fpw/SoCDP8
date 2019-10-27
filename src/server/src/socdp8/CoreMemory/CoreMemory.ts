@@ -47,14 +47,20 @@ export class CoreMemory {
     public loadCore(data: Uint16Array): void {
         const numWords = Math.min(data.length, this.getWordCount());
         for (let i = 0; i < numWords; i++) {
-            this.pokeWord(data[i], i);
+            this.pokeWord(i, data[i]);
+        }
+    }
+
+    public writeData(addr: number, data: number[]) {
+        for (let i = 0; i < data.length; i++) {
+            this.pokeWord(addr + i, data[i]);
         }
     }
 
     public clear(): void {
         const numWords = this.getWordCount();
         for (let i = 0; i < numWords; i++) {
-            this.pokeWord(0, i);
+            this.pokeWord(i, 0);
         }
     }
 }

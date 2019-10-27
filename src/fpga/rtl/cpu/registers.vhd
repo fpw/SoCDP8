@@ -24,6 +24,8 @@ entity registers is
         sw_df: in std_logic_vector(2 downto 0);
         sw_if: in std_logic_vector(2 downto 0);
         sr: in std_logic_vector(11 downto 0);
+        brk_data_add: in std_logic_vector(11 downto 0);
+        brk_data: in std_logic_vector(11 downto 0);
         --- sense register
         sense: in std_logic_vector(11 downto 0);
         --- I/O bus
@@ -44,6 +46,7 @@ entity registers is
         sc_o: out std_logic_vector(4 downto 0);
         df_o: out std_logic_vector(2 downto 0);
         if_o: out std_logic_vector(2 downto 0);
+        wc_ovf_o: out std_logic;
 
         -- instruction decoder (combinatorial)
         inst_o: out pdp8_instruction;
@@ -69,6 +72,7 @@ architecture Behavioral of registers is
 
     -- skip FF to remember whether to skip the next instruction    
     signal skip: std_logic;
+    signal wc_ovf: std_logic;
     
     -- EAE extension
     signal mqr: std_logic_vector(11 downto 0);
@@ -85,7 +89,7 @@ architecture Behavioral of registers is
 begin
 
 -- combinatorial process to select the input
-enable_regs: process(transfers, mem_buf, sense, pc, ac, io_bus, link, mqr, sr, mem_addr, sc, mc8_sf, mc8_if, mc8_df)
+enable_regs: process(transfers, mem_buf, sense, pc, ac, io_bus, link, mqr, sr, mem_addr, sc, mc8_sf, mc8_if, mc8_df, brk_data_add, brk_data)
     variable input_bus_tmp: std_logic_vector(12 downto 0);
 begin
     if transfers.ac_enable = '1' then
@@ -141,6 +145,10 @@ begin
         input_bus_tmp := '0' & mqr;
     elsif transfers.sc_enable = '1' then
         input_bus_tmp := '0' & "0000000" & sc;
+    elsif transfers.data_add_enable = '1' then
+        input_bus_tmp := '0' & brk_data_add;
+    elsif transfers.data_enable = '1' then
+        input_bus_tmp := '0' & brk_data;
     else
         input_bus_tmp := (others => '0');
     end if;
@@ -308,6 +316,10 @@ begin
         end if;
     end if;
     
+    if transfers.wc_ovf_load = '1' then
+        wc_ovf <= l_bus;
+    end if;
+    
     if transfers.mq_load = '1' then
         if transfers.ac_mq_enable = '1' then
             mqr <= ac;
@@ -333,31 +345,31 @@ begin
         if transfers.save_fields = '1' then
             mc8_sf <= mc8_if & mc8_df;
         end if;
-    
+
         if transfers.clear_fields = '1' then
             mc8_if <= (others => '0');
             mc8_ib <= (others => '0');
             mc8_df <= (others => '0');
         end if;
-        
+
         if transfers.restore_fields = '1' then
             mc8_ib <= mc8_sf(5 downto 3);
             mc8_df <= mc8_sf(2 downto 0);
         end if;
-        
+
         if transfers.ib_to_if = '1' then
             mc8_if <= mc8_ib;
         end if;
-        
+
         if transfers.load_ib = '1' then
             mc8_ib <= sense(5 downto 3);
         end if;
-    
+
         if transfers.load_df = '1' then
             mc8_df <= sense(5 downto 3);
         end if;
     end if;
-        
+
     if rstn = '0' then
         ac <= (others => '0');
         skip <= '0';
@@ -371,6 +383,7 @@ begin
         mc8_ib <= (others => '0');
         mc8_df <= (others => '0');
         mc8_sf <= (others => '0');
+        wc_ovf <= '0';
     end if;
 end process;
 
@@ -384,6 +397,7 @@ mqr_o <= mqr;
 sc_o <= sc;
 df_o <= mc8_df;
 if_o <= mc8_if;
+wc_ovf_o <= wc_ovf;
 
 with sense(11 downto 9) select inst_o <=
     INST_AND when "000",

@@ -54,6 +54,19 @@ entity io_controller is
         io_ac_clear: out std_logic;
         io_skip: out std_logic;
         
+        -- Data break connections to PDP-8
+        brk_rqst: out std_logic;
+        brk_three_cycle: out std_logic;
+        brk_ca_inc: out std_logic;
+        brk_mb_inc: out std_logic;
+        brk_data_in: out std_logic;
+        brk_data_add: out std_logic_vector(11 downto 0);
+        brk_data_ext: out std_logic_vector(2 downto 0);
+        brk_data: out std_logic_vector(11 downto 0);
+        brk_wc_overflow: in std_logic;
+        brk_ack: in std_logic;
+        brk_done: in std_logic;
+        
         -- PDP-8 interrupt line
         pdp_irq: out std_logic;
         
@@ -69,7 +82,7 @@ architecture Behavioral of io_controller is
     type axi_state is (IDLE, READ_WAIT, READ, WRITE_WAIT, WRITE, WRITE_ACK);
     signal state: axi_state;
     signal axi_in_table: std_logic;
-    signal axi_bus_id: integer range 0 to MAX_DEVICES - 1;
+    signal axi_bus_id: integer range 0 to 63;
     signal axi_dev_reg: integer range 0 to 15;
 
     type bus_to_dev_a is array(0 to 63) of integer range 0 to MAX_DEVICES - 1;
@@ -82,7 +95,7 @@ architecture Behavioral of io_controller is
     signal perph_reg_in: std_logic_vector(15 downto 0);
     signal perph_reg_write: std_logic_vector(MAX_DEVICES - 1 downto 0);
     
-    signal iop_code: io_state;
+    signal iop_code, iop_last: io_state;
     signal cur_bus_id: integer range 0 to 63;
     signal cur_dev_id: integer range 0 to MAX_DEVICES - 1;
     signal cur_sub_id: std_logic_vector(3 downto 0);
@@ -90,7 +103,7 @@ architecture Behavioral of io_controller is
     signal dev_interrupts: std_logic_vector(MAX_DEVICES - 1 downto 0);
     signal dev_attention: std_logic_vector(MAX_DEVICES - 1 downto 0);
 
-    type dev_types_a is array(0 to MAX_DEVICES - 1) of std_logic_vector(15 downto 0);
+    type dev_types_a is array(0 to MAX_DEVICES - 1) of std_logic_vector(7 downto 0);
     signal dev_types: dev_types_a;
 
     type peripheral_out_rec is record
@@ -102,7 +115,30 @@ architecture Behavioral of io_controller is
     type peripheral_out_a is array(0 to MAX_DEVICES - 1) of peripheral_out_rec;
     
     signal peripheral_out: peripheral_out_a;
+    
+    -- data break
+    signal bk_rqst: std_logic;
+    signal bk_three_cycle: std_logic;
+    signal bk_ca_inc: std_logic;
+    signal bk_mb_inc: std_logic;
+    signal bk_data_in: std_logic;
+    signal bk_data_add: std_logic_vector(11 downto 0);
+    signal bk_data_ext: std_logic_vector(2 downto 0);
+    signal bk_data: std_logic_vector(11 downto 0);
+    signal bk_ready: std_logic; 
+    
+    signal bk_mb: std_logic_vector(11 downto 0);
+    signal bk_wc_ovf: std_logic;
 begin
+
+brk_rqst <= bk_rqst;
+brk_three_cycle <= bk_three_cycle;
+brk_ca_inc <= bk_ca_inc;
+brk_mb_inc <= bk_mb_inc;
+brk_data_in <= bk_data_in;
+brk_data_add <= bk_data_add;
+brk_data_ext <= bk_data_ext;
+brk_data <= bk_data; 
 
 iop_code <= IO1 when iop(0) = '1' else
             IO2 when iop(1) = '1' else
@@ -157,10 +193,13 @@ begin
     soc_irq <= '0';
     dev_active <= (others => '0');
 
-    if iop_code /= IO_NONE then
+    if iop_code /= iop_last and iop_code /= IO_NONE then
         dev_active(cur_dev_id) <= '1';
     end if;
+
+    iop_last <= iop_code;
 end process;
+
 
 perph_reg_sel <= std_logic_vector(to_unsigned(axi_dev_reg, 4));
 
@@ -197,6 +236,16 @@ begin
     
     perph_reg_write <= (others => '0');
 
+    if brk_ack = '1' then
+        bk_rqst <= '0';
+    end if;
+    
+    if brk_done = '1' then
+        bk_ready <= '1';
+        bk_wc_ovf <= brk_wc_overflow;
+        bk_mb <= io_mb;
+    end if;
+
     case state is
         when IDLE =>
             if s_axi_arvalid = '1' then
@@ -221,10 +270,20 @@ begin
             if axi_in_table = '1' then
                 if axi_bus_id = 0 then
                     case axi_dev_reg is
-                        when 0 => s_axi_rdata <= x"50445038"; -- magic: 'PDP8'
-                        when 1 => s_axi_rdata(7 downto 0) <= std_logic_vector(to_unsigned(MAX_DEVICES, 8));
-                        when 2 => s_axi_rdata(MAX_DEVICES - 1 downto 0) <= dev_attention;
-                        when others => s_axi_rdata <= (others => '0');
+                        when 0 =>
+                            s_axi_rdata <= x"50445038"; -- magic: 'PDP8'
+                        when 1 =>
+                            s_axi_rdata(7 downto 0) <= std_logic_vector(to_unsigned(MAX_DEVICES, 8));
+                        when 2 =>
+                            s_axi_rdata(MAX_DEVICES - 1 downto 0) <= dev_attention;
+                        when 3 =>
+                            s_axi_rdata(11 downto 0) <= bk_mb;
+                            s_axi_rdata(12) <= bk_wc_ovf;
+                            s_axi_rdata(13) <= bk_ready;
+                        when 4 =>
+                            s_axi_rdata(0) <= bk_ready;
+                            s_axi_rdata(1) <= bk_rqst;
+                        when others => null;
                     end case;
                 else
                     if axi_dev_reg = 0 then
@@ -235,7 +294,7 @@ begin
                 end if;
             else
                 if axi_dev_reg = 0 then
-                    s_axi_rdata(15 downto 0) <= dev_types(axi_bus_id);
+                    s_axi_rdata(7 downto 0) <= dev_types(axi_bus_id);
                 else
                     s_axi_rdata(15 downto 0) <= peripheral_out(axi_bus_id).reg_out;
                 end if;
@@ -252,19 +311,49 @@ begin
             end if;
         when WRITE =>
             if axi_in_table = '1' then
-                if axi_dev_reg = 0 then
-                    bus_to_dev(axi_bus_id) <= to_integer(unsigned(s_axi_wdata(7 downto 0)));
-                elsif axi_dev_reg = 1 then
-                    bus_to_sub(axi_bus_id) <= s_axi_wdata(3 downto 0);
+                if axi_bus_id = 0 then
+                    case axi_dev_reg is
+                        when 3 =>
+                            if s_axi_wstrb(0) = '1' then
+                                bk_data(7 downto 0) <= s_axi_wdata(7 downto 0);
+                            end if;
+                            
+                            if s_axi_wstrb(1) = '1' then
+                                bk_data(11 downto 8) <= s_axi_wdata(11 downto 8);
+                                bk_data_add(3 downto 0) <= s_axi_wdata(15 downto 12);
+                            end if;
+                            
+                            if s_axi_wstrb(2) = '1' then
+                                bk_data_add(11 downto 4) <= s_axi_wdata(23 downto 16);
+                            end if;
+                            
+                            if s_axi_wstrb(3) = '1' then
+                                bk_data_ext <= s_axi_wdata(26 downto 24);
+                                bk_data_in <= s_axi_wdata(27);
+                                bk_mb_inc <= s_axi_wdata(28);
+                                bk_ca_inc <= s_axi_wdata(29);
+                                bk_three_cycle <= s_axi_wdata(30);
+                            end if;
+                        when 4 =>
+                            if s_axi_wstrb(0) = '1' then
+                                bk_ready <= not s_axi_wdata(0);
+                                bk_rqst <= s_axi_wdata(0);
+                            end if;
+                        when others => null;
+                    end case;
+                else
+                    if s_axi_wstrb(0) = '1' then
+                        if axi_dev_reg = 0 then
+                            bus_to_dev(axi_bus_id) <= to_integer(unsigned(s_axi_wdata(7 downto 0)));
+                        elsif axi_dev_reg = 1 then
+                            bus_to_sub(axi_bus_id) <= s_axi_wdata(3 downto 0);
+                        end if;
+                    end if;
                 end if;
             else
                 if axi_dev_reg = 0 then
                     if s_axi_wstrb(0) = '1' then
-                        dev_types(axi_bus_id)(7 downto 0) <= s_axi_wdata(7 downto 0);
-                    end if;
-        
-                    if s_axi_wstrb(1) = '1' then
-                        dev_types(axi_bus_id)(15 downto 8) <= s_axi_wdata(15 downto 8);
+                        dev_types(axi_bus_id) <= s_axi_wdata(7 downto 0);
                     end if;
                 else
                     perph_reg_in <= peripheral_out(axi_bus_id).reg_out;
@@ -292,6 +381,19 @@ begin
     if s_axi_aresetn = '0' then
         state <= IDLE;
         dev_types <= (others => (others => '0'));
+
+        bk_rqst <= '0';
+        bk_three_cycle <= '0';
+        bk_ca_inc <= '0';
+        bk_mb_inc <= '0';
+        bk_data_in <= '0';
+        bk_data_add <= (others => '0');
+        bk_data_ext <= (others => '0');
+        bk_data <= (others => '0');
+        
+        bk_ready <= '1';
+        bk_mb <= (others => '0');
+        bk_wc_ovf <= '0';
     end if;
 end process;
 

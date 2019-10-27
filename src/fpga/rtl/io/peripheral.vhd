@@ -16,7 +16,7 @@ entity peripheral is
         clk: in std_logic;
         rstn: in std_logic;
 
-        signal dev_type: in std_logic_vector(15 downto 0);
+        signal dev_type: in std_logic_vector(7 downto 0);
         signal sub_type: in std_logic_vector(3 downto 0);
 
         signal reg_sel: in std_logic_vector(3 downto 0);
@@ -133,6 +133,7 @@ action: process
         else
             pdp8_irq_buf <= '0';
         end if;
+        soc_attention <= regC(0);
 
         if enable = '1' and sub_type = x"0" then
             -- status register A:
@@ -164,6 +165,9 @@ action: process
                         -- clear DECtape flag
                         regB(0) <= '0';
                     end if;
+                    
+                    -- notify SoC
+                    regC(0) <= '1';
                 when others => null;
             end case;
         elsif enable = '1' and sub_type = x"1" then
@@ -207,18 +211,21 @@ begin
         end case;
     end if;
     
-    io_skip <= '0';
-    io_ac_clear <= '0';
-    io_bus_out <= (others => '0');
+    if iop = IO_NONE then
+        io_skip <= '0';
+        io_ac_clear <= '0';
+        io_bus_out <= (others => '0');
+    end if;
+
     pdp8_irq_buf <= '0';
     soc_attention <= '0';
-    
+
     case dev_type is
-        when x"0001" => asr33_reader;
-        when x"0002" => asr33_writer;
-        when x"0003" => pr8_reader;
-        when x"0004" => asr33_writer; -- same semantics as PR8 writer
-        when x"0005" => tc08_dectape;
+        when x"01" => asr33_reader;
+        when x"02" => asr33_writer;
+        when x"03" => pr8_reader;
+        when x"04" => asr33_writer; -- same semantics as PR8 writer
+        when x"05" => tc08_dectape;
         when others => null;
     end case;
 

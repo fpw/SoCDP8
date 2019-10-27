@@ -24,6 +24,7 @@ import { IOController } from './IO/IOController';
 import { promisify } from 'util';
 import { ASR33Writer } from './IO/Peripherals/ASR33Writer';
 import { PR8Reader } from './IO/Peripherals/PR8Reader';
+import { TC08 } from './IO/Peripherals/TC08';
 
 export interface ConsoleState {
     lamps: LampState;
@@ -40,6 +41,7 @@ export class SoCDP8 {
     private asr33reader: ASR33Reader;
     private asr33writer: ASR33Writer;
     private pr8Reader: PR8Reader;
+    private tc08: TC08;
 
     public constructor() {
         let uio = new UIOMapper();
@@ -51,35 +53,62 @@ export class SoCDP8 {
         this.mem = new CoreMemory(memBuf);
         this.io = new IOController(ioBuf);
 
-        this.pr8Reader = new PR8Reader(1);
-        this.asr33reader = new ASR33Reader(3);
-        this.asr33writer = new ASR33Writer(4);
+        this.pr8Reader = new PR8Reader(0o01);
+        this.asr33reader = new ASR33Reader(0o03);
+        this.asr33writer = new ASR33Writer(0o04);
+        this.tc08 = new TC08(0o76, this.mem);
 
         this.io.registerPeripheral(this.asr33reader);
         this.io.registerPeripheral(this.asr33writer);
         this.io.registerPeripheral(this.pr8Reader);
+        this.io.registerPeripheral(this.tc08);
 
         this.storeRIMLoader();
+        this.storeTC08Loader();
     }
 
     public storeRIMLoader(): void {
-        this.mem.pokeWord(0o7756, 0o6032); // KCC         / clear keyboard flag and ac
-        this.mem.pokeWord(0o7757, 0o6031); // KSF         / skip if keyboard flag
-        this.mem.pokeWord(0o7760, 0o5357); // JMP 7757    / jmp -1
-        this.mem.pokeWord(0o7761, 0o6036); // KRB         / clear ac, or AC with data (8 bit), clear flag
-        this.mem.pokeWord(0o7762, 0o7106); // CLL RTL     / clear link, rotate left 2
-        this.mem.pokeWord(0o7763, 0o7006); // RTL         / rotate left 2
-        this.mem.pokeWord(0o7764, 0o7510); // SPA         / skip if ac > 0
-        this.mem.pokeWord(0o7765, 0o5357); // JMP 7757    / jmp back
-        this.mem.pokeWord(0o7766, 0o7006); // RTL         / rotate left 2
-        this.mem.pokeWord(0o7767, 0o6031); // KSF         / skip if keyboard flag
-        this.mem.pokeWord(0o7770, 0o5367); // JMP 7767    / jmp -1
-        this.mem.pokeWord(0o7771, 0o6034); // KRS         / or AC with keyboard (8 bit)
-        this.mem.pokeWord(0o7772, 0o7420); // SNL         / skip if link
-        this.mem.pokeWord(0o7773, 0o3776); // DCA I 7776  / store ac in [7776], clear ac
-        this.mem.pokeWord(0o7774, 0o3376); // DCA 7776    / store ac in 7776, clear ac
-        this.mem.pokeWord(0o7775, 0o5356); // JMP 7756
-        this.mem.pokeWord(0o7776, 0o0000); // address
+        const program = [
+            0o6032, // KCC         / clear keyboard flag and ac
+            0o6031, // KSF         / skip if keyboard flag
+            0o5357, // JMP 7757    / jmp -1
+            0o6036, // KRB         / clear ac, or AC with data (8 bit), clear flag
+            0o7106, // CLL RTL     / clear link, rotate left 2
+            0o7006, // RTL         / rotate left 2
+            0o7510, // SPA         / skip if ac > 0
+            0o5357, // JMP 7757    / jmp back
+            0o7006, // RTL         / rotate left 2
+            0o6031, // KSF         / skip if keyboard flag
+            0o5367, // JMP 7767    / jmp -1
+            0o6034, // KRS         / or AC with keyboard (8 bit)
+            0o7420, // SNL         / skip if link
+            0o3776, // DCA I 7776  / store ac in [7776], clear ac
+            0o3376, // DCA 7776    / store ac in 7776, clear ac
+            0o5356, // JMP 7756
+            0o0000, // address
+        ];
+        this.mem.writeData(0o7756, program);
+    }
+
+    public storeTC08Loader(): void {
+        const program = [
+            0o6774, // 7613 DTLB        / load status register B
+            0o1222, // 7614 TAD K600    / set reverse
+            0o6766, // 7615 DTCA!DTXA   / load status register A
+            0o6771, // 7616 DTSF        / wait until reversed
+            0o5216, // 7617 JMP .-1
+            0o1223, // 7620 TAD K220    / set forward read
+            0o5215, // 7621 JMP 6766
+            0o0600, // 7622 K600
+            0o0220, // 7623 K220
+        ];
+        this.mem.writeData(0o7613, program);
+
+        const dataBreak = [
+            0o7577,
+            0o7577,
+        ]
+        this.mem.writeData(0o7754, dataBreak);
     }
 
     public readCoreDump() {

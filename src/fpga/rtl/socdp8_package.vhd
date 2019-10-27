@@ -80,6 +80,11 @@ package socdp8_package is
         reverse_skip: std_logic;
         skip_load: std_logic;
         
+        -- data break
+        data_add_enable: std_logic;
+        data_enable: std_logic;
+        wc_ovf_load: std_logic;
+        
         -- EAE
         load_eae_inst: std_logic;
         mq_enable: std_logic;
@@ -142,6 +147,10 @@ package socdp8_package is
         ma_load => '0',
         mb_load => '0',
         l_load => '0',
+        
+        data_add_enable => '0',
+        data_enable => '0',
+        wc_ovf_load => '0',
         
         load_eae_inst => '0',
         mq_enable => '0',

@@ -18,15 +18,36 @@
 
 import { Peripheral } from './Peripherals/Peripheral';
 import { NullPeripheral } from './Peripherals/NullPeripheral';
+import { promisify } from 'util';
+
+export interface DataBreakRequest {
+    data: number;
+    address: number;
+    field: number;
+    isWrite: boolean;
+    incMB: boolean;
+    threeCycle: boolean;
+    incCA: boolean;
+}
+
+export interface DataBreakReply {
+    mb: number;
+    wordCountOverflow: boolean;
+}
 
 export class IOController {
+    private readonly SOC_MAX_DEV_CNT_REG = 1;
+    private readonly SOC_ATTENTION_REG = 2;
+    private readonly BK_DATA_REG = 3;
+    private readonly BK_CONTROL_REG = 4;
+
     private ioMem: Buffer;
     private readonly maxDevices: number;
     private peripherals: Peripheral[] = [];
 
     public constructor(ioBuf: Buffer) {
         this.ioMem = ioBuf;
-        this.maxDevices = this.readSystemRegister(1);
+        this.maxDevices = this.readSystemRegister(this.SOC_MAX_DEV_CNT_REG);
         this.peripherals.push(new NullPeripheral());
         this.clear();
     }
@@ -56,7 +77,11 @@ export class IOController {
     }
 
     private readSystemRegister(reg: number) {
-        return this.getMappingTableAddr(0, reg);
+        return this.ioMem.readUInt32LE(this.getMappingTableAddr(0, reg));
+    }
+
+    private writeSystemRegister(reg: number, val: number) {
+        return this.ioMem.writeUInt32LE(val, this.getMappingTableAddr(0, reg));
     }
 
     private writeMappingTable(busId: number, reg: number, val: number) {
@@ -80,11 +105,80 @@ export class IOController {
     }
 
     public async checkDevices(): Promise<void> {
+        const attention = this.readSystemRegister(this.SOC_ATTENTION_REG);
+
         for (const [devId, perph] of this.peripherals.entries()) {
             await perph.onTick({
                 readRegister: reg => this.readPeripheralReg(devId, reg),
                 writeRegister: (reg, val) => this.writePeripheralReg(devId, reg, val)
             });
         }
+    }
+
+    public async doDataBreak(req: DataBreakRequest): Promise<DataBreakReply> {
+        const sleepMs = promisify(setTimeout);
+
+        console.log('BRK: Waiting for ready');
+        await this.waitDataBreakReady();
+
+        const requestWord: number = this.dataBreakToNumber(req);
+        console.log(`BRK: Request ${requestWord.toString(8)}`);
+        this.writeSystemRegister(this.BK_DATA_REG, requestWord);
+        this.writeSystemRegister(this.BK_CONTROL_REG, 1);
+
+        console.log('BRK: Waiting for done');
+        await this.waitDataBreakReady();
+
+        const replyWord = this.readSystemRegister(this.BK_DATA_REG);
+        if ((replyWord & (1 << 13)) == 0) {
+            throw new Error(`Data break request denied, reply: ${replyWord.toString(8)}`);
+        }
+
+        console.log(`BRK: Reply ${replyWord.toString(8)}`);
+
+        return {
+            mb: (replyWord & 0o7777),
+            wordCountOverflow: (replyWord & (1 << 12)) != 0
+        };
+    }
+
+    private async waitDataBreakReady(): Promise<void> {
+        const sleepMs = promisify(setTimeout);
+
+        for (let i = 0; i < 10; i++) {
+            const ready = (this.readSystemRegister(this.BK_CONTROL_REG) == 1);
+            if (ready) {
+                return;
+            }
+            await sleepMs(1);
+        }
+
+        throw new Error('timeout waiting for data request');
+    }
+
+    private dataBreakToNumber(req: DataBreakRequest): number {
+        let word = 0;
+
+        word |= (req.data & 0o7777)     << 0;
+        word |= (req.address & 0o7777)  << 12;
+        word |= (req.field & 0o7)       << 26;
+        
+        if (req.isWrite) {
+            word |= (1 << 27);
+        }
+
+        if (req.incMB) {
+            word |= (1 << 28);
+        }
+
+        if (req.incCA) {
+            word |= (1 << 29);
+        }
+
+        if (req.threeCycle) {
+            word |= (1 << 30);
+        }
+
+        return word;
     }
 }

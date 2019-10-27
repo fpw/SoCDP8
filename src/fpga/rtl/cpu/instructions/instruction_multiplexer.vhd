@@ -185,6 +185,12 @@ begin
             when others => transfers <= nop_transfer;
         end case;
         state_next <= STATE_FETCH;
+    elsif input.state = STATE_COUNT then
+        word_count_cycle(input, transfers, state_next);
+    elsif input.state = STATE_ADDR then
+        current_addr_cycle(input, transfers, state_next);
+    elsif input.state = STATE_BREAK then
+        break_cycle(input, transfers, state_next);
     else
         case inst is
             when INST_AND =>
