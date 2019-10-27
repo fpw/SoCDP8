@@ -369,7 +369,7 @@ port map (
 auto_index <= '1' when state = STATE_DEFER and ma(11 downto 3) = o"001" else '0';
 norm <= '1' when (ac(11) /= ac(10)) or (mqr = o"0000" and ac(9 downto 0) = "0000000000") else '0';
 brk_ack <= brk_sync;
-brk_done <= '1' when STATE = STATE_BREAK and ts = TS2 and tp = '1' else '0';
+brk_done <= '1' when STATE = STATE_BREAK and ts = TS3 and tp = '1' else '0';
 field <= mc8_df when (deferred = '1' and state = STATE_EXEC and inst /= INST_JMS and inst /= INST_JMP) else
          mc8_if when state /= STATE_BREAK else
          brk_data_ext;

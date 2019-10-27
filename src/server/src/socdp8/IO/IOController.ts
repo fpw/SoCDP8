@@ -161,7 +161,7 @@ export class IOController {
 
         word |= (req.data & 0o7777)     << 0;
         word |= (req.address & 0o7777)  << 12;
-        word |= (req.field & 0o7)       << 26;
+        word |= (req.field & 0o7)       << 24;
         
         if (req.isWrite) {
             word |= (1 << 27);

@@ -146,6 +146,7 @@ package body inst_common is
             transfers.carry_insert <= input.skip;
             transfers.ma_load <= '1';
         else
+            -- Data break: DATA ADD -> MA
             transfers.data_add_enable <= '1';
             transfers.ma_load <= '1';
             if input.brk_three_cyc = '1' then
