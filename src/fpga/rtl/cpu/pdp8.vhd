@@ -318,7 +318,7 @@ inst_mux_input <= (
         carry => carry,
         auto_index => auto_index,
         skip => skip,
-        brk_req => brk_sync,
+        brk_req => brk_rqst,
         brk_three_cyc => brk_three_cycle,
         brk_ca_inc => brk_ca_inc,
         brk_mb_inc => brk_mb_inc,
@@ -371,8 +371,9 @@ norm <= '1' when (ac(11) /= ac(10)) or (mqr = o"0000" and ac(9 downto 0) = "0000
 brk_ack <= brk_sync;
 brk_done <= '1' when STATE = STATE_BREAK and ts = TS3 and tp = '1' else '0';
 field <= mc8_df when (deferred = '1' and state = STATE_EXEC and inst /= INST_JMS and inst /= INST_JMP) else
-         mc8_if when state /= STATE_BREAK else
-         brk_data_ext;
+         mc8_if when state /= STATE_BREAK and state /= STATE_COUNT and state /= STATE_ADDR else
+         brk_data_ext when state = STATE_BREAK else
+         "000"; 
 
 time_state_pulses: process
 begin
@@ -438,7 +439,9 @@ begin
             
             if tp = '1' then
                 reg_trans <= reg_trans_inst;
-                brk_sync <= brk_rqst;
+                if state = STATE_COUNT or state = STATE_BREAK then
+                    brk_sync <= brk_rqst;
+                end if;
             end if;
         when TS2 =>
             -- the memory cycle is done, MB will be written back to memory
@@ -461,6 +464,8 @@ begin
                         reg_trans.mb_load <= '1';
                     end if;
                 end if;
+
+                brk_sync <= '0';
             end if;
         when TS3 =>
             if tp = '1' then
@@ -559,8 +564,10 @@ begin
                 reg_trans.ac_load <= '1';
                 
                 -- Enabling reverse-skip transfers 1 -> SKIP.
-                reg_trans.reverse_skip <= io_skip;
-                reg_trans.skip_load <= '1';
+                if io_skip = '1' then
+                    reg_trans.reverse_skip <= '1';
+                    reg_trans.skip_load <= '1';
+                end if;
             end if;
             
             if io_end = '1' then

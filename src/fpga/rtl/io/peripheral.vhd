@@ -128,7 +128,7 @@ action: process
 
     procedure tc08_dectape is
     begin
-        if unsigned(regB) /= 0 and regA(2) = '1' then
+        if unsigned(regB(11 downto 0) and o"7707") /= 0 and regA(2) = '1' then
             pdp8_irq_buf <= '1';
         else
             pdp8_irq_buf <= '0';
@@ -153,12 +153,12 @@ action: process
                     -- DTCA: Clear status register A
                     regA <= (others => '0');
                 when IO4 =>
-                    -- DTXA: xor status register A (0 to 9 in DEC bit order)
+                    -- DTXA: xor status register A (0 to 9 in DEC bit order), clear AC
                     regA(11 downto 2) <= regA(11 downto 2) xor io_ac(11 downto 2);
                     
                     if io_ac(1) = '0' then
                         -- clear error flags
-                        regB(11 downto 1) <= (others => '0');
+                        regB(11 downto 6) <= (others => '0');
                     end if;
                     
                     if io_ac(0) = '0' then
@@ -166,6 +166,8 @@ action: process
                         regB(0) <= '0';
                     end if;
                     
+                    io_ac_clear <= '1';
+
                     -- notify SoC
                     regC(0) <= '1';
                 when others => null;
@@ -184,7 +186,7 @@ action: process
             case iop is
                 when IO1 =>
                     -- DTSF: Skip on flags
-                    if unsigned(regB) /= 0 then
+                    if unsigned(regB(11 downto 0) and o"7707") /= 0 then
                         io_skip <= '1';
                     end if;
                 when IO2 => 
