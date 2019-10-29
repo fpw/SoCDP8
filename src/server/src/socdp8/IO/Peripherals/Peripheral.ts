@@ -33,9 +33,25 @@ export enum DeviceRegister {
     REG_D           = 4,
 }
 
+export interface DataBreakRequest {
+    data: number;
+    address: number;
+    field: number;
+    isWrite: boolean;
+    incMB: boolean;
+    threeCycle: boolean;
+    incCA: boolean;
+}
+
+export interface DataBreakReply {
+    mb: number;
+    wordCountOverflow: boolean;
+}
+
 export interface IOContext {
     readRegister(reg: DeviceRegister): number;
     writeRegister(reg: DeviceRegister, value: number): void;
+    dataBreak(req: DataBreakRequest): Promise<DataBreakReply>;
 }
 
 export abstract class Peripheral {

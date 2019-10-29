@@ -16,24 +16,9 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral } from './Peripherals/Peripheral';
+import { Peripheral, DataBreakRequest, DataBreakReply } from './Peripherals/Peripheral';
 import { NullPeripheral } from './Peripherals/NullPeripheral';
 import { promisify } from 'util';
-
-export interface DataBreakRequest {
-    data: number;
-    address: number;
-    field: number;
-    isWrite: boolean;
-    incMB: boolean;
-    threeCycle: boolean;
-    incCA: boolean;
-}
-
-export interface DataBreakReply {
-    mb: number;
-    wordCountOverflow: boolean;
-}
 
 export class IOController {
     private readonly SOC_MAX_DEV_CNT_REG = 1;
@@ -110,31 +95,29 @@ export class IOController {
         for (const [devId, perph] of this.peripherals.entries()) {
             await perph.onTick({
                 readRegister: reg => this.readPeripheralReg(devId, reg),
-                writeRegister: (reg, val) => this.writePeripheralReg(devId, reg, val)
+                writeRegister: (reg, val) => this.writePeripheralReg(devId, reg, val),
+                dataBreak: req => this.doDataBreak(req)
             });
         }
     }
 
     public async doDataBreak(req: DataBreakRequest): Promise<DataBreakReply> {
-        const sleepMs = promisify(setTimeout);
+        // remove old request
+        this.writeSystemRegister(this.BK_CONTROL_REG, 0);
 
-        console.log('BRK: Waiting for ready');
         await this.waitDataBreakReady();
 
         const requestWord: number = this.dataBreakToNumber(req);
-        console.log(`BRK: Request ${requestWord.toString(8)}`);
+        // console.log(`BRK: Request ${requestWord.toString(8)}`);
         this.writeSystemRegister(this.BK_DATA_REG, requestWord);
         this.writeSystemRegister(this.BK_CONTROL_REG, 1);
 
-        console.log('BRK: Waiting for done');
         await this.waitDataBreakReady();
 
         const replyWord = this.readSystemRegister(this.BK_DATA_REG);
         if ((replyWord & (1 << 13)) == 0) {
             throw new Error(`Data break request denied, reply: ${replyWord.toString(8)}`);
         }
-
-        console.log(`BRK: Reply ${replyWord.toString(8)}`);
 
         return {
             mb: (replyWord & 0o7777),
@@ -145,23 +128,25 @@ export class IOController {
     private async waitDataBreakReady(): Promise<void> {
         const sleepMs = promisify(setTimeout);
 
-        for (let i = 0; i < 10; i++) {
-            const ready = (this.readSystemRegister(this.BK_CONTROL_REG) == 1);
-            if (ready) {
+        let controlWord = 0;
+
+        for (let i = 0; i < 100; i++) {
+            controlWord = this.readSystemRegister(this.BK_CONTROL_REG);
+            if (controlWord == 1) {
                 return;
             }
             await sleepMs(1);
         }
 
-        throw new Error('timeout waiting for data request');
+        throw new Error(`Timeout waiting for data request, last state: ${controlWord}`);
     }
 
     private dataBreakToNumber(req: DataBreakRequest): number {
         let word = 0;
 
-        word |= (req.data & 0o7777)     << 0;
-        word |= (req.address & 0o7777)  << 12;
-        word |= (req.field & 0o7)       << 24;
+        word |= (req.data    & 0o7777) << 0;
+        word |= (req.address & 0o7777) << 12;
+        word |= (req.field   & 0o0007) << 24;
         
         if (req.isWrite) {
             word |= (1 << 27);

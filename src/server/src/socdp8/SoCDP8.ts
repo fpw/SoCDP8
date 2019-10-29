@@ -56,7 +56,7 @@ export class SoCDP8 {
         this.pr8Reader = new PR8Reader(0o01);
         this.asr33reader = new ASR33Reader(0o03);
         this.asr33writer = new ASR33Writer(0o04);
-        this.tc08 = new TC08(0o76, this.mem);
+        this.tc08 = new TC08(0o76);
 
         this.io.registerPeripheral(this.asr33reader);
         this.io.registerPeripheral(this.asr33writer);
@@ -92,23 +92,67 @@ export class SoCDP8 {
 
     public storeTC08Loader(): void {
         const program = [
-            0o6774, // 7613 DTLB        / load status register B
-            0o1222, // 7614 TAD K600    / set reverse
-            0o6766, // 7615 DTCA!DTXA   / load status register A
-            0o6771, // 7616 DTSF        / wait until reversed
-            0o5216, // 7617 JMP .-1
-            0o1223, // 7620 TAD K220    / set forward read
-            0o5215, // 7621 JMP 6766
-            0o0600, // 7622 K600
-            0o0220, // 7623 K220
+            0o6774, // 7613: DTLB        / set TC08 field to 0, clear AC
+            0o1222, // 7614: TAD K0600   / set reverse and run
+            0o6766, // 7615: DTCA!DTXA   / load status register A, clear AC
+            0o6771, // 7616: DTSF        / wait until done
+            0o5216, // 7617: JMP .-1
+            0o1223, // 7620: TAD K0220   / set forward read
+            0o5215, // 7621: JMP 7615    / execute - that loop will run until block loaded, but that won't happen before overwritten
+            0o0600, // 7622: K0600
+            0o0220, // 7623: K0220
         ];
         this.mem.writeData(0o7613, program);
 
         const dataBreak = [
-            0o7577,
-            0o7577,
+            0o7577, // 7754: data break word count
+            0o7577, // 7755: data break current addr
         ]
         this.mem.writeData(0o7754, dataBreak);
+
+        /**
+         * OS 8 bootloader writes:
+         * 7600: 1236 TAD K0600
+         * 7601: 6766 DTCA!DTXA     / Load status register A: stop and backward, clear AC
+         * 7602: 6771 DTSF          / Wait until stopped
+         * 7603: 5202 JMP .-1
+         * 7604: 3231 DCA 7631
+         * 7605: 3232 DCA 7632
+         * 7606: 1237 TAD K0620
+         * 7607: 5224 JMP 7624
+         * 7610: 0000
+         * 7611: 0137
+         * 7612: 1355 TAD [7755]    / load CA
+         * 7613: 1211 TAD K0137     / check if CA = 7640
+         * 7614: 7650 SNA CLA       / if yes, clear AC and jump to 7620. If not, loop again.
+         * 7615: 5220 JMP 7620
+         * 7616: 7000 NOP           / ATTN PC will be here in bootstrap loop
+         * 7617: 5212 JMP 7612      / ATTN or here
+         * 
+         * 7620: 1235 TAD K0010     / AC = 0010
+         * 7621: 6774 DTLB          / set TC08 field to 1, clear AC
+         * 7622: 6771 DTSF          / wait until block read finished
+         * 7623: 5222 JMP .-1
+         * 7624: 6764 DTXA          / read another block, clear AC
+         * 7625: 6774 DTLB          / set TC08 memory field to 0, clear AC
+         * 7626: 1234 TAD K7577     / AC = 7577
+         * 7627: 3355 DCA 7755      / CA = 7577, AC = 0
+         * 7630: 3354 DCA 7754      / WC = 0
+         * 7631: 6213 CIF CDF 1     / change to data and inst field 1
+         * 7632: 5242 JMP 7642
+         * 7633: 5212 JMP 7612
+         * 7634: 7577 K7577
+         * 7635: 0010 K0010
+         * 7636: 0600 K0600
+         * 7637: 0620 K0620
+         * 7640: 0000 K0000
+         * 
+         * 17642: 3344 DCA ?        / Clear CA
+         * 17643: 6771 DTSF         / Wait until block read finished
+         * 17644: 5243 JMP .-1
+         * 17645: 6203 CDF CIF 0    / Back to data and inst field 0
+         * 17646: 5205 JMP 7605
+         */
     }
 
     public readCoreDump() {
