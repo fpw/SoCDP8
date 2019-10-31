@@ -86,6 +86,18 @@ port map (
     io_ac => io_ac,
     io_mb => io_mb,
     
+    brk_rqst => '0',
+    brk_three_cycle => '0',
+    brk_ca_inc => '0',
+    brk_mb_inc => '0',
+    brk_data_in => '0',
+    brk_data_add => o"0000",
+    brk_data_ext => o"0",
+    brk_data => o"0000",
+    brk_wc_overflow => open,
+    brk_ack => open,
+    brk_done => open,
+
     mem_out_addr => mem_out_addr,
     mem_out_data => mem_out_data,
     mem_out_write => mem_out_write,
@@ -266,6 +278,7 @@ begin
         others => o"7402")
     );
     assert led_inst_field = o"1" and led_data_field = o"2" and led_accu = o"1234" and ram(8#10010#) = o"0000" report "Fail CIF JMP" severity failure;
+
 
     -- Test IR
     int_rqst <= '1';

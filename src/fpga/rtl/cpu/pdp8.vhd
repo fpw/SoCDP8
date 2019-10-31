@@ -545,7 +545,7 @@ begin
                     end if;
                 end if;
                 
-                if (inst = INST_JMP or inst = INST_JMS) and reg_trans_inst.pc_load = '1' then
+                if (inst = INST_JMP or inst = INST_JMS) and (next_state_inst = STATE_FETCH or next_state_inst = STATE_EXEC) then
                     reg_trans.ib_to_if <= '1';
                     int_inhibit <= '0';
                 end if;
