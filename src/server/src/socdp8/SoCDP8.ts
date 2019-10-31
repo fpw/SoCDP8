@@ -51,7 +51,7 @@ export class SoCDP8 {
 
         this.cons = new Console(consBuf);
         this.mem = new CoreMemory(memBuf);
-        this.io = new IOController(ioBuf);
+        this.io = new IOController(ioBuf, this.mem, this.cons);
 
         this.pr8Reader = new PR8Reader(0o01);
         this.asr33reader = new ASR33Reader(0o03);
@@ -63,6 +63,7 @@ export class SoCDP8 {
         this.io.registerPeripheral(this.pr8Reader);
         this.io.registerPeripheral(this.tc08);
 
+        this.mem.clear();
         this.storeRIMLoader();
         this.storeTC08Loader();
     }
@@ -147,8 +148,8 @@ export class SoCDP8 {
          * 7637: 0620 K0620
          * 7640: 0000 K0000
          * 
-         * 17642: 3344 DCA ?        / Clear CA
-         * 17643: 6771 DTSF         / Wait until block read finished
+         * 17642: 3344 DCA 17744    / Clear CA
+         * 17643: 6771 DTSF         / Wait until block read finished, block 1 overwrites 7600..7777
          * 17644: 5243 JMP .-1
          * 17645: 6203 CDF CIF 0    / Back to data and inst field 0
          * 17646: 5205 JMP 7605

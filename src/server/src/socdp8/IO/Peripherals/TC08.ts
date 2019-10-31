@@ -42,13 +42,13 @@ interface StatusRegisterA {
     contMode: boolean;
     func: TapeFunction;
     irq: boolean;
-    keepError: boolean;
-    keepTapeFlag: boolean;
 }
 
 interface TapeState {
     data: Buffer;
     curBlock: number;
+    blockFound: boolean;
+    blockRead: boolean;
 
     moving: boolean;
     direction: TapeDirection;
@@ -56,6 +56,7 @@ interface TapeState {
 }
 
 export class TC08 extends Peripheral {
+    private readonly DEBUG = false;
     private readonly NUM_BLOCKS = 1474;
     private readonly BLOCK_SIZE = 129;
     private readonly BRK_ADDR   = 0o7754;
@@ -68,7 +69,9 @@ export class TC08 extends Peripheral {
 
         this.tapes[0] = {
             data: readFileSync('/home/socdp8/os8.tu56'),
-            curBlock: -1,
+            curBlock: 0,
+            blockFound: false,
+            blockRead: false,
             moving: false,
             direction: TapeDirection.FORWARD,
             lastMotionAt: 0n
@@ -81,8 +84,6 @@ export class TC08 extends Peripheral {
             contMode: false,
             func: TapeFunction.MOVE,
             irq: false,
-            keepError: false,
-            keepTapeFlag: false,
         }
     }
 
@@ -97,20 +98,28 @@ export class TC08 extends Peripheral {
         return map;
     }
 
-    public async onTick(io: IOContext): Promise<void> {
-        const tapesMoved = this.doTapeMotion();
+    private lastRegA: number = 0;
 
-        const attn = io.readRegister(DeviceRegister.REG_C);
-        if (attn) {
+    public async onTick(io: IOContext): Promise<void> {
+        const [newBlockFound, newBlockReady] = this.doTapeMotion();
+        const regA = io.readRegister(DeviceRegister.REG_A);
+
+        if (this.lastRegA != regA) {
             // the program executed DTXA to change something
-            const regA = io.readRegister(DeviceRegister.REG_A);
+            if (this.DEBUG) {
+                console.log(`TC08: DTXA ${regA.toString(8)}`);
+            }
+
             this.state = this.decodeRegA(regA);
-            console.log(`TC08: Func ${TapeFunction[this.state.func]}, dir ${TapeDirection[this.state.direction]}, run ${this.state.run}, cont ${this.state.contMode}`);
+            if (this.DEBUG) {
+                console.log(`TC08: Func ${TapeFunction[this.state.func]}, dir ${TapeDirection[this.state.direction]}, run ${this.state.run}, cont ${this.state.contMode}`);
+            }
             io.writeRegister(DeviceRegister.REG_C, 0);
+            this.lastRegA = regA;
         }
 
         if (this.state.transportUnit >= this.tapes.length) {
-            console.log(`TC08: Invalid transport unit ${this.state.transportUnit}`);
+            console.error(`TC08: Invalid transport unit ${this.state.transportUnit}`);
             this.setSelectError(io);
             return;
         }
@@ -118,40 +127,57 @@ export class TC08 extends Peripheral {
         const tape = this.tapes[this.state.transportUnit];
 
         if (tape.moving && ((tape.direction == TapeDirection.REVERSE && tape.curBlock < 0) || (tape.direction == TapeDirection.FORWARD && tape.curBlock >= this.NUM_BLOCKS))) {
-            console.log(`TC08: End of tape (${tape.curBlock})`);
+            console.warn(`TC08: End of tape (${tape.curBlock})`);
             tape.moving = false;
             this.state.run = false;
-            this.state.func = TapeFunction.MOVE;
+            this.clearMotionFlag(io);
             this.setEndOfTapeError(io);
             return;
+        } else {
+            tape.moving = this.state.run;
         }
 
         if (tape.direction != this.state.direction) {
-            console.log(`TC08: Change direction on block ${tape.curBlock}`);
+            if (this.DEBUG) {
+                console.log(`TC08: Change direction on block ${tape.curBlock}`);
+            }
+            tape.blockFound = true;
+            tape.blockRead = true;
             tape.direction = this.state.direction;
             tape.lastMotionAt = this.readSteadyClock();
         }
-        
-        tape.moving = this.state.run;
-
-        const newBlock = tapesMoved[this.state.transportUnit];
 
         switch (this.state.func) {
-            case TapeFunction.MOVE:     await this.doMove(io, tape, newBlock, this.state.contMode); break;
-            case TapeFunction.SEARCH:   await this.doSearch(io, tape, newBlock, this.state.contMode); break;
-            case TapeFunction.READ:     await this.doRead(io, tape, newBlock, this.state.contMode); break;
+            case TapeFunction.MOVE:     await this.doMove(io, tape, this.state.contMode); break;
+            case TapeFunction.SEARCH:   await this.doSearch(io, tape, newBlockFound, this.state.contMode); break;
+            case TapeFunction.READ:     await this.doRead(io, tape, newBlockReady, this.state.contMode); break;
+            case TapeFunction.WRITE:    await this.doWrite(io, tape, newBlockReady, this.state.contMode); break;
             default:
-                console.log(`TC08: Function ${TapeFunction[this.state.func]} not implemented`);
+                console.error(`TC08: Function ${TapeFunction[this.state.func]} not implemented`);
                 this.setSelectError(io);
         }
     }
 
-    private doTapeMotion(): boolean[] {
-        let moves: boolean[] = []
+    private doTapeMotion(): [boolean, boolean] {
         const now = this.readSteadyClock();
+        let blockFound = false;
+        let blockRead = false;
         for (const tape of this.tapes) {
-            let moved = false;
             if (tape.moving) {
+                if (now - tape.lastMotionAt > 0.005e9) {
+                    if (!tape.blockFound && tape.curBlock >= 0 && tape.curBlock < this.NUM_BLOCKS) {
+                        tape.blockFound = true;
+                        blockFound = true;
+                    }
+                }
+
+                if (now - tape.lastMotionAt > 0.015e9) {
+                    if (!tape.blockRead && tape.curBlock >= 0 && tape.curBlock < this.NUM_BLOCKS) {
+                        tape.blockRead = true;
+                        blockRead = true;
+                    }
+                }
+
                 if (now - tape.lastMotionAt > 0.025e9) {
                     switch (tape.direction) {
                         case TapeDirection.FORWARD:
@@ -161,30 +187,30 @@ export class TC08 extends Peripheral {
                             tape.curBlock--;
                             break;
                     }
-                    moved = true;
+                    tape.blockRead = false;
+                    tape.blockFound = false;
                     tape.lastMotionAt = now;
                 }
             }
-            moves.push(moved);
         }
-        return moves;
+        return [blockFound, blockRead];
     }
 
-    private async doMove(io: IOContext, tape: TapeState, newBlock: boolean, contMode: boolean) {
+    private async doMove(io: IOContext, tape: TapeState, contMode: boolean) {
     }
 
-    private async doSearch(io: IOContext, tape: TapeState, newBlock: boolean, contMode: boolean) {
-        if (!newBlock) {
+    private async doSearch(io: IOContext, tape: TapeState, blockFound: boolean, contMode: boolean) {
+        if (!blockFound) {
             return;
         }
 
-        console.log(`TC08: Search block ${tape.curBlock}`);
-        let num = tape.curBlock;
+        console.log(`TC08: Search -> ${tape.curBlock}`);
+
         const memField = this.readMemField(io);
         const reply = await io.dataBreak({
             threeCycle: true,
             isWrite: true,
-            data: num,
+            data: tape.curBlock,
             address: this.BRK_ADDR,
             field: memField,
             incMB: false,
@@ -196,14 +222,14 @@ export class TC08 extends Peripheral {
         }
     }
 
-    private async doRead(io: IOContext, tape: TapeState, newBlock: boolean, contMode: boolean) {
-        if (!newBlock) {
+    private async doRead(io: IOContext, tape: TapeState, blockRead: boolean, contMode: boolean) {
+        if (!blockRead) {
             return;
         }
 
-        console.log(`TC08: Read block ${tape.curBlock}`);
+        console.log(`TC08: Read ${tape.curBlock}`);
         let overflow = false;
-        for (let i = 0; i < this.BLOCK_SIZE; i++) {
+        for (let i = 0; i < this.BLOCK_SIZE - 1; i++) {
             const memField = this.readMemField(io);
             const data = tape.data.readUInt16LE((tape.curBlock * this.BLOCK_SIZE + i) * 2);
 
@@ -217,27 +243,46 @@ export class TC08 extends Peripheral {
                 incCA: true
             });
 
-            const brkCA = await io.dataBreak({
-                threeCycle: false,
-                isWrite: false,
-                data: 0,
-                address: this.BRK_ADDR + 1,
-                field: 0,
-                incMB: false,
-                incCA: false
-            });
-
-            // console.log(`TC08: ${memField.toString(8)}.${brkCA.mb.toString(8)} -> ${data.toString(8)}`);
-
             if (this.state.contMode && brkReply.wordCountOverflow) {
                 overflow = true;
                 break;
             }
         }
-        
+
         if (!contMode || overflow) {
             this.setDECTapeFlag(io);
         }
+    }
+
+    private async doWrite(io: IOContext, tape: TapeState, blockRead: boolean, contMode: boolean) {
+        if (!blockRead) {
+            return;
+        }
+
+        console.log(`TC08: Write ${tape.curBlock}`);
+        let overflow = false;
+        for (let i = 0; i < this.BLOCK_SIZE - 1; i++) {
+            const memField = this.readMemField(io);
+
+            const brkReply = await io.dataBreak({
+                threeCycle: true,
+                isWrite: false,
+                data: 0,
+                address: this.BRK_ADDR,
+                field: memField,
+                incMB: false,
+                incCA: true
+            });
+
+            tape.data.writeUInt16LE(brkReply.mb, (tape.curBlock * this.BLOCK_SIZE + i) * 2);
+
+            if (brkReply.wordCountOverflow) {
+                overflow = true;
+                break;
+            }
+        }
+
+        this.setDECTapeFlag(io);
     }
 
     private decodeRegA(regA: number): StatusRegisterA {
@@ -251,14 +296,17 @@ export class TC08 extends Peripheral {
             func: (regA & 0o0070) >> 3,
 
             irq: (regA & (1 << 2)) != 0,
-            keepError: (regA & (1 << 1)) != 0,
-            keepTapeFlag: (regA & (1 << 0)) != 0
         };
     }
 
     private readMemField(io: IOContext) {
         const regB = io.readRegister(DeviceRegister.REG_B);
         return (regB & 0o0070) >> 3;
+    }
+
+    private clearMotionFlag(io: IOContext) {
+        const regA = io.readRegister(DeviceRegister.REG_A);
+        io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 7));
     }
 
     private setSelectError(io: IOContext) {
@@ -273,6 +321,6 @@ export class TC08 extends Peripheral {
 
     private setDECTapeFlag(io: IOContext) {
         const regB = io.readRegister(DeviceRegister.REG_B);
-        io.writeRegister(DeviceRegister.REG_B, regB | 1);
-}
+        io.writeRegister(DeviceRegister.REG_B, regB | (1 << 0));
+    }
 }

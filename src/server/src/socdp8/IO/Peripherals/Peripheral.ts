@@ -52,6 +52,7 @@ export interface IOContext {
     readRegister(reg: DeviceRegister): number;
     writeRegister(reg: DeviceRegister, value: number): void;
     dataBreak(req: DataBreakRequest): Promise<DataBreakReply>;
+    getPC(): number;
 }
 
 export abstract class Peripheral {

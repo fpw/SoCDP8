@@ -19,6 +19,8 @@
 import { Peripheral, DataBreakRequest, DataBreakReply } from './Peripherals/Peripheral';
 import { NullPeripheral } from './Peripherals/NullPeripheral';
 import { promisify } from 'util';
+import { CoreMemory } from '../CoreMemory/CoreMemory';
+import { Console } from '../Console/Console';
 
 export class IOController {
     private readonly SOC_MAX_DEV_CNT_REG = 1;
@@ -30,7 +32,7 @@ export class IOController {
     private readonly maxDevices: number;
     private peripherals: Peripheral[] = [];
 
-    public constructor(ioBuf: Buffer) {
+    public constructor(ioBuf: Buffer, private coreMem: CoreMemory, private console: Console) {
         this.ioMem = ioBuf;
         this.maxDevices = this.readSystemRegister(this.SOC_MAX_DEV_CNT_REG);
         this.peripherals.push(new NullPeripheral());
@@ -45,6 +47,7 @@ export class IOController {
             this.writeMappingTable(i, 0, 0);
             this.writeMappingTable(i, 1, 0);
         }
+        this.writeSystemRegister(this.BK_CONTROL_REG, 0);
     }
 
     public registerPeripheral(perph: Peripheral): void {
@@ -96,7 +99,11 @@ export class IOController {
             await perph.onTick({
                 readRegister: reg => this.readPeripheralReg(devId, reg),
                 writeRegister: (reg, val) => this.writePeripheralReg(devId, reg, val),
-                dataBreak: req => this.doDataBreak(req)
+                dataBreak: req => this.doDataBreak(req),
+                getPC: () =>  {
+                    const lamps = this.console.readLamps();
+                    return (lamps.instField << 12) | lamps.pc
+                }
             });
         }
     }
@@ -108,7 +115,7 @@ export class IOController {
         await this.waitDataBreakReady();
 
         const requestWord: number = this.dataBreakToNumber(req);
-        // console.log(`BRK: Request ${requestWord.toString(8)}`);
+        //console.log(`BRK: Request ${requestWord.toString(8)}`);
         this.writeSystemRegister(this.BK_DATA_REG, requestWord);
         this.writeSystemRegister(this.BK_CONTROL_REG, 1);
 
@@ -118,12 +125,49 @@ export class IOController {
         if ((replyWord & (1 << 13)) == 0) {
             throw new Error(`Data break request denied, reply: ${replyWord.toString(8)}`);
         }
+        //console.log(`BRK: Reply ${replyWord.toString(8)}`);
 
         return {
             mb: (replyWord & 0o7777),
             wordCountOverflow: (replyWord & (1 << 12)) != 0
         };
     }
+
+    private async simulateDataBreak(req: DataBreakRequest): Promise<DataBreakReply> {
+        let ma = 0;
+        let overflow = false;
+
+        if (req.threeCycle) {
+            let wc = this.coreMem.peekWord(req.address);
+            let ca = this.coreMem.peekWord(req.address + 1);
+            wc = (wc + 1) & 0o7777;
+            overflow = (wc == 0);
+            if (req.incCA) {
+                ca = (ca + 1) & 0o7777;
+            }
+            this.coreMem.pokeWord(req.address, wc);
+            this.coreMem.pokeWord(req.address + 1, ca);
+            ma = (req.field << 12) | ca;
+        } else {
+            ma = (req.field << 12) | req.address;
+        }
+
+        let mb = 0;
+        if (req.isWrite) {
+            this.coreMem.pokeWord(ma, req.data);
+            mb = req.data;
+        } else if (req.incMB) {
+            mb = this.coreMem.peekWord(ma);
+            mb = (mb + 1) % 0o7777;
+            this.coreMem.pokeWord(ma, req.data);
+        } else {
+            mb = this.coreMem.peekWord(ma);
+        }
+        return {
+            mb: mb,
+            wordCountOverflow: overflow
+        }
+}
 
     private async waitDataBreakReady(): Promise<void> {
         const sleepMs = promisify(setTimeout);
