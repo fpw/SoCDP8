@@ -16,6 +16,8 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { DataBreakRequest, DataBreakReply } from "./DataBreak";
+
  // musst match dev_type in peripheral.vhd
 export enum DeviceType {
     NULL            = 0,
@@ -27,32 +29,17 @@ export enum DeviceType {
 }
 
 export enum DeviceRegister {
+    REG_TYPE        = 0,
     REG_A           = 1,
     REG_B           = 2,
     REG_C           = 3,
     REG_D           = 4,
 }
 
-export interface DataBreakRequest {
-    data: number;
-    address: number;
-    field: number;
-    isWrite: boolean;
-    incMB: boolean;
-    threeCycle: boolean;
-    incCA: boolean;
-}
-
-export interface DataBreakReply {
-    mb: number;
-    wordCountOverflow: boolean;
-}
-
 export interface IOContext {
     readRegister(reg: DeviceRegister): number;
     writeRegister(reg: DeviceRegister, value: number): void;
     dataBreak(req: DataBreakRequest): Promise<DataBreakReply>;
-    getPC(): number;
 }
 
 export abstract class Peripheral {

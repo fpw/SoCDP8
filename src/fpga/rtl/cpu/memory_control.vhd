@@ -15,7 +15,6 @@ use work.socdp8_package.all;
 -- This implementation models the description starting at page 4-13.
 entity memory_control is
     generic (
-        clk_frq: natural;
         memory_cycle_time: real
     );
     port (

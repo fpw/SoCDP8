@@ -17,10 +17,10 @@
  */
 
 import * as React from "react";
-import { LampState, SwitchState } from '../../models/FrontPanelState';
+import { LampBrightness, SwitchState } from '../../models/FrontPanelState';
 
 export interface FrontPanelProps {
-    lamps: LampState;
+    lamps: LampBrightness;
     switches: SwitchState;
     onSwitch(sw: string, state: boolean): void;
 }
@@ -52,7 +52,7 @@ export class FrontPanel extends React.PureComponent<FrontPanelProps, {}> {
             if (!doc) {
                 return null;
             }
-    
+
             this.svgRoot = (doc.documentElement as unknown) as SVGSVGElement;
             this.findElements(this.svgRoot);
             this.connectSwitches();
@@ -118,43 +118,43 @@ export class FrontPanel extends React.PureComponent<FrontPanelProps, {}> {
         }
     }
 
-    private updateLamps(lamps: LampState) {
-        this.setLampRow('pdp8_lamp_df', 3, lamps.dataField);
-        this.setLampRow('pdp8_lamp_if', 3, lamps.instField);
-        this.setLampRow('pdp8_lamp_pc', 12, lamps.pc);
-        this.setLampRow('pdp8_lamp_ma', 12, lamps.memAddr);
-        this.setLampRow('pdp8_lamp_mb', 12, lamps.memBuf);
-        this.setLamp('pdp8_lamp_link', lamps.link != 0);
-        this.setLampRow('pdp8_lamp_ac', 12, lamps.ac);
-        this.setLampRow('pdp8_lamp_mq', 12, lamps.mqr);
-        this.setLampRow('pdp8_lamp_sc', 5, lamps.stepCounter);
+    private updateLamps(lamps: LampBrightness) {
+        this.setLampRow('pdp8_lamp_df', lamps.dataField);
+        this.setLampRow('pdp8_lamp_if', lamps.instField);
+        this.setLampRow('pdp8_lamp_pc', lamps.pc);
+        this.setLampRow('pdp8_lamp_ma', lamps.memAddr);
+        this.setLampRow('pdp8_lamp_mb', lamps.memBuf);
+        this.setLamp('pdp8_lamp_link', lamps.link);
+        this.setLampRow('pdp8_lamp_ac', lamps.ac);
+        this.setLampRow('pdp8_lamp_mq', lamps.mqr);
+        this.setLampRow('pdp8_lamp_sc', lamps.stepCounter);
 
-        this.setLamp('pdp8_lamp_and', (lamps.instruction & (1 << 0)) != 0);
-        this.setLamp('pdp8_lamp_tad', (lamps.instruction & (1 << 1)) != 0);
-        this.setLamp('pdp8_lamp_isz', (lamps.instruction & (1 << 2)) != 0);
-        this.setLamp('pdp8_lamp_dca', (lamps.instruction & (1 << 3)) != 0);
-        this.setLamp('pdp8_lamp_jms', (lamps.instruction & (1 << 4)) != 0);
-        this.setLamp('pdp8_lamp_jmp', (lamps.instruction & (1 << 5)) != 0);
-        this.setLamp('pdp8_lamp_iot', (lamps.instruction & (1 << 6)) != 0);
-        this.setLamp('pdp8_lamp_opr', (lamps.instruction & (1 << 7)) != 0);
+        this.setLamp('pdp8_lamp_and', lamps.instruction[7]);
+        this.setLamp('pdp8_lamp_tad', lamps.instruction[6]);
+        this.setLamp('pdp8_lamp_isz', lamps.instruction[5]);
+        this.setLamp('pdp8_lamp_dca', lamps.instruction[4]);
+        this.setLamp('pdp8_lamp_jms', lamps.instruction[3]);
+        this.setLamp('pdp8_lamp_jmp', lamps.instruction[2]);
+        this.setLamp('pdp8_lamp_iot', lamps.instruction[1]);
+        this.setLamp('pdp8_lamp_opr', lamps.instruction[0]);
 
-        this.setLamp('pdp8_lamp_fetch', (lamps.state & (1 << 0)) != 0);
-        this.setLamp('pdp8_lamp_execute', (lamps.state & (1 << 1)) != 0);
-        this.setLamp('pdp8_lamp_defer', (lamps.state & (1 << 2)) != 0);
-        this.setLamp('pdp8_lamp_word_count', (lamps.state & (1 << 3)) != 0);
-        this.setLamp('pdp8_lamp_current_addr', (lamps.state & (1 << 4)) != 0);
-        this.setLamp('pdp8_lamp_break', (lamps.state & (1 << 5)) != 0);
+        this.setLamp('pdp8_lamp_fetch', lamps.state[5]);
+        this.setLamp('pdp8_lamp_execute', lamps.state[4]);
+        this.setLamp('pdp8_lamp_defer', lamps.state[3]);
+        this.setLamp('pdp8_lamp_word_count', lamps.state[2]);
+        this.setLamp('pdp8_lamp_current_addr', lamps.state[1]);
+        this.setLamp('pdp8_lamp_break', lamps.state[0]);
 
-        this.setLamp('pdp8_lamp_ion', lamps.ion != 0);
-        this.setLamp('pdp8_lamp_pause', lamps.pause != 0);
-        this.setLamp('pdp8_lamp_run', lamps.run != 0);
+        this.setLamp('pdp8_lamp_ion', lamps.ion);
+        this.setLamp('pdp8_lamp_pause', lamps.pause);
+        this.setLamp('pdp8_lamp_run', lamps.run);
     }
 
     private updateSwitches(switches: SwitchState) {
         this.setSwitchRow('pdp8_sw_df', 3, switches.dataField);
         this.setSwitchRow('pdp8_sw_if', 3, switches.instField);
         this.setSwitchRow('pdp8_sw_swr', 12, switches.swr);
-        
+
         this.setSwitch('pdp8_sw_start', switches.start != 0);
         this.setSwitch('pdp8_sw_load', switches.load != 0);
         this.setSwitch('pdp8_sw_dep', switches.dep != 0);
@@ -165,17 +165,37 @@ export class FrontPanel extends React.PureComponent<FrontPanelProps, {}> {
         this.setSwitch('pdp8_sw_sing_inst', switches.singInst != 0);
     }
 
-    private setLampRow(id: string, width: number, value: number): void {
-        for (let i = 0; i < width; i++) {
-            this.setLamp(id + i, (value & (1 << (width - i - 1))) != 0);
+    private setLampRow(id: string, values: number[]): void {
+        for (let i = 0; i < values.length; i++) {
+            this.setLamp(id + i, values[i]);
         }
     }
 
-    private setLamp(id: string, lit: boolean): void {
+    private setLamp(id: string, brightness: number): void {
         let elem = this.lamps[id];
 
         if (elem) {
-            elem.style.fill = (lit ? '#dad103ff' : '#222222');
+            let fill: string;
+            switch (brightness) {
+                case 0:  fill = '#222222'; break;
+                case 1:  fill = '#646001'; break;
+                case 2:  fill = '#6d6801'; break;
+                case 3:  fill = '#757001'; break;
+                case 4:  fill = '#7e7901'; break;
+                case 5:  fill = '#878101'; break;
+                case 6:  fill = '#8f8901'; break;
+                case 7:  fill = '#989202'; break;
+                case 8:  fill = '#a19a02'; break;
+                case 9:  fill = '#aaa302'; break;
+                case 10: fill = '#b2ab02'; break;
+                case 11: fill = '#bbb302'; break;
+                case 12: fill = '#c4bc02'; break;
+                case 13: fill = '#ccc402'; break;
+                case 14: fill = '#d5cc02'; break;
+                case 15: fill = '#dad103'; break;
+                default: fill = 'red';
+            }
+            elem.style.fill = fill;
         }
     }
 

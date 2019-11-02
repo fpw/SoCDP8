@@ -43,20 +43,8 @@ entity console_mux is
         switch_sing_inst_pdp: out std_logic;
     
         -- Console connection
-        led_data_field_cons: out std_logic_vector(2 downto 0);
-        led_inst_field_cons: out std_logic_vector(2 downto 0);
-        led_pc_cons: out std_logic_vector(11 downto 0);
-        led_mem_addr_cons: out std_logic_vector(11 downto 0);
-        led_mem_buf_cons: out std_logic_vector(11 downto 0);
-        led_link_cons: out std_logic;
-        led_accu_cons: out std_logic_vector(11 downto 0);
-        led_step_counter_cons: out std_logic_vector(4 downto 0);
-        led_mqr_cons: out std_logic_vector(11 downto 0);
-        led_instruction_cons: out std_logic_vector(7 downto 0);
-        led_state_cons: out std_logic_vector(5 downto 0);
-        led_ion_cons: out std_logic;
-        led_pause_cons: out std_logic;
-        led_run_cons: out std_logic;
+        -- num lamps * log brightness levels
+        lamp_brightness_cons: out std_logic_vector(89 * 4 - 1 downto 0);
 
         switch_data_field_cons: in std_logic_vector(2 downto 0);
         switch_inst_field_cons: in std_logic_vector(2 downto 0);
@@ -138,9 +126,38 @@ architecture Behavioral of console_mux is
 
     signal override_leds: std_logic;
     signal override_switches: std_logic;
+    
+    signal lamp_brightness: lamp_brightness_array(0 to 88);
 begin
 
+lamps: entity work.lamp
+generic map (
+    lamp_count => 89
+)
+port map (
+    clk => S_AXI_ACLK,
+    rstn => S_AXI_ARESETN,
+    
+    input(LAMP_DF + 2 downto LAMP_DF)       => led_data_field,
+    input(LAMP_IF + 2 downto LAMP_IF)       => led_inst_field,
+    input(LAMP_PC + 11 downto LAMP_PC)      => led_pc,
+    input(LAMP_MA + 11 downto LAMP_MA)      => led_mem_addr,
+    input(LAMP_MB + 11 downto LAMP_MB)      => led_mem_buf,
+    input(LAMP_L)                           => led_link,
+    input(LAMP_AC + 11 downto LAMP_AC)      => led_accu,
+    input(LAMP_SC + 4 downto LAMP_SC)       => led_step_counter,
+    input(LAMP_MQR + 11 downto LAMP_MQR)    => led_mqr,
+    input(LAMP_IR + 7 downto LAMP_IR)       => led_instruction,
+    input(LAMP_STATE + 5 downto LAMP_STATE) => led_state,
+    input(LAMP_ION)                         => led_ion,
+    input(LAMP_PAUSE)                       => led_pause,
+    input(LAMP_RUN)                         => led_run,
+    
+    brightness => lamp_brightness
+);
+
 axi_console: process
+    variable lamp_addr: natural range 0 to 127;
 begin
     wait until rising_edge(S_AXI_ACLK);
 
@@ -201,7 +218,22 @@ begin
                 when 23 => s_axi_rdata(0) <= switch_stop_cons;
                 when 24 => s_axi_rdata(0) <= switch_sing_step_cons;
                 when 25 => s_axi_rdata(0) <= switch_sing_inst_cons;
-                when others => null;
+                
+                when others =>
+                    if axi_addr(7) = '1' then
+                        -- addr is 32 to 63
+                        -- shift to 0 to 31
+                        lamp_addr := to_integer(unsigned(axi_addr(C_S_AXI_ADDR_WIDTH - 2 downto 2)));
+
+                        s_axi_rdata(3 downto 0)   <= std_logic_vector(lamp_brightness(lamp_addr * 8 + 0));
+                        s_axi_rdata(7 downto 4)   <= std_logic_vector(lamp_brightness(lamp_addr * 8 + 1));
+                        s_axi_rdata(11 downto 8)  <= std_logic_vector(lamp_brightness(lamp_addr * 8 + 2));
+                        s_axi_rdata(15 downto 12) <= std_logic_vector(lamp_brightness(lamp_addr * 8 + 3));
+                        s_axi_rdata(19 downto 16) <= std_logic_vector(lamp_brightness(lamp_addr * 8 + 4));
+                        s_axi_rdata(23 downto 20) <= std_logic_vector(lamp_brightness(lamp_addr * 8 + 5));
+                        s_axi_rdata(27 downto 24) <= std_logic_vector(lamp_brightness(lamp_addr * 8 + 6));
+                        s_axi_rdata(31 downto 28) <= std_logic_vector(lamp_brightness(lamp_addr * 8 + 7));
+                    end if;
             end case;
             s_axi_rresp <= "00";
             s_axi_rvalid <= '1';
@@ -302,20 +334,51 @@ begin
     end if;
 end process;
 
-led_data_field_cons <= led_data_field;
-led_inst_field_cons <= led_inst_field;
-led_pc_cons <= led_pc;
-led_mem_addr_cons <= led_mem_addr;
-led_mem_buf_cons <= led_mem_buf;
-led_link_cons <= led_link;
-led_accu_cons <= led_accu;
-led_step_counter_cons <= led_step_counter;
-led_mqr_cons <= led_mqr;
-led_instruction_cons <= led_instruction;
-led_state_cons <= led_state;
-led_ion_cons <= led_ion;
-led_pause_cons <= led_pause;
-led_run_cons <= led_run;
+ldf: for i in 0 to 2 generate
+    lamp_brightness_cons((LAMP_DF + i + 1) * 4 - 1 downto (LAMP_DF + i) * 4) <= std_logic_vector(lamp_brightness(LAMP_DF + i));
+end generate;
+
+lif: for i in 0 to 2 generate
+    lamp_brightness_cons((LAMP_IF + i + 1) * 4 - 1 downto (LAMP_IF + i) * 4) <= std_logic_vector(lamp_brightness(LAMP_IF + i));
+end generate;
+
+lpc: for i in 0 to 11 generate
+    lamp_brightness_cons((LAMP_PC + i + 1) * 4 - 1downto (LAMP_PC + i) * 4) <= std_logic_vector(lamp_brightness(LAMP_PC + i));
+end generate;
+
+lma: for i in 0 to 11 generate
+    lamp_brightness_cons((LAMP_MA + i + 1) * 4 - 1 downto (LAMP_MA + i) * 4) <= std_logic_vector(lamp_brightness(LAMP_MA + i));
+end generate;
+
+lmb: for i in 0 to 11 generate
+    lamp_brightness_cons((LAMP_MB + i + 1) * 4 - 1downto (LAMP_MB + i) * 4) <= std_logic_vector(lamp_brightness(LAMP_MB + i));
+end generate;
+
+lamp_brightness_cons((LAMP_L + 1) * 4 - 1 downto LAMP_L * 4) <= std_logic_vector(lamp_brightness(LAMP_L));
+
+lac: for i in 0 to 11 generate
+    lamp_brightness_cons((LAMP_AC + i + 1) * 4 - 1 downto (LAMP_AC + i) * 4) <= std_logic_vector(lamp_brightness(LAMP_AC + i));
+end generate;
+
+lsc: for i in 0 to 4 generate
+    lamp_brightness_cons((LAMP_SC + i + 1) * 4 - 1 downto (LAMP_SC + i) * 4) <= std_logic_vector(lamp_brightness(LAMP_SC + i));
+end generate;
+
+lmqr: for i in 0 to 11 generate
+    lamp_brightness_cons((LAMP_MQR + i + 1) * 4  - 1downto (LAMP_MQR + i) * 4) <= std_logic_vector(lamp_brightness(LAMP_MQR + i));
+end generate;
+
+lir: for i in 0 to 7 generate
+    lamp_brightness_cons((LAMP_IR + i + 1) * 4 - 1 downto (LAMP_IR + i) * 4) <= std_logic_vector(lamp_brightness(LAMP_IR + i));
+end generate;
+
+lstate: for i in 0 to 5 generate
+    lamp_brightness_cons((LAMP_STATE + i + 1) * 4 - 1 downto (LAMP_STATE + i) * 4) <= std_logic_vector(lamp_brightness(LAMP_STATE + i));
+end generate;
+    
+lamp_brightness_cons((LAMP_ION + 1) * 4 - 1 downto LAMP_ION * 4) <= std_logic_vector(lamp_brightness(LAMP_ION));
+lamp_brightness_cons((LAMP_PAUSE + 1) * 4 - 1 downto LAMP_PAUSE * 4) <= std_logic_vector(lamp_brightness(LAMP_PAUSE));
+lamp_brightness_cons((LAMP_RUN + 1) * 4 - 1 downto LAMP_RUN * 4) <= std_logic_vector(lamp_brightness(LAMP_RUN));
 
 switch_data_field_pdp <= switch_data_field;
 switch_inst_field_pdp <= switch_inst_field;

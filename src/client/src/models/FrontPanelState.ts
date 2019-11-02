@@ -17,22 +17,22 @@
  */
 
 export interface FrontPanelState {
-    lamps: LampState;
+    lamps: LampBrightness;
     switches: SwitchState;
 };
 
-export interface LampState {
-    dataField: number;
-    instField: number;
-    pc: number;
-    memAddr: number;
-    memBuf: number;
+export interface LampBrightness {
+    dataField: number[];
+    instField: number[];
+    pc: number[];
+    memAddr: number[];
+    memBuf: number[];
     link: number;
-    ac: number;
-    stepCounter: number;
-    mqr: number;
-    instruction: number;
-    state: number;
+    ac: number[];
+    stepCounter: number[];
+    mqr: number[];
+    instruction: number[];
+    state: number[];
     ion: number;
     pause: number;
     run: number;
@@ -54,17 +54,17 @@ export interface SwitchState {
 
 export const FrontPanelDefaultState: FrontPanelState = {
     lamps: {
-        dataField: 0,
-        instField: 0,
-        pc: 0,
-        memAddr: 0,
-        memBuf: 0,
+        dataField: new Array(3).fill(0),
+        instField: new Array(3).fill(0),
+        pc: new Array(12).fill(0),
+        memAddr: new Array(12).fill(0),
+        memBuf: new Array(12).fill(0),
         link: 0,
-        ac: 0,
-        stepCounter: 0,
-        mqr: 0,
-        instruction: 0,
-        state: 0,
+        ac: new Array(12).fill(0),
+        stepCounter: new Array(5).fill(0),
+        mqr: new Array(12).fill(0),
+        instruction: new Array(8).fill(0),
+        state: new Array(7).fill(6),
         ion: 0,
         pause: 0,
         run: 0,

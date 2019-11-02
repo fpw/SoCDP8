@@ -12,7 +12,7 @@ entity io_controller is
     generic(
         -- AXI parameters
         C_S_AXI_ADDR_WIDTH: integer := 13;
-        MAX_DEVICES: natural := 32
+        MAX_DEVICES: natural := 8
     );
     port (
         -- AXI
@@ -156,12 +156,11 @@ io_bus_out <= peripheral_out(cur_dev_id).io_bus_out;
 gen_peripherals: for i in 0 to MAX_DEVICES - 1 generate
     perph: entity work.peripheral
     generic map (
-        clk_frq => clk_frq,
         dev_index => i
     )
     port map (
         clk => S_AXI_ACLK,
-        rstn => s_axi_aresetn,
+        rstn => '1', -- distributing the reset down here is slow, let's just reset the registers using software
         
         dev_type => dev_types(i),
         sub_type => cur_sub_id,
@@ -306,7 +305,7 @@ begin
                 state <= IDLE;
             end if;
         when WRITE_WAIT =>
-            if axi_in_table = '0' or axi_bus_id /= cur_dev_id or iop_code = IO_NONE then
+            if axi_in_table = '1' or axi_bus_id /= cur_dev_id or iop_code = IO_NONE then
                 state <= WRITE;
             end if;
         when WRITE =>

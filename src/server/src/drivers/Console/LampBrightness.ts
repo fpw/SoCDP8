@@ -16,9 +16,19 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { AppServer } from './AppServer';
-
-console.log('SoCDP8 starting...');
-
-const app = new AppServer(8000);
-app.start();
+ export interface LampBrightness {
+    dataField: number[];
+    instField: number[];
+    pc: number[];
+    memAddr: number[];
+    memBuf: number[];
+    link: number;
+    ac: number[];
+    stepCounter: number[];
+    mqr: number[];
+    instruction: number[];
+    state: number[];
+    ion: number;
+    pause: number;
+    run: number;
+}

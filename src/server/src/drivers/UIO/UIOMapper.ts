@@ -26,7 +26,7 @@ export class UIOMapper {
     public mapUio(name: string, region: string): Buffer {
         let uioName = this.findUIO(name);
         let regionPath = this.findRegion(uioName, region);
-        let size = this.readNumber(regionPath, 'size');
+        let size = this.readNumberFromFile(regionPath, 'size');
         let buffer = this.openMap(uioName, size);
         return buffer;
     }
@@ -59,7 +59,7 @@ export class UIOMapper {
         throw new Error('UIO region ' + name + ' not found');
     }
 
-    private readNumber(regionPath: string, fileName: string): number {
+    private readNumberFromFile(regionPath: string, fileName: string): number {
         let content = readFileSync(regionPath + fileName);
         return parseInt(content.toString());
     }

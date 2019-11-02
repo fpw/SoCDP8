@@ -10,28 +10,11 @@ use work.inst_common.all;
 
 entity pdp8 is
     generic (
-        clk_frq: natural := 50_000_000;
-
         -- Whether a KE8/I EAE is present
         enable_ext_eae: boolean := true;
         
         -- Whether a MC8/I memory extension is present
-        enable_ext_mc8i: boolean := true;
-        
-        -- switch debonunce time
-        debounce_time_ms: natural := 100;
-
-        -- manual time pulses delay
-        manual_cycle_time_us: natural := 2;
-
-        -- memory cycle time
-        memory_cycle_time_ns: natural := 500;
-        
-        -- duration of TS2 and TS3        
-        auto_cycle_time_ns: natural := 250;
-        
-        -- duration between EAE pulses
-        eae_cycle_time_ns: natural := 350
+        enable_ext_mc8i: boolean := true
     );
     port (
         clk: in std_logic;
@@ -200,7 +183,6 @@ begin
 
 manual_timing_inst: entity work.timing_manual
 generic map (
-    clk_frq => clk_frq,
     debounce_time => real(debounce_time_ms) * 1.0e-3,
     manual_cycle_time => real(manual_cycle_time_us) * 1.0e-6
 )
@@ -290,7 +272,6 @@ port map (
 
 mem_control: entity work.memory_control
 generic map (
-    clk_frq => clk_frq,
     memory_cycle_time => real(memory_cycle_time_ns) * 1.0e-9
 )
 port map (

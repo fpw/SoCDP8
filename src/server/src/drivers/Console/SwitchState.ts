@@ -16,17 +16,16 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, DeviceRegister, DeviceType, IOContext } from './Peripheral';
-
-export class NullPeripheral extends Peripheral {
-    public getType(): DeviceType {
-        return DeviceType.NULL;
-    }
-
-    public getBusConnections(): Map<number, number> {
-        return new Map<number, number>();
-    }
-
-    public async onTick(io: IOContext): Promise<void> {
-    }
+ export interface SwitchState {
+    dataField: number;
+    instField: number;
+    swr: number;
+    start: number;
+    load: number;
+    dep: number;
+    exam: number;
+    cont: number;
+    stop: number;
+    singStep: number;
+    singInst: number;
 }

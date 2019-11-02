@@ -29,7 +29,7 @@ export interface PDP8Props {
 
 @inject('pdp8')
 @observer
-export class PDP8 extends React.PureComponent<PDP8Props> {
+export class PDP8 extends React.Component<PDP8Props> {
     constructor(props: PDP8Props) {
         super(props);
     }

@@ -4,8 +4,27 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.MATH_REAL.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 package socdp8_package is
+    constant clk_frq: natural := 50_000_000;
+    
+    -- switch debonunce time
+    constant debounce_time_ms: natural := 100;
+
+    -- manual time pulses delay
+    constant manual_cycle_time_us: natural := 2;
+
+    -- memory cycle time
+    constant memory_cycle_time_ns: natural := 500;
+        
+    -- duration of TS2 and TS3        
+    constant auto_cycle_time_ns: natural := 250;
+        
+    -- duration between EAE pulses
+    constant eae_cycle_time_ns: natural := 350;
+
+
     -- The manual function timing states (MFTS) and automatic timing states (TS)
     type time_state_auto is (TS1, TS2, TS3, TS4);
     type time_state_manual is (MFT0, MFT1, MFT2, MFT3);
@@ -171,6 +190,24 @@ package socdp8_package is
         sf_enable => '0',
         l_disable => '0'
     );
+
+    -- lamp indices when lamps states are stored in arrays
+    constant LAMP_DF:       natural :=  0; -- 00, 01, 02
+    constant LAMP_IF:       natural :=  3; -- 03, 04, 05
+    constant LAMP_PC:       natural :=  6; -- 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17
+    constant LAMP_MA:       natural := 18; -- 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29
+    constant LAMP_MB:       natural := 30; -- 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41
+    constant LAMP_L:        natural := 42; -- 42
+    constant LAMP_AC:       natural := 43; -- 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 52, 54
+    constant LAMP_SC:       natural := 55; -- 55, 56, 57, 58, 59
+    constant LAMP_MQR:      natural := 60; -- 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71
+    constant LAMP_IR:       natural := 72; -- 72, 73, 74, 75, 76, 77, 78, 79
+    constant LAMP_STATE:    natural := 80; -- 80, 81, 82, 83, 84, 85
+    constant LAMP_ION:      natural := 86; -- 86
+    constant LAMP_PAUSE:    natural := 87; -- 87
+    constant LAMP_RUN:      natural := 88; -- 88
+
+    type lamp_brightness_array is array(natural range<>) of unsigned(3 downto 0);
 
     -- Utility functions
     --- reverse input vector

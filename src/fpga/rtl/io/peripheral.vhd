@@ -9,7 +9,6 @@ use work.socdp8_package.all;
 
 entity peripheral is
     generic (
-        clk_frq: natural;
         dev_index: natural
     );
     port (

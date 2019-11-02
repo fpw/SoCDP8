@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, DeviceRegister, DeviceType, IOContext } from './Peripheral';
+import { Peripheral, DeviceRegister, DeviceType, IOContext } from '../drivers/IO/Peripheral';
 import { readFileSync } from 'fs';
 
 enum TapeDirection {
@@ -132,6 +132,7 @@ export class TC08 extends Peripheral {
             this.state.run = false;
             this.clearMotionFlag(io);
             this.setEndOfTapeError(io);
+            tape.lastMotionAt = this.readSteadyClock();
             return;
         } else {
             tape.moving = this.state.run;
@@ -147,14 +148,20 @@ export class TC08 extends Peripheral {
             tape.lastMotionAt = this.readSteadyClock();
         }
 
-        switch (this.state.func) {
-            case TapeFunction.MOVE:     await this.doMove(io, tape, this.state.contMode); break;
-            case TapeFunction.SEARCH:   await this.doSearch(io, tape, newBlockFound, this.state.contMode); break;
-            case TapeFunction.READ:     await this.doRead(io, tape, newBlockReady, this.state.contMode); break;
-            case TapeFunction.WRITE:    await this.doWrite(io, tape, newBlockReady, this.state.contMode); break;
-            default:
-                console.error(`TC08: Function ${TapeFunction[this.state.func]} not implemented`);
-                this.setSelectError(io);
+        try {
+            switch (this.state.func) {
+                case TapeFunction.MOVE:     await this.doMove(io, tape, this.state.contMode); break;
+                case TapeFunction.SEARCH:   await this.doSearch(io, tape, newBlockFound, this.state.contMode); break;
+                case TapeFunction.READ:     await this.doRead(io, tape, newBlockReady, this.state.contMode); break;
+                case TapeFunction.WRITE:    await this.doWrite(io, tape, newBlockReady, this.state.contMode); break;
+                default:
+                    console.error(`TC08: Function ${TapeFunction[this.state.func]} not implemented`);
+                    this.setSelectError(io);
+            }
+        } catch (e) {
+            console.warn(`TC08: Timing error: ${e}`);
+            this.clearMotionFlag(io);
+            this.setEndOfTapeError(io);
         }
     }
 
@@ -288,11 +295,11 @@ export class TC08 extends Peripheral {
     private decodeRegA(regA: number): StatusRegisterA {
         return {
             transportUnit: (regA & 0o7000) >> 9,
-            
+
             direction: (regA & (1 << 8)) >> 8,
             run: (regA & (1 << 7)) != 0,
             contMode: (regA & (1 << 6)) != 0,
-            
+
             func: (regA & 0o0070) >> 3,
 
             irq: (regA & (1 << 2)) != 0,
@@ -307,6 +314,11 @@ export class TC08 extends Peripheral {
     private clearMotionFlag(io: IOContext) {
         const regA = io.readRegister(DeviceRegister.REG_A);
         io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 7));
+    }
+
+    private setTimingError(io: IOContext) {
+        const regB = io.readRegister(DeviceRegister.REG_B);
+        io.writeRegister(DeviceRegister.REG_B, regB | (1 << 11) | (1 << 6));
     }
 
     private setSelectError(io: IOContext) {

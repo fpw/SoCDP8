@@ -38,7 +38,6 @@ use work.socdp8_package.all;
  
 entity timing_manual is
     generic (
-        clk_frq: natural;
         debounce_time: real;
         manual_cycle_time: real
     );

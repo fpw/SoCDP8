@@ -16,18 +16,18 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, DeviceRegister, DeviceType, IOContext } from './Peripheral';
+import { Peripheral, DeviceRegister, DeviceType, IOContext } from '../drivers/IO/Peripheral';
 
-export class ASR33Reader extends Peripheral {
-    private lastReadAt: bigint = 0n;
-    private readerData: number[] = [];
+export class ASR33Writer extends Peripheral {
+    private lastPunchAt: bigint = 0n;
+    private onPunch?: (data: number) => Promise<void>;
 
     constructor(private busNum: number) {
         super();
     }
 
     public getType(): DeviceType {
-        return DeviceType.ASR33_READER;
+        return DeviceType.ASR33_WRITER;
     }
 
     public getBusConnections(): Map<number, number> {
@@ -36,31 +36,25 @@ export class ASR33Reader extends Peripheral {
         return map;
     }
 
-    public appendReaderData(data: number[]) {
-        this.readerData.push(...data);
-    }
-
-    public clearReaderData() {
-        this.readerData = [];
-        this.lastReadAt = this.readSteadyClock();
+    public setOnPunch(callback: (data: number) => Promise<void>) {
+        this.onPunch = callback;
     }
 
     public async onTick(io: IOContext): Promise<void> {
-        if (io.readRegister(DeviceRegister.REG_B) == 1) {
-            // data not taken yet
+        if (io.readRegister(DeviceRegister.REG_B) != 1) {
+            // no new data yet
             return;
         }
 
-        // current word was retrieved, get next
+        // new word ready
         const now = this.readSteadyClock();
-        if (now - this.lastReadAt > 0.100e9) {
-            const data = this.readerData.shift();
-            if (data != undefined) {
-                console.log(`Next ${data}, ${this.readerData.length} remaining`);
-                io.writeRegister(DeviceRegister.REG_A, data);
-                io.writeRegister(DeviceRegister.REG_B, 1);
+        if (now - this.lastPunchAt > 0.100e9) {
+            let data = io.readRegister(DeviceRegister.REG_A);
+            if (this.onPunch) {
+                io.writeRegister(DeviceRegister.REG_B, 2); // ack data
+                this.lastPunchAt = now;
+                await this.onPunch(data);
             }
-            this.lastReadAt = this.readSteadyClock();
         }
     }
 }

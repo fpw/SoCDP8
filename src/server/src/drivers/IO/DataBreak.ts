@@ -16,9 +16,17 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { AppServer } from './AppServer';
+export interface DataBreakRequest {
+    data: number;
+    address: number;
+    field: number;
+    isWrite: boolean;
+    incMB: boolean;
+    threeCycle: boolean;
+    incCA: boolean;
+}
 
-console.log('SoCDP8 starting...');
-
-const app = new AppServer(8000);
-app.start();
+export interface DataBreakReply {
+    mb: number;
+    wordCountOverflow: boolean;
+}

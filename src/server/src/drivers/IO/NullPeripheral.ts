@@ -16,9 +16,17 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { AppServer } from './AppServer';
+import { Peripheral, DeviceType, IOContext } from './Peripheral';
 
-console.log('SoCDP8 starting...');
+export class NullPeripheral extends Peripheral {
+    public getType(): DeviceType {
+        return DeviceType.NULL;
+    }
 
-const app = new AppServer(8000);
-app.start();
+    public getBusConnections(): Map<number, number> {
+        return new Map<number, number>();
+    }
+
+    public async onTick(io: IOContext): Promise<void> {
+    }
+}

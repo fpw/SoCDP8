@@ -6,13 +6,8 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 use work.socdp8_package.all;
-use work.pidp8_console_package.all;
 
 entity pidp8_console is
-    generic (
-        clk_frq: natural;
-        simulate_lamps: boolean
-    );
     port (
         clk: in std_logic;
         rstn: in std_logic;
@@ -26,20 +21,7 @@ entity pidp8_console is
     
         -- Actual console data
         -- Console connection
-        led_data_field: in std_logic_vector(2 downto 0);
-        led_inst_field: in std_logic_vector(2 downto 0);
-        led_pc: in std_logic_vector(11 downto 0);
-        led_mem_addr: in std_logic_vector(11 downto 0);
-        led_mem_buf: in std_logic_vector(11 downto 0);
-        led_link: in std_logic;
-        led_accu: in std_logic_vector(11 downto 0);
-        led_step_counter: in std_logic_vector(4 downto 0);
-        led_mqr: in std_logic_vector(11 downto 0);
-        led_instruction: in std_logic_vector(7 downto 0);
-        led_state: in std_logic_vector(5 downto 0);
-        led_ion: in std_logic;
-        led_pause: in std_logic;
-        led_run: in std_logic;
+        lamp_brightness: in std_logic_vector(89 * 4 - 1 downto 0);
 
         switch_data_field: out std_logic_vector(2 downto 0);
         switch_inst_field: out std_logic_vector(2 downto 0);
@@ -54,7 +36,6 @@ entity pidp8_console is
         switch_sing_inst: out std_logic
     );
 
-    constant lamp_count: natural := 8 * 12;
     -- we want 50 us steps for the multiplexing, how far do we have to count?
     constant cycles_max: natural := period_to_cycles(clk_frq, 50.0e-6);
     -- and a PWM delay of 1 us
@@ -75,7 +56,7 @@ architecture Behavioral of pidp8_console is
     -- state
     signal cycle_counter: natural range 0 to cycles_max - 1 := 0;
     signal pwm_counter: natural range 0 to pwm_cycles_max - 1;
-    signal duty_counter: natural range 0 to 31;
+    signal duty_counter: natural range 0 to 15;
     signal step_50us: std_logic;
     signal cur_row: natural range 0 to 7;
 
@@ -87,9 +68,6 @@ architecture Behavioral of pidp8_console is
     signal switch_row3: std_logic_vector(7 downto 0);
 
     -- combinatorial
-    type led_row_a is array(0 to 7) of std_logic_vector(11 downto 0);
-    signal led_row_data: led_row_a;
-    
     type led_brightness_row is array(0 to 7) of lamp_brightness_array(0 to 11);
     signal led_brightness: led_brightness_row;
 begin
@@ -97,20 +75,52 @@ begin
 -- Connect LED input to LED rows.
 -- Note that that the PDP-8 counts bits starting from 0 := MSB,
 -- so vectors need to be reversed.
-led_row_data(0) <= reverse(led_pc);
-led_row_data(1) <= reverse(led_mem_addr);
-led_row_data(2) <= reverse(led_mem_buf);
-led_row_data(3) <= reverse(led_accu);
-led_row_data(4) <= reverse(led_mqr);
+lpc: for i in 0 to 11 generate
+    led_brightness(0)(11 - i) <= unsigned(lamp_brightness((LAMP_PC + i + 1) * 4 - 1 downto (LAMP_PC + i) * 4));
+end generate;
 
-led_row_data(5)(11 downto 8) <= led_state(3 downto 0);
-led_row_data(5)(7 downto 0) <= led_instruction;
-led_row_data(6)(11 downto 2) <=
-     "00" & reverse(led_step_counter) &
-     led_run & led_pause & led_ion;
-led_row_data(6)(1 downto 0) <= led_state(5 downto 4);
+lma: for i in 0 to 11 generate
+    led_brightness(1)(11 - i) <= unsigned(lamp_brightness((LAMP_MA + i + 1) * 4 - 1 downto (LAMP_MA + i) * 4));
+end generate;
 
-led_row_data(7) <= "00000" & led_link & reverse(led_inst_field) & reverse(led_data_field);
+lmb: for i in 0 to 11 generate
+    led_brightness(2)(11 - i) <= unsigned(lamp_brightness((LAMP_MB + i + 1) * 4 - 1 downto (LAMP_MB + i) * 4));
+end generate;
+
+lac: for i in 0 to 11 generate
+    led_brightness(3)(11 - i) <= unsigned(lamp_brightness((LAMP_AC + i + 1) * 4 - 1 downto (LAMP_AC + i) * 4));
+end generate;
+
+lmqr: for i in 0 to 11 generate
+    led_brightness(4)(11 - i) <= unsigned(lamp_brightness((LAMP_MQR + i + 1) * 4 - 1 downto (LAMP_MQR + i) * 4));
+end generate;
+
+lstate: for i in 0 to 3 generate
+    led_brightness(5)(8 + i) <= unsigned(lamp_brightness((LAMP_STATE + i + 1) * 4 - 1 downto (LAMP_STATE + i) * 4));
+end generate;
+
+linst: for i in 0 to 7 generate
+    led_brightness(5)(i) <= unsigned(lamp_brightness((LAMP_IR + i + 1) * 4 - 1 downto (LAMP_IR + i) * 4));
+end generate;
+
+lsc: for i in 0 to 4 generate
+    led_brightness(6)(9 - i) <= unsigned(lamp_brightness((LAMP_SC + i + 1) * 4 - 1 downto (LAMP_SC + i) * 4));
+end generate;
+led_brightness(6)(4) <= unsigned(lamp_brightness((LAMP_RUN + 0 + 1) * 4 - 1 downto (LAMP_RUN + 0) * 4));
+led_brightness(6)(3) <= unsigned(lamp_brightness((LAMP_PAUSE + 0 + 1) * 4 - 1 downto (LAMP_PAUSE + 0) * 4));
+led_brightness(6)(2) <= unsigned(lamp_brightness((LAMP_ION + 0 + 1) * 4 - 1 downto (LAMP_ION + 0) * 4));
+led_brightness(6)(1) <= unsigned(lamp_brightness((LAMP_STATE + 5 + 1) * 4 - 1 downto (LAMP_STATE + 5) * 4));
+led_brightness(6)(0) <= unsigned(lamp_brightness((LAMP_STATE + 4 + 1) * 4 - 1 downto (LAMP_STATE + 4) * 4));
+
+led_brightness(7)(6) <= unsigned(lamp_brightness((LAMP_L + 0 + 1) * 4 - 1 downto (LAMP_L + 0) * 4));
+
+lif: for i in 0 to 2  generate
+    led_brightness(7)(5 - i) <= unsigned(lamp_brightness((LAMP_IF + i + 1) * 4 - 1 downto (LAMP_IF + i) * 4));
+end generate;
+
+ldf: for i in 0 to 2  generate
+    led_brightness(7)(2 - i) <= unsigned(lamp_brightness((LAMP_DF + i + 1) * 4 - 1 downto (LAMP_DF + i) * 4));
+end generate;
 
 -- Connect switch register to switch output.
 -- Note that switches are from 0 := MSB in vectors.
@@ -132,66 +142,36 @@ switch_sing_inst <= switch_row3(7);
 col_in1 <= column_in when rising_edge(clk);
 col_in2 <= col_in1 when rising_edge(clk);
 
-gen_lamps: if simulate_lamps generate
-    -- simulate lamps by observing the state to output it via PWM
-    lamps: entity work.lamp
-    generic map (
-        clk_frq => clk_frq,
-        lamp_count => lamp_count,
-        rise_time_ms => 100
-    )
-    port map (
-        clk => clk,
-        rstn => rstn,
-        input(11 downto 0) => led_row_data(0),
-        input(23 downto 12) => led_row_data(1),
-        input(35 downto 24) => led_row_data(2),
-        input(47 downto 36) => led_row_data(3),
-        input(59 downto 48) => led_row_data(4),
-        input(71 downto 60) => led_row_data(5),
-        input(83 downto 72) => led_row_data(6),
-        input(95 downto 84) => led_row_data(7),
-        brightness(0 to 11) => led_brightness(0),
-        brightness(12 to 23) => led_brightness(1),
-        brightness(24 to 35) => led_brightness(2),
-        brightness(36 to 47) => led_brightness(3),
-        brightness(48 to 59) => led_brightness(4),
-        brightness(60 to 71) => led_brightness(5),
-        brightness(72 to 83) => led_brightness(6),
-        brightness(84 to 95) => led_brightness(7)
-    );
-    
-    pwm: process
-    begin
-        wait until rising_edge(clk);
-    
-        if pwm_counter < pwm_cycles_max - 1 then
-            pwm_counter <= pwm_counter + 1;
+pwm: process
+begin
+    wait until rising_edge(clk);
+
+    if pwm_counter < pwm_cycles_max - 1 then
+        pwm_counter <= pwm_counter + 1;
+    else
+        pwm_counter <= 0;
+        
+        if duty_counter < 15 then
+            duty_counter <= duty_counter + 1;
         else
-            pwm_counter <= 0;
-            
-            if duty_counter < 31 then
-                duty_counter <= duty_counter + 1;
-            else
-                duty_counter <= 0;
-            end if;
-        end if;
-    
-        for col in 0 to 11 loop
-            if led_brightness(cur_row)(col) /= 0 and led_brightness(cur_row)(col) >= duty_counter then
-                col_out(col) <= '0'; -- low active, this enabled the LED
-            else
-                col_out(col) <= '1';
-            end if;
-        end loop;
-    
-        if rstn = '0' then
-            pwm_counter <= 0;
             duty_counter <= 0;
-            col_out <= (others => '1');
         end if;
-    end process;
-end generate;
+    end if;
+
+    for col in 0 to 11 loop
+        if led_brightness(cur_row)(col) /= 0 and led_brightness(cur_row)(col) >= duty_counter then
+            col_out(col) <= '0'; -- low active, this enabled the LED
+        else
+            col_out(col) <= '1';
+        end if;
+    end loop;
+
+    if rstn = '0' then
+        pwm_counter <= 0;
+        duty_counter <= 0;
+        col_out <= (others => '1');
+    end if;
+end process;
 
 count_cycles: process
 begin
@@ -232,9 +212,6 @@ begin
             end if;
         when LED_OUT =>
             col_t_out <= '0';
-            if not simulate_lamps then
-                col_out <= not led_row_data(cur_row);
-            end if;
             if count_50us = 31 then
                 count_50us := 0;
                 state <= LED_WAIT;

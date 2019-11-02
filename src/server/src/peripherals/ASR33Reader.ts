@@ -16,18 +16,18 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, DeviceType, IOContext, DeviceRegister } from './Peripheral';
+import { Peripheral, DeviceRegister, DeviceType, IOContext } from '../drivers/IO/Peripheral';
 
-export class PR8Reader extends Peripheral {
+export class ASR33Reader extends Peripheral {
     private lastReadAt: bigint = 0n;
     private readerData: number[] = [];
 
-    public constructor(private busNum: number) {
+    constructor(private busNum: number) {
         super();
     }
 
     public getType(): DeviceType {
-        return DeviceType.PR8_READER;
+        return DeviceType.ASR33_READER;
     }
 
     public getBusConnections(): Map<number, number> {
@@ -46,19 +46,19 @@ export class PR8Reader extends Peripheral {
     }
 
     public async onTick(io: IOContext): Promise<void> {
-        if ((io.readRegister(DeviceRegister.REG_B) & 1) == 0) {
-            // no data request
+        if (io.readRegister(DeviceRegister.REG_B) == 1) {
+            // data not taken yet
             return;
         }
 
         // current word was retrieved, get next
         const now = this.readSteadyClock();
-        if (now - this.lastReadAt > (1.0 / 300) * 1e9) {
+        if (now - this.lastReadAt > 0.100e9) {
             const data = this.readerData.shift();
             if (data != undefined) {
                 console.log(`Next ${data}, ${this.readerData.length} remaining`);
                 io.writeRegister(DeviceRegister.REG_A, data);
-                io.writeRegister(DeviceRegister.REG_B, 2); // notify new data
+                io.writeRegister(DeviceRegister.REG_B, 1);
             }
             this.lastReadAt = this.readSteadyClock();
         }

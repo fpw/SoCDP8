@@ -1,4 +1,3 @@
-import { ASR33Reader } from './IO/Peripherals/ASR33Reader';
 /*
  *   SoCDP8 - A PDP-8/I implementation on a SoC
  *   Copyright (C) 2019 Folke Will <folko@solhost.org>
@@ -17,19 +16,21 @@ import { ASR33Reader } from './IO/Peripherals/ASR33Reader';
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { UIOMapper } from '../UIO/UIOMapper';
-import { Console, LampState, SwitchState } from './Console/Console';
-import { CoreMemory } from "./CoreMemory/CoreMemory";
-import { IOController } from './IO/IOController';
-import { promisify } from 'util';
-import { ASR33Writer } from './IO/Peripherals/ASR33Writer';
-import { PR8Reader } from './IO/Peripherals/PR8Reader';
-import { TC08 } from './IO/Peripherals/TC08';
+import { UIOMapper } from '../drivers/UIO/UIOMapper';
+import { Console } from '../drivers/Console/Console';
+import { SwitchState } from "../drivers/Console/SwitchState";
+import { CoreMemory } from "../drivers/CoreMemory/CoreMemory";
+import { IOController } from '../drivers/IO/IOController';
+import { ASR33Reader } from '../peripherals/ASR33Reader';
+import { ASR33Writer } from '../peripherals/ASR33Writer';
+import { PR8Reader } from '../peripherals/PR8Reader';
+import { TC08 } from '../peripherals/TC08';
+import { LampBrightness } from '../drivers/Console/LampBrightness';
 
 export interface ConsoleState {
-    lamps: LampState;
+    lamps: LampBrightness;
     lampOverride: boolean;
-    
+
     switches: SwitchState;
     switchOverride: boolean;
 }
@@ -51,7 +52,7 @@ export class SoCDP8 {
 
         this.cons = new Console(consBuf);
         this.mem = new CoreMemory(memBuf);
-        this.io = new IOController(ioBuf, this.mem, this.cons);
+        this.io = new IOController(ioBuf);
 
         this.pr8Reader = new PR8Reader(0o01);
         this.asr33reader = new ASR33Reader(0o03);
@@ -63,9 +64,28 @@ export class SoCDP8 {
         this.io.registerPeripheral(this.pr8Reader);
         this.io.registerPeripheral(this.tc08);
 
-        this.mem.clear();
+        this.storeBlinker();
         this.storeRIMLoader();
         this.storeTC08Loader();
+    }
+
+    public storeBlinker(): void {
+        // source: http://dustyoldcomputers.com/pdp8/pdp8i/testprogs/acmqblinker.html
+        const program = [
+            0o2012, // isz   delay  / create a delay
+            0o5000, // jmp   loop
+            0o7200, // cla          / clear AC so we can load it
+            0o1013, // tad   value  / get value
+            0o7421, // mql          / stash AC into MQ
+            0o1013, // tad   value  / fetch value again
+            0o7040, // cma          / complement AC
+            0o2013, // isz   value  / get to next value
+            0o7000, // nop          / ignore possible "skip" from ISZ
+            0o5000, // jmp   loop   / and do it all again
+            0o0000, // delay
+            0o0000, // value
+        ];
+        this.mem.writeData(0, program);
     }
 
     public storeRIMLoader(): void {
@@ -110,60 +130,12 @@ export class SoCDP8 {
             0o7577, // 7755: data break current addr
         ]
         this.mem.writeData(0o7754, dataBreak);
-
-        /**
-         * OS 8 bootloader writes:
-         * 7600: 1236 TAD K0600
-         * 7601: 6766 DTCA!DTXA     / Load status register A: stop and backward, clear AC
-         * 7602: 6771 DTSF          / Wait until stopped
-         * 7603: 5202 JMP .-1
-         * 7604: 3231 DCA 7631
-         * 7605: 3232 DCA 7632
-         * 7606: 1237 TAD K0620
-         * 7607: 5224 JMP 7624
-         * 7610: 0000
-         * 7611: 0137
-         * 7612: 1355 TAD [7755]    / load CA
-         * 7613: 1211 TAD K0137     / check if CA = 7640
-         * 7614: 7650 SNA CLA       / if yes, clear AC and jump to 7620. If not, loop again.
-         * 7615: 5220 JMP 7620
-         * 7616: 7000 NOP           / ATTN PC will be here in bootstrap loop
-         * 7617: 5212 JMP 7612      / ATTN or here
-         * 
-         * 7620: 1235 TAD K0010     / AC = 0010
-         * 7621: 6774 DTLB          / set TC08 field to 1, clear AC
-         * 7622: 6771 DTSF          / wait until block read finished
-         * 7623: 5222 JMP .-1
-         * 7624: 6764 DTXA          / read another block, clear AC
-         * 7625: 6774 DTLB          / set TC08 memory field to 0, clear AC
-         * 7626: 1234 TAD K7577     / AC = 7577
-         * 7627: 3355 DCA 7755      / CA = 7577, AC = 0
-         * 7630: 3354 DCA 7754      / WC = 0
-         * 7631: 6213 CIF CDF 1     / change to data and inst field 1
-         * 7632: 5242 JMP 7642
-         * 7633: 5212 JMP 7612
-         * 7634: 7577 K7577
-         * 7635: 0010 K0010
-         * 7636: 0600 K0600
-         * 7637: 0620 K0620
-         * 7640: 0000 K0000
-         * 
-         * 17642: 3344 DCA 17744    / Clear CA
-         * 17643: 6771 DTSF         / Wait until block read finished, block 1 overwrites 7600..7777
-         * 17644: 5243 JMP .-1
-         * 17645: 6203 CDF CIF 0    / Back to data and inst field 0
-         * 17646: 5205 JMP 7605
-         */
-    }
-
-    public readCoreDump() {
-        return this.mem.dumpCore();
     }
 
     public readConsoleState(): ConsoleState {
         let state: ConsoleState = {
             lampOverride: this.cons.isLampOverridden(),
-            lamps: this.cons.readLamps(),
+            lamps: this.cons.readBrightness(),
 
             switchOverride: this.cons.isSwitchOverridden(),
             switches: this.cons.readSwitches()
@@ -172,7 +144,7 @@ export class SoCDP8 {
         return state;
     }
 
-    public async setSwitch(sw: string, state: boolean) {
+    public setSwitch(sw: string, state: boolean): void {
         this.cons.setSwitchOverride(true);
         let switches = this.cons.readSwitches();
         switch (sw) {
@@ -229,12 +201,7 @@ export class SoCDP8 {
         this.pr8Reader.appendReaderData(data);
     }
 
-    public async run(): Promise<void> {
-        const sleepMs = promisify(setTimeout);
-
-        while (true) {
-            await this.io.checkDevices();
-            await sleepMs(1);
-        }
+    public async checkDevices(): Promise<void> {
+        await this.io.checkDevices();
     }
 }

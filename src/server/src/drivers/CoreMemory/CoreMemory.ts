@@ -16,6 +16,8 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { DataBreakRequest, DataBreakReply } from "../IO/DataBreak";
+
 export class CoreMemory {
     private buf: Buffer;
 
@@ -61,6 +63,42 @@ export class CoreMemory {
         const numWords = this.getWordCount();
         for (let i = 0; i < numWords; i++) {
             this.pokeWord(i, 0);
+        }
+    }
+
+    public simulateDataBreak(req: DataBreakRequest): DataBreakReply {
+        let ma = 0;
+        let overflow = false;
+
+        if (req.threeCycle) {
+            let wc = this.peekWord(req.address);
+            let ca = this.peekWord(req.address + 1);
+            wc = (wc + 1) & 0o7777;
+            overflow = (wc == 0);
+            if (req.incCA) {
+                ca = (ca + 1) & 0o7777;
+            }
+            this.pokeWord(req.address, wc);
+            this.pokeWord(req.address + 1, ca);
+            ma = (req.field << 12) | ca;
+        } else {
+            ma = (req.field << 12) | req.address;
+        }
+
+        let mb = 0;
+        if (req.isWrite) {
+            this.pokeWord(ma, req.data);
+            mb = req.data;
+        } else if (req.incMB) {
+            mb = this.peekWord(ma);
+            mb = (mb + 1) % 0o7777;
+            this.pokeWord(ma, req.data);
+        } else {
+            mb = this.peekWord(ma);
+        }
+        return {
+            mb: mb,
+            wordCountOverflow: overflow
         }
     }
 }
