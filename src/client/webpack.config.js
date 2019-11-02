@@ -16,7 +16,7 @@ module.exports = {
   },
 
   entry: {
-    client: './src/app.tsx',
+    client: './src/start.tsx',
   },
 
   module: {

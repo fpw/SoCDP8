@@ -16,38 +16,18 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export interface FrontPanelState {
-    lamps: LampBrightness;
-    switches: SwitchState;
-};
+import { PeripheralModel } from './PeripheralModel';
 
-export interface LampBrightness {
-    dataField: number[];
-    instField: number[];
-    pc: number[];
-    memAddr: number[];
-    memBuf: number[];
-    link: number;
-    ac: number[];
-    stepCounter: number[];
-    mqr: number[];
-    instruction: number[];
-    state: number[];
-    ion: number;
-    pause: number;
-    run: number;
-}
+export class PR8Model extends PeripheralModel {
+    public onPeripheralAction(action: string, data: any): void {
+    }
 
-export interface SwitchState {
-    dataField: number;
-    instField: number;
-    swr: number;
-    start: number;
-    load: number;
-    dep: number;
-    exam: number;
-    cont: number;
-    stop: number;
-    singStep: number;
-    singInst: number;
+    public async loadTape(tape: File) {
+        let data = await this.loadFile(tape);
+        this.socket.emit('peripheral-action', {
+            devId: this.id,
+            action: 'set-data',
+            data: data
+        });
+    }
 }

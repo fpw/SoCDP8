@@ -43,7 +43,7 @@ export class PR8 extends Peripheral {
                 this.readerData.push(...data);
                 break;
             case 'set-data':
-                this.readerData = data;
+                this.readerData = Array.from(data as Buffer);
                 break;
         }
     }
@@ -59,7 +59,7 @@ export class PR8 extends Peripheral {
         if (now - this.lastReadAt > (1.0 / 300) * 1e9) {
             const data = this.readerData.shift();
             if (data != undefined) {
-                console.log(`Next ${data}, ${this.readerData.length} remaining`);
+                console.log(`PR08: Next ${data.toString(16)}, ${this.readerData.length} remaining`);
                 io.writeRegister(DeviceRegister.REG_A, data);
                 io.writeRegister(DeviceRegister.REG_B, 2); // notify new data
             }

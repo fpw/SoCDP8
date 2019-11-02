@@ -70,5 +70,5 @@ function Footer(): JSX.Element {
                 </p>
             </div>
         </footer>
-    ); 
+    );
 }

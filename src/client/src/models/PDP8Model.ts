@@ -17,20 +17,27 @@
  */
 
 import * as io from 'socket.io-client'
-import { FrontPanelState, FrontPanelDefaultState } from './FrontPanelState';
+import { FrontPanelState } from './FrontPanelState';
 import { observable, action, computed } from 'mobx'
+import { PeripheralList, DeviceType } from './PeripheralList';
+import { ASR33Model } from './peripherals/ASR33Model';
+import { PeripheralModel } from './peripherals/PeripheralModel';
+import { PR8Model } from './peripherals/PR8Model';
+import { TC08Model } from './peripherals/TC08Model';
 
 export class PDP8Model {
+    private readonly BASE_URL = 'http://192.168.178.65:8000';
+
     private socket: SocketIOClient.Socket;
 
     @observable
-    private frontPanel: FrontPanelState = FrontPanelDefaultState;
+    private frontPanel?: FrontPanelState;
 
     @observable
-    private punchData: string = '';
+    private peripherals: Map<number, PeripheralModel> = new Map();
 
     constructor() {
-        this.socket = io.connect('http://192.168.178.65:8000');
+        this.socket = io.connect(this.BASE_URL);
 
         this.socket.on('console-state', (state: FrontPanelState) => {
             this.onFrontPanelChange(state);
@@ -41,6 +48,12 @@ export class PDP8Model {
             const action = data.action as string;
             this.onPeripheralEvent(devId, action, data);
         });
+
+        setImmediate(async () => {
+            const response = await fetch(this.BASE_URL + '/peripherals');
+            const list = await response.json() as PeripheralList;
+            this.setPeripherals(list);
+        });
     }
 
     @action
@@ -48,86 +61,66 @@ export class PDP8Model {
         this.frontPanel = newState;
     }
 
-    private onPeripheralEvent(devId: number, action: string, data: any) {
-        if (devId == 1) {
-            if (action == 'punch') {
-                this.onASR33Punch(data.data);
-            }
-        }
-    }
-
     @action
-    private onASR33Punch(data: number): void {
-        const chr = data & 0x7F;
-        const old = this.punchData;
-        if (chr == 0x7F) {
-            // Rub-out
-            this.punchData = old.slice(0, old.length);
-        } else if (chr == 0x00) {
-            // nothing
-        } else {
-            // punch character
-            const str = String.fromCharCode(chr);
-            this.punchData = old + str;
+    private setPeripherals(list: PeripheralList) {
+        for (const entry of list.devices) {
+            let peripheral: PeripheralModel;
+
+            switch (entry.type) {
+                case DeviceType.ASR33:
+                    peripheral = new ASR33Model(entry.id, this.socket);
+                    break;
+                case DeviceType.PR8:
+                    peripheral = new PR8Model(entry.id, this.socket);
+                    break;
+                case DeviceType.TC08:
+                    peripheral = new TC08Model(entry.id, this.socket);
+                    break;
+                default:
+                    continue;
+            }
+
+            this.peripherals.set(entry.id, peripheral);
         }
     }
 
-    private loadFile(file: File): Promise<ArrayBuffer> {
-        return new Promise<ArrayBuffer>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                let data = reader.result as ArrayBuffer;
-                resolve(data);
-            };
-            reader.onerror = () => {
-                reject();
-            }
-            reader.readAsArrayBuffer(file);
-        });
+    private onPeripheralEvent(devId: number, action: string, data: any) {
+        const peripheral = this.peripherals.get(devId);
+        if (!peripheral) {
+            return;
+        }
+
+        peripheral.onPeripheralAction(action, data);
     }
 
     @computed
     public get panel(): FrontPanelState {
+        if (!this.frontPanel) {
+            throw Error("Panel state not loaded");
+        }
+
         return this.frontPanel;
     }
 
     @computed
-    public get punchOutput() {
-        return this.punchData;
+    public get peripheralModels(): readonly PeripheralModel[] {
+        let res: PeripheralModel[] = [];
+        this.peripherals.forEach(entry => {
+            res.push(entry);
+        })
+        return res;
+    }
+
+    @computed
+    public get ready(): boolean {
+        if (!this.frontPanel) {
+            return false;
+        }
+
+        return true;
     }
 
     public setPanelSwitch(sw: string, state: boolean): void {
         this.socket.emit('console-switch', {'switch': sw, 'state': state});
-    }
-
-    public appendReaderKey(chr: ArrayBuffer) {
-        this.socket.emit('peripheral-action', {
-            devId: 1,
-            action: 'append-data',
-            data: chr
-        });
-    }
-
-    public async loadASR33Tape(tape: File) {
-        let data = await this.loadFile(tape);
-        this.socket.emit('peripheral-action', {
-            devId: 1,
-            action: 'set-data',
-            data: data
-        });
-    }
-
-    public async loadPR8Tape(tape: File) {
-        let data = await this.loadFile(tape);
-        this.socket.emit('peripheral-action', {
-            devId: 2,
-            action: 'set-data',
-            data: data
-        });
-    }
-
-    @action
-    public clearASR33Punch() {
-        this.punchData = '';
     }
 }

@@ -16,6 +16,8 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { DeviceType } from "../drivers/IO/Peripheral";
+
 export interface BusConnection {
     busId: number;
     subType: number;
@@ -23,7 +25,7 @@ export interface BusConnection {
 
 export interface Device {
     id: number;
-    type: number;
+    type: DeviceType;
     typeString: string;
     connections: BusConnection[];
 }

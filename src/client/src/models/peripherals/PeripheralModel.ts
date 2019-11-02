@@ -16,38 +16,28 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export interface FrontPanelState {
-    lamps: LampBrightness;
-    switches: SwitchState;
-};
+export abstract class PeripheralModel {
+    constructor(protected id: number, protected socket: SocketIOClient.Socket) {
 
-export interface LampBrightness {
-    dataField: number[];
-    instField: number[];
-    pc: number[];
-    memAddr: number[];
-    memBuf: number[];
-    link: number;
-    ac: number[];
-    stepCounter: number[];
-    mqr: number[];
-    instruction: number[];
-    state: number[];
-    ion: number;
-    pause: number;
-    run: number;
-}
+    }
 
-export interface SwitchState {
-    dataField: number;
-    instField: number;
-    swr: number;
-    start: number;
-    load: number;
-    dep: number;
-    exam: number;
-    cont: number;
-    stop: number;
-    singStep: number;
-    singInst: number;
+    public get deviceId(): number {
+        return this.id;
+    }
+
+    public abstract onPeripheralAction(action: string, data: any): void;
+
+    protected async loadFile(file: File): Promise<ArrayBuffer> {
+        return new Promise<ArrayBuffer>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                let data = reader.result as ArrayBuffer;
+                resolve(data);
+            };
+            reader.onerror = () => {
+                reject();
+            }
+            reader.readAsArrayBuffer(file);
+        });
+    }
 }

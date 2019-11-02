@@ -18,10 +18,14 @@
 
 import * as React from "react";
 import { FrontPanel } from "./FrontPanel";
-import { ASR33 } from "./ASR33";
-import { PR8 } from "./PR8";
+import { ASR33 } from "../peripherals/ASR33";
+import { PR8 } from "../peripherals/PR8";
 import { PDP8Model } from '../../models/PDP8Model';
 import { inject, observer } from "mobx-react";
+import { ASR33Model } from '../../models/peripherals/ASR33Model';
+import { PR8Model } from '../../models/peripherals/PR8Model';
+import { TC08Model } from '../../models/peripherals/TC08Model';
+import { TC08 } from '../peripherals/TC08';
 
 export interface PDP8Props {
     pdp8?: PDP8Model;
@@ -29,13 +33,47 @@ export interface PDP8Props {
 
 @inject('pdp8')
 @observer
-export class PDP8 extends React.Component<PDP8Props> {
+export class PDP8 extends React.PureComponent<PDP8Props> {
     constructor(props: PDP8Props) {
         super(props);
     }
 
     public render(): JSX.Element {
         const pdp8 = this.props.pdp8!;
+
+        if (!pdp8.ready) {
+            return <section>Loading...</section>;
+        }
+
+        const peripherals = pdp8.peripheralModels;
+        const components = peripherals.map(dev => {
+            if (dev instanceof ASR33Model) {
+                return (
+                    <div className='box'>
+                        <h1 className='title'>ASR-33</h1>
+                        <ASR33
+                            onReaderKey={dev.appendReaderKey.bind(dev)}
+                            onReaderClear={dev.clearPunch.bind(dev)}
+                            onTapeLoad={dev.loadTape.bind(dev)}
+                            punchData={dev.punchOutput} />
+                    </div>
+                );
+            } else if (dev instanceof PR8Model) {
+                return (
+                    <div className='box'>
+                        <h1 className='title'>PR-8/I</h1>
+                        <PR8 onTapeLoad={dev.loadTape.bind(dev)} />
+                    </div>
+                );
+            } else if (dev instanceof TC08Model) {
+                return (
+                    <div className='box'>
+                        <h1 className='title'>TC08</h1>
+                        <TC08 />
+                    </div>
+                );
+            }
+        });
 
         return (
             <section className='section'>
@@ -47,20 +85,7 @@ export class PDP8 extends React.Component<PDP8Props> {
                                     onSwitch={pdp8.setPanelSwitch.bind(pdp8)}
                         />
                     </div>
-
-                    <div className='box'>
-                        <h1 className='title'>ASR-33</h1>
-                        <ASR33
-                            onReaderKey={pdp8.appendReaderKey.bind(pdp8)}
-                            onReaderClear={pdp8.clearASR33Punch.bind(pdp8)}
-                            onTapeLoad={pdp8.loadASR33Tape.bind(pdp8)}
-                            punchData={pdp8.punchOutput} />
-                    </div>
-
-                    <div className='box'>
-                        <h1 className='title'>PR-8/I</h1>
-                        <PR8 onTapeLoad={pdp8.loadPR8Tape.bind(pdp8)} />
-                    </div>
+                    { components }
                 </div>
             </section>
         );

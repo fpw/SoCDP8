@@ -16,38 +16,16 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export interface FrontPanelState {
-    lamps: LampBrightness;
-    switches: SwitchState;
-};
+import * as React from "react";
 
-export interface LampBrightness {
-    dataField: number[];
-    instField: number[];
-    pc: number[];
-    memAddr: number[];
-    memBuf: number[];
-    link: number;
-    ac: number[];
-    stepCounter: number[];
-    mqr: number[];
-    instruction: number[];
-    state: number[];
-    ion: number;
-    pause: number;
-    run: number;
+export interface TC08Props {
 }
 
-export interface SwitchState {
-    dataField: number;
-    instField: number;
-    swr: number;
-    start: number;
-    load: number;
-    dep: number;
-    exam: number;
-    cont: number;
-    stop: number;
-    singStep: number;
-    singInst: number;
+export class TC08 extends React.PureComponent<TC08Props> {
+    public render(): JSX.Element {
+        return (
+            <section>
+            </section>
+        );
+    }
 }

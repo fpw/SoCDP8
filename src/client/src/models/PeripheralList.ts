@@ -16,38 +16,26 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export interface FrontPanelState {
-    lamps: LampBrightness;
-    switches: SwitchState;
-};
-
-export interface LampBrightness {
-    dataField: number[];
-    instField: number[];
-    pc: number[];
-    memAddr: number[];
-    memBuf: number[];
-    link: number;
-    ac: number[];
-    stepCounter: number[];
-    mqr: number[];
-    instruction: number[];
-    state: number[];
-    ion: number;
-    pause: number;
-    run: number;
+export enum DeviceType {
+    NULL            = 0,
+    ASR33           = 1,
+    PR8             = 2,
+    TC08            = 3,
 }
 
-export interface SwitchState {
-    dataField: number;
-    instField: number;
-    swr: number;
-    start: number;
-    load: number;
-    dep: number;
-    exam: number;
-    cont: number;
-    stop: number;
-    singStep: number;
-    singInst: number;
+export interface BusConnection {
+    busId: number;
+    subType: number;
+}
+
+export interface Device {
+    id: number;
+    type: DeviceType;
+    typeString: string;
+    connections: BusConnection[];
+}
+
+export interface PeripheralList {
+    maxDevices: number;
+    devices: Device[];
 }

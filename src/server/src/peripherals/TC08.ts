@@ -122,6 +122,8 @@ export class TC08 extends Peripheral {
             }
             io.writeRegister(DeviceRegister.REG_C, 0);
             this.lastRegA = regA;
+
+            io.emitEvent('status-register-changed', regA);
         }
 
         if (this.state.transportUnit >= this.tapes.length) {
