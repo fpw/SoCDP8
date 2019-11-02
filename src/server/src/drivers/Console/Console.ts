@@ -83,7 +83,7 @@ export class Console {
 
     public readSwitches(): SwitchState {
         if (this.isSwitchOverridden()) {
-            return this.overridenSwitches;
+            return Object.assign({}, this.overridenSwitches);
         }
 
         let state: SwitchState = {

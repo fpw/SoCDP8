@@ -12,7 +12,7 @@ entity io_controller is
     generic(
         -- AXI parameters
         C_S_AXI_ADDR_WIDTH: integer := 13;
-        MAX_DEVICES: natural := 8
+        MAX_DEVICES: natural := 16
     );
     port (
         -- AXI

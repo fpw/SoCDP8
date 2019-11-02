@@ -64,7 +64,7 @@ export const FrontPanelDefaultState: FrontPanelState = {
         stepCounter: new Array(5).fill(0),
         mqr: new Array(12).fill(0),
         instruction: new Array(8).fill(0),
-        state: new Array(7).fill(6),
+        state: new Array(7).fill(0),
         ion: 0,
         pause: 0,
         run: 0,

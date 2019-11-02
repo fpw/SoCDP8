@@ -20,12 +20,13 @@ import { UIOMapper } from '../drivers/UIO/UIOMapper';
 import { Console } from '../drivers/Console/Console';
 import { SwitchState } from "../drivers/Console/SwitchState";
 import { CoreMemory } from "../drivers/CoreMemory/CoreMemory";
-import { IOController } from '../drivers/IO/IOController';
-import { ASR33Reader } from '../peripherals/ASR33Reader';
-import { ASR33Writer } from '../peripherals/ASR33Writer';
-import { PR8Reader } from '../peripherals/PR8Reader';
+import { IOController, IOListener } from '../drivers/IO/IOController';
 import { TC08 } from '../peripherals/TC08';
 import { LampBrightness } from '../drivers/Console/LampBrightness';
+import { PeripheralList, BusConnection } from './PeripheralList';
+import { DeviceType } from '../drivers/IO/Peripheral';
+import { ASR33 } from '../peripherals/ASR33';
+import { PR8 } from '../peripherals/PR8';
 
 export interface ConsoleState {
     lamps: LampBrightness;
@@ -39,29 +40,26 @@ export class SoCDP8 {
     private cons: Console;
     private mem: CoreMemory;
     private io: IOController;
-    private asr33reader: ASR33Reader;
-    private asr33writer: ASR33Writer;
-    private pr8Reader: PR8Reader;
+    private asr33: ASR33;
+    private pr8: PR8;
     private tc08: TC08;
 
-    public constructor() {
-        let uio = new UIOMapper();
-        let memBuf = uio.mapUio('socdp8_core', 'socdp8_core_mem');
-        let consBuf = uio.mapUio('socdp8_console', 'socdp8_console');
-        let ioBuf = uio.mapUio('socdp8_io', 'socdp8_io_ctrl');
+    public constructor(private ioListener: IOListener) {
+        const uio = new UIOMapper();
+        const memBuf = uio.mapUio('socdp8_core', 'socdp8_core_mem');
+        const consBuf = uio.mapUio('socdp8_console', 'socdp8_console');
+        const ioBuf = uio.mapUio('socdp8_io', 'socdp8_io_ctrl');
 
         this.cons = new Console(consBuf);
         this.mem = new CoreMemory(memBuf);
-        this.io = new IOController(ioBuf);
+        this.io = new IOController(ioBuf, this.ioListener);
 
-        this.pr8Reader = new PR8Reader(0o01);
-        this.asr33reader = new ASR33Reader(0o03);
-        this.asr33writer = new ASR33Writer(0o04);
+        this.pr8 = new PR8(0o01);
+        this.asr33 = new ASR33(0o03);
         this.tc08 = new TC08(0o76);
 
-        this.io.registerPeripheral(this.asr33reader);
-        this.io.registerPeripheral(this.asr33writer);
-        this.io.registerPeripheral(this.pr8Reader);
+        this.io.registerPeripheral(this.asr33);
+        this.io.registerPeripheral(this.pr8);
         this.io.registerPeripheral(this.tc08);
 
         this.storeBlinker();
@@ -133,20 +131,52 @@ export class SoCDP8 {
     }
 
     public readConsoleState(): ConsoleState {
-        let state: ConsoleState = {
+        return {
             lampOverride: this.cons.isLampOverridden(),
             lamps: this.cons.readBrightness(),
 
             switchOverride: this.cons.isSwitchOverridden(),
             switches: this.cons.readSwitches()
         }
+    }
 
-        return state;
+    public getPeripherals(): PeripheralList {
+        const list: PeripheralList = {
+            maxDevices: this.io.getMaxDeviceCount(),
+            devices: []
+        };
+
+        const peripherals = this.io.getRegisteredDevices();
+        for (const [idx, peripheral] of peripherals.entries()) {
+            const type = peripheral.getType();
+
+            if (type == DeviceType.NULL) {
+                continue;
+            }
+
+            let connections: BusConnection[] = [];
+            for (const [busId, subType] of peripheral.getBusConnections()) {
+                connections.push({busId: busId, subType: subType});
+            }
+
+            list.devices.push({
+                id: idx,
+                type: type,
+                typeString: DeviceType[type],
+                connections: connections,
+            });
+        }
+
+        return list;
+    }
+
+    public requestDeviceAction(devId: number, action: string, data: any) {
+        this.io.requestDeviceAction(devId, action, data);
     }
 
     public setSwitch(sw: string, state: boolean): void {
         this.cons.setSwitchOverride(true);
-        let switches = this.cons.readSwitches();
+        const switches = this.cons.readSwitches();
         switch (sw) {
             case 'df0': switches.dataField = this.setBitValue(switches.dataField, 2, state); break;
             case 'df1': switches.dataField = this.setBitValue(switches.dataField, 1, state); break;
@@ -179,26 +209,9 @@ export class SoCDP8 {
     }
 
     private setBitValue(input: number, pos: number, val: boolean): number {
-        let cleared = input & ~(1 << pos);
-        let bitVal = val ? 1 : 0;
+        const cleared = input & ~(1 << pos);
+        const bitVal = val ? 1 : 0;
         return (cleared | (bitVal << pos));
-    }
-
-    public setOnPunch(callback: (data: number) => Promise<void>) {
-        this.asr33writer.setOnPunch(callback);
-    }
-
-    public clearTapeInput() {
-        this.asr33reader.clearReaderData();
-    }
-
-    public appendTapeInput(data: number[]) {
-        this.asr33reader.appendReaderData(data);
-    }
-
-    public setHighTapeInput(data: number[]) {
-        this.pr8Reader.clearReaderData();
-        this.pr8Reader.appendReaderData(data);
     }
 
     public async checkDevices(): Promise<void> {

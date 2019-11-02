@@ -16,20 +16,19 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, DeviceType, IOContext } from './Peripheral';
+export interface BusConnection {
+    busId: number;
+    subType: number;
+}
 
-export class NullPeripheral extends Peripheral {
-    public getType(): DeviceType {
-        return DeviceType.NULL;
-    }
+export interface Device {
+    id: number;
+    type: number;
+    typeString: string;
+    connections: BusConnection[];
+}
 
-    public getBusConnections(): Map<number, number> {
-        return new Map<number, number>();
-    }
-
-    public async onTick(io: IOContext): Promise<void> {
-    }
-
-    public requestAction(action: string, data: any): void {
-    }
+export interface PeripheralList {
+    maxDevices: number;
+    devices: Device[];
 }

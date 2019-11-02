@@ -18,8 +18,11 @@
 
 import { Peripheral, DeviceRegister } from './Peripheral';
 import { NullPeripheral } from './NullPeripheral';
-import { promisify } from 'util';
 import { DataBreakRequest, DataBreakReply } from './DataBreak';
+
+export interface IOListener {
+    onPeripheralEvent(devId: number, action: string, data: any): void
+}
 
 export class IOController {
     // system registers
@@ -35,12 +38,10 @@ export class IOController {
 
     private readonly NUM_BUS_IDS = 64;
 
-    private ioMem: Buffer;
     private readonly maxDevices: number;
     private peripherals: Peripheral[] = [];
 
-    public constructor(ioBuf: Buffer) {
-        this.ioMem = ioBuf;
+    public constructor(private ioMem: Buffer, private listener: IOListener) {
         this.maxDevices = this.readSystemRegister(this.SYS_REG_MAX_DEV);
         this.peripherals.push(new NullPeripheral());
         this.clearDeviceTable();
@@ -61,6 +62,10 @@ export class IOController {
         this.writeSystemRegister(this.SYS_REG_BRK_CTRL, 0);
     }
 
+    public getMaxDeviceCount(): number {
+        return this.maxDevices;
+    }
+
     public registerPeripheral(perph: Peripheral): void {
         const devId = this.peripherals.push(perph) - 1;
 
@@ -75,6 +80,19 @@ export class IOController {
         }
     }
 
+    public getRegisteredDevices(): readonly Peripheral[] {
+        return this.peripherals;
+    }
+
+    public requestDeviceAction(devId: number, action: string, data: any) {
+        const peripheral = this.peripherals[devId];
+        if (!peripheral) {
+            return;
+        }
+
+        peripheral.requestAction(action, data);
+    }
+
     public async checkDevices(): Promise<void> {
         const attention = this.readSystemRegister(this.SYS_REG_DEV_ATTN);
 
@@ -84,6 +102,7 @@ export class IOController {
                     readRegister: reg => this.readPeripheralReg(devId, reg),
                     writeRegister: (reg, val) => this.writePeripheralReg(devId, reg, val),
                     dataBreak: req => this.doDataBreak(req),
+                    emitEvent: (action, data) => this.listener.onPeripheralEvent(devId, action, data),
                 });
             } catch (e) {
                 console.error(`Device ${devId} threw in tick: ${e}`)
@@ -91,18 +110,25 @@ export class IOController {
         }
     }
 
-    private async doDataBreak(req: DataBreakRequest): Promise<DataBreakReply> {
+    // this must not be async - the lowest sleep resolution is 1ms and we need to be faster...
+    private doDataBreak(req: DataBreakRequest): DataBreakReply {
         // remove old request
         this.writeSystemRegister(this.SYS_REG_BRK_CTRL, 0);
 
-        await this.waitDataBreakReady();
+        this.waitDataBreakReady();
 
         const requestWord: number = this.encodeDataBreak(req);
         //console.log(`BRK: Request ${requestWord.toString(8)}`);
         this.writeSystemRegister(this.SYS_REG_BRK_DATA, requestWord);
         this.writeSystemRegister(this.SYS_REG_BRK_CTRL, 1);
 
-        await this.waitDataBreakReady();
+        try {
+            this.waitDataBreakReady();
+        } catch (e) {
+            // data break was not accepted, remove request
+            this.writeSystemRegister(this.SYS_REG_BRK_CTRL, 0);
+            throw e;
+        }
 
         const replyWord = this.readSystemRegister(this.SYS_REG_BRK_DATA);
         if ((replyWord & (1 << 13)) == 0) {
@@ -116,17 +142,15 @@ export class IOController {
         };
     }
 
-    private async waitDataBreakReady(): Promise<void> {
-        const sleepMs = promisify(setTimeout);
-
+    private waitDataBreakReady(): void {
         let controlWord = 0;
 
-        for (let i = 0; i < 3; i++) {
+        // TODO: Not sure what to do against busy waiting since this must be sync
+        for (let i = 0; i < 50; i++) {
             controlWord = this.readSystemRegister(this.SYS_REG_BRK_CTRL);
             if (controlWord == 1) {
                 return;
             }
-            await sleepMs(1);
         }
 
         throw new Error(`Timeout waiting for data request, last state: ${controlWord}`);

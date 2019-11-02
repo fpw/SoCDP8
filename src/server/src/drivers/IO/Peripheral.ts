@@ -21,11 +21,9 @@ import { DataBreakRequest, DataBreakReply } from "./DataBreak";
  // musst match dev_type in peripheral.vhd
 export enum DeviceType {
     NULL            = 0,
-    ASR33_READER    = 1,
-    ASR33_WRITER    = 2,
-    PR8_READER      = 3,
-    PR8_WRITER      = 4,
-    TC08            = 5,
+    ASR33           = 1,
+    PR8             = 2,
+    TC08            = 3,
 }
 
 export enum DeviceRegister {
@@ -39,7 +37,9 @@ export enum DeviceRegister {
 export interface IOContext {
     readRegister(reg: DeviceRegister): number;
     writeRegister(reg: DeviceRegister, value: number): void;
-    dataBreak(req: DataBreakRequest): Promise<DataBreakReply>;
+    dataBreak(req: DataBreakRequest): DataBreakReply;
+
+    emitEvent(action: string, data: any): void;
 }
 
 export abstract class Peripheral {
@@ -48,6 +48,8 @@ export abstract class Peripheral {
     public abstract getBusConnections(): Map<number, number>;
 
     public abstract onTick(io: IOContext): Promise<void>;
+
+    public abstract requestAction(action: string, data: any): void;
 
     protected readSteadyClock(): bigint {
         return process.hrtime.bigint();

@@ -36,8 +36,10 @@ export class PDP8Model {
             this.onFrontPanelChange(state);
         });
 
-        this.socket.on('punch', (data: number) => {
-            this.onASR33Punch(data);
+        this.socket.on('peripheral-event', (data: any) => {
+            const devId = data.devId as number;
+            const action = data.action as string;
+            this.onPeripheralEvent(devId, action, data);
         });
     }
 
@@ -45,7 +47,15 @@ export class PDP8Model {
     private onFrontPanelChange(newState: FrontPanelState): void {
         this.frontPanel = newState;
     }
-   
+
+    private onPeripheralEvent(devId: number, action: string, data: any) {
+        if (devId == 1) {
+            if (action == 'punch') {
+                this.onASR33Punch(data.data);
+            }
+        }
+    }
+
     @action
     private onASR33Punch(data: number): void {
         const chr = data & 0x7F;
@@ -91,18 +101,29 @@ export class PDP8Model {
     }
 
     public appendReaderKey(chr: ArrayBuffer) {
-        this.socket.emit('append-asr33-tape', chr);
+        this.socket.emit('peripheral-action', {
+            devId: 1,
+            action: 'append-data',
+            data: chr
+        });
     }
 
     public async loadASR33Tape(tape: File) {
         let data = await this.loadFile(tape);
-        this.socket.emit('clear-asr33-tape', data);
-        this.socket.emit('append-asr33-tape', data);
+        this.socket.emit('peripheral-action', {
+            devId: 1,
+            action: 'set-data',
+            data: data
+        });
     }
 
     public async loadPR8Tape(tape: File) {
         let data = await this.loadFile(tape);
-        this.socket.emit('load-pr8-tape', data);
+        this.socket.emit('peripheral-action', {
+            devId: 2,
+            action: 'set-data',
+            data: data
+        });
     }
 
     @action

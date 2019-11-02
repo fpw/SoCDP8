@@ -58,12 +58,13 @@ with reg_sel select reg_out <=
 pdp8_irq <= pdp8_irq_buf;
 
 action: process
-    procedure asr33_reader is
+    procedure asr33 is
     begin
-        -- Interface: Write new data into regA and then set regB to 1
-        pdp8_irq_buf <= regB(0);
-        soc_attention <= not regB(0);
-        if enable = '1' then
+        pdp8_irq_buf <= regB(0) or regD(1);
+        soc_attention <= not regB(0) or regD(0);
+
+        if enable = '1' and sub_type = x"0" then
+            -- Reader interface: Write new data into regA and then set regB to 1
             case iop is
                 when IO1 =>
                     -- Set skip if new data
@@ -77,37 +78,31 @@ action: process
                     io_bus_out <= regA(11 downto 0);
                 when others => null;
             end case;
-        end if;
-    end procedure;
-    
-    procedure asr33_writer is
-    begin
-        -- Interface: Check regB = 1 to see if new data, take from regA and set regB to 2 to ack
-        pdp8_irq_buf <= regB(1);
-        soc_attention <= not regB(1);
-        if enable = '1' then
+        elsif enable = '1' and sub_type = x"1" then
+            -- Writer interface: Check regD = 1 to see if new data, take from regC and set regD to 2 to ack
             case iop is
                 when IO1 =>
                     -- Set skip if data acked
-                    io_skip <= regB(1);
+                    io_skip <= regD(1);
                 when IO2 =>
                     -- Clear ack flag 
-                    regB(1) <= '0';
+                    regD(1) <= '0';
                 when IO4 => 
                     -- Load buffer
-                    regA(11 downto 0) <= io_ac;
-                    regB(0) <= '1';
+                    regC(11 downto 0) <= io_ac;
+                    regD(0) <= '1';
                 when others => null;
             end case;
         end if;
     end procedure;
 
-    procedure pr8_reader is
+    procedure pr8 is
     begin
-        -- Interface: Write new data into regA if regB & 1,then set regB to 2
-        pdp8_irq_buf <= regB(1);
-        soc_attention <= regB(0);
-        if enable = '1' then
+        pdp8_irq_buf <= regB(1) or regD(1);
+        soc_attention <= regB(0) or regD(0);
+
+        if enable = '1' and sub_type = x"0" then
+            -- Reader interface: Write new data into regA if regB & 1,then set regB to 2
             case iop is
                 when IO1 =>
                     -- Set skip if new data
@@ -122,10 +117,25 @@ action: process
                     regB(1) <= '0';
                 when others => null;
             end case;
+        elsif enable = '1' and sub_type = x"1" then
+            -- Writer interface: Check regD = 1 to see if new data, take from regC and set regD to 2 to ack
+            case iop is
+                when IO1 =>
+                    -- Set skip if data acked
+                    io_skip <= regD(1);
+                when IO2 =>
+                    -- Clear ack flag 
+                    regD(1) <= '0';
+                when IO4 => 
+                    -- Load buffer
+                    regC(11 downto 0) <= io_ac;
+                    regD(0) <= '1';
+                when others => null;
+            end case;
         end if;
     end procedure;
 
-    procedure tc08_dectape is
+    procedure tc08 is
     begin
         if unsigned(regB(11 downto 0) and o"7707") /= 0 and regA(2) = '1' then
             pdp8_irq_buf <= '1';
@@ -222,11 +232,9 @@ begin
     soc_attention <= '0';
 
     case dev_type is
-        when x"01" => asr33_reader;
-        when x"02" => asr33_writer;
-        when x"03" => pr8_reader;
-        when x"04" => asr33_writer; -- same semantics as PR8 writer
-        when x"05" => tc08_dectape;
+        when x"01" => asr33;
+        when x"02" => pr8;
+        when x"03" => tc08;
         when others => null;
     end case;
 

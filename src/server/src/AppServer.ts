@@ -18,76 +18,109 @@
 
 import * as io from 'socket.io';
 import * as express from 'express';
+import * as cors from 'cors';
 import { Server } from 'http';
-import { SoCDP8 } from './models/SoCDP8';
+import { SoCDP8, ConsoleState } from './models/SoCDP8';
+import { Response, Request } from 'express-serve-static-core';
+import { isDeepStrictEqual } from 'util';
 
 export class AppServer {
+    private readonly MOMENTARY_DEBOUNCE_MS = 150;
+    private readonly CONSOLE_CHECK_MS = 75;
+    private readonly DEVICE_CHECK_MS = 1;
+
     private app: express.Application;
     private pdp8: SoCDP8;
     private socket: io.Server;
     private httpServer: Server;
 
+    private lastConsoleState?: ConsoleState;
+
     constructor(port: number) {
-        this.pdp8 = new SoCDP8();
+        this.pdp8 = new SoCDP8({
+            onPeripheralEvent: (id, action, data) => this.onPeripheralEvent(id, action, data)
+        });
 
         this.app = express();
+        this.app.use(cors());
         this.app.use(express.static('./public'));
+        this.app.get('/peripherals', (req, res) => this.requestPeripherals(req, res));
 
         this.httpServer = new Server(this.app);
         this.socket = io(this.httpServer);
-        this.socket.on('connection', client => this.onConnect(client));
+        this.socket.on('connection', client => this.onClientConnect(client));
 
         this.httpServer.listen(port);
-
-        this.pdp8.setOnPunch((data: number) => {
-            this.socket.emit('punch', data);
-            return Promise.resolve();
-        });
     }
 
-    private onConnect(client: io.Socket) {
+    public start(): void {
+        // not using setInterval since that could cause reentrant calls!
+        setImmediate(() => this.checkConsoleState());
+        setImmediate(() => this.checkDevices());
+    }
+
+    private onClientConnect(client: io.Socket) {
         console.log(`Connection ${client.id} from ${client.handshake.address}`);
 
         client.on('console-switch', data => this.onConsoleSwitch(client, data));
+        client.on('peripheral-action', data => this.onPeripheralAction(client, data));
 
-        client.on('clear-asr33-tape', () => {
-            console.log(`${client.id}: Clear ASR33 tape`);
-            this.pdp8.clearTapeInput();
-        });
-
-        client.on('append-asr33-tape', (buffer: ArrayBuffer) => {
-            console.log(`${client.id}: Append to ASR33 tape: ${buffer.byteLength}`);
-            const data: number[] = Array.from(new Uint8Array(buffer));
-            this.pdp8.appendTapeInput(data);
-        });
-
-        client.on('load-pr8-tape', (buffer: ArrayBuffer) => {
-            console.log(`${client.id}: Set PR8 tape: ${buffer.byteLength}`);
-            const data: number[] = Array.from(new Uint8Array(buffer));
-            this.pdp8.setHighTapeInput(data);
-        });
-
-        this.socket.emit('console-state', this.pdp8.readConsoleState());
+        client.emit('console-state', this.pdp8.readConsoleState());
     }
 
     private onConsoleSwitch(client: io.Socket, data: any): void {
         console.log(`${client.id}: Setting switch ${data.switch} to ${data.state ? '1' : '0'}`);
         this.pdp8.setSwitch(data.switch, data.state);
 
+        // release momentary switches automatically
         if (['start', 'load', 'dep', 'exam', 'cont', 'stop'].includes(data.switch)) {
             setTimeout(() => {
                 this.pdp8.setSwitch(data.switch, false);
-            }, 150);
+            }, this.MOMENTARY_DEBOUNCE_MS);
         }
     }
 
-    public start(): void {
-        setInterval(() => {
-            this.socket.emit('console-state', this.pdp8.readConsoleState());
-        }, 100);
+    private onPeripheralAction(client: io.Socket, data: any): void {
+        console.log(`${client.id}: Peripheral action ${data.action} on ${data.devId}`);
+        const devId = data.devId as number;
+        const action = data.action as string;
+        this.pdp8.requestDeviceAction(devId, action, data.data);
+    }
 
-        setInterval(async () => {
-            await this.pdp8.checkDevices();
-        }, 1);
+    private onPeripheralEvent(devId: number, action: string, data: any): void {
+        this.socket.emit('peripheral-event', {
+            devId: devId,
+            action: action,
+            data: data
+        });
+    }
+
+    // JSON API
+
+    private requestPeripherals(request: Request, response: Response): void {
+        const list = this.pdp8.getPeripherals();
+        response.json(list);
+    }
+
+    // State maintenance
+
+    private checkConsoleState() {
+        const curState = this.pdp8.readConsoleState();
+        if (!isDeepStrictEqual(this.lastConsoleState, curState)) {
+            this.broadcastConsoleState(curState);
+            this.lastConsoleState = curState;
+        }
+
+        setTimeout(() => this.checkConsoleState(), this.CONSOLE_CHECK_MS);
+    }
+
+    private async checkDevices() {
+        await this.pdp8.checkDevices();
+        setTimeout(() => this.checkDevices(), this.DEVICE_CHECK_MS);
+    }
+
+    private broadcastConsoleState(state: ConsoleState) {
+        // since we are only sending changes, do not send as volatile
+        this.socket.emit('console-state', state);
     }
 }
