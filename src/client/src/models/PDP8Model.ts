@@ -134,7 +134,7 @@ export class PDP8Model {
         return true;
     }
 
-    public readonly setPanelSwitch = async (sw: string, state: boolean): Promise<void> => {
+    public async setPanelSwitch(sw: string, state: boolean): Promise<void> {
         this.socket.emit('console-switch', {'switch': sw, 'state': state});
     }
 }

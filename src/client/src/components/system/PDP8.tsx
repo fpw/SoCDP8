@@ -39,7 +39,7 @@ export const PDP8: React.FunctionComponent<PDP8Props> = observer((props) =>
                 <h1 className='title'>PDP-8/I</h1>
                 <FrontPanel lamps={props.pdp8.panel.lamps}
                             switches={props.pdp8.panel.switches}
-                            onSwitch={props.pdp8.setPanelSwitch}
+                            onSwitch={props.pdp8.setPanelSwitch.bind(props.pdp8)}
                 />
             </div>
             <PeripheralList list={props.pdp8.peripherals} />

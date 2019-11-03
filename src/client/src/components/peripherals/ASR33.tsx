@@ -17,6 +17,7 @@
  */
 
 import * as React from "react";
+import { observer } from 'mobx-react-lite';
 
 export interface ASR33Props {
     punchData: string;
@@ -25,82 +26,75 @@ export interface ASR33Props {
     onTapeLoad(tape: File): void;
 }
 
-export class ASR33 extends React.PureComponent<ASR33Props> {
-    private textRef: React.RefObject<HTMLTextAreaElement>;
+export const ASR33: React.FunctionComponent<ASR33Props> = observer((props) => {
+    const textRef = React.useRef<HTMLTextAreaElement>(null);
 
-    constructor(props: ASR33Props) {
-        super(props);
-        this.textRef = React.createRef();
-    }
+    scrollToBottomOnChange(textRef);
 
-    public render(): JSX.Element {
-        return (
-            <section>
+    return (
+        <section>
+            <div className='control'>
+                <textarea readOnly ref={textRef} className='textarea has-fixed-size' rows={8} cols={80} value={props.punchData} />
+            </div>
+
+            <div className='control'>
+                <input className='input' onKeyUp={(evt) => onKey(evt, props)} />
+            </div>
+
+            <div className='field has-addons'>
                 <div className='control'>
-                    <textarea readOnly ref={this.textRef} className='textarea has-fixed-size' rows={8} cols={80} value={this.props.punchData} />
+                    <button className='button' onClick={props.onReaderClear}>Clear</button>
                 </div>
 
-                <div className='control'>
-                    <input className='input' onKeyUp={this.onKey} />
-                </div>
-
-                <div className='field has-addons'>
-                    <div className='control'>
-                        <button className='button' onClick={this.onClear}>Clear</button>
-                    </div>
-                    
-                    <div className='file'>
-                        <label className='file-label'>
-                            <input className='file-input' type='file' onChange={this.onLoadFile} />
-                            <span className='file-cta'>
-                                <span className='file-label'>
-                                    Attach Tape
-                                </span>
+                <div className='file'>
+                    <label className='file-label'>
+                        <input className='file-input' type='file' onChange={(evt) => onLoadFile(evt, props)} />
+                        <span className='file-cta'>
+                            <span className='file-label'>
+                                Attach Tape
                             </span>
-                        </label>
-                    </div>
+                        </span>
+                    </label>
                 </div>
-            </section>
-        );
-    }
+            </div>
+        </section>
+    );
+});
 
-    public componentDidUpdate(): void {
-        const textArea = this.textRef.current;
+function scrollToBottomOnChange(textRef: React.RefObject<HTMLTextAreaElement>) {
+    React.useEffect(() => {
+        const textArea = textRef.current;
         if (!textArea) {
             return;
         }
 
         textArea.scrollTop = textArea.scrollHeight;
+    });
+}
+
+function onLoadFile(evt: React.ChangeEvent, props: ASR33Props): void {
+    const target = evt.target as HTMLInputElement;
+    if (!target.files || target.files.length < 1) {
+        return;
     }
 
-    private readonly onKey = (ev: React.KeyboardEvent): void => {
-        if (ev.key == 'Enter') {
-            (ev.target as HTMLInputElement).value = '';
-            this.onPunch('\r');
-        } else if (ev.key == 'Backspace') {
-            this.onPunch('\x7F');
-        } else if (ev.key.length == 1) {
-            this.onPunch(ev.key);
-        }
-    }
+    props.onTapeLoad(target.files[0]);
+}
 
-    private readonly onPunch = (key: string) => {
-        const buf = new ArrayBuffer(1);
-        let view = new Uint8Array(buf);
-        view[0] = key.charCodeAt(0) | 0x80;
-        this.props.onReaderKey(buf);
+function onKey(ev: React.KeyboardEvent, props: ASR33Props): void {
+    if (ev.key == 'Enter') {
+        (ev.target as HTMLInputElement).value = '';
+        doPunch('\r', props);
+    } else if (ev.key == 'Backspace') {
+        doPunch('\x7F', props);
+    } else if (ev.key.length == 1) {
+        doPunch(ev.key, props);
     }
+}
 
-    private readonly onClear = (): void => {
-        this.props.onReaderClear();
-    }
-
-    private readonly onLoadFile = (evt: React.ChangeEvent): void => {
-        const target = evt.target as HTMLInputElement;
-        if (!target.files || target.files.length < 1) {
-            return;
-        }
-        
-        this.props.onTapeLoad(target.files[0]);
-    }
+function doPunch(key: string, props: ASR33Props) {
+    const buf = new ArrayBuffer(1);
+    let view = new Uint8Array(buf);
+    view[0] = key.charCodeAt(0) | 0x80;
+    props.onReaderKey(buf);
 }

@@ -66,7 +66,7 @@ set run_remote_bd_flow 1
 if { $run_remote_bd_flow == 1 } {
   # Set the reference directory for source file relative paths (by default 
   # the value is script directory path)
-  set origin_dir ./blockdesign
+  set origin_dir ./socdp8/src/fpga/boards/blockdesign
 
   # Use origin directory path location variable, if specified in the tcl shell
   if { [info exists ::origin_dir_loc] } {
@@ -131,6 +131,7 @@ if { $bCheckIPs == 1 } {
    set list_check_ips "\ 
 xilinx.com:ip:processing_system7:5.5\
 xilinx.com:ip:proc_sys_reset:5.0\
+xilinx.com:ip:xlslice:1.0\
 "
 
    set list_ips_missing ""
@@ -234,10 +235,14 @@ proc create_hier_cell_pdp8i { parentCell nameHier } {
 
   # Create pins
   create_bd_pin -dir I -type clk S_AXI_ACLK
-  create_bd_pin -dir I -type rst S_AXI_ARESETN
+  create_bd_pin -dir I -type rst S_AXI_ARESETN_0
+  create_bd_pin -dir I -type rst S_AXI_ARESETN_1
+  create_bd_pin -dir I -type rst S_AXI_ARESETN_2
   create_bd_pin -dir IO -from 11 -to 0 column_io_0
   create_bd_pin -dir O -type intr io_irq
   create_bd_pin -dir O -from 7 -to 0 led_row_out_0
+  create_bd_pin -dir I -type rst rstn_0
+  create_bd_pin -dir I -type rst rstn_1
   create_bd_pin -dir O -from 2 -to 0 switch_row_out_0
 
   # Create instance: axi_bram, and set properties
@@ -294,10 +299,7 @@ proc create_hier_cell_pdp8i { parentCell nameHier } {
      catch {common::send_msg_id "BD_TCL-106" "ERROR" "Unable to referenced block <$block_name>. Please add the files for ${block_name}'s definition into the project."}
      return 1
    }
-    set_property -dict [ list \
-   CONFIG.clk_frq {50000000} \
- ] $pidp8_console
-
+  
   # Create instance: xilinx_console_driver, and set properties
   set block_name xilinx_console_driver
   set block_cell_name xilinx_console_driver
@@ -317,22 +319,11 @@ proc create_hier_cell_pdp8i { parentCell nameHier } {
   # Create port connections
   connect_bd_net -net Net [get_bd_pins column_io_0] [get_bd_pins xilinx_console_driver/column_io]
   connect_bd_net -net S_AXI_ACLK_1 [get_bd_pins S_AXI_ACLK] [get_bd_pins axi_bram/S_AXI_ACLK] [get_bd_pins console_mux/S_AXI_ACLK] [get_bd_pins io_controller/S_AXI_ACLK] [get_bd_pins pdp8/clk] [get_bd_pins pidp8_console/clk] [get_bd_pins xilinx_console_driver/clk]
-  connect_bd_net -net S_AXI_ARESETN_1 [get_bd_pins S_AXI_ARESETN] [get_bd_pins axi_bram/S_AXI_ARESETN] [get_bd_pins console_mux/S_AXI_ARESETN] [get_bd_pins io_controller/S_AXI_ARESETN] [get_bd_pins pdp8/rstn] [get_bd_pins pidp8_console/rstn]
+  connect_bd_net -net S_AXI_ARESETN_0_1 [get_bd_pins S_AXI_ARESETN_0] [get_bd_pins console_mux/S_AXI_ARESETN]
+  connect_bd_net -net S_AXI_ARESETN_1_1 [get_bd_pins S_AXI_ARESETN_1] [get_bd_pins axi_bram/S_AXI_ARESETN]
+  connect_bd_net -net S_AXI_ARESETN_2_1 [get_bd_pins S_AXI_ARESETN_2] [get_bd_pins io_controller/S_AXI_ARESETN]
   connect_bd_net -net axi_bram_data_out [get_bd_pins axi_bram/data_out] [get_bd_pins pdp8/mem_in_data]
-  connect_bd_net -net console_mux_led_accu_cons [get_bd_pins console_mux/led_accu_cons] [get_bd_pins pidp8_console/led_accu]
-  connect_bd_net -net console_mux_led_data_field_cons [get_bd_pins console_mux/led_data_field_cons] [get_bd_pins pidp8_console/led_data_field]
-  connect_bd_net -net console_mux_led_inst_field_cons [get_bd_pins console_mux/led_inst_field_cons] [get_bd_pins pidp8_console/led_inst_field]
-  connect_bd_net -net console_mux_led_instruction_cons [get_bd_pins console_mux/led_instruction_cons] [get_bd_pins pidp8_console/led_instruction]
-  connect_bd_net -net console_mux_led_ion_cons [get_bd_pins console_mux/led_ion_cons] [get_bd_pins pidp8_console/led_ion]
-  connect_bd_net -net console_mux_led_link_cons [get_bd_pins console_mux/led_link_cons] [get_bd_pins pidp8_console/led_link]
-  connect_bd_net -net console_mux_led_mem_addr_cons [get_bd_pins console_mux/led_mem_addr_cons] [get_bd_pins pidp8_console/led_mem_addr]
-  connect_bd_net -net console_mux_led_mem_buf_cons [get_bd_pins console_mux/led_mem_buf_cons] [get_bd_pins pidp8_console/led_mem_buf]
-  connect_bd_net -net console_mux_led_mqr_cons [get_bd_pins console_mux/led_mqr_cons] [get_bd_pins pidp8_console/led_mqr]
-  connect_bd_net -net console_mux_led_pause_cons [get_bd_pins console_mux/led_pause_cons] [get_bd_pins pidp8_console/led_pause]
-  connect_bd_net -net console_mux_led_pc_cons [get_bd_pins console_mux/led_pc_cons] [get_bd_pins pidp8_console/led_pc]
-  connect_bd_net -net console_mux_led_run_cons [get_bd_pins console_mux/led_run_cons] [get_bd_pins pidp8_console/led_run]
-  connect_bd_net -net console_mux_led_state_cons [get_bd_pins console_mux/led_state_cons] [get_bd_pins pidp8_console/led_state]
-  connect_bd_net -net console_mux_led_step_counter_cons [get_bd_pins console_mux/led_step_counter_cons] [get_bd_pins pidp8_console/led_step_counter]
+  connect_bd_net -net console_mux_lamp_brightness_cons [get_bd_pins console_mux/lamp_brightness_cons] [get_bd_pins pidp8_console/lamp_brightness]
   connect_bd_net -net console_mux_switch_cont_pdp [get_bd_pins console_mux/switch_cont_pdp] [get_bd_pins pdp8/switch_cont]
   connect_bd_net -net console_mux_switch_data_field_pdp [get_bd_pins console_mux/switch_data_field_pdp] [get_bd_pins pdp8/switch_data_field]
   connect_bd_net -net console_mux_switch_dep_pdp [get_bd_pins console_mux/switch_dep_pdp] [get_bd_pins pdp8/switch_dep]
@@ -344,11 +335,22 @@ proc create_hier_cell_pdp8i { parentCell nameHier } {
   connect_bd_net -net console_mux_switch_start_pdp [get_bd_pins console_mux/switch_start_pdp] [get_bd_pins pdp8/switch_start]
   connect_bd_net -net console_mux_switch_stop_pdp [get_bd_pins console_mux/switch_stop_pdp] [get_bd_pins pdp8/switch_stop]
   connect_bd_net -net console_mux_switch_swr_pdp [get_bd_pins console_mux/switch_swr_pdp] [get_bd_pins pdp8/switch_swr]
+  connect_bd_net -net io_controller_brk_ca_inc [get_bd_pins io_controller/brk_ca_inc] [get_bd_pins pdp8/brk_ca_inc]
+  connect_bd_net -net io_controller_brk_data [get_bd_pins io_controller/brk_data] [get_bd_pins pdp8/brk_data]
+  connect_bd_net -net io_controller_brk_data_add [get_bd_pins io_controller/brk_data_add] [get_bd_pins pdp8/brk_data_add]
+  connect_bd_net -net io_controller_brk_data_ext [get_bd_pins io_controller/brk_data_ext] [get_bd_pins pdp8/brk_data_ext]
+  connect_bd_net -net io_controller_brk_data_in [get_bd_pins io_controller/brk_data_in] [get_bd_pins pdp8/brk_data_in]
+  connect_bd_net -net io_controller_brk_mb_inc [get_bd_pins io_controller/brk_mb_inc] [get_bd_pins pdp8/brk_mb_inc]
+  connect_bd_net -net io_controller_brk_rqst [get_bd_pins io_controller/brk_rqst] [get_bd_pins pdp8/brk_rqst]
+  connect_bd_net -net io_controller_brk_three_cycle [get_bd_pins io_controller/brk_three_cycle] [get_bd_pins pdp8/brk_three_cycle]
   connect_bd_net -net io_controller_io_ac_clear [get_bd_pins io_controller/io_ac_clear] [get_bd_pins pdp8/io_ac_clear]
   connect_bd_net -net io_controller_io_bus_out [get_bd_pins io_controller/io_bus_out] [get_bd_pins pdp8/io_bus_in]
   connect_bd_net -net io_controller_io_skip [get_bd_pins io_controller/io_skip] [get_bd_pins pdp8/io_skip]
   connect_bd_net -net io_controller_pdp_irq [get_bd_pins io_controller/pdp_irq] [get_bd_pins pdp8/int_rqst]
   connect_bd_net -net io_controller_soc_irq [get_bd_pins io_irq] [get_bd_pins io_controller/soc_irq]
+  connect_bd_net -net pdp8_brk_ack [get_bd_pins io_controller/brk_ack] [get_bd_pins pdp8/brk_ack]
+  connect_bd_net -net pdp8_brk_done [get_bd_pins io_controller/brk_done] [get_bd_pins pdp8/brk_done]
+  connect_bd_net -net pdp8_brk_wc_overflow [get_bd_pins io_controller/brk_wc_overflow] [get_bd_pins pdp8/brk_wc_overflow]
   connect_bd_net -net pdp8_io_ac [get_bd_pins io_controller/io_ac] [get_bd_pins pdp8/io_ac]
   connect_bd_net -net pdp8_io_iop [get_bd_pins io_controller/iop] [get_bd_pins pdp8/io_iop]
   connect_bd_net -net pdp8_io_mb [get_bd_pins io_controller/io_mb] [get_bd_pins pdp8/io_mb]
@@ -384,6 +386,8 @@ proc create_hier_cell_pdp8i { parentCell nameHier } {
   connect_bd_net -net pidp8_console_switch_start [get_bd_pins console_mux/switch_start_cons] [get_bd_pins pidp8_console/switch_start]
   connect_bd_net -net pidp8_console_switch_stop [get_bd_pins console_mux/switch_stop_cons] [get_bd_pins pidp8_console/switch_stop]
   connect_bd_net -net pidp8_console_switch_swr [get_bd_pins console_mux/switch_swr_cons] [get_bd_pins pidp8_console/switch_swr]
+  connect_bd_net -net rstn_0_1 [get_bd_pins rstn_0] [get_bd_pins pidp8_console/rstn]
+  connect_bd_net -net rstn_1_1 [get_bd_pins rstn_1] [get_bd_pins pdp8/rstn]
   connect_bd_net -net xilinx_console_driver_column_out [get_bd_pins pidp8_console/column_in] [get_bd_pins xilinx_console_driver/column_out]
   connect_bd_net -net xilinx_console_driver_led_row_out [get_bd_pins led_row_out_0] [get_bd_pins xilinx_console_driver/led_row_out]
   connect_bd_net -net xilinx_console_driver_switch_row_out [get_bd_pins switch_row_out_0] [get_bd_pins xilinx_console_driver/switch_row_out]
@@ -747,6 +751,63 @@ proc create_root_design { parentCell } {
 
   # Create instance: rst_ps7, and set properties
   set rst_ps7 [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 rst_ps7 ]
+  set_property -dict [ list \
+   CONFIG.C_NUM_PERP_ARESETN {6} \
+ ] $rst_ps7
+
+  # Create instance: xlslice_0, and set properties
+  set xlslice_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_0 ]
+  set_property -dict [ list \
+   CONFIG.DIN_FROM {5} \
+   CONFIG.DIN_TO {5} \
+   CONFIG.DIN_WIDTH {6} \
+   CONFIG.DOUT_WIDTH {1} \
+ ] $xlslice_0
+
+  # Create instance: xlslice_1, and set properties
+  set xlslice_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_1 ]
+  set_property -dict [ list \
+   CONFIG.DIN_FROM {4} \
+   CONFIG.DIN_TO {4} \
+   CONFIG.DIN_WIDTH {6} \
+   CONFIG.DOUT_WIDTH {1} \
+ ] $xlslice_1
+
+  # Create instance: xlslice_2, and set properties
+  set xlslice_2 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_2 ]
+  set_property -dict [ list \
+   CONFIG.DIN_FROM {3} \
+   CONFIG.DIN_TO {3} \
+   CONFIG.DIN_WIDTH {6} \
+   CONFIG.DOUT_WIDTH {1} \
+ ] $xlslice_2
+
+  # Create instance: xlslice_3, and set properties
+  set xlslice_3 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_3 ]
+  set_property -dict [ list \
+   CONFIG.DIN_FROM {2} \
+   CONFIG.DIN_TO {2} \
+   CONFIG.DIN_WIDTH {6} \
+   CONFIG.DOUT_WIDTH {1} \
+ ] $xlslice_3
+
+  # Create instance: xlslice_4, and set properties
+  set xlslice_4 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_4 ]
+  set_property -dict [ list \
+   CONFIG.DIN_FROM {1} \
+   CONFIG.DIN_TO {1} \
+   CONFIG.DIN_WIDTH {6} \
+   CONFIG.DOUT_WIDTH {1} \
+ ] $xlslice_4
+
+  # Create instance: xlslice_5, and set properties
+  set xlslice_5 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_5 ]
+  set_property -dict [ list \
+   CONFIG.DIN_FROM {0} \
+   CONFIG.DIN_TO {0} \
+   CONFIG.DIN_WIDTH {6} \
+   CONFIG.DOUT_WIDTH {1} \
+ ] $xlslice_5
 
   # Create interface connections
   connect_bd_intf_net -intf_net processing_system7_0_DDR [get_bd_intf_ports DDR] [get_bd_intf_pins processing_system7/DDR]
@@ -760,21 +821,26 @@ proc create_root_design { parentCell } {
   connect_bd_net -net Net [get_bd_ports column] [get_bd_pins pdp8i/column_io_0]
   connect_bd_net -net processing_system7_0_FCLK_CLK0 [get_bd_pins pdp8i/S_AXI_ACLK] [get_bd_pins processing_system7/FCLK_CLK0] [get_bd_pins processing_system7/M_AXI_GP0_ACLK] [get_bd_pins ps7_0_axi_periph/ACLK] [get_bd_pins ps7_0_axi_periph/M00_ACLK] [get_bd_pins ps7_0_axi_periph/M01_ACLK] [get_bd_pins ps7_0_axi_periph/M02_ACLK] [get_bd_pins ps7_0_axi_periph/S00_ACLK] [get_bd_pins rst_ps7/slowest_sync_clk]
   connect_bd_net -net processing_system7_0_FCLK_RESET0_N [get_bd_pins processing_system7/FCLK_RESET0_N] [get_bd_pins rst_ps7/ext_reset_in]
-  connect_bd_net -net rst_ps7_0_50M_peripheral_aresetn [get_bd_pins pdp8i/S_AXI_ARESETN] [get_bd_pins ps7_0_axi_periph/ARESETN] [get_bd_pins ps7_0_axi_periph/M00_ARESETN] [get_bd_pins ps7_0_axi_periph/M01_ARESETN] [get_bd_pins ps7_0_axi_periph/M02_ARESETN] [get_bd_pins ps7_0_axi_periph/S00_ARESETN] [get_bd_pins rst_ps7/peripheral_aresetn]
+  connect_bd_net -net rst_ps7_peripheral_aresetn [get_bd_pins rst_ps7/peripheral_aresetn] [get_bd_pins xlslice_0/Din] [get_bd_pins xlslice_1/Din] [get_bd_pins xlslice_2/Din] [get_bd_pins xlslice_3/Din] [get_bd_pins xlslice_4/Din] [get_bd_pins xlslice_5/Din]
   connect_bd_net -net socdp8_led_row_out_0 [get_bd_ports led_row] [get_bd_pins pdp8i/led_row_out_0]
   connect_bd_net -net socdp8_soc_irq_0 [get_bd_pins pdp8i/io_irq] [get_bd_pins processing_system7/IRQ_F2P]
   connect_bd_net -net socdp8_switch_row_out_0 [get_bd_ports switch_row] [get_bd_pins pdp8i/switch_row_out_0]
+  connect_bd_net -net xlslice_0_Dout [get_bd_pins ps7_0_axi_periph/ARESETN] [get_bd_pins ps7_0_axi_periph/S00_ARESETN] [get_bd_pins xlslice_0/Dout]
+  connect_bd_net -net xlslice_1_Dout [get_bd_pins pdp8i/S_AXI_ARESETN_0] [get_bd_pins ps7_0_axi_periph/M00_ARESETN] [get_bd_pins xlslice_1/Dout]
+  connect_bd_net -net xlslice_2_Dout [get_bd_pins pdp8i/S_AXI_ARESETN_1] [get_bd_pins ps7_0_axi_periph/M01_ARESETN] [get_bd_pins xlslice_2/Dout]
+  connect_bd_net -net xlslice_3_Dout [get_bd_pins pdp8i/S_AXI_ARESETN_2] [get_bd_pins ps7_0_axi_periph/M02_ARESETN] [get_bd_pins xlslice_3/Dout]
+  connect_bd_net -net xlslice_4_Dout [get_bd_pins pdp8i/rstn_0] [get_bd_pins xlslice_4/Dout]
+  connect_bd_net -net xlslice_5_Dout [get_bd_pins pdp8i/rstn_1] [get_bd_pins xlslice_5/Dout]
 
   # Create address segments
   create_bd_addr_seg -range 0x00020000 -offset 0x43C20000 [get_bd_addr_spaces processing_system7/Data] [get_bd_addr_segs pdp8i/axi_bram/S_AXI/reg0] SEG_axi_bram_0_reg0
   create_bd_addr_seg -range 0x00001000 -offset 0x43C10000 [get_bd_addr_spaces processing_system7/Data] [get_bd_addr_segs pdp8i/console_mux/S_AXI/reg0] SEG_console_mux_0_reg0
-  create_bd_addr_seg -range 0x00001000 -offset 0x43C00000 [get_bd_addr_spaces processing_system7/Data] [get_bd_addr_segs pdp8i/io_controller/S_AXI/reg0] SEG_io_controller_0_reg0
+  create_bd_addr_seg -range 0x00002000 -offset 0x43C00000 [get_bd_addr_spaces processing_system7/Data] [get_bd_addr_segs pdp8i/io_controller/S_AXI/reg0] SEG_io_controller_0_reg0
 
 
   # Restore current instance
   current_bd_instance $oldCurInst
 
-  validate_bd_design
   save_bd_design
 }
 # End of create_root_design()
@@ -786,4 +852,6 @@ proc create_root_design { parentCell } {
 
 create_root_design ""
 
+
+common::send_msg_id "BD_TCL-1000" "WARNING" "This Tcl script was generated from a block design that has not been validated. It is possible that design <$design_name> may result in errors during validation."
 
