@@ -18,57 +18,66 @@
 
 import * as React from 'react';
 import { PDP8 } from './system/PDP8';
+import { PDP8Model } from '../models/PDP8Model';
+import { observer } from 'mobx-react-lite';
 require('bulma/css/bulma.css')
 
-export class App extends React.PureComponent {
-    public render(): JSX.Element {
-        return (
-            <React.Fragment>
-                <Header />
+export interface AppProps {
+    pdp8: PDP8Model;
+}
 
-                <main>
-                    <PDP8 />
-                </main>
-
-                <Footer />
-            </React.Fragment>
-        );
+export const App: React.FunctionComponent<AppProps> = observer((props) => {
+    if (!props.pdp8.ready) {
+        return <ConnectingInfo />
     }
-}
 
-function Header(): JSX.Element {
     return (
-        <header>
-            <div className='hero is-primary is-small'>
-                <div className='hero-body'>
-                    <h1 className='title'>SoCDP-8</h1>
-                    <h2 className='subtitle'>A PDP-8/I on a chip</h2>
-                </div>
-            </div>
-            <nav className='navbar is-dark' role='navigation'>
-                <div className='navbar-menu'>
-                    <div className='navbar-start'>
-                        <a className='navbar-item'>
-                            Test
-                        </a>
-                        <a className='navbar-item'>
-                            Test
-                        </a>
-                    </div>
-                </div>
-            </nav>
-        </header>
+        <React.Fragment>
+            <Header />
+            <main>
+                <PDP8 pdp8={props.pdp8} />
+            </main>
+            <Footer />
+        </React.Fragment>
     );
-}
+});
 
-function Footer(): JSX.Element {
-    return (
-        <footer className='footer'>
-            <div className='content has-text-centered'>
+const ConnectingInfo: React.FunctionComponent = () =>
+    <section className='section'>
+        <div className='container'>
+            <div className='box'>
+                <h1 className='title'>Connecting...</h1>
                 <p>
-                    Copyright 2019 by Folke Will
+                    Please wait.
                 </p>
             </div>
-        </footer>
-    );
-}
+        </div>
+    </section>
+
+const Header: React.FunctionComponent = () =>
+    <header>
+        <div className='hero is-primary is-small'>
+            <div className='hero-body'>
+                <h1 className='title'>SoCDP-8</h1>
+                <h2 className='subtitle'>Your PDP-8/I on a chip.</h2>
+            </div>
+        </div>
+        <nav className='navbar is-dark' role='navigation'>
+            <div className='navbar-menu'>
+                <div className='navbar-start'>
+                    <a className='navbar-item'>
+                        System
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+const Footer: React.FunctionComponent = () =>
+    <footer className='footer'>
+        <div className='content has-text-centered'>
+            <p>
+                Copyright 2019 by Folke Will
+            </p>
+        </div>
+    </footer>

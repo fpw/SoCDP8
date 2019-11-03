@@ -26,7 +26,7 @@ import { PR8Model } from './peripherals/PR8Model';
 import { TC08Model } from './peripherals/TC08Model';
 
 export class PDP8Model {
-    private readonly BASE_URL = 'http://192.168.178.65:8000';
+    private readonly BASE_URL = '';
 
     private socket: SocketIOClient.Socket;
 
@@ -34,10 +34,18 @@ export class PDP8Model {
     private frontPanel?: FrontPanelState;
 
     @observable
-    private peripherals: Map<number, PeripheralModel> = new Map();
+    private peripheralModels: Map<number, PeripheralModel> = new Map();
 
     constructor() {
         this.socket = io.connect(this.BASE_URL);
+
+        this.socket.on('connect', async () => {
+            await this.onConnected();
+        });
+
+        this.socket.on('disconnect', async() => {
+            await this.onDisconnected();
+        });
 
         this.socket.on('console-state', (state: FrontPanelState) => {
             this.onFrontPanelChange(state);
@@ -48,12 +56,18 @@ export class PDP8Model {
             const action = data.action as string;
             this.onPeripheralEvent(devId, action, data);
         });
+    }
 
-        setImmediate(async () => {
-            const response = await fetch(this.BASE_URL + '/peripherals');
-            const list = await response.json() as PeripheralList;
-            this.setPeripherals(list);
-        });
+    private async onConnected(): Promise<void> {
+        const response = await fetch(this.BASE_URL + '/peripherals');
+        const list = await response.json() as PeripheralList;
+        this.setPeripherals(list);
+    }
+
+    @action
+    private async onDisconnected(): Promise<void> {
+        this.frontPanel = undefined;
+        this.peripheralModels.clear();
     }
 
     @action
@@ -80,12 +94,12 @@ export class PDP8Model {
                     continue;
             }
 
-            this.peripherals.set(entry.id, peripheral);
+            this.peripheralModels.set(entry.id, peripheral);
         }
     }
 
     private onPeripheralEvent(devId: number, action: string, data: any) {
-        const peripheral = this.peripherals.get(devId);
+        const peripheral = this.peripheralModels.get(devId);
         if (!peripheral) {
             return;
         }
@@ -103,9 +117,9 @@ export class PDP8Model {
     }
 
     @computed
-    public get peripheralModels(): readonly PeripheralModel[] {
+    public get peripherals(): PeripheralModel[] {
         let res: PeripheralModel[] = [];
-        this.peripherals.forEach(entry => {
+        this.peripheralModels.forEach(entry => {
             res.push(entry);
         })
         return res;
@@ -120,7 +134,7 @@ export class PDP8Model {
         return true;
     }
 
-    public setPanelSwitch(sw: string, state: boolean): void {
+    public readonly setPanelSwitch = async (sw: string, state: boolean): Promise<void> => {
         this.socket.emit('console-switch', {'switch': sw, 'state': state});
     }
 }

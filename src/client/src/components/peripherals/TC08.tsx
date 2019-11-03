@@ -18,14 +18,6 @@
 
 import * as React from "react";
 
-export interface TC08Props {
-}
-
-export class TC08 extends React.PureComponent<TC08Props> {
-    public render(): JSX.Element {
-        return (
-            <section>
-            </section>
-        );
-    }
-}
+export const TC08: React.FunctionComponent = () =>
+    <section>
+    </section>

@@ -17,77 +17,71 @@
  */
 
 import * as React from "react";
+import { observer } from "mobx-react-lite";
 import { FrontPanel } from "./FrontPanel";
-import { ASR33 } from "../peripherals/ASR33";
-import { PR8 } from "../peripherals/PR8";
-import { PDP8Model } from '../../models/PDP8Model';
-import { inject, observer } from "mobx-react";
 import { ASR33Model } from '../../models/peripherals/ASR33Model';
+import { ASR33 } from "../peripherals/ASR33";
 import { PR8Model } from '../../models/peripherals/PR8Model';
+import { PR8 } from "../peripherals/PR8";
 import { TC08Model } from '../../models/peripherals/TC08Model';
 import { TC08 } from '../peripherals/TC08';
+import { PDP8Model } from '../../models/PDP8Model';
+import { PeripheralModel } from '../../models/peripherals/PeripheralModel';
 
 export interface PDP8Props {
-    pdp8?: PDP8Model;
+    pdp8: PDP8Model;
 }
 
-@inject('pdp8')
-@observer
-export class PDP8 extends React.PureComponent<PDP8Props> {
-    constructor(props: PDP8Props) {
-        super(props);
-    }
+export const PDP8: React.FunctionComponent<PDP8Props> = observer((props) =>
+    <section className='section'>
+        <div className='container'>
+            <div className='box'>
+                <h1 className='title'>PDP-8/I</h1>
+                <FrontPanel lamps={props.pdp8.panel.lamps}
+                            switches={props.pdp8.panel.switches}
+                            onSwitch={props.pdp8.setPanelSwitch}
+                />
+            </div>
+            <PeripheralList list={props.pdp8.peripherals} />
+        </div>
+    </section>);
 
-    public render(): JSX.Element {
-        const pdp8 = this.props.pdp8!;
-
-        if (!pdp8.ready) {
-            return <section>Loading...</section>;
+const PeripheralList: React.FunctionComponent<{list: PeripheralModel[]}> = ({list}) => {
+    const components = list.map(dev => {
+        if (dev instanceof ASR33Model) {
+            return <ASR33Box model={dev} />
+        } else if (dev instanceof PR8Model) {
+            return <PR8Box model={dev} />
+        } else if (dev instanceof TC08Model) {
+            return <TC08Box model={dev} />
+        } else {
+            return <div />;
         }
-
-        const peripherals = pdp8.peripheralModels;
-        const components = peripherals.map(dev => {
-            if (dev instanceof ASR33Model) {
-                return (
-                    <div className='box'>
-                        <h1 className='title'>ASR-33</h1>
-                        <ASR33
-                            onReaderKey={dev.appendReaderKey.bind(dev)}
-                            onReaderClear={dev.clearPunch.bind(dev)}
-                            onTapeLoad={dev.loadTape.bind(dev)}
-                            punchData={dev.punchOutput} />
-                    </div>
-                );
-            } else if (dev instanceof PR8Model) {
-                return (
-                    <div className='box'>
-                        <h1 className='title'>PR-8/I</h1>
-                        <PR8 onTapeLoad={dev.loadTape.bind(dev)} />
-                    </div>
-                );
-            } else if (dev instanceof TC08Model) {
-                return (
-                    <div className='box'>
-                        <h1 className='title'>TC08</h1>
-                        <TC08 />
-                    </div>
-                );
-            }
-        });
-
-        return (
-            <section className='section'>
-                <div className='container'>
-                    <div className='box'>
-                        <h1 className='title'>PDP-8/I</h1>
-                        <FrontPanel lamps={pdp8.panel.lamps}
-                                    switches={pdp8.panel.switches}
-                                    onSwitch={pdp8.setPanelSwitch.bind(pdp8)}
-                        />
-                    </div>
-                    { components }
-                </div>
-            </section>
-        );
-    }
+    });
+    return <React.Fragment>{components}</React.Fragment>
 }
+
+const PeripheralBox: React.FunctionComponent<{name: string, children: React.ReactNode}> = ({name, children}) =>
+    <div className='box'>
+        <h1 className='title'>{name}</h1>
+        { children }
+    </div>
+
+const ASR33Box: React.FunctionComponent<{model: ASR33Model}> = observer(({model}) =>
+    <PeripheralBox name='ASR-33'>
+        <ASR33
+            onReaderKey={model.appendReaderKey}
+            onReaderClear={model.clearPunch}
+            onTapeLoad={model.loadTape}
+            punchData={model.punchOutput} />
+    </PeripheralBox>);
+
+const PR8Box: React.FunctionComponent<{model: PR8Model}> = observer(({model}) =>
+    <PeripheralBox name='PR-8/I'>
+        <PR8 onTapeLoad={model.loadTape} />
+    </PeripheralBox>);
+
+const TC08Box: React.FunctionComponent<{model: TC08Model}> = observer(({model}) =>
+    <PeripheralBox name='TC08'>
+        <TC08 />
+    </PeripheralBox>);

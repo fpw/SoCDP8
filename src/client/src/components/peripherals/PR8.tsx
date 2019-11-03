@@ -22,32 +22,27 @@ export interface PR8Props {
     onTapeLoad(tape: File): void;
 }
 
-export class PR8 extends React.PureComponent<PR8Props> {
-    public render(): JSX.Element {
-        return (
-            <section>
-                <div className='field has-addons'>
-                    <div className='file'>
-                        <label className='file-label'>
-                            <input className='file-input' type='file' onChange={this.onLoadFile} />
-                            <span className='file-cta'>
-                                <span className='file-label'>
-                                    Attach Tape
-                                </span>
-                            </span>
-                        </label>
-                    </div>
-                </div>
-            </section>
-        );
+function onLoadFile(evt: React.ChangeEvent,  props: PR8Props): void {
+    const target = evt.target as HTMLInputElement;
+    if (!target.files || target.files.length < 1) {
+        return;
     }
 
-    private readonly onLoadFile = (evt: React.ChangeEvent): void => {
-        const target = evt.target as HTMLInputElement;
-        if (!target.files || target.files.length < 1) {
-            return;
-        }
-        
-        this.props.onTapeLoad(target.files[0]);
-    }
+    props.onTapeLoad(target.files[0]);
 }
+
+export const PR8: React.FunctionComponent<PR8Props> = (props) =>
+    <section>
+        <div className='field has-addons'>
+            <div className='file'>
+                <label className='file-label'>
+                    <input className='file-input' type='file' onChange={evt => onLoadFile(evt, props)} />
+                    <span className='file-cta'>
+                        <span className='file-label'>
+                            Attach Tape
+                        </span>
+                    </span>
+                </label>
+            </div>
+        </div>
+    </section>

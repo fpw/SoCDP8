@@ -22,7 +22,7 @@ export class PR8Model extends PeripheralModel {
     public onPeripheralAction(action: string, data: any): void {
     }
 
-    public async loadTape(tape: File) {
+    public readonly loadTape = async (tape: File): Promise<void> => {
         let data = await this.loadFile(tape);
         this.socket.emit('peripheral-action', {
             devId: this.id,
