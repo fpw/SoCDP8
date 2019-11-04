@@ -17,7 +17,7 @@
  */
 
 import * as React from 'react';
-import { PDP8 } from './system/PDP8';
+import { PDP8, PDP8Props } from './system/PDP8';
 import { PDP8Model } from '../models/PDP8Model';
 import { observer } from 'mobx-react-lite';
 require('bulma/css/bulma.css')
@@ -33,7 +33,7 @@ export const App: React.FunctionComponent<AppProps> = observer((props) => {
 
     return (
         <React.Fragment>
-            <Header />
+            <Header pdp8={props.pdp8} />
             <main>
                 <PDP8 pdp8={props.pdp8} />
             </main>
@@ -54,7 +54,7 @@ const ConnectingInfo: React.FunctionComponent = () =>
         </div>
     </section>
 
-const Header: React.FunctionComponent = () =>
+const Header: React.FunctionComponent<PDP8Props> = (props) =>
     <header>
         <div className='hero is-primary is-small'>
             <div className='hero-body'>
@@ -65,9 +65,25 @@ const Header: React.FunctionComponent = () =>
         <nav className='navbar is-dark' role='navigation'>
             <div className='navbar-menu'>
                 <div className='navbar-start'>
-                    <a className='navbar-item'>
-                        System
-                    </a>
+                    <div className='navbar-item has-dropdown is-hoverable'>
+                        <a className='navbar-link'>
+                            Core Memory
+                        </a>
+                        <div className='navbar-dropdown'>
+                            <a className='navbar-item' onClick={() => props.pdp8.core.clear()}>
+                                Clear
+                            </a>
+                            <a className='navbar-item' onClick={() => props.pdp8.core.storeRIMLoader()}>
+                                Store RIM Loader
+                            </a>
+                            <a className='navbar-item' onClick={() => props.pdp8.core.storeOS8Loader()}>
+                                Store OS/8 TC08 Loader
+                            </a>
+                            <a className='navbar-item' onClick={() => props.pdp8.core.storeBlinker()}>
+                                Store AC/MQ Blinker
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>

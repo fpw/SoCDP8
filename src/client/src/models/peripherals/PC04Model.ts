@@ -18,7 +18,7 @@
 
 import { PeripheralModel } from './PeripheralModel';
 
-export class PR8Model extends PeripheralModel {
+export class PC04Model extends PeripheralModel {
     public onPeripheralAction(action: string, data: any): void {
     }
 

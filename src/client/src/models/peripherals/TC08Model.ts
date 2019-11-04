@@ -21,4 +21,16 @@ import { PeripheralModel } from './PeripheralModel';
 export class TC08Model extends PeripheralModel {
     public onPeripheralAction(action: string, data: any): void {
     }
+
+    public readonly loadTape = async (tape: File): Promise<void> => {
+        let data = await this.loadFile(tape);
+        this.socket.emit('peripheral-action', {
+            devId: this.id,
+            action: 'load-tape',
+            data: {
+                unit: 0,
+                tapeData: data
+            }
+        });
+    }
 }

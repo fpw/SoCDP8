@@ -22,7 +22,7 @@ import { DataBreakRequest, DataBreakReply } from "./DataBreak";
 export enum DeviceType {
     NULL            = 0,
     ASR33           = 1,
-    PR8             = 2,
+    PC04            = 2,
     TC08            = 3,
 }
 

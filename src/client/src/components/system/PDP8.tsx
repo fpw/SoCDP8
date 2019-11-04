@@ -21,8 +21,8 @@ import { observer } from "mobx-react-lite";
 import { FrontPanel } from "./FrontPanel";
 import { ASR33Model } from '../../models/peripherals/ASR33Model';
 import { ASR33 } from "../peripherals/ASR33";
-import { PR8Model } from '../../models/peripherals/PR8Model';
-import { PR8 } from "../peripherals/PR8";
+import { PC04Model } from '../../models/peripherals/PC04Model';
+import { PC04 } from "../peripherals/PC04";
 import { TC08Model } from '../../models/peripherals/TC08Model';
 import { TC08 } from '../peripherals/TC08';
 import { PDP8Model } from '../../models/PDP8Model';
@@ -50,8 +50,8 @@ const PeripheralList: React.FunctionComponent<{list: PeripheralModel[]}> = ({lis
     const components = list.map(dev => {
         if (dev instanceof ASR33Model) {
             return <ASR33Box model={dev} />
-        } else if (dev instanceof PR8Model) {
-            return <PR8Box model={dev} />
+        } else if (dev instanceof PC04Model) {
+            return <PC04Box model={dev} />
         } else if (dev instanceof TC08Model) {
             return <TC08Box model={dev} />
         } else {
@@ -63,12 +63,12 @@ const PeripheralList: React.FunctionComponent<{list: PeripheralModel[]}> = ({lis
 
 const PeripheralBox: React.FunctionComponent<{name: string, children: React.ReactNode}> = ({name, children}) =>
     <div className='box'>
-        <h1 className='title'>{name}</h1>
+        <h2 className='subtitle is-3'>{name}</h2>
         { children }
     </div>
 
 const ASR33Box: React.FunctionComponent<{model: ASR33Model}> = observer(({model}) =>
-    <PeripheralBox name='ASR-33'>
+    <PeripheralBox name='ASR-33: Teletype'>
         <ASR33
             onReaderKey={model.appendReaderKey}
             onReaderClear={model.clearPunch}
@@ -76,12 +76,12 @@ const ASR33Box: React.FunctionComponent<{model: ASR33Model}> = observer(({model}
             punchData={model.punchOutput} />
     </PeripheralBox>);
 
-const PR8Box: React.FunctionComponent<{model: PR8Model}> = observer(({model}) =>
-    <PeripheralBox name='PR-8/I'>
-        <PR8 onTapeLoad={model.loadTape} />
+const PC04Box: React.FunctionComponent<{model: PC04Model}> = observer(({model}) =>
+    <PeripheralBox name='PC04: High-Speed Paper-Tape Reader and Punch'>
+        <PC04 onTapeLoad={model.loadTape} />
     </PeripheralBox>);
 
 const TC08Box: React.FunctionComponent<{model: TC08Model}> = observer(({model}) =>
-    <PeripheralBox name='TC08'>
-        <TC08 />
+    <PeripheralBox name='TC08: DECtape Control'>
+        <TC08 onTapeLoad={model.loadTape} />
     </PeripheralBox>);

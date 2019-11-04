@@ -73,15 +73,6 @@ export class TC08 extends Peripheral {
     constructor(private busNum: number) {
         super();
 
-        this.tapes[0] = {
-            data: readFileSync('/home/socdp8/os8.tu56'),
-            curBlock: 0,
-            blockState: BlockState.NOT_STARTED,
-            lastMotionAt: 0n,
-            moving: false,
-            direction: TapeDirection.FORWARD,
-        }
-
         this.state = {
             transportUnit: 0,
             direction: TapeDirection.FORWARD,
@@ -104,6 +95,23 @@ export class TC08 extends Peripheral {
     }
 
     public requestAction(action: string, data: any): void {
+        switch (action) {
+            case 'load-tape':
+                this.loadTape(data.unit, data.tapeData);
+                break;
+        }
+    }
+
+    private loadTape(unit: number, data: Buffer) {
+        console.log(`TC08: Tape loaded`);
+        this.tapes[unit] = {
+            data: data,
+            curBlock: 0,
+            blockState: BlockState.NOT_STARTED,
+            lastMotionAt: 0n,
+            moving: false,
+            direction: TapeDirection.FORWARD,
+        }
     }
 
     public async onTick(io: IOContext): Promise<void> {
@@ -124,11 +132,15 @@ export class TC08 extends Peripheral {
             this.lastRegA = regA;
 
             io.emitEvent('status-register-changed', regA);
+
+            if (!this.tapes[this.state.transportUnit]) {
+                console.error(`TC08: Invalid transport unit ${this.state.transportUnit}`);
+                this.setSelectError(io);
+                return;
+            }
         }
 
-        if (this.state.transportUnit >= this.tapes.length) {
-            console.error(`TC08: Invalid transport unit ${this.state.transportUnit}`);
-            this.setSelectError(io);
+        if (!this.tapes[this.state.transportUnit]) {
             return;
         }
 
@@ -140,11 +152,14 @@ export class TC08 extends Peripheral {
             this.state.run = false;
             this.clearMotionFlag(io);
             this.setEndOfTapeError(io);
-            tape.lastMotionAt = this.readSteadyClock();
-            tape.blockState = BlockState.NOT_STARTED;
             return;
         } else {
             tape.moving = this.state.run;
+            if (!tape.moving && this.state.run) {
+                // start moving
+                tape.lastMotionAt = this.readSteadyClock();
+                return;
+            }
         }
 
         if (tape.direction != this.state.direction) {
@@ -154,6 +169,7 @@ export class TC08 extends Peripheral {
             tape.direction = this.state.direction;
             tape.lastMotionAt = this.readSteadyClock();
             tape.blockState = BlockState.DATA_READ;
+            return;
         }
 
         try {
@@ -196,7 +212,7 @@ export class TC08 extends Peripheral {
                         }
                         break;
                     case BlockState.DATA_READ:
-                        if (durationMs > 15) {
+                        if (durationMs > 10) {
                             switch (tape.direction) {
                                 case TapeDirection.FORWARD:
                                     tape.curBlock++;
@@ -327,6 +343,7 @@ export class TC08 extends Peripheral {
     private clearMotionFlag(io: IOContext) {
         const regA = io.readRegister(DeviceRegister.REG_A);
         io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 7));
+        this.lastRegA = regA;
     }
 
     private setTimingError(io: IOContext) {

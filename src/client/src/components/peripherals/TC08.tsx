@@ -18,6 +18,30 @@
 
 import * as React from "react";
 
-export const TC08: React.FunctionComponent = () =>
+export interface TC08Props {
+    onTapeLoad(tape: File): void;
+}
+
+export const TC08: React.FunctionComponent<TC08Props> = (props) =>
     <section>
+        <div className='field has-addons'>
+            <div className='file'>
+                <label className='file-label'>
+                    <input className='file-input' type='file' onChange={evt => onLoadFile(evt, props)} />
+                    <span className='file-cta'>
+                        <span className='file-label'>
+                            Load DECtape
+                        </span>
+                    </span>
+                </label>
+            </div>
+        </div>
     </section>
+
+function onLoadFile(evt: React.ChangeEvent,  props: TC08Props): void {
+    const target = evt.target as HTMLInputElement;
+    if (!target.files || target.files.length < 1) {
+        return;
+    }
+    props.onTapeLoad(target.files[0]);
+}

@@ -22,13 +22,16 @@ import { observable, action, computed } from 'mobx'
 import { PeripheralList, DeviceType } from './PeripheralList';
 import { ASR33Model } from './peripherals/ASR33Model';
 import { PeripheralModel } from './peripherals/PeripheralModel';
-import { PR8Model } from './peripherals/PR8Model';
+import { PC04Model } from './peripherals/PC04Model';
 import { TC08Model } from './peripherals/TC08Model';
+import { CoreMemoryModel } from './CoreMemoryModel';
 
 export class PDP8Model {
     private readonly BASE_URL = '';
 
     private socket: SocketIOClient.Socket;
+
+    private coreMemory: CoreMemoryModel;
 
     @observable
     private frontPanel?: FrontPanelState;
@@ -38,6 +41,7 @@ export class PDP8Model {
 
     constructor() {
         this.socket = io.connect(this.BASE_URL);
+        this.coreMemory = new CoreMemoryModel(this.socket);
 
         this.socket.on('connect', async () => {
             await this.onConnected();
@@ -56,6 +60,10 @@ export class PDP8Model {
             const action = data.action as string;
             this.onPeripheralEvent(devId, action, data);
         });
+    }
+
+    public get core() {
+        return this.coreMemory;
     }
 
     private async onConnected(): Promise<void> {
@@ -84,8 +92,8 @@ export class PDP8Model {
                 case DeviceType.ASR33:
                     peripheral = new ASR33Model(entry.id, this.socket);
                     break;
-                case DeviceType.PR8:
-                    peripheral = new PR8Model(entry.id, this.socket);
+                case DeviceType.PC04:
+                    peripheral = new PC04Model(entry.id, this.socket);
                     break;
                 case DeviceType.TC08:
                     peripheral = new TC08Model(entry.id, this.socket);

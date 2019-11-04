@@ -96,7 +96,7 @@ action: process
         end if;
     end procedure;
 
-    procedure pr8 is
+    procedure pc04 is
     begin
         pdp8_irq_buf <= regB(1) or regD(1);
         soc_attention <= regB(0) or regD(0);
@@ -233,7 +233,7 @@ begin
 
     case dev_type is
         when x"01" => asr33;
-        when x"02" => pr8;
+        when x"02" => pc04;
         when x"03" => tc08;
         when others => null;
     end case;

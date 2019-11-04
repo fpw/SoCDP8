@@ -64,6 +64,7 @@ export class AppServer {
 
         client.on('console-switch', data => this.onConsoleSwitch(client, data));
         client.on('peripheral-action', data => this.onPeripheralAction(client, data));
+        client.on('core', (data) => this.onCoreMemoryAction(client, data));
 
         client.emit('console-state', this.pdp8.readConsoleState());
     }
@@ -95,6 +96,18 @@ export class AppServer {
         });
     }
 
+    private onCoreMemoryAction(client: io.Socket, data: any): void {
+        console.log(`${client.id}: Core memory action: ${data.action}`);
+        switch (data.action) {
+            case 'clear':
+                this.pdp8.clearCoreMemory();
+                break;
+            case 'write':
+                this.pdp8.writeCoreMemory(data.addr, data.fragment);
+                break;
+        }
+    }
+
     // JSON API
 
     private requestPeripherals(request: Request, response: Response): void {
@@ -104,6 +117,11 @@ export class AppServer {
 
     // State maintenance
 
+    private async checkDevices() {
+        await this.pdp8.checkDevices();
+        setTimeout(() => this.checkDevices(), this.DEVICE_CHECK_MS);
+    }
+
     private checkConsoleState() {
         const curState = this.pdp8.readConsoleState();
         if (!isDeepStrictEqual(this.lastConsoleState, curState)) {
@@ -112,11 +130,6 @@ export class AppServer {
         }
 
         setTimeout(() => this.checkConsoleState(), this.CONSOLE_CHECK_MS);
-    }
-
-    private async checkDevices() {
-        await this.pdp8.checkDevices();
-        setTimeout(() => this.checkDevices(), this.DEVICE_CHECK_MS);
     }
 
     private broadcastConsoleState(state: ConsoleState) {

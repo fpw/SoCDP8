@@ -18,7 +18,7 @@
 
 import { Peripheral, DeviceType, IOContext, DeviceRegister } from '../drivers/IO/Peripheral';
 
-export class PR8 extends Peripheral {
+export class PC04 extends Peripheral {
     private lastReadAt: bigint = 0n;
     private readerData: number[] = [];
 
@@ -27,7 +27,7 @@ export class PR8 extends Peripheral {
     }
 
     public getType(): DeviceType {
-        return DeviceType.PR8;
+        return DeviceType.PC04;
     }
 
     public getBusConnections(): Map<number, number> {

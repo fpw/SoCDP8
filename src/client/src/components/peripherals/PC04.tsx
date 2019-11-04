@@ -18,20 +18,11 @@
 
 import * as React from "react";
 
-export interface PR8Props {
+export interface PC04Props {
     onTapeLoad(tape: File): void;
 }
 
-function onLoadFile(evt: React.ChangeEvent,  props: PR8Props): void {
-    const target = evt.target as HTMLInputElement;
-    if (!target.files || target.files.length < 1) {
-        return;
-    }
-
-    props.onTapeLoad(target.files[0]);
-}
-
-export const PR8: React.FunctionComponent<PR8Props> = (props) =>
+export const PC04: React.FunctionComponent<PC04Props> = (props) =>
     <section>
         <div className='field has-addons'>
             <div className='file'>
@@ -46,3 +37,12 @@ export const PR8: React.FunctionComponent<PR8Props> = (props) =>
             </div>
         </div>
     </section>
+
+function onLoadFile(evt: React.ChangeEvent,  props: PC04Props): void {
+    const target = evt.target as HTMLInputElement;
+    if (!target.files || target.files.length < 1) {
+        return;
+    }
+
+    props.onTapeLoad(target.files[0]);
+}
