@@ -66,7 +66,7 @@ export class CoreMemoryModel {
         this.write(0o7756, program);
     }
 
-    public storeOS8Loader() {
+    public storeOS8LoaderTC08() {
         const program = [
             0o6774, // 7613: DTLB        / set TC08 field to 0, clear AC
             0o1222, // 7614: TAD K0600   / set reverse and run
@@ -86,6 +86,18 @@ export class CoreMemoryModel {
         ]
         this.write(0o7754, dataBreak);
     }
+
+    public storeOS8LoaderRF08() {
+        const program = [
+            0o7600,
+            0o6603,
+            0o6622,
+            0o5352,
+            0o5752
+        ];
+        this.write(0o7750, program);
+    }
+
 
     public write(addr: number, fragment: number[]) {
         this.socket.emit('core', {

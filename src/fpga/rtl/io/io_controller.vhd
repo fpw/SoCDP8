@@ -11,8 +11,7 @@ use work.socdp8_package.all;
 entity io_controller is
     generic(
         -- AXI parameters
-        C_S_AXI_ADDR_WIDTH: integer := 13;
-        MAX_DEVICES: natural := 16
+        C_S_AXI_ADDR_WIDTH: integer := 13
     );
     port (
         -- AXI
@@ -87,26 +86,20 @@ architecture Behavioral of io_controller is
     signal axi_bus_id: integer range 0 to 63;
     signal axi_dev_reg: integer range 0 to 15;
 
-    type bus_to_dev_a is array(0 to 63) of integer range 0 to MAX_DEVICES - 1;
+    type bus_to_dev_a is array(0 to 63) of integer range 0 to DEV_ID_COUNT - 1;
     signal bus_to_dev: bus_to_dev_a;
     
-    type bus_to_sub_a is array(0 to 63) of std_logic_vector(3 downto 0);
-    signal bus_to_sub: bus_to_sub_a;
-
     signal perph_reg_sel: std_logic_vector(3 downto 0);
     signal perph_reg_in: std_logic_vector(15 downto 0);
-    signal perph_reg_write: std_logic_vector(MAX_DEVICES - 1 downto 0);
+    signal perph_reg_write: std_logic_vector(DEV_ID_COUNT - 1 downto 0);
     
-    signal iop_code, iop_last: io_state;
+    signal iop_code: io_state;
     signal cur_bus_id: integer range 0 to 63;
-    signal cur_dev_id: integer range 0 to MAX_DEVICES - 1;
-    signal cur_sub_id: std_logic_vector(3 downto 0);
-    signal dev_active: std_logic_vector(MAX_DEVICES - 1 downto 0);
-    signal dev_interrupts: std_logic_vector(MAX_DEVICES - 1 downto 0);
-    signal dev_attention: std_logic_vector(MAX_DEVICES - 1 downto 0);
+    signal cur_dev_id: integer range 0 to DEV_ID_COUNT - 1;
 
-    type dev_types_a is array(0 to MAX_DEVICES - 1) of std_logic_vector(7 downto 0);
-    signal dev_types: dev_types_a;
+    signal dev_enable: std_logic_vector(DEV_ID_COUNT - 1 downto 0);
+    signal dev_interrupts: std_logic_vector(DEV_ID_COUNT - 1 downto 0);
+    signal dev_attention: std_logic_vector(DEV_ID_COUNT - 1 downto 0);
 
     type peripheral_out_rec is record
         io_skip: std_logic;
@@ -114,7 +107,7 @@ architecture Behavioral of io_controller is
         io_bus_out: std_logic_vector(11 downto 0);
         reg_out: std_logic_vector(15 downto 0);
     end record;
-    type peripheral_out_a is array(0 to MAX_DEVICES - 1) of peripheral_out_rec;
+    type peripheral_out_a is array(0 to DEV_ID_COUNT - 1) of peripheral_out_rec;
     
     signal peripheral_out: peripheral_out_a;
     
@@ -147,65 +140,117 @@ iop_code <= IO1 when iop(0) = '1' else
             IO4 when iop(2) = '1' else
             IO_NONE;
 
-pdp_irq <= '1' when to_integer(unsigned(dev_interrupts)) /= 0 else '0';
-cur_bus_id <= to_integer(unsigned(io_mb(8 downto 3)));
-cur_dev_id <= bus_to_dev(cur_bus_id);
-cur_sub_id <= bus_to_sub(cur_bus_id);
-io_skip <= peripheral_out(cur_dev_id).io_skip;
-io_ac_clear <= peripheral_out(cur_dev_id).io_ac_clear;
-io_bus_out <= peripheral_out(cur_dev_id).io_bus_out;
-
-gen_peripherals: for i in 0 to MAX_DEVICES - 1 generate
-    perph: entity work.peripheral
-    generic map (
-        dev_index => i
-    )
-    port map (
+asr33_inst: entity work.asr33
+    port map(
         clk => S_AXI_ACLK,
-        rstn => '1', -- distributing the reset down here is slow, let's just reset the registers using software
-        
-        dev_type => dev_types(i),
-        sub_type => cur_sub_id,
+        rstn => S_AXI_ARESETN,
         
         reg_sel => perph_reg_sel,
-        reg_out => peripheral_out(i).reg_out,
+        reg_out => peripheral_out(DEV_ID_ASR33).reg_out,
         reg_in => perph_reg_in,
-        reg_write => perph_reg_write(i),
+        reg_write => perph_reg_write(DEV_ID_ASR33),
         
-        enable => dev_active(i),
+        enable => dev_enable(DEV_ID_ASR33),
         iop => iop_code,
         io_mb => io_mb,
         io_ac => io_ac,
         
-        io_skip => peripheral_out(i).io_skip,
-        io_ac_clear => peripheral_out(i).io_ac_clear,
-        io_bus_out => peripheral_out(i).io_bus_out,
+        io_skip => peripheral_out(DEV_ID_ASR33).io_skip,
+        io_ac_clear => peripheral_out(DEV_ID_ASR33).io_ac_clear,
+        io_bus_out => peripheral_out(DEV_ID_ASR33).io_bus_out,
         
-        pdp8_irq => dev_interrupts(i),
-        soc_attention => dev_attention(i)
+        pdp8_irq => dev_interrupts(DEV_ID_ASR33),
+        soc_attention => dev_attention(DEV_ID_ASR33)
     );
-end generate;
 
-io_proc: process
-begin
-    wait until rising_edge(S_AXI_ACLK);
+pc04_inst: entity work.pc04
+    port map(
+        clk => S_AXI_ACLK,
+        rstn => S_AXI_ARESETN,
+        
+        reg_sel => perph_reg_sel,
+        reg_out => peripheral_out(DEV_ID_PC04).reg_out,
+        reg_in => perph_reg_in,
+        reg_write => perph_reg_write(DEV_ID_PC04),
+        
+        enable => dev_enable(DEV_ID_PC04),
+        iop => iop_code,
+        io_mb => io_mb,
+        io_ac => io_ac,
+        
+        io_skip => peripheral_out(DEV_ID_PC04).io_skip,
+        io_ac_clear => peripheral_out(DEV_ID_PC04).io_ac_clear,
+        io_bus_out => peripheral_out(DEV_ID_PC04).io_bus_out,
+        
+        pdp8_irq => dev_interrupts(DEV_ID_PC04),
+        soc_attention => dev_attention(DEV_ID_PC04)
+    );
 
-    -- default signals
-    soc_irq <= '0';
-    dev_active <= (others => '0');
+tc08_inst: entity work.tc08
+    port map(
+        clk => S_AXI_ACLK,
+        rstn => S_AXI_ARESETN,
+        
+        reg_sel => perph_reg_sel,
+        reg_out => peripheral_out(DEV_ID_TC08).reg_out,
+        reg_in => perph_reg_in,
+        reg_write => perph_reg_write(DEV_ID_TC08),
+        
+        enable => dev_enable(DEV_ID_TC08),
+        iop => iop_code,
+        io_mb => io_mb,
+        io_ac => io_ac,
+        
+        io_skip => peripheral_out(DEV_ID_TC08).io_skip,
+        io_ac_clear => peripheral_out(DEV_ID_TC08).io_ac_clear,
+        io_bus_out => peripheral_out(DEV_ID_TC08).io_bus_out,
+        
+        pdp8_irq => dev_interrupts(DEV_ID_TC08),
+        soc_attention => dev_attention(DEV_ID_TC08)
+    );
 
-    if iop_code /= iop_last and iop_code /= IO_NONE then
-        dev_active(cur_dev_id) <= '1';
-    end if;
+rf08_inst: entity work.rf08
+    port map(
+        clk => S_AXI_ACLK,
+        rstn => S_AXI_ARESETN,
+        
+        reg_sel => perph_reg_sel,
+        reg_out => peripheral_out(DEV_ID_RF08).reg_out,
+        reg_in => perph_reg_in,
+        reg_write => perph_reg_write(DEV_ID_RF08),
+        
+        enable => dev_enable(DEV_ID_RF08),
+        iop => iop_code,
+        io_mb => io_mb,
+        io_ac => io_ac,
+        
+        io_skip => peripheral_out(DEV_ID_RF08).io_skip,
+        io_ac_clear => peripheral_out(DEV_ID_RF08).io_ac_clear,
+        io_bus_out => peripheral_out(DEV_ID_RF08).io_bus_out,
+        
+        pdp8_irq => dev_interrupts(DEV_ID_RF08),
+        soc_attention => dev_attention(DEV_ID_RF08)
+    );
 
-    iop_last <= iop_code;
-end process;
+peripheral_out(0).io_skip <= '0';
+peripheral_out(0).io_ac_clear <= '0';
+peripheral_out(0).io_bus_out <= (others => '0');
+peripheral_out(0).reg_out <= (others => '0');
+dev_interrupts(0) <= '0';
+dev_attention(0) <= '0';
 
+pdp_irq <= '1' when to_integer(unsigned(dev_interrupts)) /= 0 else '0';
+cur_bus_id <= to_integer(unsigned(io_mb(8 downto 3)));
+cur_dev_id <= bus_to_dev(cur_bus_id);
+
+io_skip <= peripheral_out(cur_dev_id).io_skip;
+io_ac_clear <= peripheral_out(cur_dev_id).io_ac_clear;
+io_bus_out <= peripheral_out(cur_dev_id).io_bus_out;
 
 perph_reg_sel <= std_logic_vector(to_unsigned(axi_dev_reg, 4));
 
 -- addr 0 to 63: bus num to dev id
--- addr 64 to 1087: device regs
+-- addr 64 to 64 + DEV_ID_COUNT: device regs
 
 axi_fsm: process
     function to_dev_id(addr: std_logic_vector(9 downto 0)) return integer is
@@ -274,9 +319,9 @@ begin
                         when 0 =>
                             s_axi_rdata <= x"50445038"; -- magic: 'PDP8'
                         when 1 =>
-                            s_axi_rdata(7 downto 0) <= std_logic_vector(to_unsigned(MAX_DEVICES, 8));
+                            s_axi_rdata(7 downto 0) <= std_logic_vector(to_unsigned(DEV_ID_COUNT, 8));
                         when 2 =>
-                            s_axi_rdata(MAX_DEVICES - 1 downto 0) <= dev_attention;
+                            s_axi_rdata(DEV_ID_COUNT - 1 downto 0) <= dev_attention;
                         when 3 =>
                             s_axi_rdata(11 downto 0) <= bk_mb;
                             s_axi_rdata(12) <= bk_wc_ovf;
@@ -288,14 +333,12 @@ begin
                     end case;
                 else
                     if axi_dev_reg = 0 then
-                        s_axi_rdata(15 downto 0) <= std_logic_vector(to_unsigned(bus_to_dev(axi_bus_id), 16));
-                    elsif axi_dev_reg = 1 then
-                        s_axi_rdata(3 downto 0) <= bus_to_sub(axi_bus_id);
+                        s_axi_rdata(7 downto 0) <= std_logic_vector(to_unsigned(bus_to_dev(axi_bus_id), 8));
                     end if;
                 end if;
             else
                 if axi_dev_reg = 0 then
-                    s_axi_rdata(7 downto 0) <= dev_types(axi_bus_id);
+                    s_axi_rdata(0) <= dev_enable(axi_bus_id);
                 else
                     s_axi_rdata(15 downto 0) <= peripheral_out(axi_bus_id).reg_out;
                 end if;
@@ -346,15 +389,13 @@ begin
                     if s_axi_wstrb(0) = '1' then
                         if axi_dev_reg = 0 then
                             bus_to_dev(axi_bus_id) <= to_integer(unsigned(s_axi_wdata(7 downto 0)));
-                        elsif axi_dev_reg = 1 then
-                            bus_to_sub(axi_bus_id) <= s_axi_wdata(3 downto 0);
                         end if;
                     end if;
                 end if;
             else
                 if axi_dev_reg = 0 then
                     if s_axi_wstrb(0) = '1' then
-                        dev_types(axi_bus_id) <= s_axi_wdata(7 downto 0);
+                        dev_enable(axi_bus_id) <= s_axi_wdata(0);
                     end if;
                 else
                     perph_reg_in <= peripheral_out(axi_bus_id).reg_out;
@@ -381,7 +422,7 @@ begin
     
     if s_axi_aresetn = '0' then
         state <= IDLE;
-        dev_types <= (others => (others => '0'));
+        dev_enable <= (others => '0');
 
         bk_rqst <= '0';
         bk_three_cycle <= '0';

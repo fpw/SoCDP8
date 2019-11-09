@@ -24,6 +24,13 @@ package socdp8_package is
     -- duration between EAE pulses
     constant eae_cycle_time_ns: natural := 350;
 
+    constant DEV_ID_NULL:   natural := 0;
+    constant DEV_ID_ASR33:  natural := 1;
+    constant DEV_ID_PC04:   natural := 2;
+    constant DEV_ID_TC08:   natural := 3;
+    constant DEV_ID_RF08:   natural := 4;
+    
+    constant DEV_ID_COUNT:  natural := 5;
 
     -- The manual function timing states (MFTS) and automatic timing states (TS)
     type time_state_auto is (TS1, TS2, TS3, TS4);

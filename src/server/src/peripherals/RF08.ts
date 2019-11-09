@@ -16,32 +16,38 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, DeviceType, IOContext, DeviceRegister } from '../drivers/IO/Peripheral';
+import { Peripheral, IOContext, DeviceRegister, DeviceID } from '../drivers/IO/Peripheral';
+import { exists, existsSync, readFileSync, writeFileSync } from 'fs';
 
 export class RF08 extends Peripheral {
     private readonly DEBUG = true;
-    private readonly BRK_ADDR   = 0o7750;
+    private readonly BRK_ADDR = 0o7750;
+    private readonly DATA_FILE = 'rf08.dat';
     private lastAccess: bigint = 0n;
     private data = Buffer.alloc(128 * 2048 * 2);
 
-    public constructor(private busNum: number) {
+    constructor() {
         super();
+
+        if (existsSync(this.DATA_FILE)) {
+            this.data = readFileSync(this.DATA_FILE);
+        }
     }
 
-    public getType(): DeviceType {
-        return DeviceType.RF08;
+    public getDeviceID(): DeviceID {
+        return DeviceID.DEV_ID_RF08;
     }
 
-    public getBusConnections(): Map<number, number> {
-        const map = new Map<number, number>();
-        map.set(this.busNum, 0);        // 60
-        map.set(this.busNum + 1, 1);    // 61
-        map.set(this.busNum + 2, 2);    // 62
-        map.set(this.busNum + 4, 4);    // 64
-        return map;
+    public getBusConnections(): number[] {
+        return [0o60, 0o61, 0o62, 0o64];
     }
 
     public requestAction(action: string, data: any): void {
+        switch (action) {
+            case 'flush':
+                writeFileSync(this.DATA_FILE, this.data);
+                break;
+        }
     }
 
     public async onTick(io: IOContext): Promise<void> {

@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export enum DeviceType {
+export enum DeviceID {
     NULL            = 0,
     ASR33           = 1,
     PC04            = 2,
@@ -24,16 +24,10 @@ export enum DeviceType {
     RF08            = 4,
 }
 
-export interface BusConnection {
-    busId: number;
-    subType: number;
-}
-
 export interface Device {
     id: number;
-    type: DeviceType;
     typeString: string;
-    connections: BusConnection[];
+    connections: number[];
 }
 
 export interface PeripheralList {

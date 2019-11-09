@@ -74,13 +74,16 @@ const Header: React.FunctionComponent<PDP8Props> = (props) =>
                                 Clear
                             </a>
                             <a className='navbar-item' onClick={() => props.pdp8.core.storeRIMLoader()}>
-                                Store RIM Loader
+                                Store RIM Loader - 7756
                             </a>
-                            <a className='navbar-item' onClick={() => props.pdp8.core.storeOS8Loader()}>
-                                Store OS/8 TC08 Loader
+                            <a className='navbar-item' onClick={() => props.pdp8.core.storeOS8LoaderTC08()}>
+                                Store OS/8 TC08 Loader - 7613
+                            </a>
+                            <a className='navbar-item' onClick={() => props.pdp8.core.storeOS8LoaderRF08()}>
+                                Store OS/8 RF08 Loader - 7750
                             </a>
                             <a className='navbar-item' onClick={() => props.pdp8.core.storeBlinker()}>
-                                Store AC/MQ Blinker
+                                Store AC/MQ Blinker - 0000
                             </a>
                         </div>
                     </div>

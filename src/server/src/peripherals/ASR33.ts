@@ -16,26 +16,19 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, DeviceRegister, DeviceType, IOContext } from '../drivers/IO/Peripheral';
+import { Peripheral, DeviceRegister, IOContext, DeviceID } from '../drivers/IO/Peripheral';
 
 export class ASR33 extends Peripheral {
     private lastReadAt: bigint = 0n;
     private lastPunchAt: bigint = 0n;
     private readerData: number[] = [];
 
-    constructor(private busNum: number) {
-        super();
+    public getDeviceID(): DeviceID {
+        return DeviceID.DEV_ID_ASR33;
     }
 
-    public getType(): DeviceType {
-        return DeviceType.ASR33;
-    }
-
-    public getBusConnections(): Map<number, number> {
-        const map = new Map<number, number>();
-        map.set(this.busNum, 0); // reader
-        map.set(this.busNum + 1, 1); // writer
-        return map;
+    public getBusConnections(): number[] {
+        return [0o03, 0o04];
     }
 
     public requestAction(action: string, data: any): void {

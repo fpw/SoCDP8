@@ -92,5 +92,5 @@ const TC08Box: React.FunctionComponent<{model: TC08Model}> = observer(({model}) 
 
 const RF08Box: React.FunctionComponent<{model: RF08Model}> = observer(({model}) =>
     <PeripheralBox name='RF08: Disk Control '>
-        <RF08 />
+        <RF08 onFlush={model.flushData} />
     </PeripheralBox>);

@@ -19,7 +19,7 @@
 import * as io from 'socket.io-client'
 import { FrontPanelState } from './FrontPanelState';
 import { observable, action, computed } from 'mobx'
-import { PeripheralList, DeviceType, Device } from './PeripheralList';
+import { PeripheralList, DeviceID, Device } from './PeripheralList';
 import { ASR33Model } from './peripherals/ASR33Model';
 import { PeripheralModel } from './peripherals/PeripheralModel';
 import { PC04Model } from './peripherals/PC04Model';
@@ -89,17 +89,17 @@ export class PDP8Model {
         for (const entry of list.devices) {
             let peripheral: PeripheralModel;
 
-            switch (entry.type) {
-                case DeviceType.ASR33:
+            switch (entry.id) {
+                case DeviceID.ASR33:
                     peripheral = new ASR33Model(entry.id, this.socket);
                     break;
-                case DeviceType.PC04:
+                case DeviceID.PC04:
                     peripheral = new PC04Model(entry.id, this.socket);
                     break;
-                case DeviceType.TC08:
+                case DeviceID.TC08:
                     peripheral = new TC08Model(entry.id, this.socket);
                     break;
-                case DeviceType.RF08:
+                case DeviceID.RF08:
                     peripheral = new RF08Model(entry.id, this.socket);
                     break;
                 default:

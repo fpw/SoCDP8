@@ -17,7 +17,6 @@
  */
 
 import { Peripheral, DeviceRegister } from './Peripheral';
-import { NullPeripheral } from './NullPeripheral';
 import { DataBreakRequest, DataBreakReply } from './DataBreak';
 
 export interface IOListener {
@@ -34,7 +33,6 @@ export class IOController {
 
     // mapping table rows
     private readonly TBL_MAPPING_DEV_ID = 0;
-    private readonly TBL_MAPPING_SUB_TYPE = 1;
 
     private readonly NUM_BUS_IDS = 64;
 
@@ -43,7 +41,6 @@ export class IOController {
 
     public constructor(private ioMem: Buffer, private listener: IOListener) {
         this.maxDevices = this.readSystemRegister(this.SYS_REG_MAX_DEV);
-        this.peripherals.push(new NullPeripheral());
         this.clearDeviceTable();
     }
 
@@ -56,7 +53,6 @@ export class IOController {
 
         for (let busId = 0; busId < this.NUM_BUS_IDS; busId++) {
             this.writeMappingTable(busId, this.TBL_MAPPING_DEV_ID, 0);
-            this.writeMappingTable(busId, this.TBL_MAPPING_SUB_TYPE, 0);
         }
 
         this.writeSystemRegister(this.SYS_REG_BRK_CTRL, 0);
@@ -67,16 +63,16 @@ export class IOController {
     }
 
     public registerPeripheral(perph: Peripheral): void {
-        const devId = this.peripherals.push(perph) - 1;
+        const devId = perph.getDeviceID();
 
-        // set peripheral type
-        this.writePeripheralReg(devId, DeviceRegister.REG_TYPE, perph.getType());
+        this.peripherals[devId] = perph;
+
+        this.writePeripheralReg(devId, DeviceRegister.REG_ENABLED, 1);
 
         // connect peripheral to bus at desired locations
         const mapping = perph.getBusConnections();
-        for (let [busId, subType] of mapping.entries()) {
+        for (const busId of mapping) {
             this.writeMappingTable(busId, this.TBL_MAPPING_DEV_ID, devId);
-            this.writeMappingTable(busId, this.TBL_MAPPING_SUB_TYPE, subType);
         }
     }
 
@@ -97,6 +93,10 @@ export class IOController {
         const attention = this.readSystemRegister(this.SYS_REG_DEV_ATTN);
 
         for (const [devId, perph] of this.peripherals.entries()) {
+            if (!perph) {
+                continue;
+            }
+
             try {
                 await perph.onTick({
                     readRegister: reg => this.readPeripheralReg(devId, reg),

@@ -16,25 +16,18 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, DeviceType, IOContext, DeviceRegister } from '../drivers/IO/Peripheral';
+import { Peripheral, IOContext, DeviceRegister, DeviceID } from '../drivers/IO/Peripheral';
 
 export class PC04 extends Peripheral {
     private lastReadAt: bigint = 0n;
     private readerData: number[] = [];
 
-    public constructor(private busNum: number) {
-        super();
+    public getDeviceID(): DeviceID {
+        return DeviceID.DEV_ID_PC04;
     }
 
-    public getType(): DeviceType {
-        return DeviceType.PC04;
-    }
-
-    public getBusConnections(): Map<number, number> {
-        const map = new Map<number, number>();
-        map.set(this.busNum, 0); // reader
-        map.set(this.busNum + 1, 1); // writer
-        return map;
+    public getBusConnections(): number[] {
+        return [0o01, 0o02];
     }
 
     public requestAction(action: string, data: any): void {

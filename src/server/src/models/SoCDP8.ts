@@ -23,11 +23,11 @@ import { CoreMemory } from "../drivers/CoreMemory/CoreMemory";
 import { IOController, IOListener } from '../drivers/IO/IOController';
 import { TC08 } from '../peripherals/TC08';
 import { LampBrightness } from '../drivers/Console/LampBrightness';
-import { PeripheralList, BusConnection } from './PeripheralList';
-import { DeviceType } from '../drivers/IO/Peripheral';
+import { PeripheralList } from './PeripheralList';
 import { ASR33 } from '../peripherals/ASR33';
 import { PC04 } from '../peripherals/PC04';
 import { RF08 } from '../peripherals/RF08';
+import { DeviceID } from '../drivers/IO/Peripheral';
 
 export interface ConsoleState {
     lamps: LampBrightness;
@@ -56,10 +56,10 @@ export class SoCDP8 {
         this.mem = new CoreMemory(memBuf);
         this.io = new IOController(ioBuf, this.ioListener);
 
-        this.pc04 = new PC04(0o01);
-        this.asr33 = new ASR33(0o03);
-        this.tc08 = new TC08(0o76);
-        this.rf08 = new RF08(0o60);
+        this.pc04 = new PC04();
+        this.asr33 = new ASR33();
+        this.tc08 = new TC08();
+        this.rf08 = new RF08();
 
         this.io.registerPeripheral(this.asr33);
         this.io.registerPeripheral(this.pc04);
@@ -92,23 +92,17 @@ export class SoCDP8 {
         };
 
         const peripherals = this.io.getRegisteredDevices();
-        for (const [idx, peripheral] of peripherals.entries()) {
-            const type = peripheral.getType();
-
-            if (type == DeviceType.NULL) {
+        for (const perph of peripherals) {
+            if (!perph) {
                 continue;
             }
 
-            let connections: BusConnection[] = [];
-            for (const [busId, subType] of peripheral.getBusConnections()) {
-                connections.push({busId: busId, subType: subType});
-            }
+            const id = perph.getDeviceID();
 
             list.devices.push({
-                id: idx,
-                type: type,
-                typeString: DeviceType[type],
-                connections: connections,
+                id: id,
+                typeString: DeviceID[id],
+                connections: perph.getBusConnections(),
             });
         }
 

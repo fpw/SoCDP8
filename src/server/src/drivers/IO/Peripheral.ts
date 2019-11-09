@@ -18,21 +18,20 @@
 
 import { DataBreakRequest, DataBreakReply } from "./DataBreak";
 
- // musst match dev_type in peripheral.vhd
-export enum DeviceType {
-    NULL            = 0,
-    ASR33           = 1,
-    PC04            = 2,
-    TC08            = 3,
-    RF08            = 4,
-}
-
 export enum DeviceRegister {
-    REG_TYPE        = 0,
+    REG_ENABLED     = 0,
     REG_A           = 1,
     REG_B           = 2,
     REG_C           = 3,
     REG_D           = 4,
+}
+
+export enum DeviceID {
+    DEV_ID_NULL     = 0,
+    DEV_ID_ASR33    = 1,
+    DEV_ID_PC04     = 2,
+    DEV_ID_TC08     = 3,
+    DEV_ID_RF08     = 4,
 }
 
 export interface IOContext {
@@ -44,9 +43,9 @@ export interface IOContext {
 }
 
 export abstract class Peripheral {
-    public abstract getType(): DeviceType;
+    public abstract getDeviceID(): DeviceID;
 
-    public abstract getBusConnections(): Map<number, number>;
+    public abstract getBusConnections(): number[];
 
     public abstract onTick(io: IOContext): Promise<void>;
 

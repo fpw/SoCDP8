@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, DeviceRegister, DeviceType, IOContext } from '../drivers/IO/Peripheral';
+import { Peripheral, DeviceRegister, IOContext, DeviceID } from '../drivers/IO/Peripheral';
 
 enum TapeDirection {
     FORWARD = 0,
@@ -70,7 +70,7 @@ export class TC08 extends Peripheral {
     private lastRegA: number = 0;
     private state: StatusRegisterA;
 
-    constructor(private busNum: number) {
+    constructor() {
         super();
 
         this.state = {
@@ -83,15 +83,12 @@ export class TC08 extends Peripheral {
         }
     }
 
-    public getType(): DeviceType {
-        return DeviceType.TC08;
+    public getDeviceID(): DeviceID {
+        return DeviceID.DEV_ID_TC08;
     }
 
-    public getBusConnections(): Map<number, number> {
-        const map = new Map<number, number>();
-        map.set(this.busNum, 0);
-        map.set(this.busNum + 1, 1);
-        return map;
+    public getBusConnections(): number[] {
+        return [0o76, 0o77];
     }
 
     public requestAction(action: string, data: any): void {
