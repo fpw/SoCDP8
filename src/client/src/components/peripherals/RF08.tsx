@@ -16,27 +16,11 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export enum DeviceType {
-    NULL            = 0,
-    ASR33           = 1,
-    PC04            = 2,
-    TC08            = 3,
-    RF08            = 4,
+import * as React from "react";
+
+export interface RF08Props {
 }
 
-export interface BusConnection {
-    busId: number;
-    subType: number;
-}
-
-export interface Device {
-    id: number;
-    type: DeviceType;
-    typeString: string;
-    connections: BusConnection[];
-}
-
-export interface PeripheralList {
-    maxDevices: number;
-    devices: Device[];
-}
+export const RF08: React.FunctionComponent<RF08Props> = (props) =>
+    <section>
+    </section>

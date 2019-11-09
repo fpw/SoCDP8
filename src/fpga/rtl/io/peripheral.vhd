@@ -209,6 +209,117 @@ action: process
             end case;
         end if;
     end procedure;
+    
+    procedure rf08 is
+    begin
+        -- regA: DMA and R/W op
+        -- regB: EMA
+        -- regC: Status register, 15: data completion flag (DCF)
+        -- regD:
+        
+        -- Status bits:
+        -- 11: PCA: Photocell sync (TODO)
+        -- 10: DRE: Data request enable
+        --  9: WLS: Write lock selected
+        --  8: EIE: Enable error interrupt
+        --  7: PIE: Enable photocell interrupt
+        --  6: CIE: Enable completion interrupt (on WCO)
+        --  5 downto 3: Memory field
+        --  2: DRL: Data request late
+        --  1: NXD: Non-existent disk
+        --  0: PER: Parity error
+
+        if (regC(8) = '1' and (regC(9) or regC(2) or regC(1) or regC(0)) = '1') or
+           (regC(6) = '1' and regC(15) = '1')
+        then
+            pdp8_irq_buf <= '1';
+        else
+            pdp8_irq_buf <= '0';
+        end if;
+
+        if enable = '1' and sub_type = x"0" then -- 60
+            case iop is
+                when IO1 =>
+                    -- DCMA: Clear DMA, parity flag, data late flag. Does not clear interrupt enable or EMA.
+                    regA(11 downto 0) <= (others => '0'); -- clear DMA
+                    regC(9) <= '0';             -- clear WLS
+                    regC(2) <= '0';             -- clear DRL
+                    regC(1) <= '0';             -- clear NXD
+                    regC(0) <= '0';             -- clear PER
+                    regC(15) <= '0';            -- done = 0
+                when IO2 => 
+                    -- DMAR: Load DMA with AC and clear AC, start reading
+                    regA(11 downto 0) <= io_ac;
+                    regA(15) <= '1';            -- read
+                    regA(14) <= '0';            -- no write
+                    io_ac_clear <= '1';
+                when IO4 =>
+                    -- DMAW: Load DMA with AC and clear AC, start writing
+                    regA(11 downto 0) <= io_ac;
+                    regA(15) <= '0';            -- no read
+                    regA(14) <= '1';            -- write
+                    io_ac_clear <= '1';
+                when others => null;
+            end case;
+        elsif enable = '1' and sub_type = x"1" then -- 61
+            case iop is
+                when IO1 =>
+                    -- DCIM: Clear interrupt enable and field
+                    regC(8 downto 3) <= (others => '0');
+                when IO2 =>
+                    -- DSAC: Skip if address confirmed (TODO)
+                    io_ac_clear <= '1'; 
+                when IO4 =>
+                    if io_mb(2 downto 0) = o"5" then
+                        -- DIML: Load interrupt enable and mem field from AC, then clear AC
+                        regC(8 downto 3) <= io_ac(8 downto 3);
+                        io_ac_clear <= '1';
+                    else
+                        -- DIMA: 
+                        io_bus_out <= regC(11 downto 0);
+                    end if;
+                when others => null;
+            end case;
+        elsif enable = '1' and sub_type = x"2" then -- 62
+            case iop is
+                when IO1 =>
+                    -- DFSE: Skip on DRL, PER, WLS or NXD
+                    io_skip <= regC(9) or regC(2) or regC(1) or regC(0);
+                when IO2 =>
+                    if io_mb(2 downto 0) = o"6" then
+                        -- DMAC: Clear AC in IOP2
+                        io_ac_clear <= '1';
+                    else
+                        -- DFSC: Skip if DCF is set
+                        io_skip <= regC(15);
+                    end if;
+                when IO4 =>
+                    -- DMAC: Load DMA into AC
+                    io_bus_out <= regA(11 downto 0);
+                when others => null;
+            end case;
+        elsif enable = '1' and sub_type = x"4" then -- 64
+            case iop is
+                when IO1 =>
+                    if io_mb(2 downto 0) = o"1" or io_mb(2 downto 0) = o"3" then
+                        -- DCXA: Clears the 8 EMA bits
+                        regB <= (others => '0');
+                    else
+                        -- DXAC: Clear AC at IOP1
+                        io_ac_clear <= '1';
+                    end if;
+                when IO2 =>
+                    -- DXAL: Load 8 EMA register bits from AC, clear AC
+                    regB(7 downto 0) <= regB(7 downto 0) or io_ac(7 downto 0);
+                    io_ac_clear <= '1';
+                when IO4 =>
+                    -- DXAC: Load EMA into AC
+                    io_bus_out(7 downto 0) <= regB(7 downto 0);
+                when others => null;
+            end case;
+        end if;
+    end procedure;
+
 begin
     wait until rising_edge(clk);
  
@@ -235,6 +346,7 @@ begin
         when x"01" => asr33;
         when x"02" => pc04;
         when x"03" => tc08;
+        when x"04" => rf08;
         when others => null;
     end case;
 

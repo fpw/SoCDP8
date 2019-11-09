@@ -16,27 +16,9 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export enum DeviceType {
-    NULL            = 0,
-    ASR33           = 1,
-    PC04            = 2,
-    TC08            = 3,
-    RF08            = 4,
-}
+import { PeripheralModel } from './PeripheralModel';
 
-export interface BusConnection {
-    busId: number;
-    subType: number;
-}
-
-export interface Device {
-    id: number;
-    type: DeviceType;
-    typeString: string;
-    connections: BusConnection[];
-}
-
-export interface PeripheralList {
-    maxDevices: number;
-    devices: Device[];
+export class RF08Model extends PeripheralModel {
+    public onPeripheralAction(action: string, data: any): void {
+    }
 }

@@ -72,6 +72,26 @@ function scrollToBottomOnChange(textRef: React.RefObject<HTMLTextAreaElement>) {
     });
 }
 
+function onKey(ev: React.KeyboardEvent, props: ASR33Props): boolean {
+    if (ev.key == 'Enter') {
+        (ev.target as HTMLInputElement).value = '';
+        sendPunch(0x0D, props);
+    } else if (ev.key == 'Backspace') {
+        sendPunch(0x7F, props);
+    } else if (ev.key.length == 1) {
+        const ascii = ev.key.charCodeAt(0);
+        if ((ascii & 0x60) == 0x60) {
+            // lowercase -> convert to uppercase
+            sendPunch(ascii & (~0x20), props);
+        } else {
+            // uppercase -> convert to ctrl
+            sendPunch(ascii & (~0x40), props);
+        }
+    }
+    console.log(`${ev.key} ${ev.ctrlKey}`)
+    return false;
+}
+
 function onLoadFile(evt: React.ChangeEvent, props: ASR33Props): void {
     const target = evt.target as HTMLInputElement;
     if (!target.files || target.files.length < 1) {
@@ -81,20 +101,9 @@ function onLoadFile(evt: React.ChangeEvent, props: ASR33Props): void {
     props.onTapeLoad(target.files[0]);
 }
 
-function onKey(ev: React.KeyboardEvent, props: ASR33Props): void {
-    if (ev.key == 'Enter') {
-        (ev.target as HTMLInputElement).value = '';
-        doPunch('\r', props);
-    } else if (ev.key == 'Backspace') {
-        doPunch('\x7F', props);
-    } else if (ev.key.length == 1) {
-        doPunch(ev.key, props);
-    }
-}
-
-function doPunch(key: string, props: ASR33Props) {
+function sendPunch(code: number, props: ASR33Props) {
     const buf = new ArrayBuffer(1);
     let view = new Uint8Array(buf);
-    view[0] = key.charCodeAt(0) | 0x80;
+    view[0] = code | 0x80;
     props.onReaderKey(buf);
 }

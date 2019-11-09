@@ -27,6 +27,8 @@ import { TC08Model } from '../../models/peripherals/TC08Model';
 import { TC08 } from '../peripherals/TC08';
 import { PDP8Model } from '../../models/PDP8Model';
 import { PeripheralModel } from '../../models/peripherals/PeripheralModel';
+import { RF08 } from '../peripherals/RF08';
+import { RF08Model } from '../../models/peripherals/RF08Model';
 
 export interface PDP8Props {
     pdp8: PDP8Model;
@@ -54,6 +56,8 @@ const PeripheralList: React.FunctionComponent<{list: PeripheralModel[]}> = ({lis
             return <PC04Box model={dev} />
         } else if (dev instanceof TC08Model) {
             return <TC08Box model={dev} />
+        } else if (dev instanceof RF08Model) {
+            return <RF08Box model={dev} />
         } else {
             return <div />;
         }
@@ -84,4 +88,9 @@ const PC04Box: React.FunctionComponent<{model: PC04Model}> = observer(({model}) 
 const TC08Box: React.FunctionComponent<{model: TC08Model}> = observer(({model}) =>
     <PeripheralBox name='TC08: DECtape Control'>
         <TC08 onTapeLoad={model.loadTape} />
+    </PeripheralBox>);
+
+const RF08Box: React.FunctionComponent<{model: RF08Model}> = observer(({model}) =>
+    <PeripheralBox name='RF08: Disk Control '>
+        <RF08 />
     </PeripheralBox>);

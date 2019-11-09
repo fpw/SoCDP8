@@ -17,7 +17,6 @@
  */
 
 import { Peripheral, DeviceRegister, DeviceType, IOContext } from '../drivers/IO/Peripheral';
-import { readFileSync } from 'fs';
 
 enum TapeDirection {
     FORWARD = 0,
@@ -51,6 +50,7 @@ enum BlockState {
 }
 
 interface TapeState {
+    unit: number;
     data: Buffer;
     curBlock: number;
     blockState: BlockState;
@@ -105,6 +105,7 @@ export class TC08 extends Peripheral {
     private loadTape(unit: number, data: Buffer) {
         console.log(`TC08: Tape loaded`);
         this.tapes[unit] = {
+            unit: unit,
             data: data,
             curBlock: 0,
             blockState: BlockState.NOT_STARTED,
@@ -147,7 +148,7 @@ export class TC08 extends Peripheral {
         const tape = this.tapes[this.state.transportUnit];
 
         if (tape.moving && ((tape.direction == TapeDirection.REVERSE && tape.curBlock < 0) || (tape.direction == TapeDirection.FORWARD && tape.curBlock >= this.NUM_BLOCKS))) {
-            console.warn(`TC08: End of tape (${tape.curBlock})`);
+            console.warn(`TC08: End of tape (${tape.unit}.${tape.curBlock})`);
             tape.moving = false;
             this.state.run = false;
             this.clearMotionFlag(io);
@@ -155,16 +156,11 @@ export class TC08 extends Peripheral {
             return;
         } else {
             tape.moving = this.state.run;
-            if (!tape.moving && this.state.run) {
-                // start moving
-                tape.lastMotionAt = this.readSteadyClock();
-                return;
-            }
         }
 
         if (tape.direction != this.state.direction) {
             if (this.DEBUG) {
-                console.log(`TC08: Change direction on block ${tape.curBlock}`);
+                console.log(`TC08: Change direction on block ${tape.unit}.${tape.curBlock}`);
             }
             tape.direction = this.state.direction;
             tape.lastMotionAt = this.readSteadyClock();
@@ -180,6 +176,7 @@ export class TC08 extends Peripheral {
                 case TapeFunction.WRITE:    this.doWrite(io, tape, newBlockReady, this.state.contMode); break;
                 default:
                     console.error(`TC08: Function ${TapeFunction[this.state.func]} not implemented`);
+                    this.clearMotionFlag(io);
                     this.setSelectError(io);
             }
         } catch (e) {
@@ -199,14 +196,18 @@ export class TC08 extends Peripheral {
                 switch (tape.blockState) {
                     case BlockState.NOT_STARTED:
                         if (durationMs > 5 && tape.curBlock >= 0 && tape.curBlock < this.NUM_BLOCKS) {
-                            blockFound = true;
+                            if (tape.unit == this.state.transportUnit) {
+                                blockFound = true;
+                            }
                             tape.blockState = BlockState.NUM_READ;
                             tape.lastMotionAt = now;
                         }
                         break;
                     case BlockState.NUM_READ:
                         if (durationMs > 10 && tape.curBlock >= 0 && tape.curBlock < this.NUM_BLOCKS) {
-                            blockRead = true;
+                            if (tape.unit == this.state.transportUnit) {
+                                blockRead = true;
+                            }
                             tape.blockState = BlockState.DATA_READ;
                             tape.lastMotionAt = now;
                         }
@@ -239,7 +240,7 @@ export class TC08 extends Peripheral {
             return;
         }
 
-        console.log(`TC08: Search -> ${tape.curBlock}`);
+        console.log(`TC08: Search -> ${tape.unit}.${tape.curBlock}`);
 
         const memField = this.readMemField(io);
         const reply = io.dataBreak({
@@ -262,7 +263,7 @@ export class TC08 extends Peripheral {
             return;
         }
 
-        console.log(`TC08: Read ${tape.curBlock}`);
+        console.log(`TC08: Read ${tape.unit}.${tape.curBlock}`);
         const block = tape.curBlock;
         let overflow = false;
         for (let i = 0; i < this.BLOCK_SIZE - 1; i++) {
@@ -295,7 +296,7 @@ export class TC08 extends Peripheral {
             return;
         }
 
-        console.log(`TC08: Write ${tape.curBlock}`);
+        console.log(`TC08: Write ${tape.unit}.${tape.curBlock}`);
         let overflow = false;
         for (let i = 0; i < this.BLOCK_SIZE - 1; i++) {
             const memField = this.readMemField(io);

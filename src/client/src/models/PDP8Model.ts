@@ -19,15 +19,16 @@
 import * as io from 'socket.io-client'
 import { FrontPanelState } from './FrontPanelState';
 import { observable, action, computed } from 'mobx'
-import { PeripheralList, DeviceType } from './PeripheralList';
+import { PeripheralList, DeviceType, Device } from './PeripheralList';
 import { ASR33Model } from './peripherals/ASR33Model';
 import { PeripheralModel } from './peripherals/PeripheralModel';
 import { PC04Model } from './peripherals/PC04Model';
 import { TC08Model } from './peripherals/TC08Model';
 import { CoreMemoryModel } from './CoreMemoryModel';
+import { RF08Model } from './peripherals/RF08Model';
 
 export class PDP8Model {
-    private readonly BASE_URL = '';
+    private readonly BASE_URL = 'http://192.168.178.65:8000';
 
     private socket: SocketIOClient.Socket;
 
@@ -97,6 +98,9 @@ export class PDP8Model {
                     break;
                 case DeviceType.TC08:
                     peripheral = new TC08Model(entry.id, this.socket);
+                    break;
+                case DeviceType.RF08:
+                    peripheral = new RF08Model(entry.id, this.socket);
                     break;
                 default:
                     continue;

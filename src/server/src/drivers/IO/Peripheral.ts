@@ -24,6 +24,7 @@ export enum DeviceType {
     ASR33           = 1,
     PC04            = 2,
     TC08            = 3,
+    RF08            = 4,
 }
 
 export enum DeviceRegister {

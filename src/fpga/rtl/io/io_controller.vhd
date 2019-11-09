@@ -23,6 +23,7 @@ entity io_controller is
         S_AXI_ARADDR: in std_logic_vector(C_S_AXI_ADDR_WIDTH - 1 downto 0);
         S_AXI_ARVALID: in std_logic;
         S_AXI_ARREADY: out std_logic; 
+        S_AXI_ARPROT: in std_logic_vector(2 downto 0);
 
         --- Read data channel: Slave outputs data
         S_AXI_RDATA: out std_logic_vector(31 downto 0);
@@ -34,6 +35,7 @@ entity io_controller is
         S_AXI_AWADDR: in std_logic_vector(C_S_AXI_ADDR_WIDTH - 1 downto 0);
         S_AXI_AWVALID: in std_logic;
         S_AXI_AWREADY: out std_logic;
+        S_AXI_AWPROT: in std_logic_vector(2 downto 0);
         
         --- Write data channel: Master writes data
         S_AXI_WDATA: in std_logic_vector(31 downto 0);

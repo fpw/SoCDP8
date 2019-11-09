@@ -112,10 +112,14 @@ export class IOController {
 
     // this must not be async - the lowest sleep resolution is 1ms and we need to be faster...
     private doDataBreak(req: DataBreakRequest): DataBreakReply {
-        // remove old request
-        this.writeSystemRegister(this.SYS_REG_BRK_CTRL, 0);
-
-        this.waitDataBreakReady();
+        try {
+            // wait for old pending requests to finish
+            this.waitDataBreakReady();
+        } catch (e) {
+            // remove pending requests
+            console.warn('Removed pending BRK');
+            this.writeSystemRegister(this.SYS_REG_BRK_CTRL, 0);
+        }
 
         const requestWord: number = this.encodeDataBreak(req);
         //console.log(`BRK: Request ${requestWord.toString(8)}`);

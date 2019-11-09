@@ -27,6 +27,7 @@ import { PeripheralList, BusConnection } from './PeripheralList';
 import { DeviceType } from '../drivers/IO/Peripheral';
 import { ASR33 } from '../peripherals/ASR33';
 import { PC04 } from '../peripherals/PC04';
+import { RF08 } from '../peripherals/RF08';
 
 export interface ConsoleState {
     lamps: LampBrightness;
@@ -43,6 +44,7 @@ export class SoCDP8 {
     private asr33: ASR33;
     private pc04: PC04;
     private tc08: TC08;
+    private rf08: RF08;
 
     public constructor(private ioListener: IOListener) {
         const uio = new UIOMapper();
@@ -57,10 +59,12 @@ export class SoCDP8 {
         this.pc04 = new PC04(0o01);
         this.asr33 = new ASR33(0o03);
         this.tc08 = new TC08(0o76);
+        this.rf08 = new RF08(0o60);
 
         this.io.registerPeripheral(this.asr33);
         this.io.registerPeripheral(this.pc04);
         this.io.registerPeripheral(this.tc08);
+        this.io.registerPeripheral(this.rf08);
     }
 
     public clearCoreMemory() {
