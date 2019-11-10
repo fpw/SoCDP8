@@ -77,4 +77,12 @@ export class ASR33Model extends PeripheralModel {
     public readonly clearPunch = async (): Promise<void> => {
         this.setPunchData('');
     }
+
+    public readonly forcePunch = async (): Promise<void> => {
+        this.socket.emit('peripheral-action', {
+            devId: this.id,
+            action: 'force',
+            data: {}
+        });
+    }
 }

@@ -77,7 +77,8 @@ const ASR33Box: React.FunctionComponent<{model: ASR33Model}> = observer(({model}
             onReaderKey={model.appendReaderKey}
             onReaderClear={model.clearPunch}
             onTapeLoad={model.loadTape}
-            punchData={model.punchOutput} />
+            punchData={model.punchOutput}
+            onPunchForce={model.forcePunch} />
     </PeripheralBox>);
 
 const PC04Box: React.FunctionComponent<{model: PC04Model}> = observer(({model}) =>

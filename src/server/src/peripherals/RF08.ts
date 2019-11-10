@@ -24,13 +24,14 @@ export class RF08 extends Peripheral {
     private readonly BRK_ADDR = 0o7750;
     private readonly DATA_FILE = 'rf08.dat';
     private lastAccess: bigint = 0n;
-    private data = Buffer.alloc(128 * 2048 * 2);
+    private data = Buffer.alloc(128 * 2048 * 4 * 2);
 
     constructor() {
         super();
 
         if (existsSync(this.DATA_FILE)) {
-            this.data = readFileSync(this.DATA_FILE);
+            const buf = readFileSync(this.DATA_FILE);
+            buf.copy(this.data);
         }
     }
 

@@ -134,6 +134,7 @@ export class TC08 extends Peripheral {
             if (!this.tapes[this.state.transportUnit]) {
                 console.error(`TC08: Invalid transport unit ${this.state.transportUnit}`);
                 this.setSelectError(io);
+                this.clearMotionFlag(io);
                 return;
             }
         }
@@ -263,7 +264,7 @@ export class TC08 extends Peripheral {
         console.log(`TC08: Read ${tape.unit}.${tape.curBlock}`);
         const block = tape.curBlock;
         let overflow = false;
-        for (let i = 0; i < this.BLOCK_SIZE - 1; i++) {
+        for (let i = 0; i < this.BLOCK_SIZE; i++) {
             const memField = this.readMemField(io);
             const data = tape.data.readUInt16LE((block * this.BLOCK_SIZE + i) * 2);
 
@@ -277,7 +278,7 @@ export class TC08 extends Peripheral {
                 incCA: true
             });
 
-            if (this.state.contMode && brkReply.wordCountOverflow) {
+            if (brkReply.wordCountOverflow) {
                 overflow = true;
                 break;
             }
@@ -295,7 +296,7 @@ export class TC08 extends Peripheral {
 
         console.log(`TC08: Write ${tape.unit}.${tape.curBlock}`);
         let overflow = false;
-        for (let i = 0; i < this.BLOCK_SIZE - 1; i++) {
+        for (let i = 0; i < this.BLOCK_SIZE; i++) {
             const memField = this.readMemField(io);
 
             const brkReply = io.dataBreak({

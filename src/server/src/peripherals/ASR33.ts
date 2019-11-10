@@ -20,8 +20,11 @@ import { Peripheral, DeviceRegister, IOContext, DeviceID } from '../drivers/IO/P
 
 export class ASR33 extends Peripheral {
     private lastReadAt: bigint = 0n;
-    private lastPunchAt: bigint = 0n;
     private readerData: number[] = [];
+
+    private gotPunch: boolean = false;
+    private punchData: number = 0;
+    private gotPunchAt: bigint = 0n;
 
     public getDeviceID(): DeviceID {
         return DeviceID.DEV_ID_ASR33;
@@ -38,6 +41,11 @@ export class ASR33 extends Peripheral {
                 break;
             case 'set-data':
                 this.readerData = Array.from(data as Buffer);
+                break;
+            case 'force':
+                this.gotPunch = true;
+                this.punchData = 0;
+                this.gotPunchAt = this.readSteadyClock();
                 break;
         }
     }
@@ -67,18 +75,24 @@ export class ASR33 extends Peripheral {
     }
 
     private async onPunchTick(io: IOContext): Promise<void> {
-        if (io.readRegister(DeviceRegister.REG_D) != 1) {
-            // no new data yet
-            return;
+        const regD = io.readRegister(DeviceRegister.REG_D);
+        const now = this.readSteadyClock();
+
+        // check if pending data
+        if (this.gotPunch) {
+            if (now - this.gotPunchAt > 0.100e9) {
+                io.writeRegister(DeviceRegister.REG_D, regD | 2); // ack data
+                io.emitEvent('punch', this.punchData);
+                this.gotPunch = false;
+            }
         }
 
-        // new word ready
-        const now = this.readSteadyClock();
-        if (now - this.lastPunchAt > 0.100e9) {
-            let data = io.readRegister(DeviceRegister.REG_C);
-            io.writeRegister(DeviceRegister.REG_D, 2); // ack data
-            this.lastPunchAt = now;
-            io.emitEvent('punch', data);
+        // check if new data
+        if (io.readRegister(DeviceRegister.REG_D) & 1) {
+            this.gotPunch = true;
+            this.punchData = io.readRegister(DeviceRegister.REG_C);
+            this.gotPunchAt = now;
+            io.writeRegister(DeviceRegister.REG_D, regD & ~1); // remove req
         }
     }
 }

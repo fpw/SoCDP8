@@ -24,6 +24,7 @@ export interface ASR33Props {
     onReaderKey(chr: ArrayBuffer): void;
     onReaderClear(): void;
     onTapeLoad(tape: File): void;
+    onPunchForce(): void;
 }
 
 export const ASR33: React.FunctionComponent<ASR33Props> = observer((props) => {
@@ -34,7 +35,9 @@ export const ASR33: React.FunctionComponent<ASR33Props> = observer((props) => {
     return (
         <section>
             <div className='control'>
-                <textarea readOnly ref={textRef} className='textarea has-fixed-size' rows={8} cols={80} value={props.punchData} />
+                <textarea ref={textRef}
+                        readOnly className='textarea has-fixed-size' rows={8} cols={80} style={{fontFamily: 'Consolas,monaco,monospace'}}
+                        value={props.punchData} />
             </div>
 
             <div className='control'>
@@ -44,6 +47,9 @@ export const ASR33: React.FunctionComponent<ASR33Props> = observer((props) => {
             <div className='field has-addons'>
                 <div className='control'>
                     <button className='button' onClick={props.onReaderClear}>Clear</button>
+                </div>
+                <div className='control'>
+                    <button className='button' onClick={props.onPunchForce}>Force Punch Flag</button>
                 </div>
 
                 <div className='file'>
@@ -63,12 +69,12 @@ export const ASR33: React.FunctionComponent<ASR33Props> = observer((props) => {
 
 function scrollToBottomOnChange(textRef: React.RefObject<HTMLTextAreaElement>) {
     React.useEffect(() => {
-        const textArea = textRef.current;
-        if (!textArea) {
+        const textElem = textRef.current;
+        if (!textElem) {
             return;
         }
 
-        textArea.scrollTop = textArea.scrollHeight;
+        textElem.scrollTop = textElem.scrollHeight - textElem.clientHeight;
     });
 }
 
@@ -78,6 +84,8 @@ function onKey(ev: React.KeyboardEvent, props: ASR33Props): boolean {
         sendPunch(0x0D, props);
     } else if (ev.key == 'Backspace') {
         sendPunch(0x7F, props);
+    } else if (ev.key == 'Escape') {
+        sendPunch(0x1B, props);
     } else if (ev.key.length == 1) {
         const ascii = ev.key.charCodeAt(0);
         if ((ascii & 0x60) == 0x60) {
@@ -88,7 +96,7 @@ function onKey(ev: React.KeyboardEvent, props: ASR33Props): boolean {
             sendPunch(ascii & (~0x40), props);
         }
     }
-    console.log(`${ev.key} ${ev.ctrlKey}`)
+
     return false;
 }
 
