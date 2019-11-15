@@ -17,18 +17,16 @@
  */
 
 import { Peripheral, IOContext, DeviceRegister, DeviceID } from '../drivers/IO/Peripheral';
-import { exists, existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { sleepMs, sleepUs } from '../sleep';
 
-export class RF08 extends Peripheral {
+export class RF08 implements Peripheral {
     private readonly DEBUG = true;
     private readonly BRK_ADDR = 0o7750;
     private readonly DATA_FILE = 'rf08.dat';
-    private lastAccess: bigint = 0n;
     private data = Buffer.alloc(128 * 2048 * 4 * 2);
 
     constructor() {
-        super();
-
         if (existsSync(this.DATA_FILE)) {
             const buf = readFileSync(this.DATA_FILE);
             buf.copy(this.data);
@@ -51,28 +49,27 @@ export class RF08 extends Peripheral {
         }
     }
 
-    public async onTick(io: IOContext): Promise<void> {
-        const now = this.readSteadyClock();
-        if (now - this.lastAccess < 0.01e9) {
-            return;
+    public async run(io: IOContext): Promise<void> {
+        while (true) {
+            const regA = io.readRegister(DeviceRegister.REG_A);
+
+            if (regA & (1 << 15)) {
+                // read
+                await sleepMs(20);
+                io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 15)); // remove request
+                await this.doRead(io);
+            } else if (regA & (1 << 14)) {
+                // write
+                await sleepMs(20);
+                io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 14)); // remove request
+                await this.doWrite(io);
+            } else {
+                await sleepMs(1);
+            }
         }
-
-        const regA = io.readRegister(DeviceRegister.REG_A);
-
-        if (regA & (1 << 15)) {
-            // read
-            io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 15));
-            this.doRead(io);
-        } else if (regA & (1 << 14)) {
-            // write
-            io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 14));
-            this.doWrite(io);
-        }
-
-        this.lastAccess = this.readSteadyClock();
     }
 
-    private doRead(io: IOContext) {
+    private async doRead(io: IOContext) {
         let addr = this.readAddress(io);
 
         if (this.DEBUG) {
@@ -98,12 +95,14 @@ export class RF08 extends Peripheral {
             this.writeAddress(io, addr);
 
             overflow = brkReply.wordCountOverflow;
+
+            await sleepUs(20);
         } while (!overflow);
 
         this.setDoneFlag(io);
     }
 
-    private doWrite(io: IOContext) {
+    private async doWrite(io: IOContext) {
         let addr = this.readAddress(io);
 
         if (this.DEBUG) {
@@ -130,6 +129,8 @@ export class RF08 extends Peripheral {
             addr = (addr + 1) & 0o3777777;
             this.writeAddress(io, addr);
             overflow = brkReply.wordCountOverflow;
+
+            await sleepUs(20);
         } while (!overflow);
 
         this.setDoneFlag(io);

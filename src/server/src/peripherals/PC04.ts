@@ -17,9 +17,12 @@
  */
 
 import { Peripheral, IOContext, DeviceRegister, DeviceID } from '../drivers/IO/Peripheral';
+import { sleepMs } from '../sleep';
 
-export class PC04 extends Peripheral {
-    private lastReadAt: bigint = 0n;
+export class PC04 implements Peripheral {
+    private readonly READER_CPS = 300;
+    private readonly PUNCH_CPS = 50;
+
     private readerData: number[] = [];
 
     public getDeviceID(): DeviceID {
@@ -41,22 +44,23 @@ export class PC04 extends Peripheral {
         }
     }
 
-    public async onTick(io: IOContext): Promise<void> {
-        if ((io.readRegister(DeviceRegister.REG_B) & 1) == 0) {
-            // no data request
-            return;
-        }
+    public async run(io: IOContext): Promise<void> {
+        while (true) {
+            if ((io.readRegister(DeviceRegister.REG_B) & 1) == 0) {
+                // no data request
+                await sleepMs(1);
+                continue;
+            }
 
-        // current word was retrieved, get next
-        const now = this.readSteadyClock();
-        if (now - this.lastReadAt > (1.0 / 300) * 1e9) {
+            // current word was retrieved, get next
             const data = this.readerData.shift();
             if (data != undefined) {
-                console.log(`PR08: Next ${data.toString(16)}, ${this.readerData.length} remaining`);
+                console.log(`PC04 reader: Next ${data.toString(16)}, ${this.readerData.length} remaining`);
                 io.writeRegister(DeviceRegister.REG_A, data);
-                io.writeRegister(DeviceRegister.REG_B, 2); // notify new data
+                io.writeRegister(DeviceRegister.REG_B, 2); // notify of new data
             }
-            this.lastReadAt = this.readSteadyClock();
+
+            await sleepMs(1000 / this.READER_CPS);
         }
     }
 }

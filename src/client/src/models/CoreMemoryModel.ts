@@ -98,6 +98,31 @@ export class CoreMemoryModel {
         this.write(0o7750, program);
     }
 
+    public storeMonitorLoader() {
+        const program = [
+            0o07600,    /* 200, CLA CLL */
+            0o01216,    /*      TAD MVB         ; move back */
+            0o04210,    /*      JMS DO          ; action */
+            0o01217,    /*      TAD K7577       ; addr */
+            0o03620,    /*      DCA I CA */
+            0o01222,    /*      TAD RDF         ; read fwd */
+            0o04210,    /*      JMS DO          ; action */
+            0o05600,    /*      JMP I 200       ; enter boot */
+            0o00000,    /* DO,  0 */
+            0o06766,    /*      DTCA!DTXA       ; start tape */
+            0o03621,    /*      DCA I WC        ; clear wc */
+            0o06771,    /*      DTSF            ; wait */
+            0o05213,    /*      JMP .-1 */
+            0o05610,    /*      JMP I DO */
+            0o00600,    /* MVB, 0600 */
+            0o07577,    /* K7577, 7757 */
+            0o07755,    /* CA,  7755 */
+            0o07754,    /* WC,  7754 */
+            0o00220     /* RF,  0220 */
+        ];
+
+        this.write(0o0200, program);
+    }
 
     public write(addr: number, fragment: number[]) {
         this.socket.emit('core', {

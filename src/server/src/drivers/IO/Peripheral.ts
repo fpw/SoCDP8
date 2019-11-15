@@ -42,16 +42,9 @@ export interface IOContext {
     emitEvent(action: string, data: any): void;
 }
 
-export abstract class Peripheral {
-    public abstract getDeviceID(): DeviceID;
-
-    public abstract getBusConnections(): number[];
-
-    public abstract onTick(io: IOContext): Promise<void>;
-
-    public abstract requestAction(action: string, data: any): void;
-
-    protected readSteadyClock(): bigint {
-        return process.hrtime.bigint();
-    }
+export interface Peripheral {
+    getDeviceID(): DeviceID;
+    getBusConnections(): number[];
+    requestAction(action: string, data: any): void;
+    run(io: IOContext): Promise<void>;
 }

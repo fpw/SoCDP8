@@ -68,7 +68,7 @@ begin
         io_bus_out <= (others => '0');
     end if;
 
-    if enable = '1' and iop_last /= iop then
+    if enable = '1' then
         -- regA: DMA and R/W op
         -- regB: EMA
         -- regC: Status register, 15: data completion flag (DCF)
@@ -93,7 +93,7 @@ begin
             pdp8_irq <= '0';
         end if;
 
-        if io_mb(8 downto 3) = o"60" then
+        if iop_last /= iop and io_mb(8 downto 3) = o"60" then
             case iop is
                 when IO1 =>
                     -- DCMA: Clear DMA, parity flag, data late flag. Does not clear interrupt enable or EMA.
@@ -117,7 +117,7 @@ begin
                     io_ac_clear <= '1';
                 when others => null;
             end case;
-        elsif io_mb(8 downto 3) = o"61" then
+        elsif iop_last /= iop and io_mb(8 downto 3) = o"61" then
             case iop is
                 when IO1 =>
                     -- DCIM: Clear interrupt enable and field
@@ -136,7 +136,7 @@ begin
                     end if;
                 when others => null;
             end case;
-        elsif io_mb(8 downto 3) = o"62" then
+        elsif iop_last /= iop and io_mb(8 downto 3) = o"62" then
             case iop is
                 when IO1 =>
                     -- DFSE: Skip on DRL, PER, WLS or NXD
@@ -154,7 +154,7 @@ begin
                     io_bus_out <= regA(11 downto 0);
                 when others => null;
             end case;
-        elsif io_mb(8 downto 3) = o"64" then
+        elsif iop_last /= iop and io_mb(8 downto 3) = o"64" then
             case iop is
                 when IO1 =>
                     if io_mb(2 downto 0) = o"1" or io_mb(2 downto 0) = o"3" then

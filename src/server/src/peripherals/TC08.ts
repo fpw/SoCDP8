@@ -17,6 +17,7 @@
  */
 
 import { Peripheral, DeviceRegister, IOContext, DeviceID } from '../drivers/IO/Peripheral';
+import { sleepMs, sleepUs } from '../sleep';
 
 enum TapeDirection {
     FORWARD = 0,
@@ -43,45 +44,48 @@ interface StatusRegisterA {
     irq: boolean;
 }
 
-enum BlockState {
-    NOT_STARTED,
-    NUM_READ,
-    DATA_READ
-}
-
 interface TapeState {
     unit: number;
     data: Buffer;
-    curBlock: number;
-    blockState: BlockState;
-    lastMotionAt: bigint;
-
-    moving: boolean;
-    direction: TapeDirection;
+    curLine: number;
 }
 
-export class TC08 extends Peripheral {
+export class TC08 implements Peripheral {
     private readonly DEBUG = false;
-    private readonly NUM_BLOCKS = 1474;
-    private readonly BLOCK_SIZE = 129;
+
+    private ZONE_WORDS = 8192;          // number of words in start / end zone
+    private ZONE_WSIZE = 6;             // number of lines per zone word
+    private ZONE_LINES = this.ZONE_WORDS * this.ZONE_WSIZE;
+
+    private SYNC_WORDS = 198            // number of sync words between zones and blocks
+    private SYNC_WSIZE = 6;             // number of lines per sync word
+    private SYNC_LINES = this.SYNC_WORDS * this.SYNC_WSIZE;
+
+    private readonly HEADER_WORDS = 5;  // number of words in header and trailer
+    private readonly HEADER_WSIZE = 6;  // number of lines in header words
+    private readonly HEADER_LINES = this.HEADER_WORDS * this.HEADER_WSIZE;
+
+    private readonly DATA_WORDS = 129;  // number of data words per block
+    private readonly DATA_WSIZE = 4;    // number of lines per data word
+    private readonly DATA_LINES = this.DATA_WORDS * this.DATA_WSIZE;
+
+    private readonly BLOCK_LINES = 2 * this.HEADER_LINES + this.DATA_LINES;
+    private readonly NUM_BLOCKS = 1474; // number of blocks on tape
+
+    // a tape consists of a reverse end zone, a sync zone, a data zone, another sync zone and a forward end zone
+    private readonly TAPE_LINES = 2 * this.ZONE_LINES + 2 * this.SYNC_LINES + this.NUM_BLOCKS * this.BLOCK_LINES;
+
+    private REVERSE_ZONE_POS = this.ZONE_LINES;
+    private FORWARD_ZONE_POS = this.TAPE_LINES - this.ZONE_LINES;
+
+    private DATA_ZONE_START = this.REVERSE_ZONE_POS + this.SYNC_LINES;
+    private DATA_ZONE_END = this.FORWARD_ZONE_POS - this.SYNC_LINES;
+
+    private US_PER_LINE = 33;           // microseconds per line
+
     private readonly BRK_ADDR   = 0o7754;
 
     private tapes: TapeState[] = [];
-    private lastRegA: number = 0;
-    private state: StatusRegisterA;
-
-    constructor() {
-        super();
-
-        this.state = {
-            transportUnit: 0,
-            direction: TapeDirection.FORWARD,
-            run: false,
-            contMode: false,
-            func: TapeFunction.MOVE,
-            irq: false,
-        }
-    }
 
     public getDeviceID(): DeviceID {
         return DeviceID.DEV_ID_TC08;
@@ -104,220 +108,320 @@ export class TC08 extends Peripheral {
         this.tapes[unit] = {
             unit: unit,
             data: data,
-            curBlock: 0,
-            blockState: BlockState.NOT_STARTED,
-            lastMotionAt: 0n,
-            moving: false,
-            direction: TapeDirection.FORWARD,
+            curLine: 1000,
         }
     }
 
-    public async onTick(io: IOContext): Promise<void> {
-        const [newBlockFound, newBlockReady] = this.doTapeMotion();
-        const regA = io.readRegister(DeviceRegister.REG_A);
+    private lastRegA: number = 0;
 
-        if (this.lastRegA != regA) {
-            // the program executed DTXA to change something
+    public async run(io: IOContext): Promise<void> {
+        while (true) {
+            const regA = io.readRegister(DeviceRegister.REG_A);
+
+            if (regA == this.lastRegA) {
+                await sleepMs(1);
+                continue;
+            }
+
+            this.lastRegA = regA;
+            const state = this.decodeRegA(regA);
+
             if (this.DEBUG) {
                 console.log(`TC08: DTXA ${regA.toString(8)}`);
             }
 
-            this.state = this.decodeRegA(regA);
-            if (this.DEBUG) {
-                console.log(`TC08: Func ${TapeFunction[this.state.func]}, dir ${TapeDirection[this.state.direction]}, run ${this.state.run}, cont ${this.state.contMode}`);
-            }
-            io.writeRegister(DeviceRegister.REG_C, 0);
-            this.lastRegA = regA;
-
-            io.emitEvent('status-register-changed', regA);
-
-            if (!this.tapes[this.state.transportUnit]) {
-                console.error(`TC08: Invalid transport unit ${this.state.transportUnit}`);
-                this.setSelectError(io);
-                this.clearMotionFlag(io);
-                return;
-            }
-        }
-
-        if (!this.tapes[this.state.transportUnit]) {
-            return;
-        }
-
-        const tape = this.tapes[this.state.transportUnit];
-
-        if (tape.moving && ((tape.direction == TapeDirection.REVERSE && tape.curBlock < 0) || (tape.direction == TapeDirection.FORWARD && tape.curBlock >= this.NUM_BLOCKS))) {
-            console.warn(`TC08: End of tape (${tape.unit}.${tape.curBlock})`);
-            tape.moving = false;
-            this.state.run = false;
-            this.clearMotionFlag(io);
-            this.setEndOfTapeError(io);
-            return;
-        } else {
-            tape.moving = this.state.run;
-        }
-
-        if (tape.direction != this.state.direction) {
-            if (this.DEBUG) {
-                console.log(`TC08: Change direction on block ${tape.unit}.${tape.curBlock}`);
-            }
-            tape.direction = this.state.direction;
-            tape.lastMotionAt = this.readSteadyClock();
-            tape.blockState = BlockState.DATA_READ;
-            return;
-        }
-
-        try {
-            switch (this.state.func) {
-                case TapeFunction.MOVE:     this.doMove(io, tape, this.state.contMode); break;
-                case TapeFunction.SEARCH:   this.doSearch(io, tape, newBlockFound, this.state.contMode); break;
-                case TapeFunction.READ:     this.doRead(io, tape, newBlockReady, this.state.contMode); break;
-                case TapeFunction.WRITE:    this.doWrite(io, tape, newBlockReady, this.state.contMode); break;
-                default:
-                    console.error(`TC08: Function ${TapeFunction[this.state.func]} not implemented`);
-                    this.clearMotionFlag(io);
-                    this.setSelectError(io);
-            }
-        } catch (e) {
-            console.warn(`TC08: Timing error: ${e}`);
-            this.clearMotionFlag(io);
-            this.setEndOfTapeError(io);
-        }
-    }
-
-    private doTapeMotion(): [boolean, boolean] {
-        const now = this.readSteadyClock();
-        let blockFound = false;
-        let blockRead = false;
-        for (const tape of this.tapes) {
-            if (tape.moving) {
-                const durationMs = (now - tape.lastMotionAt) / 1000000n;
-                switch (tape.blockState) {
-                    case BlockState.NOT_STARTED:
-                        if (durationMs > 5 && tape.curBlock >= 0 && tape.curBlock < this.NUM_BLOCKS) {
-                            if (tape.unit == this.state.transportUnit) {
-                                blockFound = true;
-                            }
-                            tape.blockState = BlockState.NUM_READ;
-                            tape.lastMotionAt = now;
-                        }
-                        break;
-                    case BlockState.NUM_READ:
-                        if (durationMs > 10 && tape.curBlock >= 0 && tape.curBlock < this.NUM_BLOCKS) {
-                            if (tape.unit == this.state.transportUnit) {
-                                blockRead = true;
-                            }
-                            tape.blockState = BlockState.DATA_READ;
-                            tape.lastMotionAt = now;
-                        }
-                        break;
-                    case BlockState.DATA_READ:
-                        if (durationMs > 10) {
-                            switch (tape.direction) {
-                                case TapeDirection.FORWARD:
-                                    tape.curBlock++;
-                                    break;
-                                case TapeDirection.REVERSE:
-                                    tape.curBlock--;
-                                    break;
-                            }
-                            tape.blockState = BlockState.NOT_STARTED;
-                            tape.lastMotionAt = now;
-                        }
-                        break;
+            if (state.run) {
+                try {
+                    await this.performFunction(io, state);
+                } catch (e) {
+                    console.log(`TC08: Error ${e}`);
+                    this.setTimingError(io);
+                    continue;
                 }
             }
         }
-        return [blockFound, blockRead];
     }
 
-    private doMove(io: IOContext, tape: TapeState, contMode: boolean) {
+    private didRegAChange(io: IOContext): boolean {
+        const regA = io.readRegister(DeviceRegister.REG_A);
+        return regA != this.lastRegA;
     }
 
-    private doSearch(io: IOContext, tape: TapeState, blockFound: boolean, contMode: boolean) {
-        if (!blockFound) {
+    private async performFunction(io: IOContext, state: StatusRegisterA) {
+        const tape = this.tapes[state.transportUnit];
+
+        if (!tape) {
+            this.setSelectError(io);
             return;
         }
 
-        console.log(`TC08: Search -> ${tape.unit}.${tape.curBlock}`);
+        if (this.DEBUG) {
+            console.log(`TC08: Func ${TapeFunction[state.func]}, dir ${TapeDirection[state.direction]}, run ${state.run}, cont ${state.contMode}`);
+        }
 
-        const memField = this.readMemField(io);
-        const reply = io.dataBreak({
-            threeCycle: true,
-            isWrite: true,
-            data: tape.curBlock,
-            address: this.BRK_ADDR,
-            field: memField,
-            incMB: false,
-            incCA: false
-        });
-
-        if (!contMode || reply.wordCountOverflow) {
-            this.setDECTapeFlag(io);
+        switch (state.func) {
+            case TapeFunction.MOVE:
+                await this.doMove(io, tape, state.direction);
+                break;
+            case TapeFunction.SEARCH:
+                await this.doSearch(io, tape, state.direction, state.contMode);
+                break;
+            case TapeFunction.READ:
+                await this.doRead(io, tape, state.direction, state.contMode);
+                break;
+            case TapeFunction.WRITE:
+                await this.doWrite(io, tape, state.direction, state.contMode);
+                break;
+            default:
+                console.log(`TC08: Function ${TapeFunction[state.func]} not implemented`);
+                this.setSelectError(io);
         }
     }
 
-    private doRead(io: IOContext, tape: TapeState, blockRead: boolean, contMode: boolean) {
-        if (!blockRead) {
-            return;
-        }
+    private async doMove(io: IOContext, tape: TapeState, dir: TapeDirection) {
+        let stop = false;
+        do {
+            if (dir == TapeDirection.FORWARD) {
+                if (tape.curLine > this.FORWARD_ZONE_POS) {
+                    stop = true;
+                }
+            } else {
+                if (tape.curLine < this.REVERSE_ZONE_POS) {
+                    stop = true;
+                }
+            }
 
-        console.log(`TC08: Read ${tape.unit}.${tape.curBlock}`);
-        const block = tape.curBlock;
-        let overflow = false;
-        for (let i = 0; i < this.BLOCK_SIZE; i++) {
+            await this.moveAndWaitLines(tape, dir, this.BLOCK_LINES);
+
+            if (this.didRegAChange(io)) {
+                return;
+            }
+        } while (!stop);
+
+        console.log(`TC08: Move done, now ${tape.curLine}`);
+        this.setEndOfTapeError(io);
+    }
+
+    private async doSearch(io: IOContext, tape: TapeState, dir: TapeDirection, contMode: boolean) {
+        while (!this.didRegAChange(io)) {
+            const [curBlock, curBlockPos] = this.calcBlockAddr(tape.curLine);
+
+            if (dir == TapeDirection.FORWARD) {
+                if (tape.curLine >= this.FORWARD_ZONE_POS) {
+                    this.setEndOfTapeError(io);
+                    continue;
+                }
+
+                if (tape.curLine >= this.DATA_ZONE_END) {
+                    this.moveAndWaitLines(tape, dir, this.BLOCK_LINES);
+                    continue;
+                }
+
+                if (tape.curLine < this.DATA_ZONE_START) {
+                    await this.moveAndWaitLines(tape, dir, this.DATA_ZONE_START - tape.curLine);
+                    continue;
+                }
+
+                if (curBlockPos != 0) {
+                    // wait until tape is at the block header of the next block
+                    await this.moveAndWaitLines(tape, dir, this.BLOCK_LINES - curBlockPos);
+                    continue;
+                }
+            } else {
+                if (tape.curLine < this.REVERSE_ZONE_POS) {
+                    this.setEndOfTapeError(io);
+                    continue;
+                }
+
+                if (tape.curLine < this.DATA_ZONE_START) {
+                    this.moveAndWaitLines(tape, dir, this.BLOCK_LINES);
+                    continue;
+                }
+
+                if (tape.curLine > this.DATA_ZONE_END) {
+                    await this.moveAndWaitLines(tape, dir, tape.curLine - this.DATA_ZONE_END);
+                    continue;
+                }
+
+                if (curBlockPos != this.BLOCK_LINES - 1) {
+                    // wait until tape is at the reverse block header of the next block
+                    await this.moveAndWaitLines(tape, dir, curBlockPos + 1);
+                    continue;
+                }
+            }
+
+            console.log(`TC08: Search -> ${tape.unit}.${curBlock}`);
+
             const memField = this.readMemField(io);
-            const data = tape.data.readUInt16LE((block * this.BLOCK_SIZE + i) * 2);
-
-            const brkReply = io.dataBreak({
+            const reply = io.dataBreak({
                 threeCycle: true,
                 isWrite: true,
-                data: data,
+                data: curBlock,
                 address: this.BRK_ADDR,
                 field: memField,
                 incMB: false,
-                incCA: true
+                incCA: false
             });
 
-            if (brkReply.wordCountOverflow) {
-                overflow = true;
-                break;
+            if (!contMode || reply.wordCountOverflow) {
+                this.setDECTapeFlag(io);
             }
-        }
 
-        if (!contMode || overflow) {
-            this.setDECTapeFlag(io);
+            // skip over header
+            await this.moveAndWaitLines(tape, dir, this.HEADER_LINES);
         }
     }
 
-    private doWrite(io: IOContext, tape: TapeState, blockRead: boolean, contMode: boolean) {
-        if (!blockRead) {
-            return;
+    private async doRead(io: IOContext, tape: TapeState, dir: TapeDirection, contMode: boolean) {
+        if (dir == TapeDirection.REVERSE) {
+            throw Error("Reverse read not supported");
         }
 
-        console.log(`TC08: Write ${tape.unit}.${tape.curBlock}`);
-        let overflow = false;
-        for (let i = 0; i < this.BLOCK_SIZE; i++) {
-            const memField = this.readMemField(io);
+        if (tape.curLine < this.DATA_ZONE_START) {
+            await this.moveAndWaitLines(tape, dir, this.DATA_ZONE_START - tape.curLine);
+        }
 
-            const brkReply = io.dataBreak({
-                threeCycle: true,
-                isWrite: false,
-                data: 0,
-                address: this.BRK_ADDR,
-                field: memField,
-                incMB: false,
-                incCA: true
-            });
+        while (!this.didRegAChange(io)) {
+            if (tape.curLine >= this.DATA_ZONE_END) {
+                await this.moveAndWaitLines(tape, dir, this.HEADER_LINES);
+                continue;
+            }
 
-            tape.data.writeUInt16LE(brkReply.mb, (tape.curBlock * this.BLOCK_SIZE + i) * 2);
+            if (tape.curLine >= this.FORWARD_ZONE_POS) {
+                this.setEndOfTapeError(io);
+                continue;
+            }
 
-            if (brkReply.wordCountOverflow) {
-                overflow = true;
-                break;
+            const [curBlock, curPos] = this.calcBlockAddr(tape.curLine);
+
+            // move to beginning of block content
+            if (curPos < this.HEADER_LINES) {
+                // skip over header
+                await this.moveAndWaitLines(tape, dir, this.HEADER_LINES - curPos);
+                continue;
+            } else if (curPos > this.HEADER_LINES) {
+                // skip over trailer to next block
+                await this.moveAndWaitLines(tape, dir, this.BLOCK_LINES + this.HEADER_LINES - curPos);
+                continue;
+            }
+
+            console.log(`TC08: Read ${tape.unit}.${curBlock}`);
+            let overflow = false;
+            for (let i = 0; i < this.DATA_WORDS; i++) {
+                const memField = this.readMemField(io);
+                const data = tape.data.readUInt16LE((curBlock * this.DATA_WORDS + i) * 2);
+
+                const brkReply = io.dataBreak({
+                    threeCycle: true,
+                    isWrite: true,
+                    data: data,
+                    address: this.BRK_ADDR,
+                    field: memField,
+                    incMB: false,
+                    incCA: true
+                });
+
+                if (brkReply.wordCountOverflow) {
+                    overflow = true;
+                    break;
+                }
+
+                await this.moveAndWaitLines(tape, dir, this.DATA_WSIZE);
+
+                if (this.didRegAChange(io)) {
+                    return;
+                }
+            }
+
+            if (!contMode || overflow) {
+                this.setDECTapeFlag(io);
             }
         }
+    }
 
-        this.setDECTapeFlag(io);
+    private async doWrite(io: IOContext, tape: TapeState, dir: TapeDirection, contMode: boolean) {
+        if (dir == TapeDirection.REVERSE) {
+            throw Error("Reverse write not supported");
+        }
+
+        if (tape.curLine < this.DATA_ZONE_START) {
+            await this.moveAndWaitLines(tape, dir, this.DATA_ZONE_START - tape.curLine);
+        }
+
+        while (!this.didRegAChange(io)) {
+            if (tape.curLine >= this.DATA_ZONE_END) {
+                await this.moveAndWaitLines(tape, dir, this.HEADER_LINES);
+                continue;
+            }
+
+            if (tape.curLine >= this.FORWARD_ZONE_POS) {
+                this.setEndOfTapeError(io);
+                continue;
+            }
+
+            const [curBlock, curPos] = this.calcBlockAddr(tape.curLine);
+
+            // move to beginning of block content
+            if (curPos < this.HEADER_LINES) {
+                // skip over header
+                await this.moveAndWaitLines(tape, dir, this.HEADER_LINES - curPos);
+                continue;
+            } else if (curPos > this.HEADER_LINES) {
+                // skip over trailer to next block
+                await this.moveAndWaitLines(tape, dir, this.BLOCK_LINES + this.HEADER_LINES - curPos);
+                continue;
+            }
+
+            console.log(`TC08: Write ${tape.unit}.${curBlock}`);
+            let overflow = false;
+            for (let i = 0; i < this.DATA_WORDS; i++) {
+                const memField = this.readMemField(io);
+
+                const brkReply = io.dataBreak({
+                    threeCycle: true,
+                    isWrite: false,
+                    data: 0,
+                    address: this.BRK_ADDR,
+                    field: memField,
+                    incMB: false,
+                    incCA: true
+                });
+
+                tape.data.writeUInt16LE(brkReply.mb, (curBlock * this.DATA_WORDS + i) * 2);
+
+                if (brkReply.wordCountOverflow) {
+                    overflow = true;
+                    break;
+                }
+
+                await this.moveAndWaitLines(tape, dir, this.DATA_WSIZE);
+
+                if (this.didRegAChange(io)) {
+                    return;
+                }
+            }
+
+            if (!contMode || overflow) {
+                this.setDECTapeFlag(io);
+            }
+        }
+    }
+
+    private async moveAndWaitLines(tape: TapeState, dir: TapeDirection, lines: number): Promise<void> {
+        if (dir == TapeDirection.FORWARD) {
+            tape.curLine += lines;
+        } else {
+            tape.curLine -= lines;
+        }
+
+        await sleepUs(lines * this.US_PER_LINE);
+    }
+
+    private calcBlockAddr(line: number): [number, number] {
+        const block = Math.floor((line - this.DATA_ZONE_START) / this.BLOCK_LINES);
+        const offset = (line - this.DATA_ZONE_START) % this.BLOCK_LINES;
+
+        return [block, offset];
     }
 
     private decodeRegA(regA: number): StatusRegisterA {
@@ -339,25 +443,33 @@ export class TC08 extends Peripheral {
         return (regB & 0o0070) >> 3;
     }
 
-    private clearMotionFlag(io: IOContext) {
-        const regA = io.readRegister(DeviceRegister.REG_A);
-        io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 7));
-        this.lastRegA = regA;
-    }
-
     private setTimingError(io: IOContext) {
+        console.log(`TC08: Timing error`);
+        this.clearMotionFlag(io);
+
         const regB = io.readRegister(DeviceRegister.REG_B);
         io.writeRegister(DeviceRegister.REG_B, regB | (1 << 11) | (1 << 6));
     }
 
     private setSelectError(io: IOContext) {
+        console.log(`TC08: Select error`);
+        this.clearMotionFlag(io);
+
         const regB = io.readRegister(DeviceRegister.REG_B);
         io.writeRegister(DeviceRegister.REG_B, regB | (1 << 11) | (1 << 8));
     }
 
     private setEndOfTapeError(io: IOContext) {
+        console.log(`TC08: End of tape`);
+        this.clearMotionFlag(io);
+
         const regB = io.readRegister(DeviceRegister.REG_B);
         io.writeRegister(DeviceRegister.REG_B, regB | (1 << 11) | (1 << 9));
+    }
+
+    private clearMotionFlag(io: IOContext) {
+        const regA = io.readRegister(DeviceRegister.REG_A);
+        io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 7));
     }
 
     private setDECTapeFlag(io: IOContext) {

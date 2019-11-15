@@ -82,6 +82,9 @@ const Header: React.FunctionComponent<PDP8Props> = (props) =>
                             <a className='navbar-item' onClick={() => props.pdp8.core.storeOS8LoaderRF08()}>
                                 Store OS/8 RF08 Loader - 7750
                             </a>
+                            <a className='navbar-item' onClick={() => props.pdp8.core.storeMonitorLoader()}>
+                                Store Disk Monitor Loader - 0200
+                            </a>
                             <a className='navbar-item' onClick={() => props.pdp8.core.storeBlinker()}>
                                 Store AC/MQ Blinker - 0000
                             </a>

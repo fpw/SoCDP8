@@ -67,7 +67,7 @@ begin
         io_bus_out <= (others => '0');
     end if;
 
-    if enable = '1' and iop_last /= iop  then
+    if enable = '1'  then
         if unsigned(regB(11 downto 0) and o"7707") /= 0 and regA(2) = '1' then
             pdp8_irq <= '1';
         else
@@ -75,7 +75,7 @@ begin
         end if;
         soc_attention <= regC(0);
 
-        if io_mb(8 downto 3) = o"76" then
+        if iop_last /= iop and io_mb(8 downto 3) = o"76" then
             -- status register A:
             -- 11 downto 9: transport unit
             --           8: motion, 0 = forward, 1 = reverse
@@ -112,7 +112,7 @@ begin
                     regC(0) <= '1';
                 when others => null;
             end case;
-        elsif io_mb(8 downto 3) = o"77" then
+        elsif iop_last /= iop and io_mb(8 downto 3) = o"77" then
             -- status register B
             -- 11: error flag (EF)
             -- 10: mark track error (MK TRK)

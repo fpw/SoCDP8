@@ -152,8 +152,4 @@ export class SoCDP8 {
         const bitVal = val ? 1 : 0;
         return (cleared | (bitVal << pos));
     }
-
-    public async checkDevices(): Promise<void> {
-        await this.io.checkDevices();
-    }
 }

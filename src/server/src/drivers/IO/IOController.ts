@@ -74,6 +74,13 @@ export class IOController {
         for (const busId of mapping) {
             this.writeMappingTable(busId, this.TBL_MAPPING_DEV_ID, devId);
         }
+
+        perph.run({
+            readRegister: reg => this.readPeripheralReg(devId, reg),
+            writeRegister: (reg, val) => this.writePeripheralReg(devId, reg, val),
+            dataBreak: req => this.doDataBreak(req),
+            emitEvent: (action, data) => this.listener.onPeripheralEvent(devId, action, data)
+        });
     }
 
     public getRegisteredDevices(): readonly Peripheral[] {
@@ -87,27 +94,6 @@ export class IOController {
         }
 
         peripheral.requestAction(action, data);
-    }
-
-    public async checkDevices(): Promise<void> {
-        const attention = this.readSystemRegister(this.SYS_REG_DEV_ATTN);
-
-        for (const [devId, perph] of this.peripherals.entries()) {
-            if (!perph) {
-                continue;
-            }
-
-            try {
-                await perph.onTick({
-                    readRegister: reg => this.readPeripheralReg(devId, reg),
-                    writeRegister: (reg, val) => this.writePeripheralReg(devId, reg, val),
-                    dataBreak: req => this.doDataBreak(req),
-                    emitEvent: (action, data) => this.listener.onPeripheralEvent(devId, action, data),
-                });
-            } catch (e) {
-                console.error(`Device ${devId} threw in tick: ${e}`)
-            }
-        }
     }
 
     // this must not be async - the lowest sleep resolution is 1ms and we need to be faster...
@@ -214,5 +200,4 @@ export class IOController {
     private getMappingTableAddr(busId: number, reg: number): number {
         return busId * (16 * 4) + reg * 4;
     }
-
 }

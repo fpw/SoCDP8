@@ -17,14 +17,14 @@
  */
 
 import { Peripheral, DeviceRegister, IOContext, DeviceID } from '../drivers/IO/Peripheral';
+import { sleepMs } from '../sleep';
 
-export class ASR33 extends Peripheral {
-    private lastReadAt: bigint = 0n;
+export class ASR33 implements Peripheral {
+    private readonly READER_CPS = 10;
+    private readonly PUNCH_CPS = 12; // with 10, Focal69 identifies as PDP-8/L
+
     private readerData: number[] = [];
-
-    private gotPunch: boolean = false;
-    private punchData: number = 0;
-    private gotPunchAt: bigint = 0n;
+    private forcePunch: boolean = false;
 
     public getDeviceID(): DeviceID {
         return DeviceID.DEV_ID_ASR33;
@@ -43,56 +43,59 @@ export class ASR33 extends Peripheral {
                 this.readerData = Array.from(data as Buffer);
                 break;
             case 'force':
-                this.gotPunch = true;
-                this.punchData = 0;
-                this.gotPunchAt = this.readSteadyClock();
+                this.forcePunch = true;
                 break;
         }
     }
 
-    public async onTick(io: IOContext): Promise<void> {
-        await this.onReaderTick(io);
-        await this.onPunchTick(io);
+    public async run(io: IOContext): Promise<void> {
+        this.runReader(io);
+        this.runPunch(io);
     }
 
-    private async onReaderTick(io: IOContext): Promise<void> {
-        if (io.readRegister(DeviceRegister.REG_B) == 1) {
-            // data not taken yet
-            return;
-        }
+    private async runReader(io: IOContext) {
+        while (true) {
+            if (io.readRegister(DeviceRegister.REG_B) == 1) {
+                // data not taken yet
+                await sleepMs(1);
+                continue;
+            }
 
-        // current word was retrieved, get next
-        const now = this.readSteadyClock();
-        if (now - this.lastReadAt > 0.100e9) {
+            // current word was retrieved, get next
             const data = this.readerData.shift();
             if (data != undefined) {
                 console.log(`ASR-33 reader: Next ${data.toString(16)}, ${this.readerData.length} remaining`);
                 io.writeRegister(DeviceRegister.REG_A, data);
                 io.writeRegister(DeviceRegister.REG_B, 1);
             }
-            this.lastReadAt = this.readSteadyClock();
+
+            await sleepMs(1000 / this.READER_CPS);
         }
     }
 
-    private async onPunchTick(io: IOContext): Promise<void> {
-        const regD = io.readRegister(DeviceRegister.REG_D);
-        const now = this.readSteadyClock();
-
-        // check if pending data
-        if (this.gotPunch) {
-            if (now - this.gotPunchAt > 0.100e9) {
-                io.writeRegister(DeviceRegister.REG_D, regD | 2); // ack data
-                io.emitEvent('punch', this.punchData);
-                this.gotPunch = false;
+    private async runPunch(io: IOContext) {
+        while (true) {
+            if (this.forcePunch) {
+                io.writeRegister(DeviceRegister.REG_D, 2);
+                this.forcePunch = false;
             }
-        }
 
-        // check if new data
-        if (io.readRegister(DeviceRegister.REG_D) & 1) {
-            this.gotPunch = true;
-            this.punchData = io.readRegister(DeviceRegister.REG_C);
-            this.gotPunchAt = now;
-            io.writeRegister(DeviceRegister.REG_D, regD & ~1); // remove req
+            let regD = io.readRegister(DeviceRegister.REG_D);
+            const newData = (regD & 1) != 0;
+
+            if (!newData) {
+                await sleepMs(1);
+                continue;
+            }
+
+            io.writeRegister(DeviceRegister.REG_D, regD & ~1); // remove request
+            const punchData = io.readRegister(DeviceRegister.REG_C);
+
+            await sleepMs(1000 / this.PUNCH_CPS);
+
+            regD = io.readRegister(DeviceRegister.REG_D);
+            io.writeRegister(DeviceRegister.REG_D, regD | 2); // ack data
+            io.emitEvent('punch', punchData);
         }
     }
 }

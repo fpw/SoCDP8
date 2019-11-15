@@ -22,12 +22,11 @@ import * as cors from 'cors';
 import { Server } from 'http';
 import { SoCDP8, ConsoleState } from './models/SoCDP8';
 import { Response, Request } from 'express-serve-static-core';
-import { isDeepStrictEqual } from 'util';
+import { isDeepStrictEqual, promisify } from 'util';
 
 export class AppServer {
     private readonly MOMENTARY_DEBOUNCE_MS = 150;
     private readonly CONSOLE_CHECK_MS = 75;
-    private readonly DEVICE_CHECK_MS = 1;
 
     private app: express.Application;
     private pdp8: SoCDP8;
@@ -54,9 +53,7 @@ export class AppServer {
     }
 
     public start(): void {
-        // not using setInterval since that could cause reentrant calls!
-        setImmediate(() => this.checkConsoleState());
-        setImmediate(() => this.checkDevices());
+        this.startConsoleCheckLoop();
     }
 
     private onClientConnect(client: io.Socket) {
@@ -117,19 +114,18 @@ export class AppServer {
 
     // State maintenance
 
-    private async checkDevices() {
-        await this.pdp8.checkDevices();
-        setTimeout(() => this.checkDevices(), this.DEVICE_CHECK_MS);
-    }
+    private async startConsoleCheckLoop(): Promise<void> {
+        const sleepMs = promisify(setTimeout);
 
-    private checkConsoleState() {
-        const curState = this.pdp8.readConsoleState();
-        if (!isDeepStrictEqual(this.lastConsoleState, curState)) {
-            this.broadcastConsoleState(curState);
-            this.lastConsoleState = curState;
+        while (true) {
+            const curState = this.pdp8.readConsoleState();
+            if (!isDeepStrictEqual(this.lastConsoleState, curState)) {
+                this.broadcastConsoleState(curState);
+                this.lastConsoleState = curState;
+            }
+
+            await sleepMs(this.CONSOLE_CHECK_MS);
         }
-
-        setTimeout(() => this.checkConsoleState(), this.CONSOLE_CHECK_MS);
     }
 
     private broadcastConsoleState(state: ConsoleState) {
