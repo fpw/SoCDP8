@@ -253,7 +253,7 @@ export class TC08 implements Peripheral {
             console.log(`TC08: Search -> ${tape.unit}.${curBlock}`);
 
             const memField = this.readMemField(io);
-            const reply = io.dataBreak({
+            const reply = await io.dataBreak({
                 threeCycle: true,
                 isWrite: true,
                 data: curBlock,
@@ -311,7 +311,7 @@ export class TC08 implements Peripheral {
                 const memField = this.readMemField(io);
                 const data = tape.data.readUInt16LE((curBlock * this.DATA_WORDS + i) * 2);
 
-                const brkReply = io.dataBreak({
+                const brkReply = await io.dataBreak({
                     threeCycle: true,
                     isWrite: true,
                     data: data,
@@ -377,7 +377,7 @@ export class TC08 implements Peripheral {
             for (let i = 0; i < this.DATA_WORDS; i++) {
                 const memField = this.readMemField(io);
 
-                const brkReply = io.dataBreak({
+                const brkReply = await io.dataBreak({
                     threeCycle: true,
                     isWrite: false,
                     data: 0,

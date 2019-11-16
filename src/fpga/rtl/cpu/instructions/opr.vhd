@@ -10,11 +10,8 @@ use work.inst_common.all;
 
 -- This entity implements the mechanization chart for the OPR instruction.
 entity inst_opr is
-    generic (
-        enable_ext_eae: boolean
-    );
-
     port (
+        enable_ext_eae: in std_logic;
         input: in inst_input;
         transfers: out register_transfers;
         state_next: out major_state
@@ -25,14 +22,14 @@ architecture Behavioral of inst_opr is
     signal need_exec_cycle: std_logic;
 begin
 
-need_exec_cycle <= '1' when enable_ext_eae and input.mb(8) = '1' and input.mb(0) = '1' and -- Group 3
+need_exec_cycle <= '1' when enable_ext_eae = '1' and input.mb(8) = '1' and input.mb(0) = '1' and -- Group 3
                     ((input.mb(3) = '1' or input.mb(2) = '1' or input.mb(1) = '1') and           -- any EAE instruction
                     not (input.mb(3) = '1' and input.mb(2) = '0' and input.mb(1) = '0'))         -- but not NMI
                     else '0';
 
 
 -- combinatorial process
-opr_inst: process(input, need_exec_cycle)
+opr_inst: process(input, enable_ext_eae, need_exec_cycle)
 begin
     -- default output
     transfers <= nop_transfer;
@@ -156,7 +153,7 @@ begin
                         end if;
 
                         transfers.ac_load <= '1';
-                    elsif enable_ext_eae then
+                    elsif enable_ext_eae = '1' then
                         -- Group 3: EAE
                         transfers.load_eae_inst <= '1';
                         

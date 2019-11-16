@@ -12,12 +12,10 @@ use work.inst_common.all;
 -- It selects the signals for the register transfers based on the current
 -- instruction, major state and time division.
 entity instruction_multiplexer is
-    generic (
-        enable_ext_eae: boolean
-    );
     port (
         inst: in pdp8_instruction;
         input: in inst_input;
+        enable_ext_eae: in std_logic;
         eae_on: in std_logic;
         eae_inst: in eae_instruction;
         transfers: out register_transfers;
@@ -108,11 +106,9 @@ port map (
 );
 
 opr_instance: entity work.inst_opr
-generic map (
-    enable_ext_eae => enable_ext_eae
-)
 port map (
     input => input,
+    enable_ext_eae => enable_ext_eae,
     transfers => transfers_opr,
     state_next => state_next_opr
 );
@@ -156,7 +152,7 @@ port map (
 -- select the output of the currenct instruction
 mux_inst: process(input, inst, eae_inst, transfers_muy, transfers_dvi, transfers_nmi, transfers_shl, transfers_asr, transfers_lsr, eae_on,
     state_next_and, state_next_tad, state_next_isz, state_next_dca, state_next_jms, state_next_jmp, state_next_iot, state_next_opr,
-    transfers_and, transfers_tad, transfers_isz, transfers_dca, transfers_jms, transfers_jmp, transfers_iot, transfers_opr)
+    transfers_and, transfers_tad, transfers_isz, transfers_dca, transfers_jms, transfers_jmp, transfers_iot, transfers_opr, enable_ext_eae)
 begin
     transfers <= nop_transfer;
     state_next <= STATE_NONE;

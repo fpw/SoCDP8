@@ -12,12 +12,12 @@ use work.socdp8_package.all;
 -- output signals that indicate which registers will receive the data on the bus.
 -- Additionally, the data can be modified during the transfer by an addition network and a rotate circuit.
 entity registers is
-    generic (
-        enable_ext_mc8i: boolean
-    );
     port (
         clk: in std_logic;
         rstn: in std_logic;
+
+        enable_eae: std_logic;
+        enable_mc8i: std_logic;
         
         -- connect external registers
         --- switch register
@@ -281,7 +281,7 @@ begin
     if transfers.pc_load = '1' then
         pc <= input_bus(11 downto 0);
         skip <= '0';
-        if transfers.sr_enable = '1' then
+        if transfers.sr_enable = '1' and enable_mc8i = '1' then
             mc8_if <= sw_if;
             mc8_ib <= sw_if;
             mc8_df <= sw_df;
@@ -341,7 +341,7 @@ begin
         link <= '0';
     end if;
 
-    if enable_ext_mc8i then
+    if enable_mc8i = '1' then
         if transfers.save_fields = '1' then
             mc8_sf <= mc8_if & mc8_df;
         end if;
@@ -368,6 +368,11 @@ begin
         if transfers.load_df = '1' then
             mc8_df <= sense(5 downto 3);
         end if;
+    end if;
+    
+    if enable_eae = '0' then
+        mqr <= (others => '0');
+        sc <= (others => '0');
     end if;
 
     if rstn = '0' then

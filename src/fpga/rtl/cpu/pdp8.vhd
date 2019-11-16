@@ -9,16 +9,13 @@ use work.socdp8_package.all;
 use work.inst_common.all;
 
 entity pdp8 is
-    generic (
-        -- Whether a KE8/I EAE is present
-        enable_ext_eae: boolean := true;
-        
-        -- Whether a MC8/I memory extension is present
-        enable_ext_mc8i: boolean := true
-    );
     port (
         clk: in std_logic;
         rstn: in std_logic;
+        
+        -- Configuration
+        enable_ext_eae: in std_logic;
+        enable_ext_mem_fields: in std_logic_vector(2 downto 0);
         
         -- I/O connections
         io_bus_in: in std_logic_vector(11 downto 0);
@@ -88,6 +85,7 @@ entity pdp8 is
         switch_sing_step: in std_logic;
         switch_sing_inst: in std_logic
     );
+
 end pdp8;
 
 architecture Behavioral of pdp8 is
@@ -163,6 +161,7 @@ architecture Behavioral of pdp8 is
     signal sense: std_logic_vector(11 downto 0);
     signal mem_done: std_logic;
     --- from register network
+    signal enable_mc8i: std_logic;
     signal reg_trans: register_transfers;
     signal link: std_logic;
     signal carry: std_logic;
@@ -236,13 +235,15 @@ port map (
     eae_end => eae_end
 );
 
+enable_mc8i <= '1' when enable_ext_mem_fields /= "000" else '0';
+
 regs: entity work.registers
-generic map (
-    enable_ext_mc8i => enable_ext_mc8i
-)
 port map (
     clk => clk,
     rstn => rstn,
+    
+    enable_eae => enable_ext_eae,
+    enable_mc8i => enable_mc8i,
     
     sr => switch_swr,
     sw_df => switch_data_field,
@@ -277,6 +278,7 @@ generic map (
 port map (
     clk => clk,
     rstn => rstn,
+    max_field => unsigned(enable_ext_mem_fields),
     mem_addr => ma,
     field => field,
     mem_start => mem_start,
@@ -309,12 +311,10 @@ inst_mux_input <= (
     );
 
 inst_mux: entity work.instruction_multiplexer
-generic map (
-    enable_ext_eae => enable_ext_eae
-)
 port map (
     inst => inst,
     input => inst_mux_input,
+    enable_ext_eae => enable_ext_eae,
     eae_on => eae_on,
     eae_inst => eae_inst,
     transfers => reg_trans_inst,
@@ -492,7 +492,7 @@ begin
                 end if;
                 
                 -- MC8 are part of TS3
-                if enable_ext_mc8i and state = STATE_FETCH and inst = INST_IOT and mb(8 downto 6) = o"2" then
+                if enable_mc8i = '1' and state = STATE_FETCH and inst = INST_IOT and mb(8 downto 6) = o"2" then
                     if mb(2 downto 0) = o"4" then
                         case mb(5 downto 3) is
                             when o"1" =>

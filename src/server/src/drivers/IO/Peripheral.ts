@@ -38,7 +38,7 @@ export enum DeviceID {
 export interface IOContext {
     readRegister(reg: DeviceRegister): number;
     writeRegister(reg: DeviceRegister, value: number): void;
-    dataBreak(req: DataBreakRequest): DataBreakReply;
+    dataBreak(req: DataBreakRequest): Promise<DataBreakReply>;
 
     emitEvent(action: string, data: any): void;
 }

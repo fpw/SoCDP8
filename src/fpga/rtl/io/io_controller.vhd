@@ -47,6 +47,10 @@ entity io_controller is
         S_AXI_BREADY: in std_logic;
         S_AXI_BRESP: out std_logic_vector(1 downto 0); -- 00 := OKAY, 10 := RETRY
 
+        -- PDP-8 configuration output
+        conf_enable_eae: out std_logic;
+        conf_max_field: out std_logic_vector(2 downto 0);
+
         -- I/O connections to PDP-8
         iop: in std_logic_vector(2 downto 0);
         io_ac: in std_logic_vector(11 downto 0);
@@ -85,6 +89,9 @@ architecture Behavioral of io_controller is
     signal axi_in_table: std_logic;
     signal axi_bus_id: integer range 0 to 63;
     signal axi_dev_reg: integer range 0 to 15;
+
+    signal enable_eae: std_logic;
+    signal max_mem_field: std_logic_vector(2 downto 0);
 
     type bus_to_dev_a is array(0 to 63) of integer range 0 to DEV_ID_COUNT - 1;
     signal bus_to_dev: bus_to_dev_a;
@@ -255,6 +262,9 @@ df32_inst: entity work.df32
         soc_attention => dev_attention(DEV_ID_DF32)
     );
 
+conf_enable_eae <= enable_eae;
+conf_max_field <= max_mem_field;
+
 peripheral_out(0).io_skip <= '0';
 peripheral_out(0).io_ac_clear <= '0';
 peripheral_out(0).io_bus_out <= (others => '0');
@@ -340,7 +350,8 @@ begin
                 if axi_bus_id = 0 then
                     case axi_dev_reg is
                         when 0 =>
-                            s_axi_rdata <= x"50445038"; -- magic: 'PDP8'
+                            s_axi_rdata(0) <= enable_eae;
+                            s_axi_rdata(3 downto 1) <= max_mem_field;
                         when 1 =>
                             s_axi_rdata(7 downto 0) <= std_logic_vector(to_unsigned(DEV_ID_COUNT, 8));
                         when 2 =>
@@ -380,6 +391,11 @@ begin
             if axi_in_table = '1' then
                 if axi_bus_id = 0 then
                     case axi_dev_reg is
+                        when 0 =>
+                            if s_axi_wstrb(0) = '1' then
+                                enable_eae <= s_axi_wdata(0);
+                                max_mem_field <= s_axi_wdata(3 downto 1);
+                            end if;
                         when 3 =>
                             if s_axi_wstrb(0) = '1' then
                                 bk_data(7 downto 0) <= s_axi_wdata(7 downto 0);
@@ -446,6 +462,9 @@ begin
     if s_axi_aresetn = '0' then
         state <= IDLE;
         dev_enable <= (others => '0');
+
+        enable_eae <= '0';
+        max_mem_field <= "000";
 
         bk_rqst <= '0';
         bk_three_cycle <= '0';

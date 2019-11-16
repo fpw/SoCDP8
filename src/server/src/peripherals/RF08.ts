@@ -81,7 +81,7 @@ export class RF08 implements Peripheral {
             const data = this.data.readUInt16LE(addr * 2);
             const memField = this.readMemField(io);
 
-            const brkReply = io.dataBreak({
+            const brkReply = await io.dataBreak({
                 threeCycle: true,
                 isWrite: true,
                 data: data,
@@ -113,7 +113,7 @@ export class RF08 implements Peripheral {
         do {
             const memField = this.readMemField(io);
 
-            const brkReply = io.dataBreak({
+            const brkReply = await io.dataBreak({
                 threeCycle: true,
                 isWrite: false,
                 data: 0,

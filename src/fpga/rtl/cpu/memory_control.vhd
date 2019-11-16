@@ -20,6 +20,8 @@ entity memory_control is
     port (
         clk: in std_logic;
         rstn: in std_logic;
+        
+        signal max_field: in unsigned(2 downto 0);
 
         -- address and field selection
         signal mem_addr: in std_logic_vector(11 downto 0);
@@ -70,13 +72,26 @@ mem_ctrl: process begin
             end if;
         when SENS =>
             state <= INHIBIT;
-            sense <= mem_in_data;
+            if unsigned(field) <= max_field then
+                sense <= mem_in_data;
+            else
+                -- check if total number of fields is odd and access to the first non-existing field
+                if max_field(0) = '0' and unsigned(field) = max_field + 1 then
+                    sense <= (others => '0');
+                else
+                    sense <= (others => '1');
+                end if;
+            end if;
             counter <= num_cycles_mem - 1;
         when INHIBIT =>
             if counter > 0 then
                 counter <= counter - 1;
             else
-                state <= WRITE;
+                if unsigned(field) <= max_field then
+                    state <= WRITE;
+                else
+                    state <= IDLE;
+                end if;
             end if;
         when WRITE =>
             state <= IDLE;

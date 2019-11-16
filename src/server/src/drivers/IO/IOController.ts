@@ -18,6 +18,8 @@
 
 import { Peripheral, DeviceRegister } from './Peripheral';
 import { DataBreakRequest, DataBreakReply } from './DataBreak';
+import { sleepUs } from '../../sleep';
+import { CPUExtensions } from '../../models/PeripheralList';
 
 export interface IOListener {
     onPeripheralEvent(devId: number, action: string, data: any): void
@@ -25,7 +27,7 @@ export interface IOListener {
 
 export class IOController {
     // system registers
-    private readonly SYS_REG_MAGIC = 0;
+    private readonly SYS_REG_CONFIG = 0;
     private readonly SYS_REG_MAX_DEV = 1;
     private readonly SYS_REG_DEV_ATTN = 2;
     private readonly SYS_REG_BRK_DATA = 3;
@@ -38,10 +40,27 @@ export class IOController {
 
     private readonly maxDevices: number;
     private peripherals: Peripheral[] = [];
+    private brkBusy = false;
 
     public constructor(private ioMem: Buffer, private listener: IOListener) {
         this.maxDevices = this.readSystemRegister(this.SYS_REG_MAX_DEV);
         this.clearDeviceTable();
+        this.configureExtensions({
+            eae: true,
+            maxMemField: 7
+        });
+    }
+
+    public getExtensions(): CPUExtensions {
+        const conf = this.readSystemRegister(this.SYS_REG_CONFIG);
+        return {
+            eae: (conf & (1 << 0)) != 0,
+            maxMemField: (conf >> 1) & 0o7,
+        };
+    }
+
+    private configureExtensions(ext: CPUExtensions) {
+        this.writeSystemRegister(this.SYS_REG_CONFIG, ((ext.maxMemField & 7) << 1) | (ext.eae ? 1 : 0));
     }
 
     private clearDeviceTable(): void {
@@ -97,10 +116,15 @@ export class IOController {
     }
 
     // this must not be async - the lowest sleep resolution is 1ms and we need to be faster...
-    private doDataBreak(req: DataBreakRequest): DataBreakReply {
+    private async doDataBreak(req: DataBreakRequest): Promise<DataBreakReply> {
+        while (this.brkBusy) {
+            await sleepUs(10);
+        }
+        this.brkBusy = true;
+
         try {
             // wait for old pending requests to finish
-            this.waitDataBreakReady();
+            await this.waitDataBreakReady();
         } catch (e) {
             // remove pending requests
             console.warn('Removed pending BRK');
@@ -108,12 +132,13 @@ export class IOController {
         }
 
         const requestWord: number = this.encodeDataBreak(req);
-        //console.log(`BRK: Request ${requestWord.toString(8)}`);
         this.writeSystemRegister(this.SYS_REG_BRK_DATA, requestWord);
         this.writeSystemRegister(this.SYS_REG_BRK_CTRL, 1);
 
+        this.brkBusy = false;
+
         try {
-            this.waitDataBreakReady();
+            await this.waitDataBreakReady();
         } catch (e) {
             // data break was not accepted, remove request
             this.writeSystemRegister(this.SYS_REG_BRK_CTRL, 0);
@@ -124,7 +149,6 @@ export class IOController {
         if ((replyWord & (1 << 13)) == 0) {
             throw new Error(`Data break request denied, reply: ${replyWord.toString(8)}`);
         }
-        //console.log(`BRK: Reply ${replyWord.toString(8)}`);
 
         return {
             mb: (replyWord & 0o7777),
@@ -132,15 +156,15 @@ export class IOController {
         };
     }
 
-    private waitDataBreakReady(): void {
+    private async waitDataBreakReady() {
         let controlWord = 0;
 
-        // TODO: Not sure what to do against busy waiting since this must be sync
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 10; i++) {
             controlWord = this.readSystemRegister(this.SYS_REG_BRK_CTRL);
             if (controlWord == 1) {
                 return;
             }
+            await sleepUs(5);
         }
 
         throw new Error(`Timeout waiting for data request, last state: ${controlWord}`);

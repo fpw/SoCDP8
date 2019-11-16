@@ -23,7 +23,7 @@ import { CoreMemory } from "../drivers/CoreMemory/CoreMemory";
 import { IOController, IOListener } from '../drivers/IO/IOController';
 import { TC08 } from '../peripherals/TC08';
 import { LampBrightness } from '../drivers/Console/LampBrightness';
-import { PeripheralList } from './PeripheralList';
+import { PeripheralList, CPUExtensions } from './PeripheralList';
 import { ASR33 } from '../peripherals/ASR33';
 import { PC04 } from '../peripherals/PC04';
 import { RF08 } from '../peripherals/RF08';
@@ -77,8 +77,13 @@ export class SoCDP8 {
         }
     }
 
+    public getCPUExtensions(): CPUExtensions {
+        return this.io.getExtensions();
+    }
+
     public getPeripherals(): PeripheralList {
         const list: PeripheralList = {
+            cpuExtensions: this.io.getExtensions(),
             maxDevices: this.io.getMaxDeviceCount(),
             devices: []
         };

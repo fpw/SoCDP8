@@ -16,6 +16,11 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+export interface CPUExtensions {
+    eae: boolean;
+    maxMemField: number;
+}
+
 export interface Device {
     id: number;
     typeString: string;
@@ -23,6 +28,7 @@ export interface Device {
 }
 
 export interface PeripheralList {
+    cpuExtensions: CPUExtensions;
     maxDevices: number;
     devices: Device[];
 }
