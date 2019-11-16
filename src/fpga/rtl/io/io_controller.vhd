@@ -232,6 +232,29 @@ rf08_inst: entity work.rf08
         soc_attention => dev_attention(DEV_ID_RF08)
     );
 
+df32_inst: entity work.df32
+    port map(
+        clk => S_AXI_ACLK,
+        rstn => S_AXI_ARESETN,
+        
+        reg_sel => perph_reg_sel,
+        reg_out => peripheral_out(DEV_ID_DF32).reg_out,
+        reg_in => perph_reg_in,
+        reg_write => perph_reg_write(DEV_ID_DF32),
+        
+        enable => dev_enable(DEV_ID_DF32),
+        iop => iop_code,
+        io_mb => io_mb,
+        io_ac => io_ac,
+        
+        io_skip => peripheral_out(DEV_ID_DF32).io_skip,
+        io_ac_clear => peripheral_out(DEV_ID_DF32).io_ac_clear,
+        io_bus_out => peripheral_out(DEV_ID_DF32).io_bus_out,
+        
+        pdp8_irq => dev_interrupts(DEV_ID_DF32),
+        soc_attention => dev_attention(DEV_ID_DF32)
+    );
+
 peripheral_out(0).io_skip <= '0';
 peripheral_out(0).io_ac_clear <= '0';
 peripheral_out(0).io_bus_out <= (others => '0');

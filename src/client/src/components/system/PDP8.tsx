@@ -29,6 +29,8 @@ import { PDP8Model } from '../../models/PDP8Model';
 import { PeripheralModel } from '../../models/peripherals/PeripheralModel';
 import { RF08 } from '../peripherals/RF08';
 import { RF08Model } from '../../models/peripherals/RF08Model';
+import { DF32Model } from '../../models/peripherals/DF32Model';
+import { DF32 } from '../peripherals/DF32';
 
 export interface PDP8Props {
     pdp8: PDP8Model;
@@ -58,6 +60,8 @@ const PeripheralList: React.FunctionComponent<{list: PeripheralModel[]}> = ({lis
             return <TC08Box model={dev} />
         } else if (dev instanceof RF08Model) {
             return <RF08Box model={dev} />
+        } else if (dev instanceof DF32Model) {
+            return <DF32Box model={dev} />
         } else {
             return <div />;
         }
@@ -94,4 +98,9 @@ const TC08Box: React.FunctionComponent<{model: TC08Model}> = observer(({model}) 
 const RF08Box: React.FunctionComponent<{model: RF08Model}> = observer(({model}) =>
     <PeripheralBox name='RF08: Disk Control '>
         <RF08 onFlush={model.flushData} />
+    </PeripheralBox>);
+
+const DF32Box: React.FunctionComponent<{model: DF32Model}> = observer(({model}) =>
+    <PeripheralBox name='DF32: Disk Control '>
+        <DF32 onFlush={model.flushData} />
     </PeripheralBox>);

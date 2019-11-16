@@ -41,7 +41,7 @@ architecture Behavioral of asr33 is
 begin
 
 with reg_sel select reg_out <=
-    -- 0 is used for dev type outside
+    -- 0 is used for dev enable outside
     regA when x"1",
     regB when x"2",
     regC when x"3",

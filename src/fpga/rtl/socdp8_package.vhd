@@ -29,8 +29,9 @@ package socdp8_package is
     constant DEV_ID_PC04:   natural := 2;
     constant DEV_ID_TC08:   natural := 3;
     constant DEV_ID_RF08:   natural := 4;
+    constant DEV_ID_DF32:   natural := 5;
     
-    constant DEV_ID_COUNT:  natural := 5;
+    constant DEV_ID_COUNT:  natural := 6;
 
     -- The manual function timing states (MFTS) and automatic timing states (TS)
     type time_state_auto is (TS1, TS2, TS3, TS4);

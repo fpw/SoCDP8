@@ -16,22 +16,18 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export enum DeviceID {
-    NULL            = 0,
-    ASR33           = 1,
-    PC04            = 2,
-    TC08            = 3,
-    RF08            = 4,
-    DF32            = 5,
-}
+import { PeripheralModel } from './PeripheralModel';
 
-export interface Device {
-    id: number;
-    typeString: string;
-    connections: number[];
-}
+export class DF32Model extends PeripheralModel {
+    public onPeripheralAction(action: string, data: any): void {
+    }
 
-export interface PeripheralList {
-    maxDevices: number;
-    devices: Device[];
+    public readonly flushData = (): void => {
+        this.socket.emit('peripheral-action', {
+            devId: this.id,
+            action: 'flush',
+            data: {
+            }
+        });
+    };
 }

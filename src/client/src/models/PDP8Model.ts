@@ -26,6 +26,7 @@ import { PC04Model } from './peripherals/PC04Model';
 import { TC08Model } from './peripherals/TC08Model';
 import { CoreMemoryModel } from './CoreMemoryModel';
 import { RF08Model } from './peripherals/RF08Model';
+import { DF32Model } from './peripherals/DF32Model';
 
 export class PDP8Model {
     private readonly BASE_URL = 'http://192.168.178.65:8000';
@@ -101,6 +102,9 @@ export class PDP8Model {
                     break;
                 case DeviceID.RF08:
                     peripheral = new RF08Model(entry.id, this.socket);
+                    break;
+                case DeviceID.DF32:
+                    peripheral = new DF32Model(entry.id, this.socket);
                     break;
                 default:
                     continue;

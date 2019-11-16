@@ -28,6 +28,7 @@ import { ASR33 } from '../peripherals/ASR33';
 import { PC04 } from '../peripherals/PC04';
 import { RF08 } from '../peripherals/RF08';
 import { DeviceID } from '../drivers/IO/Peripheral';
+import { DF32 } from '../peripherals/DF32';
 
 export interface ConsoleState {
     lamps: LampBrightness;
@@ -41,10 +42,6 @@ export class SoCDP8 {
     private cons: Console;
     private mem: CoreMemory;
     private io: IOController;
-    private asr33: ASR33;
-    private pc04: PC04;
-    private tc08: TC08;
-    private rf08: RF08;
 
     public constructor(private ioListener: IOListener) {
         const uio = new UIOMapper();
@@ -56,15 +53,10 @@ export class SoCDP8 {
         this.mem = new CoreMemory(memBuf);
         this.io = new IOController(ioBuf, this.ioListener);
 
-        this.pc04 = new PC04();
-        this.asr33 = new ASR33();
-        this.tc08 = new TC08();
-        this.rf08 = new RF08();
-
-        this.io.registerPeripheral(this.asr33);
-        this.io.registerPeripheral(this.pc04);
-        this.io.registerPeripheral(this.tc08);
-        this.io.registerPeripheral(this.rf08);
+        this.io.registerPeripheral(new ASR33());
+        this.io.registerPeripheral(new PC04());
+        this.io.registerPeripheral(new TC08());
+        this.io.registerPeripheral(new DF32());
     }
 
     public clearCoreMemory() {

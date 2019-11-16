@@ -16,22 +16,15 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export enum DeviceID {
-    NULL            = 0,
-    ASR33           = 1,
-    PC04            = 2,
-    TC08            = 3,
-    RF08            = 4,
-    DF32            = 5,
+import * as React from "react";
+
+export interface DF32Props {
+    onFlush(): void;
 }
 
-export interface Device {
-    id: number;
-    typeString: string;
-    connections: number[];
-}
-
-export interface PeripheralList {
-    maxDevices: number;
-    devices: Device[];
-}
+export const DF32: React.FunctionComponent<DF32Props> = (props) =>
+    <section>
+        <button className='button' onClick={() => props.onFlush()}>
+            Flush
+        </button>
+    </section>

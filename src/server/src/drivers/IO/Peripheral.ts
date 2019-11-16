@@ -32,6 +32,7 @@ export enum DeviceID {
     DEV_ID_PC04     = 2,
     DEV_ID_TC08     = 3,
     DEV_ID_RF08     = 4,
+    DEV_ID_DF32     = 5,
 }
 
 export interface IOContext {
