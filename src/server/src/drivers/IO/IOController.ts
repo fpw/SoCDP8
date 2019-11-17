@@ -47,6 +47,7 @@ export class IOController {
         this.clearDeviceTable();
         this.configureExtensions({
             eae: true,
+            kt8i: true,
             maxMemField: 7
         });
     }
@@ -54,13 +55,18 @@ export class IOController {
     public getExtensions(): CPUExtensions {
         const conf = this.readSystemRegister(this.SYS_REG_CONFIG);
         return {
-            eae: (conf & (1 << 0)) != 0,
-            maxMemField: (conf >> 1) & 0o7,
+            maxMemField: conf & 0o7,
+            eae: (conf & (1 << 3)) != 0,
+            kt8i: (conf & (1 << 4)) != 0
         };
     }
 
     private configureExtensions(ext: CPUExtensions) {
-        this.writeSystemRegister(this.SYS_REG_CONFIG, ((ext.maxMemField & 7) << 1) | (ext.eae ? 1 : 0));
+        this.writeSystemRegister(this.SYS_REG_CONFIG,
+                (ext.maxMemField & 7) |
+                (ext.eae ? (1 << 3) : 0) |
+                (ext.kt8i ? (1 << 4) : 0)
+        );
     }
 
     private clearDeviceTable(): void {

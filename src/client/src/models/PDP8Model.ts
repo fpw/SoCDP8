@@ -92,6 +92,10 @@ export class PDP8Model {
 
             switch (entry.id) {
                 case DeviceID.ASR33:
+                case DeviceID.TT1:
+                case DeviceID.TT2:
+                case DeviceID.TT3:
+                case DeviceID.TT4:
                     peripheral = new ASR33Model(entry.id, this.socket);
                     break;
                 case DeviceID.PC04:

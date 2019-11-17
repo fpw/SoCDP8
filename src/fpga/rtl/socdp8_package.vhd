@@ -30,8 +30,13 @@ package socdp8_package is
     constant DEV_ID_TC08:   natural := 3;
     constant DEV_ID_RF08:   natural := 4;
     constant DEV_ID_DF32:   natural := 5;
+    constant DEV_ID_TT1:    natural := 6;
+    constant DEV_ID_TT2:    natural := 7;
+    constant DEV_ID_TT3:    natural := 8;
+    constant DEV_ID_TT4:    natural := 9;
+    constant DEV_ID_KW8I:   natural := 10;
     
-    constant DEV_ID_COUNT:  natural := 6;
+    constant DEV_ID_COUNT:  natural := 11;
 
     -- The manual function timing states (MFTS) and automatic timing states (TS)
     type time_state_auto is (TS1, TS2, TS3, TS4);
@@ -65,6 +70,7 @@ package socdp8_package is
         initialize: std_logic;
         eae_set: std_logic;
         eae_end: std_logic;
+        force_jms: std_logic;
     
         -- an enable signal puts the register data on the register bus
         -- enabling multiple registers will cause an addition or OR combination
@@ -121,6 +127,9 @@ package socdp8_package is
         sc_load: std_logic;
         inc_sc: std_logic;
         
+        -- KT8I:
+        ub_load: std_logic;
+        
         -- MC8
         clear_fields: std_logic;
         save_fields: std_logic;
@@ -142,6 +151,8 @@ package socdp8_package is
         initialize => '0',
         eae_set => '0',
         eae_end => '0',
+        force_jms => '0',
+        
         ac_enable => '0',
         ac_comp_enable => '0',
         pc_enable => '0',
@@ -186,6 +197,9 @@ package socdp8_package is
         ac_mq_enable => '0',
         sc_load => '0',
         inc_sc => '0',
+        
+        ub_load => '0',
+        
         
         clear_fields => '0',
         save_fields => '0',

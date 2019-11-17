@@ -16,8 +16,9 @@ entity registers is
         clk: in std_logic;
         rstn: in std_logic;
 
-        enable_eae: std_logic;
-        enable_mc8i: std_logic;
+        enable_eae: in std_logic;
+        enable_mc8i: in std_logic;
+        enable_kt8i: in std_logic;
         
         -- connect external registers
         --- switch register
@@ -47,6 +48,7 @@ entity registers is
         df_o: out std_logic_vector(2 downto 0);
         if_o: out std_logic_vector(2 downto 0);
         wc_ovf_o: out std_logic;
+        kt8i_uf_o: out std_logic;
 
         -- instruction decoder (combinatorial)
         inst_o: out pdp8_instruction;
@@ -83,13 +85,18 @@ architecture Behavioral of registers is
     signal mc8_if, mc8_ib, mc8_df: std_logic_vector(2 downto 0);
     signal mc8_sf: std_logic_vector(5 downto 0);
     
+    -- KT8I extension
+    signal kt8i_uf: std_logic;
+    signal kt8i_suf: std_logic;
+    signal kt8i_ub: std_logic;
+    
     -- input register bus, with carry
     signal input_bus: std_logic_vector(12 downto 0);
     signal l_bus: std_logic;
 begin
 
 -- combinatorial process to select the input
-enable_regs: process(transfers, mem_buf, sense, pc, ac, io_bus, link, mqr, sr, mem_addr, sc, mc8_sf, mc8_if, mc8_df, brk_data_add, brk_data)
+enable_regs: process(transfers, mem_buf, sense, pc, ac, io_bus, link, mqr, sr, mem_addr, sc, mc8_sf, mc8_if, mc8_df, brk_data_add, brk_data, enable_kt8i, kt8i_suf)
     variable input_bus_tmp: std_logic_vector(12 downto 0);
 begin
     if transfers.ac_enable = '1' then
@@ -112,7 +119,7 @@ begin
             input_bus_tmp := '0' & (ac or sr);
         elsif transfers.sf_enable = '1' then
             -- if both AC and SF are enabled, OR them
-            input_bus_tmp := '0' & (ac or ("000000" & mc8_sf));
+            input_bus_tmp := '0' & (ac or ("00000" & kt8i_suf & mc8_sf));
         elsif transfers.if_enable = '1' then
             -- if both AC and IF are enabled, OR them
             input_bus_tmp := '0' & (ac or ("000000" & mc8_if & "000"));
@@ -285,6 +292,7 @@ begin
             mc8_if <= sw_if;
             mc8_ib <= sw_if;
             mc8_df <= sw_df;
+            kt8i_ub <= '0';
         end if;
     end if;
         
@@ -344,21 +352,26 @@ begin
     if enable_mc8i = '1' then
         if transfers.save_fields = '1' then
             mc8_sf <= mc8_if & mc8_df;
+            kt8i_suf <= kt8i_uf;
         end if;
 
         if transfers.clear_fields = '1' then
             mc8_if <= (others => '0');
             mc8_ib <= (others => '0');
             mc8_df <= (others => '0');
+            kt8i_uf <= '0';
+            kt8i_ub <= '0';
         end if;
 
         if transfers.restore_fields = '1' then
             mc8_ib <= mc8_sf(5 downto 3);
             mc8_df <= mc8_sf(2 downto 0);
+            kt8i_uf <= kt8i_suf;
         end if;
 
         if transfers.ib_to_if = '1' then
             mc8_if <= mc8_ib;
+            kt8i_uf <= kt8i_ub;
         end if;
 
         if transfers.load_ib = '1' then
@@ -370,11 +383,17 @@ begin
         end if;
     end if;
     
+    if enable_kt8i = '1' then
+        if transfers.ub_load = '1' then
+            kt8i_ub <= sense(3);
+        end if;
+    end if;
+
     if enable_eae = '0' then
         mqr <= (others => '0');
         sc <= (others => '0');
     end if;
-
+    
     if rstn = '0' then
         ac <= (others => '0');
         skip <= '0';
@@ -389,6 +408,9 @@ begin
         mc8_df <= (others => '0');
         mc8_sf <= (others => '0');
         wc_ovf <= '0';
+        
+        kt8i_uf <= '0';
+        kt8i_ub <= '0';
     end if;
 end process;
 
@@ -403,6 +425,7 @@ sc_o <= sc;
 df_o <= mc8_df;
 if_o <= mc8_if;
 wc_ovf_o <= wc_ovf;
+kt8i_uf_o <= kt8i_uf;
 
 with sense(11 downto 9) select inst_o <=
     INST_AND when "000",

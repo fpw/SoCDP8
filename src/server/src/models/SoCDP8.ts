@@ -29,6 +29,7 @@ import { PC04 } from '../peripherals/PC04';
 import { RF08 } from '../peripherals/RF08';
 import { DeviceID } from '../drivers/IO/Peripheral';
 import { DF32 } from '../peripherals/DF32';
+import { KW8I } from '../peripherals/KW8I';
 
 export interface ConsoleState {
     lamps: LampBrightness;
@@ -53,10 +54,15 @@ export class SoCDP8 {
         this.mem = new CoreMemory(memBuf);
         this.io = new IOController(ioBuf, this.ioListener);
 
-        this.io.registerPeripheral(new ASR33());
+        this.io.registerPeripheral(new ASR33(DeviceID.DEV_ID_ASR33));
+        this.io.registerPeripheral(new ASR33(DeviceID.DEV_ID_TT1));
+        this.io.registerPeripheral(new ASR33(DeviceID.DEV_ID_TT2));
+        this.io.registerPeripheral(new ASR33(DeviceID.DEV_ID_TT3));
+        this.io.registerPeripheral(new ASR33(DeviceID.DEV_ID_TT4));
         this.io.registerPeripheral(new PC04());
-        this.io.registerPeripheral(new TC08());
-        this.io.registerPeripheral(new DF32());
+        // this.io.registerPeripheral(new TC08());
+        this.io.registerPeripheral(new RF08());
+        this.io.registerPeripheral(new KW8I());
     }
 
     public clearCoreMemory() {

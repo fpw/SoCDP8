@@ -49,6 +49,7 @@ entity io_controller is
 
         -- PDP-8 configuration output
         conf_enable_eae: out std_logic;
+        conf_enable_kt8i: out std_logic;
         conf_max_field: out std_logic_vector(2 downto 0);
 
         -- I/O connections to PDP-8
@@ -91,6 +92,7 @@ architecture Behavioral of io_controller is
     signal axi_dev_reg: integer range 0 to 15;
 
     signal enable_eae: std_logic;
+    signal enable_kt8i: std_logic;
     signal max_mem_field: std_logic_vector(2 downto 0);
 
     type bus_to_dev_a is array(0 to 63) of integer range 0 to DEV_ID_COUNT - 1;
@@ -148,6 +150,9 @@ iop_code <= IO1 when iop(0) = '1' else
             IO_NONE;
 
 asr33_inst: entity work.asr33
+    generic map(
+        bus_addr => o"03"
+    )
     port map(
         clk => S_AXI_ACLK,
         rstn => S_AXI_ARESETN,
@@ -169,6 +174,34 @@ asr33_inst: entity work.asr33
         pdp8_irq => dev_interrupts(DEV_ID_ASR33),
         soc_attention => dev_attention(DEV_ID_ASR33)
     );
+
+tt_insts: for i in 0 to 3 generate
+    tt_inst: entity work.asr33
+        generic map(
+            bus_addr => o"40" + 2 * i
+        )
+        port map(
+            clk => S_AXI_ACLK,
+            rstn => S_AXI_ARESETN,
+            
+            reg_sel => perph_reg_sel,
+            reg_out => peripheral_out(DEV_ID_TT1 + i).reg_out,
+            reg_in => perph_reg_in,
+            reg_write => perph_reg_write(DEV_ID_TT1 + i),
+            
+            enable => dev_enable(DEV_ID_TT1 + i),
+            iop => iop_code,
+            io_mb => io_mb,
+            io_ac => io_ac,
+            
+            io_skip => peripheral_out(DEV_ID_TT1 + i).io_skip,
+            io_ac_clear => peripheral_out(DEV_ID_TT1 + i).io_ac_clear,
+            io_bus_out => peripheral_out(DEV_ID_TT1 + i).io_bus_out,
+            
+            pdp8_irq => dev_interrupts(DEV_ID_TT1 + i),
+            soc_attention => dev_attention(DEV_ID_TT1 + i)
+        );
+end generate;
 
 pc04_inst: entity work.pc04
     port map(
@@ -262,8 +295,32 @@ df32_inst: entity work.df32
         soc_attention => dev_attention(DEV_ID_DF32)
     );
 
+kw8i_inst: entity work.kw8i
+    port map(
+        clk => S_AXI_ACLK,
+        rstn => S_AXI_ARESETN,
+        
+        reg_sel => perph_reg_sel,
+        reg_out => peripheral_out(DEV_ID_KW8I).reg_out,
+        reg_in => perph_reg_in,
+        reg_write => perph_reg_write(DEV_ID_KW8I),
+        
+        enable => dev_enable(DEV_ID_KW8I),
+        iop => iop_code,
+        io_mb => io_mb,
+        io_ac => io_ac,
+        
+        io_skip => peripheral_out(DEV_ID_KW8I).io_skip,
+        io_ac_clear => peripheral_out(DEV_ID_KW8I).io_ac_clear,
+        io_bus_out => peripheral_out(DEV_ID_KW8I).io_bus_out,
+        
+        pdp8_irq => dev_interrupts(DEV_ID_KW8I),
+        soc_attention => dev_attention(DEV_ID_KW8I)
+    );
+
 conf_enable_eae <= enable_eae;
 conf_max_field <= max_mem_field;
+conf_enable_kt8i <= enable_kt8i;
 
 peripheral_out(0).io_skip <= '0';
 peripheral_out(0).io_ac_clear <= '0';
@@ -350,8 +407,9 @@ begin
                 if axi_bus_id = 0 then
                     case axi_dev_reg is
                         when 0 =>
-                            s_axi_rdata(0) <= enable_eae;
-                            s_axi_rdata(3 downto 1) <= max_mem_field;
+                            s_axi_rdata(2 downto 0) <= max_mem_field;
+                            s_axi_rdata(3) <= enable_eae;
+                            s_axi_rdata(4) <= enable_kt8i;
                         when 1 =>
                             s_axi_rdata(7 downto 0) <= std_logic_vector(to_unsigned(DEV_ID_COUNT, 8));
                         when 2 =>
@@ -393,8 +451,9 @@ begin
                     case axi_dev_reg is
                         when 0 =>
                             if s_axi_wstrb(0) = '1' then
-                                enable_eae <= s_axi_wdata(0);
-                                max_mem_field <= s_axi_wdata(3 downto 1);
+                                max_mem_field <= s_axi_wdata(2 downto 0);
+                                enable_eae <= s_axi_wdata(3);
+                                enable_kt8i <= s_axi_wdata(4);
                             end if;
                         when 3 =>
                             if s_axi_wstrb(0) = '1' then

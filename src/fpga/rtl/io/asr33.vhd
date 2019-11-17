@@ -8,6 +8,9 @@ use IEEE.NUMERIC_STD.ALL;
 use work.socdp8_package.all;
 
 entity asr33 is
+    generic (
+        bus_addr: unsigned(5 downto 0)
+    );
     port (
         clk: in std_logic;
         rstn: in std_logic;
@@ -72,7 +75,7 @@ begin
         io_bus_out <= (others => '0');
     end if;
 
-    if enable = '1' and iop_last /= iop and io_mb(8 downto 3) = o"03" then
+    if enable = '1' and iop_last /= iop and io_mb(8 downto 3) = std_logic_vector(bus_addr) then
         -- Reader interface: Write new data into regA and then set regB to 1
         case iop is
             when IO1 =>
@@ -87,7 +90,7 @@ begin
                 io_bus_out <= regA(11 downto 0);
             when others => null;
         end case;
-    elsif enable = '1' and iop_last /= iop and io_mb(8 downto 3) = o"04" then
+    elsif enable = '1' and iop_last /= iop and io_mb(8 downto 3) = std_logic_vector(bus_addr + 1) then
         -- Writer interface: Check regD = 1 to see if new data, take from regC and set regD to 2 to ack
         case iop is
             when IO1 =>

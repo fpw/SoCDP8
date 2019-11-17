@@ -134,7 +134,9 @@ begin
 
                         -- HLT
                         if input.mb(1) = '1' then
-                            transfers.clear_run <= '1';
+                            if input.kt8i_uf = '0' then
+                                transfers.clear_run <= '1';
+                            end if;
                         end if;
                         
                         if input.mb(7) = '0' and input.mb(2) = '0' then
@@ -142,14 +144,18 @@ begin
                             transfers.ac_enable <= '1';
                         elsif input.mb(7) = '0' and input.mb(2) = '1' then
                             -- no CLA but OSR
-                            transfers.ac_enable <= '1';
-                            transfers.sr_enable <= '1';
+                            if input.kt8i_uf = '0' then
+                                transfers.ac_enable <= '1';
+                                transfers.sr_enable <= '1';
+                            end if;
                         elsif input.mb(7) = '1' and input.mb(2) = '0' then
                             -- CLA but no OSR
                             -- 0 -> AC
                         elsif input.mb(7) = '1' and input.mb(2) = '1' then
                             -- CLA and OSR
-                            transfers.sr_enable <= '1';
+                            if input.kt8i_uf = '0' then
+                                transfers.sr_enable <= '1';
+                            end if;
                         end if;
 
                         transfers.ac_load <= '1';

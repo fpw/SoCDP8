@@ -16,20 +16,20 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export interface CPUExtensions {
-    eae: boolean;
-    kt8i: boolean;
-    maxMemField: number;
-}
+import { Peripheral, IOContext, DeviceID } from '../drivers/IO/Peripheral';
 
-export interface Device {
-    id: number;
-    typeString: string;
-    connections: number[];
-}
+export class KW8I implements Peripheral {
+    public getDeviceID(): DeviceID {
+        return DeviceID.DEV_ID_KW8I;
+    }
 
-export interface PeripheralList {
-    cpuExtensions: CPUExtensions;
-    maxDevices: number;
-    devices: Device[];
+    public getBusConnections(): number[] {
+        return [0o13];
+    }
+
+    public requestAction(action: string, data: any): void {
+    }
+
+    public async run(io: IOContext): Promise<void> {
+    }
 }

@@ -26,12 +26,23 @@ export class ASR33 implements Peripheral {
     private readerData: number[] = [];
     private forcePunch: boolean = false;
 
+    constructor(public readonly id: DeviceID) {
+    }
+
     public getDeviceID(): DeviceID {
-        return DeviceID.DEV_ID_ASR33;
+        return this.id;
     }
 
     public getBusConnections(): number[] {
-        return [0o03, 0o04];
+        switch (this.id) {
+            case DeviceID.DEV_ID_ASR33: return [0o03, 0o04];
+            case DeviceID.DEV_ID_TT1:   return [0o40, 0o41];
+            case DeviceID.DEV_ID_TT2:   return [0o42, 0o43];
+            case DeviceID.DEV_ID_TT3:   return [0o44, 0o45];
+            case DeviceID.DEV_ID_TT4:   return [0o46, 0o47];
+        }
+
+        throw Error(`Invalid ASR-33 id: ${this.id}`)
     }
 
     public requestAction(action: string, data: any): void {

@@ -12,6 +12,7 @@ package inst_common is
     type inst_input is record
         state: major_state;
         time_div: time_state_auto;
+        int_ok: std_logic;
         mb: std_logic_vector(11 downto 0);
         mqr: std_logic_vector(11 downto 0);
         sc: std_logic_vector(4 downto 0);
@@ -25,6 +26,7 @@ package inst_common is
         brk_mb_inc: std_logic;
         norm: std_logic;
         eae_inst: eae_instruction;
+        kt8i_uf: std_logic;
     end record;
     
     --- the fetch cycles is the same for TAD, ISZ, DCA and JMS
@@ -140,12 +142,18 @@ package body inst_common is
         transfers <= nop_transfer;
         state_next <= STATE_FETCH;
 
-        if input.brk_req = '0' then
-            -- PC (+ 1 if skip) -> MA
-            transfers.pc_enable <= '1';
-            transfers.carry_insert <= input.skip;
+        if input.int_ok = '1' then
+            -- Interrupt
+            
+            -- 0 -> MA, force JMS
             transfers.ma_load <= '1';
-        else
+            transfers.force_jms <= '1';
+            state_next <= STATE_EXEC;
+
+            -- MC8 fields
+            transfers.save_fields <= '1';
+            transfers.clear_fields <= '1';
+        elsif input.brk_req = '1' then
             -- Data break: DATA ADD -> MA
             transfers.data_add_enable <= '1';
             transfers.ma_load <= '1';
@@ -154,6 +162,12 @@ package body inst_common is
             else
                 state_next <= STATE_BREAK;
             end if;
+        else
+            -- No data break and no interrupt
+            -- PC (+ 1 if skip) -> MA
+            transfers.pc_enable <= '1';
+            transfers.carry_insert <= input.skip;
+            transfers.ma_load <= '1';
         end if;
     end;
 

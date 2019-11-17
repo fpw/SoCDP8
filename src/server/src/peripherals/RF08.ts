@@ -24,7 +24,7 @@ export class RF08 implements Peripheral {
     private readonly DEBUG = true;
     private readonly BRK_ADDR = 0o7750;
     private readonly DATA_FILE = 'rf08.dat';
-    private data = Buffer.alloc(128 * 2048 * 4 * 2);
+    private data = Buffer.alloc(4 * 128 * 2048 * 2); // 4 disks, each with 128 tracks of 2048 words stored in 2 bytes
 
     constructor() {
         if (existsSync(this.DATA_FILE)) {
@@ -53,23 +53,27 @@ export class RF08 implements Peripheral {
         while (true) {
             const regA = io.readRegister(DeviceRegister.REG_A);
 
-            if (regA & (1 << 15)) {
-                // read
-                await sleepMs(20);
-                io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 15)); // remove request
-                await this.doRead(io);
-            } else if (regA & (1 << 14)) {
-                // write
-                await sleepMs(20);
-                io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 14)); // remove request
-                await this.doWrite(io);
-            } else {
-                await sleepMs(1);
+            try {
+                if (regA & (1 << 15)) {
+                    // read
+                    io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 15)); // remove request
+                    await this.doRead(io);
+                } else if (regA & (1 << 14)) {
+                    // write
+                    io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 14)); // remove request
+                    await this.doWrite(io);
+                } else {
+                    await sleepMs(1);
+                }
+            } catch (e) {
+                console.log(`RF08: Error ${e}`);
             }
         }
     }
 
     private async doRead(io: IOContext) {
+        await sleepMs(20);
+
         let addr = this.readAddress(io);
 
         if (this.DEBUG) {
@@ -95,14 +99,14 @@ export class RF08 implements Peripheral {
             this.writeAddress(io, addr);
 
             overflow = brkReply.wordCountOverflow;
-
-            await sleepUs(20);
         } while (!overflow);
 
         this.setDoneFlag(io);
     }
 
     private async doWrite(io: IOContext) {
+        await sleepMs(20);
+
         let addr = this.readAddress(io);
 
         if (this.DEBUG) {
@@ -129,8 +133,6 @@ export class RF08 implements Peripheral {
             addr = (addr + 1) & 0o3777777;
             this.writeAddress(io, addr);
             overflow = brkReply.wordCountOverflow;
-
-            await sleepUs(20);
         } while (!overflow);
 
         this.setDoneFlag(io);

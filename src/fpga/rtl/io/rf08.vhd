@@ -139,19 +139,26 @@ begin
         elsif iop_last /= iop and io_mb(8 downto 3) = o"62" then
             case iop is
                 when IO1 =>
-                    -- DFSE: Skip on DRL, PER, WLS or NXD
-                    io_skip <= regC(9) or regC(2) or regC(1) or regC(0);
+                    if io_mb(2 downto 0) = o"1" then
+                        -- DFSE: Skip on DRL, PER, WLS or NXD
+                        io_skip <= regC(9) or regC(2) or regC(1) or regC(0);
+                    elsif io_mb(2 downto 0) = o"3" then
+                        -- DISK: Skip if error or DCF is set
+                        io_skip <= regC(9) or regC(2) or regC(1) or regC(0) or regC(15);
+                    end if;
                 when IO2 =>
                     if io_mb(2 downto 0) = o"6" then
                         -- DMAC: Clear AC in IOP2
                         io_ac_clear <= '1';
-                    else
+                    elsif io_mb(2 downto 0) = o"2" then
                         -- DFSC: Skip if DCF is set
                         io_skip <= regC(15);
                     end if;
                 when IO4 =>
-                    -- DMAC: Load DMA into AC
-                    io_bus_out <= regA(11 downto 0);
+                    if io_mb(2 downto 0) = o"6" then
+                        -- DMAC: Load DMA into AC
+                        io_bus_out <= regA(11 downto 0);
+                    end if;
                 when others => null;
             end case;
         elsif iop_last /= iop and io_mb(8 downto 3) = o"64" then

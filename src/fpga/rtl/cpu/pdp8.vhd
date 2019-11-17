@@ -15,6 +15,7 @@ entity pdp8 is
         
         -- Configuration
         enable_ext_eae: in std_logic;
+        enable_ext_kt8i: in std_logic;
         enable_ext_mem_fields: in std_logic_vector(2 downto 0);
         
         -- I/O connections
@@ -131,7 +132,11 @@ architecture Behavioral of pdp8 is
     signal norm: std_logic;
     signal int_inhibit: std_logic;
     signal field: std_logic_vector(2 downto 0);
-
+    
+    -- KT8I
+    signal kt8i_uint: std_logic;
+    signal int_rqst_ored: std_logic;
+    
     -- data break
     signal brk_sync: std_logic;
 
@@ -171,6 +176,7 @@ architecture Behavioral of pdp8 is
     signal inst_cur: pdp8_instruction;
     signal eae_inst_cur: eae_instruction;
     signal mc8_df, mc8_if: std_logic_vector(2 downto 0);
+    signal kt8i_uf: std_logic;
     --- from instruction mux
     signal inst_mux_input: inst_input;
     signal reg_trans_inst: register_transfers;
@@ -244,6 +250,7 @@ port map (
     
     enable_eae => enable_ext_eae,
     enable_mc8i => enable_mc8i,
+    enable_kt8i => enable_ext_kt8i,
     
     sr => switch_swr,
     sw_df => switch_data_field,
@@ -268,7 +275,8 @@ port map (
     eae_inst_o => eae_inst_cur,
     df_o => mc8_df,
     if_o => mc8_if,
-    wc_ovf_o => brk_wc_overflow
+    wc_ovf_o => brk_wc_overflow,
+    kt8i_uf_o => kt8i_uf
 );
 
 mem_control: entity work.memory_control
@@ -295,6 +303,7 @@ port map (
 inst_mux_input <= (
         state => state,
         time_div => ts,
+        int_ok => int_ok,
         mb => mb,
         mqr => mqr,
         sc => sc,
@@ -307,7 +316,8 @@ inst_mux_input <= (
         brk_mb_inc => brk_mb_inc,
         brk_data_in => brk_data_in,
         norm => norm,
-        eae_inst => eae_inst
+        eae_inst => eae_inst,
+        kt8i_uf => kt8i_uf
     );
 
 inst_mux: entity work.instruction_multiplexer
@@ -321,12 +331,14 @@ port map (
     state_next => next_state_inst
 );
 
+int_rqst_ored <= int_rqst or kt8i_uint;
+
 interrupt_instance: entity work.interrupt_controller
 port map (
     clk => clk,
     rstn => rstn,
 
-    int_rqst => int_rqst,
+    int_rqst => int_rqst_ored,
     int_strobe => int_strobe,
     int_inhibit => int_inhibit,
 
@@ -482,8 +494,10 @@ begin
                 -- slow cycle unless internal address
                 if state = STATE_FETCH and inst = INST_IOT and mb(8 downto 6) /= o"2" and mb(8 downto 3) /= o"00" then
                     -- this is basically the IO START signal
-                    pause <= '1';
-                    io_start <= '1';
+                    if kt8i_uf = '0' then
+                        pause <= '1';
+                        io_start <= '1';
+                    end if;
                 end if;
                 
                 if reg_trans_inst.eae_set = '1' then
@@ -495,6 +509,9 @@ begin
                 if enable_mc8i = '1' and state = STATE_FETCH and inst = INST_IOT and mb(8 downto 6) = o"2" then
                     if mb(2 downto 0) = o"4" then
                         case mb(5 downto 3) is
+                            when o"0" =>
+                                -- CINT
+                                kt8i_uint <= '0';
                             when o"1" =>
                                 -- RDF
                                 reg_trans.df_enable <= '1';
@@ -513,16 +530,41 @@ begin
                             when o"4" =>
                                 -- RMF
                                 reg_trans.restore_fields <= '1';
+                            when o"5" =>
+                                -- SINT: 1 -> SKIP if flag set
+                                if kt8i_uint = '1' then
+                                    reg_trans.reverse_skip <= '1';
+                                    reg_trans.skip_load <= '1';
+                                end if;
+                            when o"6" | o"7" =>
+                                -- CUF: MB(3) -> UB
+                                reg_trans.ub_load <= '1';
+                                int_inhibit <= '1';
                             when others =>
                                 null; 
                         end case;
                     else
                         -- CDF
-                        reg_trans.load_df <= mb(0);
+                        if mb(0) = '1' then
+                            reg_trans.load_df <= '1';
+                        end if;
                         
                         -- CIF
-                        int_inhibit <= mb(1);
-                        reg_trans.load_ib <= mb(1);
+                        if mb(1) = '1' then
+                            int_inhibit <= '1';
+                            reg_trans.load_ib <= '1';
+                        end if;
+                    end if;
+                end if;
+                
+                if enable_ext_kt8i = '1' and kt8i_uf = '1' then
+                    if state = STATE_FETCH then
+                        if inst = INST_IOT then
+                            kt8i_uint <= '1';
+                        elsif inst = INST_OPR and mb(8) = '1' and mb(0) = '0' and (mb(2) = '1' or mb(1) = '1') then
+                            -- OPR or HLT
+                            kt8i_uint <= '1';
+                        end if;
                     end if;
                 end if;
                 
@@ -579,17 +621,9 @@ begin
                 else
                     state <= STATE_FETCH;
                 end if;
-
-                if int_ok = '1' then
-                    -- 0 -> MA
-                    reg_trans <= nop_transfer;
-                    reg_trans.ma_load <= '1';
+                
+                if reg_trans_inst.force_jms = '1' then
                     inst <= INST_JMS;
-                    state <= STATE_EXEC;
-                    
-                    -- MC8 fields
-                    reg_trans.save_fields <= '1';
-                    reg_trans.clear_fields <= '1';
                 end if;
             end if;
     end case;
@@ -657,6 +691,7 @@ begin
         run <= '0';
         pause <= '0';
         brk_sync <= '0';
+        kt8i_uint <= '0';
     end if;
 end process;
 

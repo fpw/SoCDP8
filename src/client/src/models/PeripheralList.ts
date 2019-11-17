@@ -17,12 +17,17 @@
  */
 
 export enum DeviceID {
-    NULL            = 0,
-    ASR33           = 1,
-    PC04            = 2,
-    TC08            = 3,
-    RF08            = 4,
-    DF32            = 5,
+    NULL     = 0,
+    ASR33    = 1,
+    PC04     = 2,
+    TC08     = 3,
+    RF08     = 4,
+    DF32     = 5,
+    TT1      = 6,
+    TT2      = 7,
+    TT3      = 8,
+    TT4      = 9,
+    KW8I     = 10,
 }
 
 export interface Device {
