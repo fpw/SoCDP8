@@ -148,6 +148,7 @@ architecture Behavioral of pdp8 is
     signal mft: time_state_manual;
     signal mftp: std_logic;
     signal mfts0: std_logic;
+    signal mftp2: std_logic;
     --- from automatic timing generator
     signal ts: time_state_auto;
     signal tp: std_logic;
@@ -353,12 +354,16 @@ port map (
     switch_load => switch_load,
     switch_exam => switch_exam,
     switch_dep => switch_dep,
+    switch_start => switch_start,
+    mftp2 => mftp2,
     state => state,
     mb => mb,
     inst => inst,
-    state_next => next_state_inst
+    state_next => next_state_inst,
+    kt8i_uf => kt8i_uf
 );
 
+mftp2 <= '1' when mft = MFT2 and mftp = '1' else '0';
 auto_index <= '1' when state = STATE_DEFER and ma(11 downto 3) = o"001" else '0';
 norm <= '1' when (ac(11) /= ac(10)) or (mqr = o"0000" and ac(9 downto 0) = "0000000000") else '0';
 brk_ack <= brk_sync;
@@ -493,7 +498,7 @@ begin
                 
                 -- slow cycle unless internal address
                 if state = STATE_FETCH and inst = INST_IOT and mb(8 downto 6) /= o"2" and mb(8 downto 3) /= o"00" then
-                    -- this is basically the IO START signal
+                    -- this is basically the SLOW CYCLE and IO START signal
                     if kt8i_uf = '0' then
                         pause <= '1';
                         io_start <= '1';
@@ -506,7 +511,7 @@ begin
                 end if;
                 
                 -- MC8 are part of TS3
-                if enable_mc8i = '1' and state = STATE_FETCH and inst = INST_IOT and mb(8 downto 6) = o"2" then
+                if enable_mc8i = '1' and state = STATE_FETCH and inst = INST_IOT and mb(8 downto 6) = o"2" and kt8i_uf = '0' then
                     if mb(2 downto 0) = o"4" then
                         case mb(5 downto 3) is
                             when o"0" =>

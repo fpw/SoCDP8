@@ -37,6 +37,7 @@ architecture Behavioral of rf08 is
     signal regA: std_logic_vector(15 downto 0);
     signal regB: std_logic_vector(15 downto 0);
     signal regC: std_logic_vector(15 downto 0);
+    signal regD: std_logic_vector(15 downto 0);
 begin
 
 with reg_sel select reg_out <=
@@ -44,6 +45,7 @@ with reg_sel select reg_out <=
     regA when x"1",
     regB when x"2",
     regC when x"3",
+    regD when x"4",
     x"0000" when others;
 
 iop_last <= iop when rising_edge(clk);
@@ -58,6 +60,7 @@ begin
             when x"1" => regA <= reg_in;
             when x"2" => regB <= reg_in;
             when x"3" => regC <= reg_in;
+            when x"4" => regD <= reg_in;
             when others => null;
         end case;
     end if;
@@ -69,9 +72,10 @@ begin
     end if;
 
     if enable = '1' then
-        -- regA: DMA and R/W op
+        -- regA: DMA and R/W request
         -- regB: EMA
-        -- regC: Status register, 15: data completion flag (DCF)
+        -- regC: Status register
+        -- regD: Control register, 0: data completion flag (DCF) 
         
         -- Status bits:
         -- 11: PCA: Photocell sync (TODO)
@@ -86,7 +90,7 @@ begin
         --  0: PER: Parity error
 
         if (regC(8) = '1' and (regC(9) or regC(2) or regC(1) or regC(0)) = '1') or
-           (regC(6) = '1' and regC(15) = '1')
+           (regC(6) = '1' and regD(0) = '1')
         then
             pdp8_irq <= '1';
         else
@@ -102,7 +106,7 @@ begin
                     regC(2) <= '0';             -- clear DRL
                     regC(1) <= '0';             -- clear NXD
                     regC(0) <= '0';             -- clear PER
-                    regC(15) <= '0';            -- done = 0
+                    regD(0) <= '0';             -- done = 0
                 when IO2 => 
                     -- DMAR: Load DMA with AC and clear AC, start reading
                     regA(11 downto 0) <= io_ac;
@@ -144,7 +148,7 @@ begin
                         io_skip <= regC(9) or regC(2) or regC(1) or regC(0);
                     elsif io_mb(2 downto 0) = o"3" then
                         -- DISK: Skip if error or DCF is set
-                        io_skip <= regC(9) or regC(2) or regC(1) or regC(0) or regC(15);
+                        io_skip <= regC(9) or regC(2) or regC(1) or regC(0) or regD(0);
                     end if;
                 when IO2 =>
                     if io_mb(2 downto 0) = o"6" then
@@ -152,7 +156,7 @@ begin
                         io_ac_clear <= '1';
                     elsif io_mb(2 downto 0) = o"2" then
                         -- DFSC: Skip if DCF is set
-                        io_skip <= regC(15);
+                        io_skip <= regD(0);
                     end if;
                 when IO4 =>
                     if io_mb(2 downto 0) = o"6" then

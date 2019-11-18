@@ -102,6 +102,12 @@ export class AppServer {
             case 'write':
                 this.pdp8.writeCoreMemory(data.addr, data.fragment);
                 break;
+            case 'save':
+                this.pdp8.saveState();
+                break;
+            case 'restore':
+                this.pdp8.loadState();
+                break;
         }
     }
 

@@ -131,4 +131,16 @@ export class CoreMemoryModel {
             fragment: fragment
         });
     }
+
+    public save() {
+        this.socket.emit('core', {
+            action: 'save',
+        });
+    }
+
+    public restore()  {
+        this.socket.emit('core', {
+            action: 'restore',
+        });
+    }
 }

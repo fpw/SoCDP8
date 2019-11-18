@@ -30,6 +30,8 @@ import { RF08 } from '../peripherals/RF08';
 import { DeviceID } from '../drivers/IO/Peripheral';
 import { DF32 } from '../peripherals/DF32';
 import { KW8I } from '../peripherals/KW8I';
+import { readFile, writeFile } from 'fs';
+import { promisify } from 'util';
 
 export interface ConsoleState {
     lamps: LampBrightness;
@@ -60,7 +62,7 @@ export class SoCDP8 {
         this.io.registerPeripheral(new ASR33(DeviceID.DEV_ID_TT3));
         this.io.registerPeripheral(new ASR33(DeviceID.DEV_ID_TT4));
         this.io.registerPeripheral(new PC04());
-        // this.io.registerPeripheral(new TC08());
+        this.io.registerPeripheral(new TC08());
         this.io.registerPeripheral(new RF08());
         this.io.registerPeripheral(new KW8I());
     }
@@ -154,5 +156,18 @@ export class SoCDP8 {
         const cleared = input & ~(1 << pos);
         const bitVal = val ? 1 : 0;
         return (cleared | (bitVal << pos));
+    }
+
+    public async loadState() {
+        const fsRead = promisify(readFile);
+
+        const data = await fsRead('core.dat');
+        this.mem.loadCore(new Uint16Array(data.buffer));
+    }
+
+    public async saveState() {
+        const memory = this.mem.dumpCore();
+        const fsWrite = promisify(writeFile);
+        await fsWrite('core.dat', memory);
     }
 }

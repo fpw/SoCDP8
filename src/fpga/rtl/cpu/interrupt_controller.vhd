@@ -32,10 +32,13 @@ entity interrupt_controller is
         switch_load: in std_logic;
         switch_exam: in std_logic;
         switch_dep: in std_logic;
+        switch_start: in std_logic;
+        mftp2: in std_logic;
         state: in major_state;
         mb: in std_logic_vector(11 downto 0);
         inst: in pdp8_instruction;
-        state_next: in major_state
+        state_next: in major_state;
+        kt8i_uf: in std_logic
     );
 end interrupt_controller;
 
@@ -77,7 +80,7 @@ begin
         
         if state = STATE_FETCH then
             int_delay <= int_enable_int;
-            if inst = INST_IOT and mb(8 downto 3) = o"00" then
+            if inst = INST_IOT and mb(8 downto 3) = o"00" and kt8i_uf = '0' then
                 if mb(0) = '1' then
                     int_enable_int <= '1';
                 elsif mb(1) = '1' then
@@ -100,6 +103,9 @@ begin
     
     if manual_preset = '1' then
         int_sync <= '0';
+    end if;
+    
+    if switch_start = '1' and mftp2 = '1' then
         int_enable_int <= '0';
     end if;
     
@@ -110,7 +116,7 @@ begin
     end if;
 end process;
 
-int_ok_int <= int_sync and int_delay and int_enable_int and not int_inhibit;
+int_ok_int <= int_sync and int_delay and not int_inhibit;
 int_ok <= int_ok_int;
 
 int_enable <= int_enable_int; 

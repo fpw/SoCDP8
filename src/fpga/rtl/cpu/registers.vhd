@@ -366,7 +366,7 @@ begin
         if transfers.restore_fields = '1' then
             mc8_ib <= mc8_sf(5 downto 3);
             mc8_df <= mc8_sf(2 downto 0);
-            kt8i_uf <= kt8i_suf;
+            kt8i_ub <= kt8i_suf;
         end if;
 
         if transfers.ib_to_if = '1' then

@@ -70,6 +70,12 @@ const Header: React.FunctionComponent<PDP8Props> = (props) =>
                             Core Memory
                         </a>
                         <div className='navbar-dropdown'>
+                            <a className='navbar-item' onClick={() => props.pdp8.core.save()}>
+                                Save
+                            </a>
+                            <a className='navbar-item' onClick={() => props.pdp8.core.restore()}>
+                                Restore
+                            </a>
                             <a className='navbar-item' onClick={() => props.pdp8.core.clear()}>
                                 Clear
                             </a>

@@ -18,7 +18,7 @@
 
 import { Peripheral, IOContext, DeviceRegister, DeviceID } from '../drivers/IO/Peripheral';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { sleepMs, sleepUs } from '../sleep';
+import { sleepMs } from '../sleep';
 
 export class RF08 implements Peripheral {
     private readonly DEBUG = true;
@@ -157,7 +157,6 @@ export class RF08 implements Peripheral {
     }
 
     private setDoneFlag(io: IOContext) {
-        const regC = io.readRegister(DeviceRegister.REG_C);
-        io.writeRegister(DeviceRegister.REG_C, regC | (1 << 15));
+        io.writeRegister(DeviceRegister.REG_D, 1);
     }
 }
