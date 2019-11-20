@@ -26,7 +26,7 @@ import { isDeepStrictEqual, promisify } from 'util';
 
 export class AppServer {
     private readonly MOMENTARY_DEBOUNCE_MS = 150;
-    private readonly CONSOLE_CHECK_MS = 75;
+    private readonly PANEL_CHECK_MS = 75;
 
     private app: express.Application;
     private pdp8: SoCDP8;
@@ -130,7 +130,7 @@ export class AppServer {
                 this.lastConsoleState = curState;
             }
 
-            await sleepMs(this.CONSOLE_CHECK_MS);
+            await sleepMs(this.PANEL_CHECK_MS);
         }
     }
 

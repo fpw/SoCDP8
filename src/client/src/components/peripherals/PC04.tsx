@@ -19,6 +19,8 @@
 import * as React from "react";
 
 export interface PC04Props {
+    punchData: Uint8Array;
+    clearPunch(): void;
     onTapeLoad(tape: File): void;
 }
 
@@ -35,6 +37,16 @@ export const PC04: React.FunctionComponent<PC04Props> = (props) =>
                     </span>
                 </label>
             </div>
+            <div className='field'>
+                <div className='control'>
+                    <button className='button' onClick={() => onDownloadPunch(props.punchData)}>Download Punch</button>
+                </div>
+            </div>
+            <div className='field'>
+                <div className='control'>
+                    <button className='button' onClick={() => props.clearPunch()}>Clear Punch</button>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -45,4 +57,31 @@ function onLoadFile(evt: React.ChangeEvent,  props: PC04Props): void {
     }
 
     props.onTapeLoad(target.files[0]);
+}
+
+async function onDownloadPunch(data: Uint8Array) {
+    const convert = () => new Promise<string>((resolve, reject) => {
+        const blob = new Blob([Uint8Array.from(data)], {type: 'application/octet-stream'});
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            if (evt.target && evt.target.result) {
+                resolve(evt.target.result as string);
+            } else {
+                reject('Invalid data');
+            }
+        };
+        reader.readAsDataURL(blob);
+    });
+
+    try {
+        const dataURI = await convert();
+        const link = document.createElement('a');
+        link.setAttribute('href', dataURI);
+        link.setAttribute('download', 'punch.bin');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (e) {
+        alert(e);
+    }
 }

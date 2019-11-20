@@ -33,7 +33,7 @@ export class PC04 implements Peripheral {
         return [0o01, 0o02];
     }
 
-    public requestAction(action: string, data: any): void {
+    public requestAction(action: string, data: any): any {
         switch (action) {
             case 'append-data':
                 this.readerData.push(...data);
@@ -45,6 +45,11 @@ export class PC04 implements Peripheral {
     }
 
     public async run(io: IOContext): Promise<void> {
+        this.runReader(io);
+        this.runPunch(io);
+    }
+
+    public async runReader(io: IOContext): Promise<void> {
         while (true) {
             if ((io.readRegister(DeviceRegister.REG_B) & 1) == 0) {
                 // no data request
@@ -61,6 +66,28 @@ export class PC04 implements Peripheral {
             }
 
             await sleepMs(1000 / this.READER_CPS);
+        }
+    }
+
+    private async runPunch(io: IOContext) {
+        while (true) {
+            let regD = io.readRegister(DeviceRegister.REG_D);
+            const newData = (regD & 1) != 0;
+
+            if (!newData) {
+                await sleepMs(1);
+                continue;
+            }
+
+            io.writeRegister(DeviceRegister.REG_D, regD & ~1); // remove request
+            const punchData = io.readRegister(DeviceRegister.REG_C) & 0xFF;
+
+            await sleepMs(1000 / this.PUNCH_CPS);
+
+            regD = io.readRegister(DeviceRegister.REG_D);
+            io.writeRegister(DeviceRegister.REG_D, regD | 2); // ack data
+            console.log(`PC04: Punch ${punchData.toString(16)}`);
+            io.emitEvent('punch', punchData);
         }
     }
 }

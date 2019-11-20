@@ -17,9 +17,33 @@
  */
 
 import { PeripheralModel } from './PeripheralModel';
+import { observable, action, computed } from 'mobx';
 
 export class PC04Model extends PeripheralModel {
+    @observable
+    private punchData: number[] = [];
+
+    @action
     public onPeripheralAction(action: string, data: any): void {
+        switch (action) {
+            case 'punch':
+                this.punchData.push(data.data);
+                break;
+        }
+    }
+
+    @action
+    private setPunchData(data: number[]) {
+        this.punchData = data;
+    }
+
+    public readonly clearPunch = async (): Promise<void> => {
+        this.setPunchData([]);
+    }
+
+    @computed
+    public get punchOutput(): Uint8Array {
+        return Uint8Array.from(this.punchData);
     }
 
     public readonly loadTape = async (tape: File): Promise<void> => {

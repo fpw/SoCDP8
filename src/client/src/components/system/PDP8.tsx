@@ -87,7 +87,7 @@ const ASR33Box: React.FunctionComponent<{model: ASR33Model}> = observer(({model}
 
 const PC04Box: React.FunctionComponent<{model: PC04Model}> = observer(({model}) =>
     <PeripheralBox name='PC04: High-Speed Paper-Tape Reader and Punch'>
-        <PC04 onTapeLoad={model.loadTape} />
+        <PC04 onTapeLoad={model.loadTape} punchData={model.punchOutput} clearPunch={model.clearPunch} />
     </PeripheralBox>);
 
 const TC08Box: React.FunctionComponent<{model: TC08Model}> = observer(({model}) =>
