@@ -1,4 +1,3 @@
-import { RK8 } from '../components/peripherals/RK8';
 /*
  *   SoCDP8 - A PDP-8/I implementation on a SoC
  *   Copyright (C) 2019 Folke Will <folko@solhost.org>
@@ -17,28 +16,15 @@ import { RK8 } from '../components/peripherals/RK8';
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export enum DeviceID {
-    NULL     = 0,
-    ASR33    = 1,
-    PC04     = 2,
-    TC08     = 3,
-    RF08     = 4,
-    DF32     = 5,
-    TT1      = 6,
-    TT2      = 7,
-    TT3      = 8,
-    TT4      = 9,
-    KW8I     = 10,
-    RK8      = 11,
+import * as React from "react";
+
+export interface RK8Props {
+    onFlush(): void;
 }
 
-export interface Device {
-    id: number;
-    typeString: string;
-    connections: number[];
-}
-
-export interface PeripheralList {
-    maxDevices: number;
-    devices: Device[];
-}
+export const RK8: React.FunctionComponent<RK8Props> = (props) =>
+    <section>
+        <button className='button' onClick={() => props.onFlush()}>
+            Flush
+        </button>
+    </section>

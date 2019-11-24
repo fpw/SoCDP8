@@ -24,6 +24,7 @@ export enum DeviceRegister {
     REG_B           = 2,
     REG_C           = 3,
     REG_D           = 4,
+    REG_E           = 5,
 }
 
 export enum DeviceID {
@@ -38,6 +39,7 @@ export enum DeviceID {
     DEV_ID_TT3      = 8,
     DEV_ID_TT4      = 9,
     DEV_ID_KW8I     = 10,
+    DEV_ID_RK8      = 11,
 }
 
 export interface IOContext {

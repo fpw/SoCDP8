@@ -65,19 +65,13 @@ architecture Behavioral of integration_tb is
 begin
 
 dut: entity work.pdp8
-generic map (
-    clk_frq => 50_000_000,
-    enable_ext_eae => true,
-    enable_ext_mc8i => true,
-    debounce_time_ms => 1,
-    manual_cycle_time_us => 1,
-    memory_cycle_time_ns => 100,
-    auto_cycle_time_ns => 40,
-    eae_cycle_time_ns => 80
-)
 port map (
     clk => clk,
     rstn => rstn,
+    
+    enable_ext_eae => '1',
+    enable_ext_kt8i => '1',
+    enable_ext_mem_fields => "111",
     
     io_bus_in => io_bus_in,
     io_ac_clear => io_ac_clear,

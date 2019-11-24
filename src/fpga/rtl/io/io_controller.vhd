@@ -318,6 +318,29 @@ kw8i_inst: entity work.kw8i
         soc_attention => dev_attention(DEV_ID_KW8I)
     );
 
+rk8_inst: entity work.rk8
+    port map(
+        clk => S_AXI_ACLK,
+        rstn => S_AXI_ARESETN,
+        
+        reg_sel => perph_reg_sel,
+        reg_out => peripheral_out(DEV_ID_RK8).reg_out,
+        reg_in => perph_reg_in,
+        reg_write => perph_reg_write(DEV_ID_RK8),
+        
+        enable => dev_enable(DEV_ID_RK8),
+        iop => iop_code,
+        io_mb => io_mb,
+        io_ac => io_ac,
+        
+        io_skip => peripheral_out(DEV_ID_RK8).io_skip,
+        io_ac_clear => peripheral_out(DEV_ID_RK8).io_ac_clear,
+        io_bus_out => peripheral_out(DEV_ID_RK8).io_bus_out,
+        
+        pdp8_irq => dev_interrupts(DEV_ID_RK8),
+        soc_attention => dev_attention(DEV_ID_RK8)
+    );
+
 conf_enable_eae <= enable_eae;
 conf_max_field <= max_mem_field;
 conf_enable_kt8i <= enable_kt8i;

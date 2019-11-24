@@ -35,8 +35,9 @@ package socdp8_package is
     constant DEV_ID_TT3:    natural := 8;
     constant DEV_ID_TT4:    natural := 9;
     constant DEV_ID_KW8I:   natural := 10;
+    constant DEV_ID_RK8:    natural := 11;
     
-    constant DEV_ID_COUNT:  natural := 11;
+    constant DEV_ID_COUNT:  natural := 12;
 
     -- The manual function timing states (MFTS) and automatic timing states (TS)
     type time_state_auto is (TS1, TS2, TS3, TS4);
@@ -236,7 +237,7 @@ package socdp8_package is
     function reverse(x: in std_logic_vector) return std_logic_vector;
     
     --- given a clock frequency and a period (e.g. 1.0-e6 for 1 us), calculate a counter value to generate the period
-    function period_to_cycles(clk_frq: in natural; period: in real) return natural;
+    function period_to_cycles(frq: in natural; period: in real) return natural;
 end socdp8_package;
 
 package body socdp8_package is
@@ -250,9 +251,9 @@ package body socdp8_package is
         return res;
     end reverse;
     
-    function period_to_cycles(clk_frq: in natural; period: in real) return natural is
+    function period_to_cycles(frq: in natural; period: in real) return natural is
     begin
-        return natural(ceil(real(clk_frq) * real(period)));
+        return natural(ceil(real(frq) * real(period)));
     end period_to_cycles;
 
 end package body;

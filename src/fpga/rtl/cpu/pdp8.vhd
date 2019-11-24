@@ -154,7 +154,7 @@ architecture Behavioral of pdp8 is
     signal tp: std_logic;
     signal mem_idle: std_logic;
     signal io_start: std_logic;
-    signal io_state: io_state;
+    signal ios: io_state;
     signal io_end: std_logic;
     signal io_strobe: std_logic;
     signal int_strobe: std_logic;
@@ -232,7 +232,7 @@ port map (
     int_strobe => int_strobe,
     
     io_start => io_start,
-    io_state_o => io_state,
+    io_state_o => ios,
     io_end => io_end,
     io_strobe => io_strobe,
     
@@ -700,9 +700,9 @@ begin
     end if;
 end process;
 
-io_iop_tmp(0) <= '1' when io_state = IO1 and mb(0) = '1' else '0';
-io_iop_tmp(1) <= '1' when io_state = IO2 and mb(1) = '1' else '0';
-io_iop_tmp(2) <= '1' when io_state = IO4 and mb(2) = '1' else '0';
+io_iop_tmp(0) <= '1' when ios = IO1 and mb(0) = '1' else '0';
+io_iop_tmp(1) <= '1' when ios = IO2 and mb(1) = '1' else '0';
+io_iop_tmp(2) <= '1' when ios = IO4 and mb(2) = '1' else '0';
 io_iop <= io_iop_tmp;
 io_ac <= ac;
 io_mb <= mb;
