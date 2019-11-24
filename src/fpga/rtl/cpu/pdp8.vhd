@@ -9,6 +9,9 @@ use work.socdp8_package.all;
 use work.inst_common.all;
 
 entity pdp8 is
+    generic (
+        debounce_ms: natural := debounce_time_ms
+    );
     port (
         clk: in std_logic;
         rstn: in std_logic;
@@ -189,7 +192,7 @@ begin
 
 manual_timing_inst: entity work.timing_manual
 generic map (
-    debounce_time => real(debounce_time_ms) * 1.0e-3,
+    debounce_time => real(debounce_ms) * 1.0e-3,
     manual_cycle_time => real(manual_cycle_time_us) * 1.0e-6
 )
 port map (

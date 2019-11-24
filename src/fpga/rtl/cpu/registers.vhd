@@ -411,6 +411,7 @@ begin
         
         kt8i_uf <= '0';
         kt8i_ub <= '0';
+        kt8i_suf <= '0';
     end if;
 end process;
 

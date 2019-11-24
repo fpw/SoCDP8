@@ -65,6 +65,9 @@ architecture Behavioral of integration_tb is
 begin
 
 dut: entity work.pdp8
+generic map (
+    debounce_ms => 1
+)
 port map (
     clk => clk,
     rstn => rstn,
@@ -129,7 +132,7 @@ port map (
 
 clk_gen: process
 begin
-    wait for 10 ns;
+    wait for 20 ns;
     clk <= not clk;
 
     if stop_sim then
