@@ -17,12 +17,16 @@
  */
 
 export abstract class PeripheralModel {
-    constructor(protected id: number, protected socket: SocketIOClient.Socket) {
+    constructor(protected id: number, protected socket: SocketIOClient.Socket, protected bus: number[]) {
 
     }
 
     public get deviceId(): number {
         return this.id;
+    }
+
+    public get connections(): number[] {
+        return this.bus;
     }
 
     public abstract onPeripheralAction(action: string, data: any): void;

@@ -33,6 +33,8 @@ import { DF32Model } from '../../models/peripherals/DF32Model';
 import { DF32 } from '../peripherals/DF32';
 import { RK8Model } from '../../models/peripherals/RK8Model';
 import { RK8 } from '../peripherals/RK8';
+import { KW8IModel } from '../../models/peripherals/KW8IModel';
+import { KW8I } from '../peripherals/KW8I';
 
 export interface PDP8Props {
     pdp8: PDP8Model;
@@ -66,6 +68,8 @@ const PeripheralList: React.FunctionComponent<{list: PeripheralModel[]}> = ({lis
             return <DF32Box model={dev} />
         } else if (dev instanceof RK8Model) {
             return <RK8Box model={dev} />
+        } else if (dev instanceof KW8IModel) {
+            return <KW8IBox model={dev} />
         } else {
             return <div />;
         }
@@ -73,14 +77,15 @@ const PeripheralList: React.FunctionComponent<{list: PeripheralModel[]}> = ({lis
     return <React.Fragment>{components}</React.Fragment>
 }
 
-const PeripheralBox: React.FunctionComponent<{name: string, children: React.ReactNode}> = ({name, children}) =>
+const PeripheralBox: React.FunctionComponent<{model: PeripheralModel, name: string, children: React.ReactNode}> = ({model, name, children}) =>
     <div className='box'>
         <h2 className='subtitle is-3'>{name}</h2>
+        <h3 className='subtitle is-5'>Bus: {model.connections.map(x => x.toString(8)).join(', ')}</h3>
         { children }
     </div>
 
 const ASR33Box: React.FunctionComponent<{model: ASR33Model}> = observer(({model}) =>
-    <PeripheralBox name='ASR-33: Teletype'>
+    <PeripheralBox name='ASR-33: Teletype' model={model}>
         <ASR33
             onReaderKey={model.appendReaderKey}
             onReaderClear={model.clearPunch}
@@ -90,26 +95,31 @@ const ASR33Box: React.FunctionComponent<{model: ASR33Model}> = observer(({model}
     </PeripheralBox>);
 
 const PC04Box: React.FunctionComponent<{model: PC04Model}> = observer(({model}) =>
-    <PeripheralBox name='PC04: High-Speed Paper-Tape Reader and Punch'>
+    <PeripheralBox name='PC04: High-Speed Paper-Tape Reader and Punch' model={model}>
         <PC04 onTapeLoad={model.loadTape} punchData={model.punchOutput} clearPunch={model.clearPunch} />
     </PeripheralBox>);
 
 const TC08Box: React.FunctionComponent<{model: TC08Model}> = observer(({model}) =>
-    <PeripheralBox name='TC08: DECtape Control'>
+    <PeripheralBox name='TC08: DECtape Control' model={model}>
         <TC08 onTapeLoad={model.loadTape} />
     </PeripheralBox>);
 
 const RF08Box: React.FunctionComponent<{model: RF08Model}> = observer(({model}) =>
-    <PeripheralBox name='RF08: Disk Control '>
+    <PeripheralBox name='RF08: Disk Control' model={model}>
         <RF08 onFlush={model.flushData} />
     </PeripheralBox>);
 
 const DF32Box: React.FunctionComponent<{model: DF32Model}> = observer(({model}) =>
-    <PeripheralBox name='DF32: Disk Control '>
+    <PeripheralBox name='DF32: Disk Control' model={model}>
         <DF32 onFlush={model.flushData} />
     </PeripheralBox>);
 
 const RK8Box: React.FunctionComponent<{model: RK8Model}> = observer(({model}) =>
-    <PeripheralBox name='RK8: Disk Control '>
+    <PeripheralBox name='RK8: Disk Control' model={model}>
         <RK8 onFlush={model.flushData} />
+    </PeripheralBox>);
+
+const KW8IBox: React.FunctionComponent<{model: KW8IModel}> = observer(({model}) =>
+    <PeripheralBox name='KW8I: Real Time Clock' model={model}>
+        <KW8I />
     </PeripheralBox>);

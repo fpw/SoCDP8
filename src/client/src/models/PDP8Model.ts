@@ -28,6 +28,7 @@ import { CoreMemoryModel } from './CoreMemoryModel';
 import { RF08Model } from './peripherals/RF08Model';
 import { DF32Model } from './peripherals/DF32Model';
 import { RK8Model } from './peripherals/RK8Model';
+import { KW8IModel } from './peripherals/KW8IModel';
 
 export class PDP8Model {
     private readonly BASE_URL = 'http://192.168.178.65:8000';
@@ -97,22 +98,25 @@ export class PDP8Model {
                 case DeviceID.TT2:
                 case DeviceID.TT3:
                 case DeviceID.TT4:
-                    peripheral = new ASR33Model(entry.id, this.socket);
+                    peripheral = new ASR33Model(entry.id, this.socket, entry.connections);
                     break;
                 case DeviceID.PC04:
-                    peripheral = new PC04Model(entry.id, this.socket);
+                    peripheral = new PC04Model(entry.id, this.socket, entry.connections);
                     break;
                 case DeviceID.TC08:
-                    peripheral = new TC08Model(entry.id, this.socket);
+                    peripheral = new TC08Model(entry.id, this.socket, entry.connections);
                     break;
                 case DeviceID.RF08:
-                    peripheral = new RF08Model(entry.id, this.socket);
+                    peripheral = new RF08Model(entry.id, this.socket, entry.connections);
                     break;
                 case DeviceID.DF32:
-                    peripheral = new DF32Model(entry.id, this.socket);
+                    peripheral = new DF32Model(entry.id, this.socket, entry.connections);
                     break;
                 case DeviceID.RK8:
-                    peripheral = new RK8Model(entry.id, this.socket);
+                    peripheral = new RK8Model(entry.id, this.socket, entry.connections);
+                    break;
+                case DeviceID.KW8I:
+                    peripheral = new KW8IModel(entry.id, this.socket, entry.connections);
                     break;
                 default:
                     continue;

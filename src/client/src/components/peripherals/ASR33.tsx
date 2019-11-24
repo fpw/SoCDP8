@@ -41,7 +41,7 @@ export const ASR33: React.FunctionComponent<ASR33Props> = observer((props) => {
             </div>
 
             <div className='control'>
-                <input className='input' onKeyUp={(evt) => onKey(evt, props)} />
+                <input className='input' onKeyUp={evt => onKeyUp(evt, props)} onKeyPress={evt => onKeyPress(evt, props)} />
             </div>
 
             <div className='field has-addons'>
@@ -78,7 +78,7 @@ function scrollToBottomOnChange(textRef: React.RefObject<HTMLTextAreaElement>) {
     });
 }
 
-function onKey(ev: React.KeyboardEvent, props: ASR33Props): boolean {
+function onKeyUp(ev: React.KeyboardEvent, props: ASR33Props): boolean {
     if (ev.key == 'Enter') {
         (ev.target as HTMLInputElement).value = '';
         sendPunch(0x0D, props);
@@ -86,7 +86,13 @@ function onKey(ev: React.KeyboardEvent, props: ASR33Props): boolean {
         sendPunch(0x7F, props);
     } else if (ev.key == 'Escape') {
         sendPunch(0x1B, props);
-    } else if (ev.key.length == 1) {
+    }
+
+    return false;
+}
+
+function onKeyPress(ev: React.KeyboardEvent, props: ASR33Props): boolean {
+    if (ev.key.length == 1) {
         const ascii = ev.key.charCodeAt(0);
         if ((ascii & 0x60) == 0x60) {
             // lowercase -> convert to uppercase
