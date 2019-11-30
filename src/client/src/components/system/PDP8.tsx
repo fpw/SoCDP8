@@ -41,17 +41,17 @@ export interface PDP8Props {
 }
 
 export const PDP8: React.FunctionComponent<PDP8Props> = observer((props) =>
-    <section className='section'>
-        <div className='container'>
-            <div className='box'>
-                <h1 className='title'>PDP-8/I</h1>
+    <section className='section container'>
+        <div className='panel is-primary'>
+            <p className='panel-heading'>PDP-8/I</p>
+            <div className='panel-block'>
                 <FrontPanel lamps={props.pdp8.panel.lamps}
-                            switches={props.pdp8.panel.switches}
-                            onSwitch={props.pdp8.setPanelSwitch.bind(props.pdp8)}
-                />
+                                switches={props.pdp8.panel.switches}
+                                onSwitch={props.pdp8.setPanelSwitch.bind(props.pdp8)}
+                    />
             </div>
-            <PeripheralList list={props.pdp8.peripherals} />
         </div>
+        <PeripheralList list={props.pdp8.peripherals} />
     </section>);
 
 const PeripheralList: React.FunctionComponent<{list: PeripheralModel[]}> = ({list}) => {
@@ -78,48 +78,54 @@ const PeripheralList: React.FunctionComponent<{list: PeripheralModel[]}> = ({lis
 }
 
 const PeripheralBox: React.FunctionComponent<{model: PeripheralModel, name: string, children: React.ReactNode}> = ({model, name, children}) =>
-    <div className='box'>
-        <h2 className='subtitle is-3'>{name}</h2>
-        <h3 className='subtitle is-5'>Bus: {model.connections.map(x => x.toString(8)).join(', ')}</h3>
-        { children }
-    </div>
+    <section className='panel is-primary'>
+        <p className='panel-heading'>
+            {name} @ Bus {model.connections.map(x => x.toString(8)).join(', ')}
+        </p>
+        <div className='panel-block'>
+            <div className='container'>
+                { children }
+            </div>
+        </div>
+    </section>
 
 const ASR33Box: React.FunctionComponent<{model: ASR33Model}> = observer(({model}) =>
-    <PeripheralBox name='ASR-33: Teletype' model={model}>
+    <PeripheralBox name='ASR-33 Teletype' model={model}>
         <ASR33
             onReaderKey={model.appendReaderKey}
             onReaderClear={model.clearPunch}
             onTapeLoad={model.loadTape}
             punchData={model.punchOutput}
-            onPunchForce={model.forcePunch} />
+            onReaderActivationChange={model.setReaderActive}
+        />
     </PeripheralBox>);
 
 const PC04Box: React.FunctionComponent<{model: PC04Model}> = observer(({model}) =>
-    <PeripheralBox name='PC04: High-Speed Paper-Tape Reader and Punch' model={model}>
+    <PeripheralBox name='PC04 High-Speed Paper-Tape Reader and Punch' model={model}>
         <PC04 onTapeLoad={model.loadTape} punchData={model.punchOutput} clearPunch={model.clearPunch} />
     </PeripheralBox>);
 
 const TC08Box: React.FunctionComponent<{model: TC08Model}> = observer(({model}) =>
-    <PeripheralBox name='TC08: DECtape Control' model={model}>
+    <PeripheralBox name='TC08 DECtape Control' model={model}>
         <TC08 onTapeLoad={model.loadTape} />
     </PeripheralBox>);
 
 const RF08Box: React.FunctionComponent<{model: RF08Model}> = observer(({model}) =>
-    <PeripheralBox name='RF08: Disk Control' model={model}>
+    <PeripheralBox name='RF08 Disk Control' model={model}>
         <RF08 onFlush={model.flushData} />
     </PeripheralBox>);
 
 const DF32Box: React.FunctionComponent<{model: DF32Model}> = observer(({model}) =>
-    <PeripheralBox name='DF32: Disk Control' model={model}>
+    <PeripheralBox name='DF32 Disk Control' model={model}>
         <DF32 onFlush={model.flushData} />
     </PeripheralBox>);
 
 const RK8Box: React.FunctionComponent<{model: RK8Model}> = observer(({model}) =>
-    <PeripheralBox name='RK8: Disk Control' model={model}>
+    <PeripheralBox name='RK8 Disk Control' model={model}>
         <RK8 onFlush={model.flushData} />
     </PeripheralBox>);
 
 const KW8IBox: React.FunctionComponent<{model: KW8IModel}> = observer(({model}) =>
-    <PeripheralBox name='KW8I: Real Time Clock' model={model}>
+    <PeripheralBox name='KW8I Real Time Clock' model={model}>
         <KW8I />
     </PeripheralBox>);

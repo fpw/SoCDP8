@@ -57,10 +57,10 @@ export class ASR33Model extends PeripheralModel {
         return this.punchData;
     }
 
-    public readonly appendReaderKey = async (chr: ArrayBuffer): Promise<void> => {
+    public readonly appendReaderKey = async (chr: number): Promise<void> => {
         this.socket.emit('peripheral-action', {
             devId: this.id,
-            action: 'append-data',
+            action: 'key-press',
             data: chr
         });
     }
@@ -69,20 +69,20 @@ export class ASR33Model extends PeripheralModel {
         let data = await this.loadFile(tape);
         this.socket.emit('peripheral-action', {
             devId: this.id,
-            action: 'set-data',
+            action: 'reader-tape-set',
             data: data
         });
     }
 
-    public readonly clearPunch = async (): Promise<void> => {
-        this.setPunchData('');
-    }
-
-    public readonly forcePunch = async (): Promise<void> => {
+    public readonly setReaderActive = async (active: boolean): Promise<void> => {
         this.socket.emit('peripheral-action', {
             devId: this.id,
-            action: 'force',
-            data: {}
+            action: 'reader-set-active',
+            data: active
         });
+    };
+
+    public readonly clearPunch = async (): Promise<void> => {
+        this.setPunchData('');
     }
 }

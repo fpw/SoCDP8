@@ -74,6 +74,8 @@ begin
         io_bus_out <= (others => '0');
     end if;
 
+    pdp8_irq <= '0';
+
     if enable = '1' then
         -- regA: command register and R(13)/W(14)/P(15)
         -- regB: track, and sector address

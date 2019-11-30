@@ -67,6 +67,8 @@ begin
         io_bus_out <= (others => '0');
     end if;
 
+    pdp8_irq <= '0';
+
     if enable = '1'  then
         if unsigned(regB(11 downto 0) and o"7707") /= 0 and regA(2) = '1' then
             pdp8_irq <= '1';

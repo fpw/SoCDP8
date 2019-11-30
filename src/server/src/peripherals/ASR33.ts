@@ -23,8 +23,13 @@ export class ASR33 implements Peripheral {
     private readonly READER_CPS = 10;
     private readonly PUNCH_CPS = 12; // with 10, Focal69 identifies as PDP-8/L
 
-    private readerData: number[] = [];
-    private forcePunch: boolean = false;
+    private readerActive: boolean = false;
+    private readerTape: number[] = [];
+    private readerTapePos: number = 0;
+    private keyBuffer: number[] = [];
+
+    private punchBuffer: number[] = [];
+    private punchTape: number[] = [];
 
     constructor(public readonly id: DeviceID) {
     }
@@ -47,15 +52,22 @@ export class ASR33 implements Peripheral {
 
     public requestAction(action: string, data: any): void {
         switch (action) {
-            case 'append-data':
-                this.readerData.push(...data);
+            case 'key-press':
+                this.onKey(data);
                 break;
-            case 'set-data':
-                this.readerData = Array.from(data as Buffer);
+            case 'reader-tape-set':
+                this.readerTape = Array.from(data as Buffer);
+                this.readerTapePos = 0;
                 break;
-            case 'force':
-                this.forcePunch = true;
+            case 'reader-set-active':
+                this.readerActive = data;
                 break;
+        }
+    }
+
+    private onKey(key: number): void {
+        if (!this.readerActive) {
+            this.keyBuffer.push(key);
         }
     }
 
@@ -66,16 +78,8 @@ export class ASR33 implements Peripheral {
 
     private async runReader(io: IOContext) {
         while (true) {
-            if (io.readRegister(DeviceRegister.REG_B) == 1) {
-                // data not taken yet
-                await sleepMs(1);
-                continue;
-            }
-
-            // current word was retrieved, get next
-            const data = this.readerData.shift();
-            if (data != undefined) {
-                console.log(`ASR-33 reader: Next ${data.toString(16)}, ${this.readerData.length} remaining`);
+            const data = this.readNext();
+            if (data !== null) {
                 io.writeRegister(DeviceRegister.REG_A, data);
                 io.writeRegister(DeviceRegister.REG_B, 1);
             }
@@ -84,13 +88,35 @@ export class ASR33 implements Peripheral {
         }
     }
 
+    private readNext(): number | null {
+        if (this.readerActive) {
+            return this.readNextFromTape();
+        } else {
+            return this.readNextKey();
+        }
+    }
+
+    private readNextKey(): number | null {
+        const data = this.keyBuffer.shift();
+        if (data !== undefined) {
+            return data;
+        } else {
+            return null;
+        }
+    }
+
+    private readNextFromTape(): number | null {
+        if (this.readerTapePos < this.readerTape.length) {
+            const data = this.readerTape[this.readerTapePos++];
+            console.log(`ASR-33 reader: Read ${data.toString(16)}, ${this.readerTapePos} / ${this.readerTape.length}`);
+            return data;
+        } else {
+            return null;
+        }
+    }
+
     private async runPunch(io: IOContext) {
         while (true) {
-            if (this.forcePunch) {
-                io.writeRegister(DeviceRegister.REG_D, 2);
-                this.forcePunch = false;
-            }
-
             let regD = io.readRegister(DeviceRegister.REG_D);
             const newData = (regD & 1) != 0;
 

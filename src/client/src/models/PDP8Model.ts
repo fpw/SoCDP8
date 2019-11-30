@@ -16,10 +16,10 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import * as io from 'socket.io-client'
+import * as io from 'socket.io-client';
 import { FrontPanelState } from './FrontPanelState';
-import { observable, action, computed } from 'mobx'
-import { PeripheralList, DeviceID, Device } from './PeripheralList';
+import { observable, action, computed } from 'mobx';
+import { PeripheralList, DeviceID } from './PeripheralList';
 import { ASR33Model } from './peripherals/ASR33Model';
 import { PeripheralModel } from './peripherals/PeripheralModel';
 import { PC04Model } from './peripherals/PC04Model';

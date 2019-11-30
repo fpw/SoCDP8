@@ -31,12 +31,13 @@ module.exports = {
         loader: 'source-map-loader'
       },
       {
-        test: /\.svg$|\.html$/,
+        test: /\.svg$|\.html$/i,
         use: {
           loader: 'file-loader',
           options: {
             name: '[path][name].[ext]',
-            context: 'public'
+            context: 'public',
+            esModule: false
           }
         }
       },

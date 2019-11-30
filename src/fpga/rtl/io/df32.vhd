@@ -64,6 +64,8 @@ begin
         io_ac_clear <= '0';
         io_bus_out <= (others => '0');
     end if;
+    
+    pdp8_irq <= '0';
 
     if enable = '1' then
         -- regA: DMA and R/W op

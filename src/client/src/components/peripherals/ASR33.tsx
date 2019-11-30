@@ -21,10 +21,10 @@ import { observer } from 'mobx-react-lite';
 
 export interface ASR33Props {
     punchData: string;
-    onReaderKey(chr: ArrayBuffer): void;
+    onReaderKey(chr: number): void;
     onReaderClear(): void;
     onTapeLoad(tape: File): void;
-    onPunchForce(): void;
+    onReaderActivationChange(state: boolean): void;
 }
 
 export const ASR33: React.FunctionComponent<ASR33Props> = observer((props) => {
@@ -34,33 +34,52 @@ export const ASR33: React.FunctionComponent<ASR33Props> = observer((props) => {
 
     return (
         <section>
-            <div className='control'>
-                <textarea ref={textRef}
-                        readOnly className='textarea has-fixed-size' rows={8} cols={80} style={{fontFamily: 'Consolas,monaco,monospace'}}
+            <div className='box'>
+                <h2 className='subtitle is-4'>Output</h2>
+                <div className='control'>
+                    <textarea ref={textRef}
+                        readOnly className='textarea has-fixed-size' rows={8} cols={80} style={{fontFamily: 'monospace'}}
                         value={props.punchData} />
-            </div>
-
-            <div className='control'>
-                <input className='input' onKeyUp={evt => onKeyUp(evt, props)} onKeyPress={evt => onKeyPress(evt, props)} />
-            </div>
-
-            <div className='field has-addons'>
-                <div className='control'>
-                    <button className='button' onClick={props.onReaderClear}>Clear</button>
-                </div>
-                <div className='control'>
-                    <button className='button' onClick={props.onPunchForce}>Force Punch Flag</button>
                 </div>
 
-                <div className='file'>
-                    <label className='file-label'>
-                        <input className='file-input' type='file' onChange={(evt) => onLoadFile(evt, props)} />
-                        <span className='file-cta'>
-                            <span className='file-label'>
-                                Attach Tape
-                            </span>
-                        </span>
+                <div className='control'>
+                    <button className='button' onClick={props.onReaderClear}>Clear Output</button>
+                </div>
+            </div>
+
+            <div className='box'>
+            <h2 className='subtitle is-4'>Input</h2>
+                <div className='field'>
+                    <label className='label'>
+                        Key Input
+                        <div className='control'>
+                            <input className='input' onKeyUp={evt => onKeyUp(evt, props)} onKeyPress={evt => onKeyPress(evt, props)} />
+                        </div>
                     </label>
+                </div>
+
+                <div className='field'>
+                    <div className='control'>
+                        <label className='checkbox'>
+                            <input type='checkbox' onChange={evt => props.onReaderActivationChange(evt.target.checked)} />
+                            Reader On
+                        </label>
+                    </div>
+                </div>
+
+                <div className='field'>
+                    <div className='control'>
+                        <div className='file'>
+                            <label className='file-label'>
+                                <input className='file-input' type='file' onChange={evt => onLoadFile(evt, props)} />
+                                <span className='file-cta'>
+                                    <span className='file-label'>
+                                        Load Tape
+                                    </span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -116,8 +135,5 @@ function onLoadFile(evt: React.ChangeEvent, props: ASR33Props): void {
 }
 
 function sendPunch(code: number, props: ASR33Props) {
-    const buf = new ArrayBuffer(1);
-    let view = new Uint8Array(buf);
-    view[0] = code | 0x80;
-    props.onReaderKey(buf);
+    props.onReaderKey(code | 0x80);
 }
