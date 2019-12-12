@@ -69,7 +69,7 @@ export class SoCDP8 {
         // this.io.registerPeripheral(new KW8I());
 
         // this.io.registerPeripheral(new DF32());
-        // this.io.registerPeripheral(new RF08());
+        this.io.registerPeripheral(new RF08());
         // this.io.registerPeripheral(new RK8());
     }
 
