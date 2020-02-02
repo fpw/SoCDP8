@@ -1,60 +1,56 @@
-Index: git/board/xilinx/common/board.c
-===================================================================
---- git.orig/board/xilinx/common/board.c
-+++ git/board/xilinx/common/board.c
-@@ -7,32 +7,35 @@
- #include <common.h>
+From ca115d9c87516f5eb689b517bb92d0476583b282 Mon Sep 17 00:00:00 2001
+From: Rock Qu <yunq@xilinx.com>
+Date: Mon, 12 Aug 2019 10:38:41 -0700
+Subject: [PATCH 2/4] allow to read mac address from SPI flash
+
+---
+ board/xilinx/common/board.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/board/xilinx/common/board.c b/board/xilinx/common/board.c
+index 7e6340b..2414735 100644
+--- a/board/xilinx/common/board.c
++++ b/board/xilinx/common/board.c
+@@ -7,6 +7,8 @@
  #include <dm/uclass.h>
  #include <i2c.h>
+ #include <mach/sys_proto.h>
 +#include <spi.h>
 +#include <spi_flash.h>
  
  int zynq_board_read_rom_ethaddr(unsigned char *ethaddr)
  {
- 	int ret = -EINVAL;
+@@ -34,5 +36,30 @@ int zynq_board_read_rom_ethaddr(unsigned char *ethaddr)
+ 		debug("%s: I2C EEPROM MAC %pM\n", __func__, ethaddr);
+ #endif
  
--#if defined(CONFIG_ZYNQ_GEM_I2C_MAC_OFFSET)
--	struct udevice *dev;
--	ofnode eeprom;
-+#define CMD_OTPREAD_ARRAY_FAST          0x4b
-+        struct spi_flash *flash;
-+        flash = spi_flash_probe(CONFIG_SF_DEFAULT_BUS,
-+                                CONFIG_SF_DEFAULT_CS,
-+                                CONFIG_SF_DEFAULT_SPEED,
-+                                CONFIG_SF_DEFAULT_MODE);
-+        if (!flash) {
-+                printf("SPI(bus:%u cs:%u) probe failed\n",
-+                        CONFIG_SF_DEFAULT_BUS,
-+                        CONFIG_SF_DEFAULT_CS);
-+                return -ENODEV;
-+        }
-+        /* set the cmd to otp read */
-+        flash->read_cmd = CMD_OTPREAD_ARRAY_FAST;
-+        ret = spi_flash_read(flash, 0x20, 6, ethaddr);
-+        if (ret)
-+                debug("%s: SPI EEPROM MAC address read failed\n", __func__);
-+        else
-+                debug("%s: SPI EEPROM MAC %pM\n", __func__, ethaddr);
- 
--	eeprom = ofnode_get_chosen_node("xlnx,eeprom");
--	if (!ofnode_valid(eeprom))
--		return -ENODEV;
--
--	debug("%s: Path to EEPROM %s\n", __func__,
--	      ofnode_get_chosen_prop("xlnx,eeprom"));
--
--	ret = uclass_get_device_by_ofnode(UCLASS_I2C_EEPROM, eeprom, &dev);
--	if (ret)
--		return ret;
--
--	ret = dm_i2c_read(dev, CONFIG_ZYNQ_GEM_I2C_MAC_OFFSET, ethaddr, 6);
--	if (ret)
--		debug("%s: I2C EEPROM MAC address read failed\n", __func__);
--	else
--		debug("%s: I2C EEPROM MAC %pM\n", __func__, ethaddr);
--#endif
-+        if (flash)
-+                spi_flash_free(flash);
- 
++#if defined(CONFIG_ZYNQ_QSPI) && defined(CONFIG_ZYNQ_GEM_SPI_MAC_OFFSET)
++#define CMD_OTPREAD_ARRAY_FAST		0x4b
++	struct spi_flash *flash;
++	flash = spi_flash_probe(CONFIG_SF_DEFAULT_BUS,
++				CONFIG_SF_DEFAULT_CS,
++				CONFIG_SF_DEFAULT_SPEED,
++				CONFIG_SF_DEFAULT_MODE);
++	if (!flash) {
++		printf("SPI(bus:%u cs:%u) probe failed\n",
++			CONFIG_SF_DEFAULT_BUS,
++			CONFIG_SF_DEFAULT_CS);
++		return -ENODEV;
++	}
++	/* set the cmd to otp read */
++	flash->read_cmd = CMD_OTPREAD_ARRAY_FAST;
++	ret = spi_flash_read(flash, CONFIG_ZYNQ_GEM_SPI_MAC_OFFSET, 6, ethaddr);
++	if (ret)
++		debug("%s: SPI EEPROM MAC address read failed\n", __func__);
++	else
++		debug("%s: SPI EEPROM MAC %pM\n", __func__, ethaddr);
++
++	if (flash)
++		spi_flash_free(flash);
++#endif
++
  	return ret;
  }
+-- 
+1.9.5
+
