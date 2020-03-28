@@ -27,6 +27,11 @@ entity pc04 is
         io_ac_clear: out std_logic;
         io_bus_out: out std_logic_vector(11 downto 0);
         
+        uart_rx: in std_logic;
+        uart_tx: out std_logic;
+        uart_cts: out std_logic;
+        uart_rts: in std_logic;
+
         pdp8_irq: out std_logic;
         soc_attention: out std_logic
     );
@@ -38,7 +43,39 @@ architecture Behavioral of pc04 is
     signal regB: std_logic_vector(15 downto 0);
     signal regC: std_logic_vector(15 downto 0);
     signal regD: std_logic_vector(15 downto 0);
+
+    signal uart_tx_ready: std_logic;
+    signal uart_tx_data: std_logic_vector(7 downto 0) := x"00";
+    signal uart_tx_send: std_logic := '0';
+
+    signal uart_rx_data: std_logic_vector(7 downto 0) := x"00";
+    signal uart_rx_recv: std_logic;
+    signal uart_rx_latch: std_logic := '0';
 begin
+
+pc04_uart: entity work.uart
+generic map(
+    baud_rate => 300,
+    data_bits => 8,
+    stop_bits => 2
+)
+port map(
+    clk => clk,
+    
+    rx => uart_rx,
+    tx => uart_tx,
+    
+    rts => uart_rts,
+    cts => uart_cts,
+    
+    tx_ready => uart_tx_ready,
+    tx_data => uart_tx_data,
+    tx_send => uart_tx_send,
+
+    rx_data => uart_rx_data,
+    rx_recv => uart_rx_recv
+    
+);
 
 with reg_sel select reg_out <=
     -- 0 is used for dev enable outside
@@ -48,7 +85,7 @@ with reg_sel select reg_out <=
     regD when x"4",
     x"0000" when others;
 
-pdp8_irq <= regB(1) or regD(1) when enable = '1' else '0';
+pdp8_irq <= regB(1) or regD(1) or uart_rx_latch when enable = '1' else '0';
 soc_attention <= regB(0) or regD(0) when enable = '1' else '0';
 iop_last <= iop when rising_edge(clk);
 
@@ -56,6 +93,14 @@ tc04_proc: process
 begin
     wait until rising_edge(clk);
  
+    -- defaults 
+    uart_tx_send <= '0';
+    
+    if uart_rx_recv = '1' then
+        uart_rx_latch <= '1';
+        uart_cts <= '1';
+    end if;
+
     if reg_write = '1' then
         case reg_sel is
             when x"1" => regA <= reg_in;
@@ -77,15 +122,22 @@ begin
         case iop is
             when IO1 =>
                 -- Set skip if new data
-                io_skip <= regB(1);
+                io_skip <= regB(1) or uart_rx_latch;
             when IO2 => 
                 -- Clear new data flag, put data on bus
-                io_bus_out <= regA(11 downto 0);
-                regB(1) <= '0';
+                if uart_rx_latch = '1' then
+                    io_bus_out(11 downto 8) <= (others => '0');
+                    io_bus_out(7 downto 0) <= uart_rx_data(7 downto 0);
+                    uart_rx_latch <= '0';
+                else
+                    io_bus_out <= regA(11 downto 0);
+                    regB(1) <= '0';
+                end if;
             when IO4 =>
                 -- Clear flag, request new data
                 regB(0) <= '1';
                 regB(1) <= '0';
+                uart_cts <= '0';
             when others => null;
         end case;
     elsif enable = '1' and iop_last /= iop and io_mb(8 downto 3) = o"02" then
@@ -93,7 +145,7 @@ begin
         case iop is
             when IO1 =>
                 -- Set skip if data acked
-                io_skip <= regD(1);
+                io_skip <= regD(1) and uart_tx_ready;
             when IO2 =>
                 -- Clear ack flag 
                 regD(1) <= '0';
@@ -101,11 +153,15 @@ begin
                 -- Load buffer
                 regC(11 downto 0) <= io_ac;
                 regD(0) <= '1';
+                
+                uart_tx_data <= io_ac(7 downto 0);
+                uart_tx_send <= '1';
             when others => null;
         end case;
     end if;
 
     if rstn = '0' then
+        uart_cts <= '0';
         regA <= (others => '0');
         regB <= (others => '0');
         regC <= (others => '0');

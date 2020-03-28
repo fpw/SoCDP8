@@ -11,7 +11,8 @@ use work.socdp8_package.all;
 entity io_controller is
     generic(
         -- AXI parameters
-        C_S_AXI_ADDR_WIDTH: integer := 13
+        C_S_AXI_ADDR_WIDTH: integer := 13;
+        num_uarts: natural := 2
     );
     port (
         -- AXI
@@ -72,6 +73,12 @@ entity io_controller is
         brk_wc_overflow: in std_logic;
         brk_ack: in std_logic;
         brk_done: in std_logic;
+        
+        -- UARTs
+        uart_rx: in std_logic_vector(num_uarts - 1 downto 0);
+        uart_tx: out std_logic_vector(num_uarts - 1 downto 0);
+        uart_rts: in std_logic_vector(num_uarts - 1 downto 0);
+        uart_cts: out std_logic_vector(num_uarts - 1 downto 0);
         
         -- PDP-8 interrupt line
         pdp_irq: out std_logic;
@@ -171,6 +178,11 @@ asr33_inst: entity work.asr33
         io_ac_clear => peripheral_out(DEV_ID_ASR33).io_ac_clear,
         io_bus_out => peripheral_out(DEV_ID_ASR33).io_bus_out,
         
+        uart_rx => uart_rx(0),
+        uart_tx => uart_tx(0),
+        uart_rts => uart_rts(0),
+        uart_cts => uart_cts(0),
+        
         pdp8_irq => dev_interrupts(DEV_ID_ASR33),
         soc_attention => dev_attention(DEV_ID_ASR33)
     );
@@ -197,7 +209,12 @@ tt_insts: for i in 0 to 3 generate
             io_skip => peripheral_out(DEV_ID_TT1 + i).io_skip,
             io_ac_clear => peripheral_out(DEV_ID_TT1 + i).io_ac_clear,
             io_bus_out => peripheral_out(DEV_ID_TT1 + i).io_bus_out,
-            
+
+            uart_rx => '1',
+            uart_tx => open,
+            uart_rts => '1',
+            uart_cts => open,
+                
             pdp8_irq => dev_interrupts(DEV_ID_TT1 + i),
             soc_attention => dev_attention(DEV_ID_TT1 + i)
         );
@@ -217,6 +234,11 @@ pc04_inst: entity work.pc04
         iop => iop_code,
         io_mb => io_mb,
         io_ac => io_ac,
+
+        uart_rx => uart_rx(1),
+        uart_tx => uart_tx(1),
+        uart_rts => uart_rts(1),
+        uart_cts => uart_cts(1),
         
         io_skip => peripheral_out(DEV_ID_PC04).io_skip,
         io_ac_clear => peripheral_out(DEV_ID_PC04).io_ac_clear,
