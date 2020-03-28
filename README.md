@@ -45,8 +45,8 @@ I evaluated a few SoC boards:
 For now, I am targeting the Zynq and will use the Pynq-Z2 board for development.
 
 ## Project Status
-Unfortunately, I had to make a small modification to the PiDP-8/I hardware to support the Zynq boards: The 1k resistors must be replaced by 220 Ohm resistors to support the different pullup resistance of the Zynq drivers. But at least 220 Ohm also work with the Raspberry Pi, so this modification is compatible.
+The base system including EAE, timesharing, data breaks, I/O and interrupts is functional and passes the MAINDEC tests that can be loaded using the RIM and BIN loaders. It can successfully run Focal69, OS/8 and TSS/8.
 
-The base system including EAE, I/O and interrupts is functional and passes the MAINDEC tests that can be loaded using the RIM and BIN loaders. It can also run Focal69. The following parts are missing:
-* Data breaks
-* Time sharing option
+External peripherals are mainly implemented in software and only provide a base functionality for now.
+
+Unfortunately, I had to make a small modification to the PiDP-8/I hardware to support the Zynq boards: The 1k resistors must be replaced by 220 Ohm resistors to support the different pullup resistance of the Zynq drivers. But at least 220 Ohm also work with the Raspberry Pi, so this modification is compatible.
