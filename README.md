@@ -14,7 +14,7 @@ The common Raspberry Pi + Linux + SIMH approach has a few drawbacks:
 
 The SoCDP8 implements the PDP-8/I system in VHDL, targeting an FPGA. The system is modeled exactly as described in the original [maintenance manual](/docs/PDP8I_maintenance_manual_vol1.pdf) and the engineering drawings. The manual is treated as the project's specification: Registers and signals are named as described in the book, register transfers are modeled as specified in the drawings.
 
-Peripherals are implemented on the ARM CPU of the SoC. This allows an easy implementation of peripheral devices like the teletype. The peripheral code can access the board's SD card to retrieve tapes, disk images and so on. Instead of using Linux, the peripheral code is implemented without an operating system to allow quick boot times and won't require clean shutdowns.
+Peripherals are implemented on the ARM CPU of the SoC. This allows an easy implementation of peripheral devices like the teletype. The peripheral code can access the board's SD card to retrieve tapes, disk images and so on. When connected to a network (Ethernet or WiFi), the system and its peripherals can be controlled through a web frontend using a browser.
 
 ## Project Vision
 * Provide a simple replacement for the Raspberry Pi: Ideally, the project runs on a SoC board that snaps into the PiDP-8/I console in the same way as the Raspberry Pi.
@@ -45,8 +45,8 @@ I evaluated a few SoC boards:
 For now, I am targeting the Zynq and will use the Pynq-Z2 board for development.
 
 ## Project Status
-Unfortunately, I had to make a small modification to the PiDP-8/I hardware to support the Zynq boards: The 1k resistors must be replaced by 220 Ohm resistors to support the different pullup resistance of the Zynq drivers. But at least 220 Ohm also work with the Raspberry Pi, so this modification is compatible.
+The base system including EAE, timesharing, data breaks, I/O and interrupts is functional and passes the MAINDEC tests that can be loaded using the RIM and BIN loaders. It can successfully run Focal69, OS/8 and TSS/8.
 
-The base system including EAE, I/O and interrupts is functional and passes the MAINDEC tests that can be loaded using the RIM and BIN loaders. It can also run Focal69. The following parts are missing:
-* Data breaks
-* Time sharing option
+External peripherals are mainly implemented in software and only provide a base functionality for now.
+
+Unfortunately, I had to make a small modification to the PiDP-8/I hardware to support the Zynq boards: The 1k resistors must be replaced by 220 Ohm resistors to support the different pullup resistance of the Zynq drivers. But at least 220 Ohm also work with the Raspberry Pi, so this modification is compatible.
