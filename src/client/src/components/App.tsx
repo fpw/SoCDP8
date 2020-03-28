@@ -80,7 +80,10 @@ const Header: React.FunctionComponent<PDP8Props> = (props) =>
                                 Clear
                             </a>
                             <a className='navbar-item' onClick={() => props.pdp8.core.storeRIMLoader()}>
-                                Store RIM Loader - 7756
+                                Store RIM LS Loader - 7756
+                            </a>
+                            <a className='navbar-item' onClick={() => props.pdp8.core.storeHSRIMLoader()}>
+                                Store RIM HS Loader - 7756
                             </a>
                             <a className='navbar-item' onClick={() => props.pdp8.core.storeOS8LoaderTC08()}>
                                 Store OS/8 TC08 Loader - 7613

@@ -66,6 +66,29 @@ export class CoreMemoryModel {
         this.write(0o7756, program);
     }
 
+    public storeHSRIMLoader() {
+        const program = [
+            0o6014,
+            0o6011,
+            0o5357,
+            0o6016,
+            0o7106,
+            0o7006,
+            0o7510,
+            0o5374,
+            0o7006,
+            0o6011,
+            0o5367,
+            0o6016,
+            0o7420,
+            0o3776,
+            0o3376,
+            0o5357,
+            0o0000,
+        ];
+        this.write(0o7756, program);
+    }
+
     public storeOS8LoaderTC08() {
         const program = [
             0o6774, // 7613: DTLB        / set TC08 field to 0, clear AC

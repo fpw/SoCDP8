@@ -31,7 +31,7 @@ import { RK8Model } from './peripherals/RK8Model';
 import { KW8IModel } from './peripherals/KW8IModel';
 
 export class PDP8Model {
-    private readonly BASE_URL = 'http://192.168.178.22:8000';
+    private readonly BASE_URL = '';
 
     private socket: SocketIOClient.Socket;
 

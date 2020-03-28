@@ -44,12 +44,10 @@ export const PDP8: React.FunctionComponent<PDP8Props> = observer((props) =>
     <section className='section container'>
         <div className='panel is-primary'>
             <p className='panel-heading'>PDP-8/I</p>
-            <div className='panel-block'>
-                <FrontPanel lamps={props.pdp8.panel.lamps}
-                                switches={props.pdp8.panel.switches}
-                                onSwitch={props.pdp8.setPanelSwitch.bind(props.pdp8)}
-                    />
-            </div>
+            <FrontPanel lamps={props.pdp8.panel.lamps}
+                            switches={props.pdp8.panel.switches}
+                            onSwitch={props.pdp8.setPanelSwitch.bind(props.pdp8)}
+                />
         </div>
         <PeripheralList list={props.pdp8.peripherals} />
     </section>);
