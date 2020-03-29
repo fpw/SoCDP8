@@ -53,7 +53,6 @@ architecture Behavioral of asr33 is
 
     signal uart_rx_data: std_logic_vector(7 downto 0) := x"00";
     signal uart_rx_recv: std_logic;
-    signal uart_rx_latch: std_logic := '0';
 begin
 
 asr_uart: entity work.uart
@@ -88,7 +87,7 @@ with reg_sel select reg_out <=
     regD when x"4",
     x"0000" when others;
 
-pdp8_irq <= regB(0) or regD(1) or uart_rx_latch when enable = '1' else '0';
+pdp8_irq <= regB(0) or regD(1) when enable = '1' else '0';
 soc_attention <= not regB(0) or regD(0) when enable = '1' else '0';
 iop_last <= iop when rising_edge(clk);
 
@@ -100,7 +99,10 @@ begin
     uart_tx_send <= '0';
     
     if uart_rx_recv = '1' then
-        uart_rx_latch <= '1';
+        uart_cts <= '1';
+        regA(11 downto 8) <= (others => '0');
+        regA(7 downto 0) <= uart_rx_data;
+        regB(0) <= '1';
     end if;
 
     if reg_write = '1' then
@@ -124,20 +126,15 @@ begin
         case iop is
             when IO1 =>
                 -- Set skip if new data
-                io_skip <= regB(0) or uart_rx_latch;
+                io_skip <= regB(0);
             when IO2 => 
                 -- Clear AC, clear new data flag
                 io_ac_clear <= '1';
                 regB(0) <= '0';
+                uart_cts <= '0';
             when IO4 => 
                 -- Put data on bus
-                if uart_rx_latch = '1' then
-                    io_bus_out(11 downto 8) <= (others => '0');
-                    io_bus_out(7 downto 0) <= uart_rx_data(7 downto 0);
-                    uart_rx_latch <= '0';
-                else
-                    io_bus_out <= regA(11 downto 0);
-                end if;
+                io_bus_out <= regA(11 downto 0);
             when others => null;
         end case;
     elsif enable = '1' and iop_last /= iop and io_mb(8 downto 3) = std_logic_vector(bus_addr + 1) then
@@ -161,6 +158,7 @@ begin
     end if;
 
     if rstn = '0' then
+        uart_cts <= '0';
         regA <= (others => '0');
         regB <= (others => '0');
         regC <= (others => '0');
