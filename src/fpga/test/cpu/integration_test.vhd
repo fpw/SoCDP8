@@ -295,7 +295,7 @@ begin
     int_rqst <= '0';
     assert led_data_field = o"1" and led_inst_field = o"1" and led_pc = o"0005" and ram(8#00000#) /= o"0003" report "Fail IR" severity failure;
     
-    -- Test BSW
+    -- Test SWP
     test((
         8#00000# => o"1006",        -- TAD 6
         8#00001# => o"7421",        -- MQL
