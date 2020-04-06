@@ -110,7 +110,12 @@ begin
             input_bus_tmp := '0' & (ac or io_bus);
         elsif transfers.mq_enable = '1' then
             -- if both AC and MQR are enabled, OR them
-            input_bus_tmp := '0' & (ac or mqr);
+            -- unless ac_mq_enable -> SWP and only load MQ
+            if transfers.ac_mq_enable = '0' then
+                input_bus_tmp := '0' & (ac or mqr);
+            else
+                input_bus_tmp := '0' & mqr;
+            end if;
         elsif transfers.sc_enable = '1' then
             -- if both AC and SC are enabled, OR them
             input_bus_tmp := '0' & (ac or ("0000000" & sc));

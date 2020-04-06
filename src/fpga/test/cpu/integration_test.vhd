@@ -295,6 +295,20 @@ begin
     int_rqst <= '0';
     assert led_data_field = o"1" and led_inst_field = o"1" and led_pc = o"0005" and ram(8#00000#) /= o"0003" report "Fail IR" severity failure;
     
+    -- Test BSW
+    test((
+        8#00000# => o"1006",        -- TAD 6
+        8#00001# => o"7421",        -- MQL
+        8#00002# => o"7300",        -- CLA CLL
+        8#00003# => o"1007",        -- TAD 7
+        8#00004# => o"7521",        -- MQL MQA -> SWP
+        8#00005# => o"7402",        -- HLT
+        8#00006# => o"3456",        -- C3456
+        8#00007# => o"1234",        -- C1234
+        others => o"7402")
+    );
+    assert led_mqr = o"1234" and led_accu = o"3456" report "Fail IR" severity failure;
+    
     report "End of tests";
     stop_sim <= true;
     
