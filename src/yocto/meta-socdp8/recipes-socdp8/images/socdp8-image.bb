@@ -16,7 +16,8 @@ IMAGE_INSTALL = "packagegroup-core-boot kernel-modules \
     socat \
     devmem2 \
     uio-udev-rules \
-    nodejs nodejs-npm mmap-io \
+    nodejs nodejs-npm \
+    socdp8-server socdp8-client \
     "
     
 DISTRO_FEATURES = "wifi"

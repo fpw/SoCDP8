@@ -167,13 +167,21 @@ export class SoCDP8 {
     public async loadState() {
         const fsRead = promisify(readFile);
 
-        const data = await fsRead('core.dat');
-        this.mem.loadCore(new Uint16Array(data.buffer));
+        try {
+            const data = await fsRead('core.dat');
+            this.mem.loadCore(new Uint16Array(data.buffer));
+        } catch (Error) {
+            console.warn('Error loading state');
+        }
     }
 
     public async saveState() {
         const memory = this.mem.dumpCore();
         const fsWrite = promisify(writeFile);
-        await fsWrite('core.dat', memory);
+        try {
+            await fsWrite('core.dat', memory);
+        } catch (Error) {
+            console.warn('Error saving state');
+        }
     }
 }

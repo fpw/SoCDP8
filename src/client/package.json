@@ -4,9 +4,9 @@
   "version": "0.0.1",
   "author": "Folke Will <folko@solhost.org>",
   "license": "AGPL-3.0-or-later",
-  "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx webpack",
     "deploy": "npx webpack && cp -av dist/. /home/folko/fuse/app/public",
     "start": "webpack-dev-server"
   },
