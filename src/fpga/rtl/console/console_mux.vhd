@@ -298,6 +298,12 @@ begin
             end if;
     end case;
     
+    -- Pressing CONT or STOP disables console overrides
+    if switch_cont_cons = '1' or switch_stop_cons = '1' then
+        override_switches <= '0';
+        override_leds <= '0';
+    end if;
+    
     if override_leds = '0' then
         led_data_field <= led_data_field_pdp;
         led_inst_field <= led_inst_field_pdp;
