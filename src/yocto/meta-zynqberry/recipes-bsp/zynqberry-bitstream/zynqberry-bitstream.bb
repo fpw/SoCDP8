@@ -1,6 +1,6 @@
 SUMMARY = "SoCDP8 FPGA bitstream"
-LICENSE = "GPLv2"
-LIC_FILES_CHKSUM = "file://COPYING;md5=12f884d2ae1ff87c09e5b7ccc2c4ca7e"
+LICENSE = "AGPL-3.0"
+LIC_FILES_CHKSUM = "file://COPYING;md5=eb1e647870add0502f8f010b19de32af"
 
 SRC_URI = "file://zynqberry.bit \
            file://COPYING \

@@ -1,6 +1,6 @@
 DESCRIPTON = "SoCDP8 startup script"
-LICENSE = "GPL-2.0"
-LIC_FILES_CHKSUM = "file://COPYING;md5=12f884d2ae1ff87c09e5b7ccc2c4ca7e"
+LICENSE = "AGPL-3.0"
+LIC_FILES_CHKSUM = "file://COPYING;md5=eb1e647870add0502f8f010b19de32af"
 
 # Recipe revision - don't forget to 'bump' when a new revision is created!
 PR = "r3"
