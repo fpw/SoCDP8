@@ -34,6 +34,9 @@ export class ASR33 implements Peripheral {
     constructor(public readonly id: DeviceID) {
     }
 
+    public async saveState() {
+    }
+
     public getDeviceID(): DeviceID {
         return this.id;
     }

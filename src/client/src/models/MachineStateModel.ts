@@ -16,23 +16,11 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, IOContext, DeviceID } from '../drivers/IO/Peripheral';
-
-export class KW8I implements Peripheral {
-    public getDeviceID(): DeviceID {
-        return DeviceID.DEV_ID_KW8I;
+export class MachineStateModel {
+    constructor(private socket: SocketIOClient.Socket) {
     }
 
-    public getBusConnections(): number[] {
-        return [0o13];
-    }
-
-    public async saveState() {
-    }
-
-    public requestAction(action: string, data: any): void {
-    }
-
-    public async run(io: IOContext): Promise<void> {
+    public save() {
+        this.socket.emit('state', {action: 'save'});
     }
 }

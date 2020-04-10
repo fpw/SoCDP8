@@ -55,4 +55,6 @@ export interface Peripheral {
     getBusConnections(): number[];
     requestAction(action: string, data: any): void;
     run(io: IOContext): Promise<void>;
+
+    saveState(): Promise<void>;
 }

@@ -29,13 +29,15 @@ import { RF08Model } from './peripherals/RF08Model';
 import { DF32Model } from './peripherals/DF32Model';
 import { RK8Model } from './peripherals/RK8Model';
 import { KW8IModel } from './peripherals/KW8IModel';
+import { MachineStateModel } from './MachineStateModel';
 
 export class PDP8Model {
-    private readonly BASE_URL = '';
+    private readonly BASE_URL = 'http://192.168.178.68:8000';
 
     private socket: SocketIOClient.Socket;
 
     private coreMemory: CoreMemoryModel;
+    private machineState: MachineStateModel;
 
     @observable
     private frontPanel?: FrontPanelState;
@@ -46,6 +48,7 @@ export class PDP8Model {
     constructor() {
         this.socket = io.connect(this.BASE_URL);
         this.coreMemory = new CoreMemoryModel(this.socket);
+        this.machineState = new MachineStateModel(this.socket);
 
         this.socket.on('connect', async () => {
             await this.onConnected();
@@ -68,6 +71,10 @@ export class PDP8Model {
 
     public get core() {
         return this.coreMemory;
+    }
+
+    public get state() {
+        return this.machineState;
     }
 
     private async onConnected(): Promise<void> {

@@ -47,7 +47,7 @@ export class CoreMemory {
     }
 
     public loadCore(data: Uint16Array): void {
-        console.log(`Restoring ${data.length}`);
+        console.log(`Restoring ${data.length} words`);
         const numWords = Math.min(data.length, this.getWordCount());
         for (let i = 0; i < numWords; i++) {
             this.pokeWord(i, data[i]);

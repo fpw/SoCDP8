@@ -33,6 +33,8 @@ export class IOController {
     private readonly SYS_REG_BRK_DATA = 3;
     private readonly SYS_REG_BRK_CTRL = 4;
 
+    private readonly NUM_DEV_REGS = 16;
+
     // mapping table rows
     private readonly TBL_MAPPING_DEV_ID = 0;
 
@@ -44,12 +46,17 @@ export class IOController {
 
     public constructor(private ioMem: Buffer, private listener: IOListener) {
         this.maxDevices = this.readSystemRegister(this.SYS_REG_MAX_DEV);
-        this.clearDeviceTable();
-        this.configureExtensions({
-            eae: true,
-            kt8i: true,
-            maxMemField: 7
-        });
+
+        // clear pending data breaks
+        this.writeSystemRegister(this.SYS_REG_BRK_CTRL, 0);
+    }
+
+    public configureExtensions(ext: CPUExtensions) {
+        this.writeSystemRegister(this.SYS_REG_CONFIG,
+                (ext.maxMemField & 7) |
+                (ext.eae ? (1 << 3) : 0) |
+                (ext.kt8i ? (1 << 4) : 0)
+        );
     }
 
     public getExtensions(): CPUExtensions {
@@ -61,26 +68,18 @@ export class IOController {
         };
     }
 
-    private configureExtensions(ext: CPUExtensions) {
-        this.writeSystemRegister(this.SYS_REG_CONFIG,
-                (ext.maxMemField & 7) |
-                (ext.eae ? (1 << 3) : 0) |
-                (ext.kt8i ? (1 << 4) : 0)
-        );
-    }
-
-    private clearDeviceTable(): void {
+    public clearDeviceTable(): void {
         for (let devId = 0; devId < this.maxDevices; devId++) {
-            for (let reg = 0; reg < 16; reg++) {
+            for (let reg = 0; reg < this.NUM_DEV_REGS; reg++) {
                 this.writePeripheralReg(devId, reg, 0);
             }
         }
 
-        for (let busId = 0; busId < this.NUM_BUS_IDS; busId++) {
+        for (let busId = 1; busId < this.NUM_BUS_IDS; busId++) {
             this.writeMappingTable(busId, this.TBL_MAPPING_DEV_ID, 0);
         }
 
-        this.writeSystemRegister(this.SYS_REG_BRK_CTRL, 0);
+        this.peripherals = [];
     }
 
     public getMaxDeviceCount(): number {
@@ -109,7 +108,13 @@ export class IOController {
     }
 
     public getRegisteredDevices(): readonly Peripheral[] {
-        return this.peripherals;
+        const res: Peripheral[] = [];
+        for (const p of this.peripherals) {
+            if (p) {
+                res.push(p);
+            }
+        }
+        return res;
     }
 
     public requestDeviceAction(devId: number, action: string, data: any) {

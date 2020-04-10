@@ -17,16 +17,18 @@
  */
 
 import { Peripheral, IOContext, DeviceRegister, DeviceID } from '../drivers/IO/Peripheral';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, promises } from 'fs';
 import { sleepMs } from '../sleep';
 
 export class RF08 implements Peripheral {
     private readonly DEBUG = true;
     private readonly BRK_ADDR = 0o7750;
-    private readonly DATA_FILE = 'rf08.dat';
+    private readonly DATA_FILE: string;
     private data = Buffer.alloc(4 * 128 * 2048 * 2); // 4 disks, each with 128 tracks of 2048 words stored in 2 bytes
 
-    constructor() {
+    constructor(dir: string) {
+        this.DATA_FILE = dir + '/rf08.dat';
+
         if (existsSync(this.DATA_FILE)) {
             const buf = readFileSync(this.DATA_FILE);
             buf.copy(this.data);
@@ -42,11 +44,10 @@ export class RF08 implements Peripheral {
     }
 
     public requestAction(action: string, data: any): void {
-        switch (action) {
-            case 'flush':
-                writeFileSync(this.DATA_FILE, this.data);
-                break;
-        }
+    }
+
+    public async saveState() {
+        await promises.writeFile(this.DATA_FILE, this.data);
     }
 
     public async run(io: IOContext): Promise<void> {

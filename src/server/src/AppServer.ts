@@ -25,6 +25,7 @@ import { Response, Request } from 'express-serve-static-core';
 import { isDeepStrictEqual, promisify } from 'util';
 
 export class AppServer {
+    private readonly DATA_DIR = '/home/socdp8/'
     private readonly MOMENTARY_DEBOUNCE_MS = 150;
     private readonly PANEL_CHECK_MS = 75;
 
@@ -36,9 +37,11 @@ export class AppServer {
     private lastConsoleState?: ConsoleState;
 
     constructor(port: number) {
-        this.pdp8 = new SoCDP8({
+        this.pdp8 = new SoCDP8(this.DATA_DIR, {
             onPeripheralEvent: (id, action, data) => this.onPeripheralEvent(id, action, data)
         });
+
+        this.pdp8.activateState('default');
 
         let clientDir = './public';
         if (process.env.SOCDP8_CLIENT_DIR) {
@@ -67,6 +70,7 @@ export class AppServer {
         client.on('console-switch', data => this.onConsoleSwitch(client, data));
         client.on('peripheral-action', data => this.onPeripheralAction(client, data));
         client.on('core', (data) => this.onCoreMemoryAction(client, data));
+        client.on('state', (data) => this.onStateAction(client, data));
 
         client.emit('console-state', this.pdp8.readConsoleState());
     }
@@ -107,11 +111,14 @@ export class AppServer {
             case 'write':
                 this.pdp8.writeCoreMemory(data.addr, data.fragment);
                 break;
+        }
+    }
+
+    private onStateAction(client: io.Socket, data: any): void {
+        console.log(`${client.id}: State action: ${data.action}`);
+        switch (data.action) {
             case 'save':
                 this.pdp8.saveState();
-                break;
-            case 'restore':
-                this.pdp8.loadState();
                 break;
         }
     }

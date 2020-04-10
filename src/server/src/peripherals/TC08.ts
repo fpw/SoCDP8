@@ -103,6 +103,9 @@ export class TC08 implements Peripheral {
         }
     }
 
+    public async saveState() {
+    }
+
     private loadTape(unit: number, data: Buffer) {
         console.log(`TC08: Tape loaded`);
         this.tapes[unit] = {

@@ -44,6 +44,9 @@ export class PC04 implements Peripheral {
         }
     }
 
+    public async saveState() {
+    }
+
     public async run(io: IOContext): Promise<void> {
         this.runReader(io);
         this.runPunch(io);

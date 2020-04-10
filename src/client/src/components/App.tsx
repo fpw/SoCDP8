@@ -62,53 +62,52 @@ const Header: React.FunctionComponent<PDP8Props> = (props) =>
                 <h2 className='subtitle'>Your PDP-8/I on a chip.</h2>
             </div>
         </div>
-        <nav className='navbar is-dark' role='navigation'>
-            <div className='navbar-menu'>
-                <div className='navbar-start'>
-                    <div className='navbar-item has-dropdown is-hoverable'>
-                        <a className='navbar-link'>
-                            Core Memory
-                        </a>
-                        <div className='navbar-dropdown'>
-                            <a className='navbar-item' onClick={() => props.pdp8.core.save()}>
-                                Save
-                            </a>
-                            <a className='navbar-item' onClick={() => props.pdp8.core.restore()}>
-                                Restore
-                            </a>
-                            <a className='navbar-item' onClick={() => props.pdp8.core.clear()}>
-                                Clear
-                            </a>
-                            <a className='navbar-item' onClick={() => props.pdp8.core.storeRIMLoader()}>
-                                Store RIM LS Loader - 7756
-                            </a>
-                            <a className='navbar-item' onClick={() => props.pdp8.core.storeHSRIMLoader()}>
-                                Store RIM HS Loader - 7756
-                            </a>
-                            <a className='navbar-item' onClick={() => props.pdp8.core.storeOS8LoaderTC08()}>
-                                Store OS/8 TC08 Loader - 7613
-                            </a>
-                            <a className='navbar-item' onClick={() => props.pdp8.core.storeOS8LoaderRF08()}>
-                                Store OS/8 RF08 Loader - 7750
-                            </a>
-                            <a className='navbar-item' onClick={() => props.pdp8.core.storeMonitorLoader()}>
-                                Store Disk Monitor Loader - 0200
-                            </a>
-                            <a className='navbar-item' onClick={() => props.pdp8.core.storeBlinker()}>
-                                Store AC/MQ Blinker - 0000
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </nav>
+        <MenuContainer>
+            <Menu title='Machine'>
+                <MenuEntry label='Save State' cb={() => props.pdp8.state.save()} />
+            </Menu>
+
+            <Menu title='Core Memory'>
+                <MenuEntry label='Clear' cb={() => props.pdp8.core.clear()} />
+                <MenuEntry label='Store RIM LS Loader - 7756' cb={() => props.pdp8.core.storeRIMLoader()} />
+                <MenuEntry label='Store RIM HS Loader - 7756' cb={() => props.pdp8.core.storeHSRIMLoader()} />
+                <MenuEntry label='Store OS/8 TC08 Loader - 7613' cb={() => props.pdp8.core.storeOS8LoaderTC08()} />
+                <MenuEntry label='Store OS/8 RF08 Loader - 7750' cb={() => props.pdp8.core.storeOS8LoaderRF08()} />
+                <MenuEntry label='Store Disk Monitor Loader - 0200' cb={() => props.pdp8.core.storeMonitorLoader()} />
+                <MenuEntry label='Store AC/MQ Blinker - 0000' cb={() => props.pdp8.core.storeBlinker()} />
+            </Menu>
+        </MenuContainer>
     </header>
 
 const Footer: React.FunctionComponent = () =>
     <footer className='footer'>
         <div className='content has-text-centered'>
             <p>
-                Copyright 2019 by Folke Will
+                Copyright 2020 by Folke Will
             </p>
         </div>
     </footer>
+
+const MenuContainer: React.FunctionComponent = (props) =>
+    <nav className='navbar is-dark' role='navigation'>
+        <div className='navbar-menu'>
+            <div className='navbar-start'>
+                { props.children }
+            </div>
+        </div>
+    </nav>
+
+const Menu: React.FunctionComponent<{title: string}> = (props) =>
+    <div className='navbar-item has-dropdown is-hoverable'>
+        <a className='navbar-link'>
+            { props.title }
+        </a>
+        <div className='navbar-dropdown'>
+            { props.children }
+        </div>
+    </div>
+
+const MenuEntry: React.FunctionComponent<{label: string, cb: (() => void)}> = (props) =>
+    <a className='navbar-item' onClick={() => props.cb() }>
+        { props.label }
+    </a>

@@ -17,20 +17,26 @@
  */
 
 import { Peripheral, IOContext, DeviceRegister, DeviceID } from '../drivers/IO/Peripheral';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, fstat, promises } from 'fs';
 import { sleepMs, sleepUs } from '../sleep';
 
 export class DF32 implements Peripheral {
     private readonly DEBUG = true;
     private readonly BRK_ADDR = 0o7750;
-    private readonly DATA_FILE = 'df32.dat';
+    private readonly DATA_FILE: string;
     private data = Buffer.alloc(4 * 16 * 2048 * 2); // 4 disks, each with 16 tracks of 2048 words, stored as 2 bytes each
 
-    constructor() {
+    constructor(dir: string) {
+        this.DATA_FILE = dir + '/df32.dat';
+
         if (existsSync(this.DATA_FILE)) {
             const buf = readFileSync(this.DATA_FILE);
             buf.copy(this.data);
         }
+    }
+
+    public async saveState() {
+        await promises.writeFile(this.DATA_FILE, this.data);
     }
 
     public getDeviceID(): DeviceID {
@@ -42,11 +48,6 @@ export class DF32 implements Peripheral {
     }
 
     public requestAction(action: string, data: any): void {
-        switch (action) {
-            case 'flush':
-                writeFileSync(this.DATA_FILE, this.data);
-                break;
-        }
     }
 
     public async run(io: IOContext): Promise<void> {
