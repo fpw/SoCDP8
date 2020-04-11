@@ -28,7 +28,6 @@ import { RF08Model } from './peripherals/RF08Model';
 import { DF32Model } from './peripherals/DF32Model';
 import { RK8Model } from './peripherals/RK8Model';
 import { KW8IModel } from './peripherals/KW8IModel';
-import { MachineStateModel } from './MachineStateModel';
 import { MachineState, DeviceID } from './MachineState';
 
 export class PDP8Model {
@@ -37,7 +36,6 @@ export class PDP8Model {
     private socket: SocketIOClient.Socket;
 
     private coreMemory: CoreMemoryModel;
-    private machineState: MachineStateModel;
 
     @observable
     private frontPanel?: FrontPanelState;
@@ -45,10 +43,13 @@ export class PDP8Model {
     @observable
     private peripheralModels: Map<number, PeripheralModel> = new Map();
 
+    @observable
+    private machineState: MachineState;
+
     constructor() {
         this.socket = io.connect(this.BASE_URL);
         this.coreMemory = new CoreMemoryModel(this.socket);
-        this.machineState = new MachineStateModel(this.socket);
+        this.machineState = new MachineState(this.socket);
 
         this.socket.on('connect', async () => {
             await this.onConnected();
@@ -79,8 +80,8 @@ export class PDP8Model {
 
     private async onConnected(): Promise<void> {
         const response = await fetch(this.BASE_URL + '/machine-states/active');
-        const state = await response.json() as MachineState;
-        this.setMachineState(state);
+        const stateObj = await response.json();
+        this.setMachineState(stateObj);
     }
 
     @action
@@ -95,10 +96,13 @@ export class PDP8Model {
     }
 
     @action
-    private setMachineState(state: MachineState) {
-        for (const devIdStr of state.peripherals) {
+    private setMachineState(stateObj: any) {
+        const state = MachineState.fromJSONObject(this.socket, stateObj);
+        this.machineState = state;
+        this.peripheralModels.clear();
+
+        for (const id of state.peripherals) {
             let peripheral: PeripheralModel;
-            const id = DeviceID[devIdStr as keyof typeof DeviceID];
 
             switch (id) {
                 case DeviceID.DEV_ID_ASR33:

@@ -31,16 +31,50 @@ export enum DeviceID {
     DEV_ID_RK8      = 11,
 }
 
-export interface MachineState {
+export class MachineState {
     // General
-    directory: string;
-    name: string;
+    public name: string = "";
 
     // CPU extensions
-    eaePresent: boolean;
-    kt8iPresent: boolean;
-    maxMemField: number;
+    public eaePresent: boolean = false;
+    public kt8iPresent: boolean = false;
+    public maxMemField: number = 0;
 
-    // Peripherals as DeviceID strings
-    peripherals: string[];
+    // Peripherals
+    public peripherals: DeviceID[] = [];
+
+    constructor(private socket: SocketIOClient.Socket) {
+    }
+
+    public save() {
+        this.socket.emit('state', {action: 'save'});
+    }
+
+    public toJSONObject(): Object {
+        const obj = {
+            name: this.name,
+            eae: this.eaePresent,
+            kt8i: this.kt8iPresent,
+            maxMemField: this.maxMemField,
+            peripherals: this.peripherals.map(id => DeviceID[id])
+        };
+
+        return obj;
+    }
+
+    public static fromJSONObject(socket: SocketIOClient.Socket, configObj: any): MachineState {
+        const state = new MachineState(socket);
+
+        state.name = configObj.name;
+        state.eaePresent = configObj.eae;
+        state.kt8iPresent = configObj.kt8i;
+        state.maxMemField = configObj.maxMemField;
+
+        for (const perphIdStr of configObj.peripherals) {
+            const id = DeviceID[perphIdStr as keyof typeof DeviceID];
+            state.peripherals.push(id);
+        }
+
+        return state;
+    }
 }

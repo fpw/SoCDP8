@@ -20,6 +20,7 @@ import * as React from 'react';
 import { PDP8, PDP8Props } from './system/PDP8';
 import { PDP8Model } from '../models/PDP8Model';
 import { observer } from 'mobx-react-lite';
+import { HashRouter as Router, NavLink, Route, Link, Switch } from 'react-router-dom';
 require('bulma/css/bulma.css')
 
 export interface AppProps {
@@ -32,13 +33,17 @@ export const App: React.FunctionComponent<AppProps> = observer((props) => {
     }
 
     return (
-        <React.Fragment>
+        <Router>
             <Header pdp8={props.pdp8} />
             <main>
-                <PDP8 pdp8={props.pdp8} />
+                <Switch>
+                    <Route exact path='/'>
+                        <PDP8 pdp8={props.pdp8} />
+                    </Route>
+                </Switch>
             </main>
             <Footer />
-        </React.Fragment>
+        </Router>
     );
 });
 
@@ -62,31 +67,25 @@ const Header: React.FunctionComponent<PDP8Props> = (props) =>
                 <h2 className='subtitle'>Your PDP-8/I on a chip.</h2>
             </div>
         </div>
-        <MenuContainer>
-            <Menu title='Machine'>
-                <MenuEntry label='Save State' cb={() => props.pdp8.state.save()} />
-            </Menu>
+        <Route>
+            <MenuContainer>
+                <Menu title='Machine'>
+                    <MenuEntry label='Save State' cb={() => props.pdp8.state.save()} />
+                </Menu>
 
-            <Menu title='Core Memory'>
-                <MenuEntry label='Clear' cb={() => props.pdp8.core.clear()} />
-                <MenuEntry label='Store RIM LS Loader - 7756' cb={() => props.pdp8.core.storeRIMLoader()} />
-                <MenuEntry label='Store RIM HS Loader - 7756' cb={() => props.pdp8.core.storeHSRIMLoader()} />
-                <MenuEntry label='Store OS/8 TC08 Loader - 7613' cb={() => props.pdp8.core.storeOS8LoaderTC08()} />
-                <MenuEntry label='Store OS/8 RF08 Loader - 7750' cb={() => props.pdp8.core.storeOS8LoaderRF08()} />
-                <MenuEntry label='Store Disk Monitor Loader - 0200' cb={() => props.pdp8.core.storeMonitorLoader()} />
-                <MenuEntry label='Store AC/MQ Blinker - 0000' cb={() => props.pdp8.core.storeBlinker()} />
-            </Menu>
-        </MenuContainer>
+                <Menu title='Core Memory'>
+                    <MenuEntry label='Clear' cb={() => props.pdp8.core.clear()} />
+                    <MenuEntry label='Store RIM LS Loader - 7756' cb={() => props.pdp8.core.storeRIMLoader()} />
+                    <MenuEntry label='Store RIM HS Loader - 7756' cb={() => props.pdp8.core.storeHSRIMLoader()} />
+                    <MenuEntry label='Store OS/8 TC08 Loader - 7613' cb={() => props.pdp8.core.storeOS8LoaderTC08()} />
+                    <MenuEntry label='Store OS/8 RF08 Loader - 7750' cb={() => props.pdp8.core.storeOS8LoaderRF08()} />
+                    <MenuEntry label='Store Disk Monitor Loader - 0200' cb={() => props.pdp8.core.storeMonitorLoader()} />
+                    <MenuEntry label='Store AC/MQ Blinker - 0000' cb={() => props.pdp8.core.storeBlinker()} />
+                    <NavLink className='navbar-item' to='/test'>test</NavLink>
+                </Menu>
+            </MenuContainer>
+        </Route>
     </header>
-
-const Footer: React.FunctionComponent = () =>
-    <footer className='footer'>
-        <div className='content has-text-centered'>
-            <p>
-                Copyright 2020 by Folke Will
-            </p>
-        </div>
-    </footer>
 
 const MenuContainer: React.FunctionComponent = (props) =>
     <nav className='navbar is-dark' role='navigation'>
@@ -111,3 +110,12 @@ const MenuEntry: React.FunctionComponent<{label: string, cb: (() => void)}> = (p
     <a className='navbar-item' onClick={() => props.cb() }>
         { props.label }
     </a>
+
+const Footer: React.FunctionComponent = () =>
+    <footer className='footer'>
+        <div className='content has-text-centered'>
+            <p>
+                Copyright 2020 by Folke Will
+            </p>
+        </div>
+    </footer>
