@@ -19,6 +19,10 @@
 import { PeripheralModel } from './PeripheralModel';
 
 export class KW8IModel extends PeripheralModel {
+    public get connections(): number[] {
+        return [0o13];
+    }
+
     public onPeripheralAction(action: string, data: any) {
     }
 }

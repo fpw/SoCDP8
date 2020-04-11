@@ -19,7 +19,6 @@
 import * as io from 'socket.io-client';
 import { FrontPanelState } from './FrontPanelState';
 import { observable, action, computed } from 'mobx';
-import { PeripheralList, DeviceID } from './PeripheralList';
 import { ASR33Model } from './peripherals/ASR33Model';
 import { PeripheralModel } from './peripherals/PeripheralModel';
 import { PC04Model } from './peripherals/PC04Model';
@@ -30,6 +29,7 @@ import { DF32Model } from './peripherals/DF32Model';
 import { RK8Model } from './peripherals/RK8Model';
 import { KW8IModel } from './peripherals/KW8IModel';
 import { MachineStateModel } from './MachineStateModel';
+import { MachineState, DeviceID } from './MachineState';
 
 export class PDP8Model {
     private readonly BASE_URL = 'http://192.168.178.68:8000';
@@ -78,9 +78,9 @@ export class PDP8Model {
     }
 
     private async onConnected(): Promise<void> {
-        const response = await fetch(this.BASE_URL + '/peripherals');
-        const list = await response.json() as PeripheralList;
-        this.setPeripherals(list);
+        const response = await fetch(this.BASE_URL + '/machine-states/active');
+        const state = await response.json() as MachineState;
+        this.setMachineState(state);
     }
 
     @action
@@ -95,41 +95,42 @@ export class PDP8Model {
     }
 
     @action
-    private setPeripherals(list: PeripheralList) {
-        for (const entry of list.devices) {
+    private setMachineState(state: MachineState) {
+        for (const devIdStr of state.peripherals) {
             let peripheral: PeripheralModel;
+            const id = DeviceID[devIdStr as keyof typeof DeviceID];
 
-            switch (entry.id) {
-                case DeviceID.ASR33:
-                case DeviceID.TT1:
-                case DeviceID.TT2:
-                case DeviceID.TT3:
-                case DeviceID.TT4:
-                    peripheral = new ASR33Model(entry.id, this.socket, entry.connections);
+            switch (id) {
+                case DeviceID.DEV_ID_ASR33:
+                case DeviceID.DEV_ID_TT1:
+                case DeviceID.DEV_ID_TT2:
+                case DeviceID.DEV_ID_TT3:
+                case DeviceID.DEV_ID_TT4:
+                    peripheral = new ASR33Model(id, this.socket);
                     break;
-                case DeviceID.PC04:
-                    peripheral = new PC04Model(entry.id, this.socket, entry.connections);
+                case DeviceID.DEV_ID_PC04:
+                    peripheral = new PC04Model(id, this.socket);
                     break;
-                case DeviceID.TC08:
-                    peripheral = new TC08Model(entry.id, this.socket, entry.connections);
+                case DeviceID.DEV_ID_TC08:
+                    peripheral = new TC08Model(id, this.socket);
                     break;
-                case DeviceID.RF08:
-                    peripheral = new RF08Model(entry.id, this.socket, entry.connections);
+                case DeviceID.DEV_ID_RF08:
+                    peripheral = new RF08Model(id, this.socket);
                     break;
-                case DeviceID.DF32:
-                    peripheral = new DF32Model(entry.id, this.socket, entry.connections);
+                case DeviceID.DEV_ID_DF32:
+                    peripheral = new DF32Model(id, this.socket);
                     break;
-                case DeviceID.RK8:
-                    peripheral = new RK8Model(entry.id, this.socket, entry.connections);
+                case DeviceID.DEV_ID_RK8:
+                    peripheral = new RK8Model(id, this.socket);
                     break;
-                case DeviceID.KW8I:
-                    peripheral = new KW8IModel(entry.id, this.socket, entry.connections);
+                case DeviceID.DEV_ID_KW8I:
+                    peripheral = new KW8IModel(id, this.socket);
                     break;
                 default:
                     continue;
             }
 
-            this.peripheralModels.set(entry.id, peripheral);
+            this.peripheralModels.set(id, peripheral);
         }
     }
 

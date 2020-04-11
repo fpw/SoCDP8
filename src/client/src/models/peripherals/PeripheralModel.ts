@@ -15,19 +15,18 @@
  *   You should have received a copy of the GNU Affero General Public License
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import { DeviceID } from '../MachineState';
 
 export abstract class PeripheralModel {
-    constructor(protected id: number, protected socket: SocketIOClient.Socket, protected bus: number[]) {
+    constructor(protected id: DeviceID, protected socket: SocketIOClient.Socket) {
 
     }
 
-    public get deviceId(): number {
+    public get deviceId(): DeviceID {
         return this.id;
     }
 
-    public get connections(): number[] {
-        return this.bus;
-    }
+    public abstract get connections(): number[];
 
     public abstract onPeripheralAction(action: string, data: any): void;
 

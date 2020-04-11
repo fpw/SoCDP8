@@ -19,12 +19,8 @@
 import * as React from "react";
 
 export interface DF32Props {
-    onFlush(): void;
 }
 
 export const DF32: React.FunctionComponent<DF32Props> = (props) =>
     <section>
-        <button className='button' onClick={() => props.onFlush()}>
-            Flush
-        </button>
     </section>

@@ -33,7 +33,7 @@ export class MachineState {
     // Peripherals
     public peripherals: DeviceID[] = [];
 
-    public async save(dir: string) {
+    public toJSONObject(): Object {
         const obj = {
             name: this.name,
             eae: this.eaePresent,
@@ -42,7 +42,12 @@ export class MachineState {
             peripherals: this.peripherals.map(id => DeviceID[id])
         };
 
-        await promises.writeFile(dir + '/machine.json', JSON.stringify(obj, null, 2));
+        return obj;
+    }
+
+    public async save(dir: string) {
+        const json = JSON.stringify(this.toJSONObject(), null, 2);
+        await promises.writeFile(dir + '/machine.json', json);
     }
 
     public static load(dir: string): MachineState {

@@ -18,10 +18,23 @@
 
 import { observable, action, computed } from 'mobx';
 import { PeripheralModel } from './PeripheralModel';
+import { DeviceID } from '../MachineState';
 
 export class ASR33Model extends PeripheralModel {
     @observable
     private punchData: string = '';
+
+    public get connections(): number[] {
+        switch (this.id) {
+            case DeviceID.DEV_ID_ASR33: return [0o03, 0o04];
+            case DeviceID.DEV_ID_TT1:   return [0o40, 0o41];
+            case DeviceID.DEV_ID_TT2:   return [0o42, 0o43];
+            case DeviceID.DEV_ID_TT3:   return [0o44, 0o45];
+            case DeviceID.DEV_ID_TT4:   return [0o46, 0o47];
+        }
+
+        throw Error(`Invalid ASR-33 id: ${this.id}`)
+    }
 
     public onPeripheralAction(action: string, data: any) {
         switch (action) {

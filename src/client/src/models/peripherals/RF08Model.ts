@@ -19,15 +19,10 @@
 import { PeripheralModel } from './PeripheralModel';
 
 export class RF08Model extends PeripheralModel {
-    public onPeripheralAction(action: string, data: any): void {
+    public get connections(): number[] {
+        return [0o60, 0o61, 0o62, 0o64];
     }
 
-    public readonly flushData = (): void => {
-        this.socket.emit('peripheral-action', {
-            devId: this.id,
-            action: 'flush',
-            data: {
-            }
-        });
-    };
+    public onPeripheralAction(action: string, data: any): void {
+    }
 }

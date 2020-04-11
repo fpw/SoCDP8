@@ -19,12 +19,8 @@
 import * as React from "react";
 
 export interface RK8Props {
-    onFlush(): void;
 }
 
 export const RK8: React.FunctionComponent<RK8Props> = (props) =>
     <section>
-        <button className='button' onClick={() => props.onFlush()}>
-            Flush
-        </button>
     </section>

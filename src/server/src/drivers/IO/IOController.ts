@@ -19,7 +19,12 @@
 import { Peripheral, DeviceRegister } from './Peripheral';
 import { DataBreakRequest, DataBreakReply } from './DataBreak';
 import { sleepUs } from '../../sleep';
-import { CPUExtensions } from '../../models/PeripheralList';
+
+export interface CPUExtensions {
+    eae: boolean;
+    kt8i: boolean;
+    maxMemField: number;
+}
 
 export interface IOListener {
     onPeripheralEvent(devId: number, action: string, data: any): void

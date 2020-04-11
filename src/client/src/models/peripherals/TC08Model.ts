@@ -19,6 +19,10 @@
 import { PeripheralModel } from './PeripheralModel';
 
 export class TC08Model extends PeripheralModel {
+    public get connections(): number[] {
+        return [0o76, 0o77];
+    }
+
     public onPeripheralAction(action: string, data: any): void {
     }
 

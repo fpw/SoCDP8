@@ -19,15 +19,10 @@
 import { PeripheralModel } from './PeripheralModel';
 
 export class RK8Model extends PeripheralModel {
-    public onPeripheralAction(action: string, data: any): void {
+    public get connections(): number[] {
+        return [0o73, 0o74, 0o75];
     }
 
-    public readonly flushData = (): void => {
-        this.socket.emit('peripheral-action', {
-            devId: this.id,
-            action: 'flush',
-            data: {
-            }
-        });
-    };
+    public onPeripheralAction(action: string, data: any): void {
+    }
 }

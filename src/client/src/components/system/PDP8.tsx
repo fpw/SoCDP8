@@ -110,17 +110,17 @@ const TC08Box: React.FunctionComponent<{model: TC08Model}> = observer(({model}) 
 
 const RF08Box: React.FunctionComponent<{model: RF08Model}> = observer(({model}) =>
     <PeripheralBox name='RF08 Disk Control' model={model}>
-        <RF08 onFlush={model.flushData} />
+        <RF08 />
     </PeripheralBox>);
 
 const DF32Box: React.FunctionComponent<{model: DF32Model}> = observer(({model}) =>
     <PeripheralBox name='DF32 Disk Control' model={model}>
-        <DF32 onFlush={model.flushData} />
+        <DF32 />
     </PeripheralBox>);
 
 const RK8Box: React.FunctionComponent<{model: RK8Model}> = observer(({model}) =>
     <PeripheralBox name='RK8 Disk Control' model={model}>
-        <RK8 onFlush={model.flushData} />
+        <RK8 />
     </PeripheralBox>);
 
 const KW8IBox: React.FunctionComponent<{model: KW8IModel}> = observer(({model}) =>

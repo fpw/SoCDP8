@@ -23,6 +23,10 @@ export class PC04Model extends PeripheralModel {
     @observable
     private punchData: number[] = [];
 
+    public get connections(): number[] {
+        return [0o01, 0o02];
+    }
+
     @action
     public onPeripheralAction(action: string, data: any): void {
         switch (action) {

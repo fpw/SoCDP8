@@ -51,17 +51,30 @@ export class AppServer {
         this.app = express();
         this.app.use(cors());
         this.app.use(express.static(clientDir));
-        this.app.get('/peripherals', (req, res) => this.requestPeripherals(req, res));
+        this.setupJSONApi();
 
         this.httpServer = new Server(this.app);
         this.socket = io(this.httpServer);
-        this.socket.on('connection', client => this.onClientConnect(client));
+        this.setupSocketAPI();
 
         this.httpServer.listen(port);
     }
 
     public start(): void {
         this.startConsoleCheckLoop();
+    }
+
+    private onPeripheralEvent(devId: number, action: string, data: any): void {
+        this.socket.emit('peripheral-event', {
+            devId: devId,
+            action: action,
+            data: data
+        });
+    }
+
+    // Socket API
+    private setupSocketAPI(): void {
+        this.socket.on('connection', client => this.onClientConnect(client));
     }
 
     private onClientConnect(client: io.Socket) {
@@ -94,14 +107,6 @@ export class AppServer {
         this.pdp8.requestDeviceAction(devId, action, data.data);
     }
 
-    private onPeripheralEvent(devId: number, action: string, data: any): void {
-        this.socket.emit('peripheral-event', {
-            devId: devId,
-            action: action,
-            data: data
-        });
-    }
-
     private onCoreMemoryAction(client: io.Socket, data: any): void {
         console.log(`${client.id}: Core memory action: ${data.action}`);
         switch (data.action) {
@@ -125,9 +130,19 @@ export class AppServer {
 
     // JSON API
 
-    private requestPeripherals(request: Request, response: Response): void {
-        const list = this.pdp8.getPeripherals();
+    private setupJSONApi(): void {
+        this.app.get('/machine-states', (req, res) => this.requestStateList(req, res));
+        this.app.get('/machine-states/active', (req, res) => this.requestActiveState(req, res));
+    }
+
+    private requestStateList(request: Request, response: Response): void {
+        const list = this.pdp8.getStateList().map(e => e.toJSONObject());
         response.json(list);
+    }
+
+    private requestActiveState(request: Request, response: Response): void {
+        const state = this.pdp8.getActiveState();
+        response.json(state.toJSONObject());
     }
 
     // State maintenance

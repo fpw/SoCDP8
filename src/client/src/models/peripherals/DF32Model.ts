@@ -22,12 +22,7 @@ export class DF32Model extends PeripheralModel {
     public onPeripheralAction(action: string, data: any): void {
     }
 
-    public readonly flushData = (): void => {
-        this.socket.emit('peripheral-action', {
-            devId: this.id,
-            action: 'flush',
-            data: {
-            }
-        });
-    };
+    public get connections(): number[] {
+        return [0o60, 0o61, 0o62];
+    }
 }

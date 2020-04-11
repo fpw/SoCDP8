@@ -24,7 +24,6 @@ import { IOController, IOListener } from '../drivers/IO/IOController';
 import { DeviceID, Peripheral } from '../drivers/IO/Peripheral';
 import { promises } from 'fs';
 import { LampBrightness } from '../drivers/Console/LampBrightness';
-import { PeripheralList, CPUExtensions } from './PeripheralList';
 import { MachineStateList } from './MachineStateList';
 import { MachineState } from './MachineState';
 import { TC08 } from '../peripherals/TC08';
@@ -76,7 +75,7 @@ export class SoCDP8 {
 
             // Save core memory
             const memory = this.mem.dumpCore();
-            await promises.writeFile(dir + '/core.dat', memory);
+            await promises.writeFile(dir + '/core.dat', Buffer.from(memory.buffer));
 
             // Save all peripherals
             for (const peripheral of this.io.getRegisteredDevices()) {
@@ -142,6 +141,20 @@ export class SoCDP8 {
         }
     }
 
+    public getStateList(): MachineState[] {
+        const res: MachineState[] = [];
+
+        for (const state of this.stateList.getStates()) {
+            res.push(state);
+        }
+
+        return res;
+    }
+
+    public getActiveState(): MachineState {
+        return this.currentState;
+    }
+
     public clearCoreMemory() {
         this.mem.clear();
     }
@@ -158,35 +171,6 @@ export class SoCDP8 {
             switchOverride: this.cons.isSwitchOverridden(),
             switches: this.cons.readSwitches()
         }
-    }
-
-    public getCPUExtensions(): CPUExtensions {
-        return this.io.getExtensions();
-    }
-
-    public getPeripherals(): PeripheralList {
-        const list: PeripheralList = {
-            cpuExtensions: this.io.getExtensions(),
-            maxDevices: this.io.getMaxDeviceCount(),
-            devices: []
-        };
-
-        const peripherals = this.io.getRegisteredDevices();
-        for (const perph of peripherals) {
-            if (!perph) {
-                continue;
-            }
-
-            const id = perph.getDeviceID();
-
-            list.devices.push({
-                id: id,
-                typeString: DeviceID[id],
-                connections: perph.getBusConnections(),
-            });
-        }
-
-        return list;
     }
 
     public requestDeviceAction(devId: number, action: string, data: any) {

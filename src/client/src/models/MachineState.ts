@@ -16,20 +16,31 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export interface CPUExtensions {
-    eae: boolean;
-    kt8i: boolean;
+export enum DeviceID {
+    DEV_ID_NULL     = 0,
+    DEV_ID_ASR33    = 1,
+    DEV_ID_PC04     = 2,
+    DEV_ID_TC08     = 3,
+    DEV_ID_RF08     = 4,
+    DEV_ID_DF32     = 5,
+    DEV_ID_TT1      = 6,
+    DEV_ID_TT2      = 7,
+    DEV_ID_TT3      = 8,
+    DEV_ID_TT4      = 9,
+    DEV_ID_KW8I     = 10,
+    DEV_ID_RK8      = 11,
+}
+
+export interface MachineState {
+    // General
+    directory: string;
+    name: string;
+
+    // CPU extensions
+    eaePresent: boolean;
+    kt8iPresent: boolean;
     maxMemField: number;
-}
 
-export interface Device {
-    id: number;
-    typeString: string;
-    connections: number[];
-}
-
-export interface PeripheralList {
-    cpuExtensions: CPUExtensions;
-    maxDevices: number;
-    devices: Device[];
+    // Peripherals as DeviceID strings
+    peripherals: string[];
 }
