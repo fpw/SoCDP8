@@ -17,6 +17,7 @@
  */
 
 import * as React from "react";
+import { makeStyles, createStyles, Button, ButtonGroup } from '@material-ui/core';
 
 export interface PC04Props {
     punchData: Uint8Array;
@@ -24,31 +25,28 @@ export interface PC04Props {
     onTapeLoad(tape: File): void;
 }
 
-export const PC04: React.FunctionComponent<PC04Props> = (props) =>
-    <section>
-        <div className='field has-addons'>
-            <div className='file'>
-                <label className='file-label'>
-                    <input className='file-input' type='file' onChange={evt => onLoadFile(evt, props)} />
-                    <span className='file-cta'>
-                        <span className='file-label'>
-                            Attach Tape
-                        </span>
-                    </span>
-                </label>
-            </div>
-            <div className='field'>
-                <div className='control'>
-                    <button className='button' onClick={() => onDownloadPunch(props.punchData)}>Download Punch</button>
-                </div>
-            </div>
-            <div className='field'>
-                <div className='control'>
-                    <button className='button' onClick={() => props.clearPunch()}>Clear Punch</button>
-                </div>
-            </div>
-        </div>
-    </section>
+const useStyles = makeStyles(theme => createStyles({
+    fileInput: {
+        display: 'none',
+    }
+}));
+
+export const PC04: React.FunctionComponent<PC04Props> = props => {
+    const classes = useStyles();
+    const tapeInput = React.useRef<HTMLInputElement>(null);
+
+    return (
+        <section>
+            <input ref={tapeInput} className={classes.fileInput} type='file' onChange={evt => onLoadFile(evt, props)}/>
+
+            <ButtonGroup variant='outlined' color='primary'>
+                <Button onClick={() => tapeInput?.current?.click()}>Attach Tape</Button>>
+                <Button onClick={() => onDownloadPunch(props.punchData)}>Download Punch</Button>>
+                <Button onClick={() => props.clearPunch()}>Clear Punch</Button>>
+            </ButtonGroup>
+        </section>
+    );
+}
 
 function onLoadFile(evt: React.ChangeEvent,  props: PC04Props): void {
     const target = evt.target as HTMLInputElement;

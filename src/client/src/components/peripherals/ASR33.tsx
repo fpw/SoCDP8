@@ -18,6 +18,8 @@
 
 import * as React from "react";
 import { observer } from 'mobx-react-lite';
+import { TextField, Switch, FormGroup, FormControlLabel, FormControl, Box } from "@material-ui/core";
+import { makeStyles, createStyles, Button } from '@material-ui/core';
 
 export interface ASR33Props {
     punchData: string;
@@ -27,66 +29,59 @@ export interface ASR33Props {
     onReaderActivationChange(state: boolean): void;
 }
 
+const useStyles = makeStyles(theme => createStyles({
+    output: {
+        fontFamily: 'monospace',
+    },
+    fileInput: {
+        display: 'none',
+    }
+}));
+
 export const ASR33: React.FunctionComponent<ASR33Props> = observer((props) => {
-    const textRef = React.useRef<HTMLTextAreaElement>(null);
+    const classes = useStyles();
+    const textRef = React.useRef<HTMLInputElement>(null);
+    const tapeInput = React.useRef<HTMLInputElement>(null);
 
     scrollToBottomOnChange(textRef);
 
     return (
         <section>
-            <div className='box'>
-                <h2 className='subtitle is-4'>Output</h2>
-                <div className='control'>
-                    <textarea ref={textRef}
-                        readOnly className='textarea has-fixed-size' rows={8} cols={80} style={{fontFamily: 'monospace'}}
-                        value={props.punchData} />
-                </div>
+            <Box mb={4}>
+                <TextField label='Output' variant='outlined'
+                    InputProps={{
+                        className: classes.output
+                    }}
+                    inputRef={textRef}
+                    multiline
+                    rows={8} fullWidth
+                    value={props.punchData}
+                />
+                <Button variant='contained' onClick={() => props.onReaderClear()}>Clear Output</Button>
+            </Box>
 
-                <div className='control'>
-                    <button className='button' onClick={props.onReaderClear}>Clear Output</button>
-                </div>
-            </div>
-
-            <div className='box'>
-            <h2 className='subtitle is-4'>Input</h2>
-                <div className='field'>
-                    <label className='label'>
-                        Key Input
-                        <div className='control'>
-                            <input className='input' onKeyUp={evt => onKeyUp(evt, props)} onKeyPress={evt => onKeyPress(evt, props)} />
-                        </div>
-                    </label>
-                </div>
-
-                <div className='field'>
-                    <div className='control'>
-                        <label className='checkbox'>
-                            <input type='checkbox' onChange={evt => props.onReaderActivationChange(evt.target.checked)} />
-                            Reader On
-                        </label>
-                    </div>
-                </div>
-
-                <div className='field'>
-                    <div className='control'>
-                        <div className='file'>
-                            <label className='file-label'>
-                                <input className='file-input' type='file' onChange={evt => onLoadFile(evt, props)} />
-                                <span className='file-cta'>
-                                    <span className='file-label'>
-                                        Load Tape
-                                    </span>
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <Box>
+                <TextField label='Input' variant='outlined'
+                    fullWidth
+                    onKeyUp={evt => onKeyUp(evt, props)} onKeyPress={evt => onKeyPress(evt, props)}
+                />
+                <FormGroup row>
+                    <FormControl>
+                        <input ref={tapeInput} className={classes.fileInput} type='file' onChange={evt => onLoadFile(evt, props)}/>
+                        <Button variant='outlined' color='primary' onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
+                    </FormControl>
+                    <FormControlLabel
+                        control={<Switch onChange={evt => props.onReaderActivationChange(evt.target.checked)} />}
+                        labelPlacement='start'
+                        label='Reader On'
+                    />
+            </FormGroup>
+            </Box>
         </section>
     );
 });
 
-function scrollToBottomOnChange(textRef: React.RefObject<HTMLTextAreaElement>) {
+function scrollToBottomOnChange(textRef: React.RefObject<HTMLInputElement>) {
     React.useEffect(() => {
         const textElem = textRef.current;
         if (!textElem) {

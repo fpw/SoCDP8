@@ -45,17 +45,9 @@ export class MachineState {
         return obj;
     }
 
-    public async save(dir: string) {
-        const json = JSON.stringify(this.toJSONObject(), null, 2);
-        await promises.writeFile(dir + '/machine.json', json);
-    }
-
-    public static load(dir: string): MachineState {
+    public static fromJSONObject(configObj: any): MachineState {
         const state = new MachineState();
-        const configJson = readFileSync(dir + '/machine.json');
-        const configObj = JSON.parse(configJson.toString());
 
-        state.directory = dir;
         state.name = configObj.name;
         state.eaePresent = configObj.eae;
         state.kt8iPresent = configObj.kt8i;
@@ -65,6 +57,21 @@ export class MachineState {
             const id = DeviceID[perphIdStr as keyof typeof DeviceID];
             state.peripherals.push(id);
         }
+
+        return state;
+    }
+
+    public async save(dir: string) {
+        const json = JSON.stringify(this.toJSONObject(), null, 2);
+        await promises.writeFile(dir + '/machine.json', json);
+    }
+
+    public static load(dir: string): MachineState {
+        const configJson = readFileSync(dir + '/machine.json');
+        const configObj = JSON.parse(configJson.toString());
+
+        const state = this.fromJSONObject(configObj);
+        state.directory = dir;
 
         return state;
     }

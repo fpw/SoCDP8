@@ -136,11 +136,13 @@ export class AppServer {
     }
 
     private requestStateList(request: Request, response: Response): void {
+        console.log('Sending state list');
         const list = this.pdp8.getStateList().map(e => e.toJSONObject());
         response.json(list);
     }
 
     private requestActiveState(request: Request, response: Response): void {
+        console.log('Sending active state');
         const state = this.pdp8.getActiveState();
         response.json(state.toJSONObject());
     }

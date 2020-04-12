@@ -43,13 +43,6 @@ export class MachineState {
     // Peripherals
     public peripherals: DeviceID[] = [];
 
-    constructor(private socket: SocketIOClient.Socket) {
-    }
-
-    public save() {
-        this.socket.emit('state', {action: 'save'});
-    }
-
     public toJSONObject(): Object {
         const obj = {
             name: this.name,
@@ -62,8 +55,8 @@ export class MachineState {
         return obj;
     }
 
-    public static fromJSONObject(socket: SocketIOClient.Socket, configObj: any): MachineState {
-        const state = new MachineState(socket);
+    public static fromJSONObject(configObj: any): MachineState {
+        const state = new MachineState();
 
         state.name = configObj.name;
         state.eaePresent = configObj.eae;

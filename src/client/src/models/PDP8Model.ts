@@ -44,12 +44,12 @@ export class PDP8Model {
     private peripheralModels: Map<number, PeripheralModel> = new Map();
 
     @observable
-    private machineState: MachineState;
+    private activeState: MachineState;
 
     constructor() {
         this.socket = io.connect(this.BASE_URL);
         this.coreMemory = new CoreMemoryModel(this.socket);
-        this.machineState = new MachineState(this.socket);
+        this.activeState = new MachineState();
 
         this.socket.on('connect', async () => {
             await this.onConnected();
@@ -74,8 +74,8 @@ export class PDP8Model {
         return this.coreMemory;
     }
 
-    public get state() {
-        return this.machineState;
+    public get currentState() {
+        return this.activeState;
     }
 
     private async onConnected(): Promise<void> {
@@ -97,8 +97,8 @@ export class PDP8Model {
 
     @action
     private setMachineState(stateObj: any) {
-        const state = MachineState.fromJSONObject(this.socket, stateObj);
-        this.machineState = state;
+        const state = MachineState.fromJSONObject(stateObj);
+        this.activeState = state;
         this.peripheralModels.clear();
 
         for (const id of state.peripherals) {
@@ -145,6 +145,19 @@ export class PDP8Model {
         }
 
         peripheral.onPeripheralAction(action, data);
+    }
+
+    public async fetchStateList(): Promise<MachineState[]> {
+        const res: MachineState[] = [];
+
+        const response = await fetch(this.BASE_URL + '/machine-states');
+        const listObj = await response.json();
+        for (const obj of listObj) {
+            const state = MachineState.fromJSONObject(obj);
+            res.push(state);
+        }
+
+        return res;
     }
 
     @computed

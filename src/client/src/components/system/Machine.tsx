@@ -35,22 +35,32 @@ import { RK8Model } from '../../models/peripherals/RK8Model';
 import { RK8 } from '../peripherals/RK8';
 import { KW8IModel } from '../../models/peripherals/KW8IModel';
 import { KW8I } from '../peripherals/KW8I';
+import { Card, CardMedia, CardContent, CardHeader, Typography, makeStyles, createStyles, Container, Box } from "@material-ui/core";
 
-export interface PDP8Props {
+export interface MachineProps {
     pdp8: PDP8Model;
 }
 
-export const PDP8: React.FunctionComponent<PDP8Props> = observer((props) =>
-    <section className='section container'>
-        <div className='panel is-primary'>
-            <p className='panel-heading'>PDP-8/I</p>
-            <FrontPanel lamps={props.pdp8.panel.lamps}
-                            switches={props.pdp8.panel.switches}
-                            onSwitch={props.pdp8.setPanelSwitch.bind(props.pdp8)}
-                />
-        </div>
-        <PeripheralList list={props.pdp8.peripherals} />
-    </section>);
+export const Machine: React.FunctionComponent<MachineProps> = observer(props => {
+    return (
+        <Container>
+            <Box mb={4}>
+                <Card variant='outlined'>
+                    <CardHeader title='PDP-8/I' />
+                    <CardMedia>
+                        <FrontPanel lamps={props.pdp8.panel.lamps}
+                                    switches={props.pdp8.panel.switches}
+                                    onSwitch={props.pdp8.setPanelSwitch.bind(props.pdp8)}
+                        />
+                    </CardMedia>
+                    <CardContent>
+                    </CardContent>
+                </Card>
+            </Box>
+            <PeripheralList list={props.pdp8.peripherals} />
+        </Container>
+    );
+});
 
 const PeripheralList: React.FunctionComponent<{list: PeripheralModel[]}> = ({list}) => {
     const components = list.map(dev => {
@@ -76,17 +86,14 @@ const PeripheralList: React.FunctionComponent<{list: PeripheralModel[]}> = ({lis
 }
 
 const PeripheralBox: React.FunctionComponent<{model: PeripheralModel, name: string, children: React.ReactNode}> = ({model, name, children}) =>
-    <section className='panel is-primary'>
-        <p className='panel-heading'>
-            {name} @ Bus {model.connections.map(x => x.toString(8)).join(', ')}
-        </p>
-        <div className='panel-block'>
-            <div className='container'>
+    <Box mb={4}>
+        <Card variant='outlined'>
+            <CardHeader title={`${name} @ Bus ${model.connections.map(x => x.toString(8)).join(', ')}`}/>
+            <CardContent>
                 { children }
-            </div>
-        </div>
-    </section>
-
+            </CardContent>
+        </Card>
+    </Box>
 const ASR33Box: React.FunctionComponent<{model: ASR33Model}> = observer(({model}) =>
     <PeripheralBox name='ASR-33 Teletype' model={model}>
         <ASR33
