@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import * as React from "react";
+import React from 'react';
 
 export interface DF32Props {
 }

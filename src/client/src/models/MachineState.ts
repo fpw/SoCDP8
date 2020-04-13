@@ -31,6 +31,23 @@ export enum DeviceID {
     DEV_ID_RK8      = 11,
 }
 
+export function deviceIdToString(id: DeviceID): string {
+    switch (id) {
+        case DeviceID.DEV_ID_ASR33: return "ASR-33";
+        case DeviceID.DEV_ID_PC04:  return "PC04";
+        case DeviceID.DEV_ID_TC08:  return "TC08";
+        case DeviceID.DEV_ID_RF08:  return "RF08";
+        case DeviceID.DEV_ID_DF32:  return "DF32";
+        case DeviceID.DEV_ID_TT1:   return "PT08.1";
+        case DeviceID.DEV_ID_TT2:   return "PT08.2";
+        case DeviceID.DEV_ID_TT3:   return "PT08.3";
+        case DeviceID.DEV_ID_TT4:   return "PT08.4";
+        case DeviceID.DEV_ID_KW8I:  return "KW8/I";
+        case DeviceID.DEV_ID_RK8:   return "RK8";
+        default: throw new Error(`Unknown device ID ${id}`);
+    }
+}
+
 export class MachineState {
     // General
     public name: string = "";
@@ -53,6 +70,22 @@ export class MachineState {
         };
 
         return obj;
+    }
+
+    public static get defaultNewState(): MachineState {
+        const state = new MachineState();
+
+        state.eaePresent = true;
+        state.kt8iPresent = false;
+        state.maxMemField = 7;
+        state.peripherals = [
+            DeviceID.DEV_ID_ASR33,
+            DeviceID.DEV_ID_PC04,
+            DeviceID.DEV_ID_TC08,
+            DeviceID.DEV_ID_RF08,
+        ];
+
+        return state;
     }
 
     public static fromJSONObject(configObj: any): MachineState {

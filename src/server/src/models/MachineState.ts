@@ -61,9 +61,9 @@ export class MachineState {
         return state;
     }
 
-    public async save(dir: string) {
+    public async save() {
         const json = JSON.stringify(this.toJSONObject(), null, 2);
-        await promises.writeFile(dir + '/machine.json', json);
+        await promises.writeFile(this.directory + '/machine.json', json);
     }
 
     public static load(dir: string): MachineState {

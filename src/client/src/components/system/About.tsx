@@ -16,8 +16,8 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import * as React from "react";
-import { Typography } from "@material-ui/core";
+import React from 'react';
+import Typography from "@material-ui/core/Typography";
 
 export const About: React.FunctionComponent = () =>
   <section>

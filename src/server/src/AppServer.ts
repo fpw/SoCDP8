@@ -23,6 +23,7 @@ import { Server } from 'http';
 import { SoCDP8, ConsoleState } from './models/SoCDP8';
 import { Response, Request } from 'express-serve-static-core';
 import { isDeepStrictEqual, promisify } from 'util';
+import { MachineState } from './models/MachineState';
 
 export class AppServer {
     private readonly DATA_DIR = '/home/socdp8/'
@@ -51,6 +52,7 @@ export class AppServer {
         this.app = express();
         this.app.use(cors());
         this.app.use(express.static(clientDir));
+        this.app.use(express.json());
         this.setupJSONApi();
 
         this.httpServer = new Server(this.app);
@@ -128,10 +130,11 @@ export class AppServer {
         }
     }
 
-    // JSON API
+    // JSON REST API
 
     private setupJSONApi(): void {
         this.app.get('/machine-states', (req, res) => this.requestStateList(req, res));
+        this.app.post('/machine-states', (req, res) => this.postNewState(req, res));
         this.app.get('/machine-states/active', (req, res) => this.requestActiveState(req, res));
     }
 
@@ -145,6 +148,22 @@ export class AppServer {
         console.log('Sending active state');
         const state = this.pdp8.getActiveState();
         response.json(state.toJSONObject());
+    }
+
+    private postNewState(request: Request, response: Response): void {
+        console.log('Creating new state');
+
+        try {
+            const state = MachineState.fromJSONObject(request.body);
+            this.pdp8.createState(state);
+            response.json({success: true});
+        } catch (e) {
+            if (e instanceof Error) {
+                response.json({success: false, error: e.message});
+            } else {
+                response.json({success: false});
+            }
+        }
     }
 
     // State maintenance

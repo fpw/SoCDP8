@@ -16,8 +16,10 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import * as React from "react";
-import { makeStyles, createStyles, Button, ButtonGroup } from '@material-ui/core';
+import React from 'react';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
+import ButtonGroup from "@material-ui/core/ButtonGroup";
+import Button from "@material-ui/core/Button";
 
 export interface TC08Props {
     onTapeLoad(tape: File, unit: number): void;

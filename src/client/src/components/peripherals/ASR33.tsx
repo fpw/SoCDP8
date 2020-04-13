@@ -16,10 +16,16 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import * as React from "react";
 import { observer } from 'mobx-react-lite';
-import { TextField, Switch, FormGroup, FormControlLabel, FormControl, Box } from "@material-ui/core";
-import { makeStyles, createStyles, Button } from '@material-ui/core';
+import { createStyles, makeStyles } from "@material-ui/core/styles";
+import TextField from "@material-ui/core/TextField";
+import Box from "@material-ui/core/Box";
+import Button from "@material-ui/core/Button";
+import FormGroup from "@material-ui/core/FormGroup";
+import FormControl from "@material-ui/core/FormControl";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Switch from "@material-ui/core/Switch";
+import React from 'react';
 
 export interface ASR33Props {
     punchData: string;
@@ -50,7 +56,8 @@ export const ASR33: React.FunctionComponent<ASR33Props> = observer((props) => {
             <Box mb={4}>
                 <TextField label='Output' variant='outlined'
                     InputProps={{
-                        className: classes.output
+                        className: classes.output,
+                        spellCheck: false,
                     }}
                     inputRef={textRef}
                     multiline

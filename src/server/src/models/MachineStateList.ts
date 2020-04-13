@@ -78,4 +78,19 @@ export class MachineStateList {
         return config;
     }
 
+    public addState(state: MachineState) {
+        if (this.stateMap.has(state.name)) {
+            throw new Error('Name already exists');
+        }
+
+        const randomId = (Math.random() + 1).toString(36).substr(2, 5);
+        const cleanName = state.name.replace(/[^-a-zA-Z0-9_]/g, '_') + '_' + randomId;
+
+        const dir = `${this.machineDir}/${cleanName}/`
+        mkdirSync(dir, {recursive: true});
+        state.directory = dir;
+        state.save();
+
+        this.stateMap.set(state.name, state);
+    }
 }

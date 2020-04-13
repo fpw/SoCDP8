@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import * as React from "react";
+import React from 'react';
 import { observer } from "mobx-react-lite";
 import { FrontPanel } from "./FrontPanel";
 import { ASR33Model } from '../../models/peripherals/ASR33Model';
@@ -35,7 +35,16 @@ import { RK8Model } from '../../models/peripherals/RK8Model';
 import { RK8 } from '../peripherals/RK8';
 import { KW8IModel } from '../../models/peripherals/KW8IModel';
 import { KW8I } from '../peripherals/KW8I';
-import { Card, CardMedia, CardContent, CardHeader, Typography, makeStyles, createStyles, Container, Box } from "@material-ui/core";
+
+import Typography from '@material-ui/core/Typography';
+import Container from '@material-ui/core/Container';
+import Box from '@material-ui/core/Box';
+import Card from "@material-ui/core/Card";
+import CardHeader from "@material-ui/core/CardHeader";
+import CardMedia from "@material-ui/core/CardMedia";
+import CardActions from "@material-ui/core/CardActions";
+import Button from "@material-ui/core/Button";
+import CardContent from "@material-ui/core/CardContent";
 
 export interface MachineProps {
     pdp8: PDP8Model;
@@ -44,6 +53,10 @@ export interface MachineProps {
 export const Machine: React.FunctionComponent<MachineProps> = observer(props => {
     return (
         <Container>
+            <Typography component='h1' variant='h4' gutterBottom>
+                Machine: {props.pdp8.currentState.name}
+            </Typography>
+
             <Box mb={4}>
                 <Card variant='outlined'>
                     <CardHeader title='PDP-8/I' />
@@ -53,8 +66,9 @@ export const Machine: React.FunctionComponent<MachineProps> = observer(props => 
                                     onSwitch={props.pdp8.setPanelSwitch.bind(props.pdp8)}
                         />
                     </CardMedia>
-                    <CardContent>
-                    </CardContent>
+                    <CardActions>
+                        <Button color='primary' onClick={() => props.pdp8.saveCurrentState()}>Save State</Button>
+                    </CardActions>
                 </Card>
             </Box>
             <PeripheralList list={props.pdp8.peripherals} />
@@ -85,15 +99,6 @@ const PeripheralList: React.FunctionComponent<{list: PeripheralModel[]}> = ({lis
     return <React.Fragment>{components}</React.Fragment>
 }
 
-const PeripheralBox: React.FunctionComponent<{model: PeripheralModel, name: string, children: React.ReactNode}> = ({model, name, children}) =>
-    <Box mb={4}>
-        <Card variant='outlined'>
-            <CardHeader title={`${name} @ Bus ${model.connections.map(x => x.toString(8)).join(', ')}`}/>
-            <CardContent>
-                { children }
-            </CardContent>
-        </Card>
-    </Box>
 const ASR33Box: React.FunctionComponent<{model: ASR33Model}> = observer(({model}) =>
     <PeripheralBox name='ASR-33 Teletype' model={model}>
         <ASR33
@@ -134,3 +139,13 @@ const KW8IBox: React.FunctionComponent<{model: KW8IModel}> = observer(({model}) 
     <PeripheralBox name='KW8I Real Time Clock' model={model}>
         <KW8I />
     </PeripheralBox>);
+
+const PeripheralBox: React.FunctionComponent<{model: PeripheralModel, name: string, children: React.ReactNode}> = ({model, name, children}) =>
+    <Box mb={4}>
+        <Card variant='outlined'>
+            <CardHeader title={`${name} @ Bus ${model.connections.map(x => x.toString(8)).join(', ')}`}/>
+            <CardContent>
+                { children }
+            </CardContent>
+        </Card>
+    </Box>

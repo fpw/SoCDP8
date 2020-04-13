@@ -71,7 +71,7 @@ export class SoCDP8 {
 
         try {
             // Save config
-            await this.currentState.save(dir);
+            await this.currentState.save();
 
             // Save core memory
             const memory = this.mem.dumpCore();
@@ -153,6 +153,10 @@ export class SoCDP8 {
 
     public getActiveState(): MachineState {
         return this.currentState;
+    }
+
+    public createState(state: MachineState) {
+        this.stateList.addState(state);
     }
 
     public clearCoreMemory() {

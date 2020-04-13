@@ -17,6 +17,7 @@
  */
 
 import * as io from 'socket.io-client';
+
 import { FrontPanelState } from './FrontPanelState';
 import { observable, action, computed } from 'mobx';
 import { ASR33Model } from './peripherals/ASR33Model';
@@ -160,6 +161,10 @@ export class PDP8Model {
         return res;
     }
 
+    public async saveCurrentState() {
+        this.socket.emit('state', {'action': 'save'});
+    }
+
     @computed
     public get panel(): FrontPanelState {
         if (!this.frontPanel) {
@@ -189,5 +194,20 @@ export class PDP8Model {
 
     public async setPanelSwitch(sw: string, state: boolean): Promise<void> {
         this.socket.emit('console-switch', {'switch': sw, 'state': state});
+    }
+
+    public async createNewState(state: MachineState) {
+        const location = this.BASE_URL + '/machine-states';
+        const settings: RequestInit = {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(state.toJSONObject())
+        }
+
+        const response = await fetch(location, settings);
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error);
+        }
     }
 }

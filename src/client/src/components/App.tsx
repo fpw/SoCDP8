@@ -16,15 +16,30 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import * as React from 'react';
+import React from 'react';
 import { Machine } from './system/Machine';
 import { PDP8Model } from '../models/PDP8Model';
 import { observer } from 'mobx-react-lite';
 import { HashRouter as Router, Route, Link as RouterLink, Switch, Redirect } from 'react-router-dom';
 import { About } from './system/About';
 import { MachineManager } from './system/MachineManager';
-import { CssBaseline, AppBar, Toolbar, Typography, Drawer, ListItem, ListItemText, List, Divider, Container, Grid, Link, Box } from '@material-ui/core'
+
 import { makeStyles, createStyles } from '@material-ui/core/styles';
+import InfoIcon from '@material-ui/icons/Info';
+import TuneIcon from '@material-ui/icons/Tune';
+import MemoryIcon from '@material-ui/icons/Memory';
+import CssBaseline from '@material-ui/core/CssBaseline';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
+import Container from '@material-ui/core/Container';
+import Drawer from '@material-ui/core/Drawer';
+import Divider from '@material-ui/core/Divider';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
+import Box from '@material-ui/core/Box';
 
 const drawerWidth = 240;
 const useStyles = makeStyles(theme => createStyles({
@@ -109,20 +124,17 @@ const MainApp: React.FunctionComponent<AppProps> = observer(props => {
                 <div className={classes.toolbar} />
                 <Divider />
                 <List>
-                    <ListItem>
-                        <ListItemText>
-                            <Link component={RouterLink} to='/machine'>Show Active Machine</Link>
-                        </ListItemText>
+                    <ListItem button component={RouterLink} to='/machines/active'>
+                        <ListItemIcon><MemoryIcon /></ListItemIcon>
+                        <ListItemText primary='Active Machine' />
                     </ListItem>
-                    <ListItem>
-                        <ListItemText>
-                            <Link component={RouterLink} to='/machines'>Manage Machines</Link>
-                        </ListItemText>
+                    <ListItem button component={RouterLink} to='/machines'>
+                        <ListItemIcon><TuneIcon /></ListItemIcon>
+                        <ListItemText primary='Manage Machines' />
                     </ListItem>
-                    <ListItem>
-                        <ListItemText>
-                            <Link component={RouterLink} to='/about'>About</Link>
-                        </ListItemText>
+                    <ListItem button component={RouterLink} to='/about'>
+                        <ListItemIcon><InfoIcon /></ListItemIcon>
+                        <ListItemText primary='About' />
                     </ListItem>
                 </List>
             </Drawer>
@@ -131,16 +143,19 @@ const MainApp: React.FunctionComponent<AppProps> = observer(props => {
                 <Container maxWidth='lg' className={classes.container}>
                     <Switch>
                         <Route exact path="/">
-                        <Redirect to="/machine" />
+                            <Redirect to="/machines/active" />
                         </Route>
-                        <Route path="/machine">
-                        <Machine pdp8={props.pdp8} />
+
+                        <Route path="/machines/active">
+                            <Machine pdp8={props.pdp8} />
                         </Route>
+
                         <Route path="/machines">
-                        <MachineManager pdp8={props.pdp8}/>
+                            <MachineManager pdp8={props.pdp8}/>
                         </Route>
+
                         <Route path="/about">
-                        <About />
+                            <About />
                         </Route>
                     </Switch>
                 </Container>
