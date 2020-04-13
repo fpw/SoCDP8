@@ -20,5 +20,10 @@ import { AppServer } from './AppServer';
 
 console.log('SoCDP8 starting...');
 
-const app = new AppServer(8000);
-app.start();
+const app = new AppServer();
+
+async function run() {
+    await app.start(8000);
+}
+
+run();

@@ -50,11 +50,24 @@ export interface IOContext {
     emitEvent(action: string, data: any): void;
 }
 
-export interface Peripheral {
-    getDeviceID(): DeviceID;
-    getBusConnections(): number[];
-    requestAction(action: string, data: any): void;
-    run(io: IOContext): Promise<void>;
+export abstract class Peripheral {
+    private keepRunning = true;
 
-    saveState(): Promise<void>;
+    public abstract getDeviceID(): DeviceID;
+    public abstract getBusConnections(): number[];
+    public abstract run(io: IOContext): Promise<void>;
+
+    public requestAction(action: string, data: any): void {
+    }
+
+    public async saveState(): Promise<void> {
+    }
+
+    public stop(): void {
+        this.keepRunning = false;
+    }
+
+    protected get keepAlive(): boolean {
+        return this.keepRunning;
+    }
 }

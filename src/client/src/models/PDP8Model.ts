@@ -32,7 +32,7 @@ import { KW8IModel } from './peripherals/KW8IModel';
 import { MachineState, DeviceID } from './MachineState';
 
 export class PDP8Model {
-    private readonly BASE_URL = 'http://192.168.178.68:8000';
+    private readonly BASE_URL: string = '';
 
     private socket: SocketIOClient.Socket;
 
@@ -48,12 +48,16 @@ export class PDP8Model {
     private activeState: MachineState;
 
     constructor() {
+        if (window.location.toString().includes('localhost')) {
+            this.BASE_URL = 'http://192.168.178.68:8000';
+        }
+
         this.socket = io.connect(this.BASE_URL);
         this.coreMemory = new CoreMemoryModel(this.socket);
         this.activeState = new MachineState();
 
         this.socket.on('connect', async () => {
-            await this.onConnected();
+            await this.readActiveState();
         });
 
         this.socket.on('disconnect', async() => {
@@ -69,6 +73,10 @@ export class PDP8Model {
             const action = data.action as string;
             this.onPeripheralEvent(devId, action, data);
         });
+
+        this.socket.on('state', (data: any) => {
+            this.onStateEvent(data);
+        });
     }
 
     public get core() {
@@ -79,7 +87,7 @@ export class PDP8Model {
         return this.activeState;
     }
 
-    private async onConnected(): Promise<void> {
+    private async readActiveState(): Promise<void> {
         const response = await fetch(this.BASE_URL + '/machine-states/active');
         const stateObj = await response.json();
         this.setMachineState(stateObj);
@@ -162,7 +170,7 @@ export class PDP8Model {
     }
 
     public async saveCurrentState() {
-        this.socket.emit('state', {'action': 'save'});
+        this.socket.emit('state', {action: 'save'});
     }
 
     @computed
@@ -208,6 +216,29 @@ export class PDP8Model {
         const data = await response.json();
         if (!data.success) {
             throw new Error(data.error);
+        }
+    }
+
+    public async activateState(state: MachineState) {
+        const location = this.BASE_URL + '/machine-states/activate';
+        const settings: RequestInit = {
+            method: 'post',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({name: state.name})
+        };
+
+        const response = await fetch(location, settings);
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error);
+        }
+    }
+
+    private onStateEvent(data: any) {
+        switch (data.action) {
+            case 'active-state-changed':
+                this.readActiveState();
+                break;
         }
     }
 }

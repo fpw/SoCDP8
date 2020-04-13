@@ -36,6 +36,8 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ExpansionPanel from '@material-ui/core/ExpansionPanel';
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
+import ButtonGroup from '@material-ui/core/ButtonGroup';
+import Button from '@material-ui/core/Button';
 
 export interface MachineManagerProps {
     pdp8: PDP8Model
@@ -57,6 +59,7 @@ const StyledTableCell = withStyles(theme => ({
 
 export const MachineManager: React.FunctionComponent<MachineManagerProps> = (props) => {
     const [states, setStates] = useState<MachineState[]>([]);
+    const [formBusy, setFormBusy] = useState<boolean>(false);
     const classes = useStyles();
 
     useEffect(() => {
@@ -68,7 +71,7 @@ export const MachineManager: React.FunctionComponent<MachineManagerProps> = (pro
     }, []);
 
     return (
-        <Box>
+        <section>
             <Typography component='h1' variant='h4' gutterBottom>Manage Machines</Typography>
 
             <ExpansionPanel>
@@ -79,7 +82,12 @@ export const MachineManager: React.FunctionComponent<MachineManagerProps> = (pro
                     <Box width='75%' pl={4}>
                         <MachineForm
                             initialState={MachineState.defaultNewState}
-                            onSubmit={(s) => onNewState(props.pdp8, s)}
+                            onSubmit={async (s) => {
+                                setFormBusy(true);
+                                await onNewState(props.pdp8, s);
+                                setFormBusy(false);
+                            }}
+                            buttonEnabled={!formBusy}
                         />
                     </Box>
                 </ExpansionPanelDetails>
@@ -94,60 +102,89 @@ export const MachineManager: React.FunctionComponent<MachineManagerProps> = (pro
                                 <StyledTableCell>Core</StyledTableCell>
                                 <StyledTableCell>Extensions</StyledTableCell>
                                 <StyledTableCell>Peripherals</StyledTableCell>
+                                <StyledTableCell>Actions</StyledTableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            { states.map(s => <MachineEntry state={s} />)}
+                            { states.map(s => <MachineEntry pdp8={props.pdp8} state={s} />)}
                         </TableBody>
                     </Table>
                 </TableContainer>
             </Box>
-        </Box>
+        </section>
     );
 };
 
-const MachineEntry: React.FunctionComponent<{state: MachineState}> = (props) =>
-    <TableRow>
-        <StyledTableCell>{props.state.name}</StyledTableCell>
-        <StyledTableCell>
-            {(props.state.maxMemField + 1) * 4} kiW
-        </StyledTableCell>
-        <StyledTableCell>
-            <ul>
-                {(() => {
-                    if (props.state.maxMemField > 0) {
-                        return <li>MC8/I</li>
-                    }
-                })()}
-                {(() => {
-                    if (props.state.eaePresent) {
-                        return <li>KE8/I</li>
-                    }
-                })()}
-                {(() => {
-                    if (props.state.kt8iPresent) {
-                        return <li>KT8/I</li>
-                    }
-                })()}
-            </ul>
-        </StyledTableCell>
-        <StyledTableCell>
-            <ul>
-                { props.state.peripherals.map(id =>
-                    <li>{deviceIdToString(id)}</li>
-                )}
-            </ul>
-        </StyledTableCell>
-    </TableRow>
+const MachineEntry: React.FunctionComponent<{pdp8: PDP8Model, state: MachineState}> = (props) => {
+    const [busy, setBusy] = React.useState<boolean>(false);
+
+    return (
+        <TableRow>
+            <StyledTableCell>{props.state.name}</StyledTableCell>
+            <StyledTableCell>
+                {(props.state.maxMemField + 1) * 4} kiW
+            </StyledTableCell>
+            <StyledTableCell>
+                <ul>
+                    {(() => {
+                        if (props.state.maxMemField > 0) {
+                            return <li>MC8/I</li>
+                        }
+                    })()}
+                    {(() => {
+                        if (props.state.eaePresent) {
+                            return <li>KE8/I</li>
+                        }
+                    })()}
+                    {(() => {
+                        if (props.state.kt8iPresent) {
+                            return <li>KT8/I</li>
+                        }
+                    })()}
+                </ul>
+            </StyledTableCell>
+            <StyledTableCell>
+                <ul>
+                    { props.state.peripherals.map(id =>
+                        <li>{deviceIdToString(id)}</li>
+                    )}
+                </ul>
+            </StyledTableCell>
+            <StyledTableCell>
+                <ButtonGroup variant='outlined' orientation='vertical'>
+                    <Button disabled={busy} onClick={async () => {
+                        setBusy(true);
+                        await activateState(props.pdp8, props.state);
+                        setBusy(false);
+                    }}>
+                        Activate
+                    </Button>
+                </ButtonGroup>
+            </StyledTableCell>
+        </TableRow>
+    );
+};
 
 async function onNewState(pdp8: PDP8Model, state: MachineState) {
     try {
         await pdp8.createNewState(state);
     } catch (e) {
         if (e instanceof Error) {
-            alert(e.message);
+            alert(`Creating state failed: ${e.message}`);
         } else {
-            alert('State could not be created');
+            alert('Creating state failed');
+        }
+    }
+}
+
+async function activateState(pdp8: PDP8Model, state: MachineState) {
+    try {
+        await pdp8.activateState(state);
+    } catch (e) {
+        if (e instanceof Error) {
+            alert(`Activating state failed: ${e.message}`);
+        } else {
+            alert('Activating state failed');
         }
     }
 }

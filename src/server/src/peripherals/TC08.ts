@@ -50,7 +50,7 @@ interface TapeState {
     curLine: number;
 }
 
-export class TC08 implements Peripheral {
+export class TC08 extends Peripheral {
     private readonly DEBUG = false;
 
     private ZONE_WORDS = 8192;          // number of words in start / end zone
@@ -103,9 +103,6 @@ export class TC08 implements Peripheral {
         }
     }
 
-    public async saveState() {
-    }
-
     private loadTape(unit: number, data: Buffer) {
         console.log(`TC08: Tape loaded`);
         this.tapes[unit] = {
@@ -118,7 +115,7 @@ export class TC08 implements Peripheral {
     private lastRegA: number = 0;
 
     public async run(io: IOContext): Promise<void> {
-        while (true) {
+        while (this.keepAlive) {
             const regA = io.readRegister(DeviceRegister.REG_A);
 
             if (regA == this.lastRegA) {

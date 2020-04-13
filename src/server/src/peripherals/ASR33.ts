@@ -19,7 +19,7 @@
 import { Peripheral, DeviceRegister, IOContext, DeviceID } from '../drivers/IO/Peripheral';
 import { sleepMs } from '../sleep';
 
-export class ASR33 implements Peripheral {
+export class ASR33 extends Peripheral {
     private readonly READER_CPS = 10;
     private readonly PUNCH_CPS = 12; // with 10, Focal69 identifies as PDP-8/L
 
@@ -32,9 +32,7 @@ export class ASR33 implements Peripheral {
     private punchTape: number[] = [];
 
     constructor(public readonly id: DeviceID) {
-    }
-
-    public async saveState() {
+        super();
     }
 
     public getDeviceID(): DeviceID {
@@ -80,7 +78,7 @@ export class ASR33 implements Peripheral {
     }
 
     private async runReader(io: IOContext) {
-        while (true) {
+        while (this.keepAlive) {
             const data = this.readNext();
             if (data !== null) {
                 io.writeRegister(DeviceRegister.REG_A, data);
@@ -119,7 +117,7 @@ export class ASR33 implements Peripheral {
     }
 
     private async runPunch(io: IOContext) {
-        while (true) {
+        while (this.keepAlive) {
             let regD = io.readRegister(DeviceRegister.REG_D);
             const newData = (regD & 1) != 0;
 

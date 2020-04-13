@@ -20,7 +20,7 @@ import { Peripheral, IOContext, DeviceRegister, DeviceID } from '../drivers/IO/P
 import { existsSync, readFileSync, promises } from 'fs';
 import { sleepMs, sleepUs } from '../sleep';
 
-export class RK8 implements Peripheral {
+export class RK8 extends Peripheral {
     private readonly DEBUG = true;
     private readonly DATA_FILE: string;
     private readonly SECTORS_PER_DISK = 203 * 16;
@@ -29,6 +29,8 @@ export class RK8 implements Peripheral {
     private data = Buffer.alloc(this.NUM_DISKS * this.SECTORS_PER_DISK * this.WORDS_PER_SECTOR * 2);
 
     constructor(dir: string) {
+        super();
+
         this.DATA_FILE = dir + '/rk8.dat';
 
         if (existsSync(this.DATA_FILE)) {
@@ -45,15 +47,12 @@ export class RK8 implements Peripheral {
         return [0o73, 0o74, 0o75];
     }
 
-    public requestAction(action: string, data: any): void {
-    }
-
     public async saveState() {
         await promises.writeFile(this.DATA_FILE, this.data);
     }
 
     public async run(io: IOContext): Promise<void> {
-        while (true) {
+        while (this.keepAlive) {
             const regA = io.readRegister(DeviceRegister.REG_A);
 
             if (regA & (1 << 13)) {

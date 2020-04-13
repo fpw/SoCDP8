@@ -35,6 +35,7 @@ import { createStyles, makeStyles } from '@material-ui/core/styles';
 export interface MachineFormProps {
     initialState: MachineState;
     onSubmit(state: MachineState): void;
+    buttonEnabled: boolean;
 }
 
 const useStyles = makeStyles(theme => createStyles({
@@ -49,7 +50,7 @@ export const MachineForm: React.FunctionComponent<MachineFormProps> = (props) =>
 
     const coreMemoryMarks: Mark[] = [0, 1, 2, 3, 4, 5, 6, 7].map(i => {return {
             value: i,
-            label: `${(i + 1) * 4} kiW`
+            label: `${(i + 1) * 4}`
         } as Mark}
     );
 
@@ -76,7 +77,7 @@ export const MachineForm: React.FunctionComponent<MachineFormProps> = (props) =>
                 </FormControl>
 
                 <FormControl component='fieldset' className={classes.fieldset}>
-                    <FormLabel component='legend'>Core Memory</FormLabel>
+                    <FormLabel component='legend'>Core Memory (kiW)</FormLabel>
                     <Slider
                         defaultValue={s.maxMemField}
                         valueLabelDisplay='off'
@@ -107,7 +108,7 @@ export const MachineForm: React.FunctionComponent<MachineFormProps> = (props) =>
 
                 <FormControl component='fieldset' className={classes.fieldset}>
                     <FormLabel component='legend'>Hard Disk</FormLabel>
-                    <RadioGroup name='disk' defaultValue={DeviceID[getDiskType(s.peripherals)]}>
+                    <RadioGroup name='disk' defaultValue={DeviceID[getDiskType(s.peripherals)]} row>
                         <FormControlLabel value={DeviceID[DeviceID.DEV_ID_NULL]} control={<Radio />} label='None' />
                         <FormControlLabel value={DeviceID[DeviceID.DEV_ID_DF32]} control={<Radio />} label='DF32' />
                         <FormControlLabel value={DeviceID[DeviceID.DEV_ID_RF08]} control={<Radio />} label='RF08' />
@@ -135,7 +136,7 @@ export const MachineForm: React.FunctionComponent<MachineFormProps> = (props) =>
                     } label='KW8/I' />
                 </FormControl>
             </FormGroup>
-            <Button type='submit' variant='contained' color='primary'>
+            <Button type='submit' variant='contained' color='primary' disabled={!props.buttonEnabled}>
                 Create Machine
             </Button>
         </form>

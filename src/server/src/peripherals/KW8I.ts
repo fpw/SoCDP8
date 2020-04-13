@@ -18,19 +18,13 @@
 
 import { Peripheral, IOContext, DeviceID } from '../drivers/IO/Peripheral';
 
-export class KW8I implements Peripheral {
+export class KW8I extends Peripheral {
     public getDeviceID(): DeviceID {
         return DeviceID.DEV_ID_KW8I;
     }
 
     public getBusConnections(): number[] {
         return [0o13];
-    }
-
-    public async saveState() {
-    }
-
-    public requestAction(action: string, data: any): void {
     }
 
     public async run(io: IOContext): Promise<void> {

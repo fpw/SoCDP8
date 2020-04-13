@@ -33,6 +33,7 @@ import { RF08 } from '../peripherals/RF08';
 import { DF32 } from '../peripherals/DF32';
 import { KW8I } from '../peripherals/KW8I';
 import { RK8 } from '../peripherals/RK8';
+import { sleepMs } from '../sleep';
 
 export interface ConsoleState {
     lamps: LampBrightness;
@@ -91,6 +92,14 @@ export class SoCDP8 {
     public async activateState(stateName: string) {
         const state = this.stateList.getStateByName(stateName);
 
+        // Stop current machine
+        await this.stopCPU();
+
+        // Stop current peripherals
+        for (const perph of this.io.getRegisteredDevices()) {
+            perph.stop();
+        }
+
         // Restore config
         this.io.configureExtensions({
             eae: state.eaePresent,
@@ -111,9 +120,28 @@ export class SoCDP8 {
             this.mem.loadCore(new Uint16Array(core.buffer));
         } catch (e) {
             console.warn('Core memory not loaded: ' + e);
+            this.mem.clear();
         }
 
         this.currentState = state;
+    }
+
+    private async stopCPU() {
+        const isRunning = this.readConsoleState().lamps.run;
+        if (!isRunning) {
+            return;
+        }
+
+        const wasOverride = this.cons.isSwitchOverridden();
+
+        this.cons.setSwitchOverride(true);
+        this.setSwitch('stop', true);
+        while (this.readConsoleState().lamps.run) {
+            await sleepMs(1);
+        }
+        this.setSwitch('stop', false);
+
+        this.cons.setSwitchOverride(wasOverride);
     }
 
     private createPeripheral(dir: string, id: DeviceID): Peripheral {

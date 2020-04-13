@@ -19,7 +19,7 @@
 import { Peripheral, IOContext, DeviceRegister, DeviceID } from '../drivers/IO/Peripheral';
 import { sleepMs } from '../sleep';
 
-export class PC04 implements Peripheral {
+export class PC04 extends Peripheral {
     private readonly READER_CPS = 300;
     private readonly PUNCH_CPS = 50;
 
@@ -44,16 +44,13 @@ export class PC04 implements Peripheral {
         }
     }
 
-    public async saveState() {
-    }
-
     public async run(io: IOContext): Promise<void> {
         this.runReader(io);
         this.runPunch(io);
     }
 
     public async runReader(io: IOContext): Promise<void> {
-        while (true) {
+        while (this.keepAlive) {
             if ((io.readRegister(DeviceRegister.REG_B) & 1) == 0) {
                 // no data request
                 await sleepMs(1);
@@ -73,7 +70,7 @@ export class PC04 implements Peripheral {
     }
 
     private async runPunch(io: IOContext) {
-        while (true) {
+        while (this.keepAlive) {
             let regD = io.readRegister(DeviceRegister.REG_D);
             const newData = (regD & 1) != 0;
 

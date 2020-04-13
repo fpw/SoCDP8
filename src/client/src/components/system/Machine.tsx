@@ -35,6 +35,7 @@ import { RK8Model } from '../../models/peripherals/RK8Model';
 import { RK8 } from '../peripherals/RK8';
 import { KW8IModel } from '../../models/peripherals/KW8IModel';
 import { KW8I } from '../peripherals/KW8I';
+import { CoreMemorySnippets, CoreMemorySnippet } from '../../models/CoreMemorySnippet';
 
 import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
@@ -45,12 +46,21 @@ import CardMedia from "@material-ui/core/CardMedia";
 import CardActions from "@material-ui/core/CardActions";
 import Button from "@material-ui/core/Button";
 import CardContent from "@material-ui/core/CardContent";
+import ButtonGroup from '@material-ui/core/ButtonGroup';
+import Dialog from '@material-ui/core/Dialog';
+import ListItemText from '@material-ui/core/ListItemText';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
 
 export interface MachineProps {
     pdp8: PDP8Model;
 }
 
 export const Machine: React.FunctionComponent<MachineProps> = observer(props => {
+    const [busy, setBusy] = React.useState<boolean>(false);
+    const [showSnippets, setShowSnippets] = React.useState<boolean>(false);
+
     return (
         <Container>
             <Typography component='h1' variant='h4' gutterBottom>
@@ -67,7 +77,33 @@ export const Machine: React.FunctionComponent<MachineProps> = observer(props => 
                         />
                     </CardMedia>
                     <CardActions>
-                        <Button color='primary' onClick={() => props.pdp8.saveCurrentState()}>Save State</Button>
+                        <ButtonGroup color='primary' variant='outlined'>
+                            <Button onClick={async () => {
+                                        setBusy(true);
+                                        await props.pdp8.saveCurrentState();
+                                        setBusy(false);
+                                    }}
+                                    disabled={busy}
+                            >
+                                Save State
+                            </Button>
+
+                            <Button onClick={() => setShowSnippets(true)}>
+                                Load Snippet
+                            </Button>
+
+                            <Button onClick={() => props.pdp8.core.clear()}>
+                                Clear Core
+                            </Button>
+                        </ButtonGroup>
+                        <SnippetDialog
+                                open={showSnippets}
+                                onClose={() => setShowSnippets(false)}
+                                onSelect={(snippet) => {
+                                    props.pdp8.core.write(snippet.start, snippet.data);
+                                    setShowSnippets(false);
+                                }}
+                        />
                     </CardActions>
                 </Card>
             </Box>
@@ -75,6 +111,21 @@ export const Machine: React.FunctionComponent<MachineProps> = observer(props => 
         </Container>
     );
 });
+
+const SnippetDialog: React.FunctionComponent<{onSelect: ((s: CoreMemorySnippet) => void), open: boolean, onClose: (() => void)}> = (props) => {
+    return (
+        <Dialog open={props.open} onClose={props.onClose}>
+            <DialogTitle>Select Snippet</DialogTitle>
+            <List>
+                { CoreMemorySnippets.map(snippet =>
+                    <ListItem button onClick={() => props.onSelect(snippet)}>
+                        <ListItemText primary={snippet.label} secondary={snippet.desc} />
+                    </ListItem>
+            )};
+            </List>
+        </Dialog>
+    );
+};
 
 const PeripheralList: React.FunctionComponent<{list: PeripheralModel[]}> = ({list}) => {
     const components = list.map(dev => {

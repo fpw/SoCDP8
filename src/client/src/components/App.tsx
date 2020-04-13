@@ -34,7 +34,6 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
 import Drawer from '@material-ui/core/Drawer';
-import Divider from '@material-ui/core/Divider';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
@@ -47,8 +46,7 @@ const useStyles = makeStyles(theme => createStyles({
         display: 'flex',
     },
     appBar: {
-        width: `calc(100% - ${drawerWidth}px)`,
-        marginLeft: drawerWidth,
+        zIndex: theme.zIndex.drawer + 1,
     },
     drawer: {
         width: drawerWidth,
@@ -57,22 +55,29 @@ const useStyles = makeStyles(theme => createStyles({
     drawerPaper: {
         width: drawerWidth,
     },
+    drawerContainer: {
+        overFlow: 'auto',
+    },
     content: {
-        flexGrow: 1
+        flexGrow: 1,
+        padding: theme.spacing(3),
     },
     container: {
         paddingTop: theme.spacing(4),
         paddingBottom: theme.spacing(4),
     },
-    toolbar: theme.mixins.toolbar,
 }));
 
 export interface AppProps {
     pdp8: PDP8Model;
 }
 
-export const App: React.FunctionComponent<AppProps> = props => {
+export const App: React.FunctionComponent<AppProps> = observer(props => {
     const classes = useStyles();
+
+    if (!props.pdp8.ready) {
+        return <ConnectingInfo />;
+    }
 
     return (
         <div className={classes.root}>
@@ -84,24 +89,59 @@ export const App: React.FunctionComponent<AppProps> = props => {
                     </Typography>
                 </Toolbar>
             </AppBar>
-            <ConnectedMachine pdp8={props.pdp8} />
+            <Router>
+                <Drawer variant='permanent' className={classes.drawer} classes={{paper: classes.drawerPaper}}>
+                    <Toolbar />
+                    <div className={classes.drawerContainer}>
+                        <List>
+                            <ListItem button component={RouterLink} to='/machines/active'>
+                                <ListItemIcon><MemoryIcon /></ListItemIcon>
+                                <ListItemText primary='Active Machine' />
+                            </ListItem>
+                            <ListItem button component={RouterLink} to='/machines'>
+                                <ListItemIcon><TuneIcon /></ListItemIcon>
+                                <ListItemText primary='Manage Machines' />
+                            </ListItem>
+                            <ListItem button component={RouterLink} to='/about'>
+                                <ListItemIcon><InfoIcon /></ListItemIcon>
+                                <ListItemText primary='About' />
+                            </ListItem>
+                        </List>
+                    </div>
+                </Drawer>
+                <main className={classes.content}>
+                    <Toolbar />
+                    <Container maxWidth='lg' className={classes.container}>
+                        <Switch>
+                            <Route exact path="/">
+                                <Redirect to="/machines/active" />
+                            </Route>
+
+                            <Route path="/machines/active">
+                                <Machine pdp8={props.pdp8} />
+                            </Route>
+
+                            <Route path="/machines">
+                                <MachineManager pdp8={props.pdp8}/>
+                            </Route>
+
+                            <Route path="/about">
+                                <About />
+                            </Route>
+                        </Switch>
+                    </Container>
+                    <Copyright />
+                </main>
+            </Router>
         </div>
     )
-};
-
-const ConnectedMachine: React.FunctionComponent<AppProps> = observer(props => {
-    if (!props.pdp8.ready) {
-        return <ConnectingInfo />;
-    } else {
-        return <MainApp pdp8={props.pdp8} />
-    }
 });
 
 const ConnectingInfo: React.FunctionComponent = () => {
     const classes = useStyles();
+
     return (
         <main className={classes.content}>
-            <div className={classes.toolbar} />
             <Container maxWidth='lg'>
                 <Typography component='h1' variant='h2'>
                     Connecting...
@@ -114,56 +154,6 @@ const ConnectingInfo: React.FunctionComponent = () => {
         </main>
     );
 };
-
-const MainApp: React.FunctionComponent<AppProps> = observer(props => {
-    const classes = useStyles();
-
-    return (
-        <Router>
-            <Drawer variant='permanent' anchor='left' className={classes.drawer} classes={{paper: classes.drawerPaper}}>
-                <div className={classes.toolbar} />
-                <Divider />
-                <List>
-                    <ListItem button component={RouterLink} to='/machines/active'>
-                        <ListItemIcon><MemoryIcon /></ListItemIcon>
-                        <ListItemText primary='Active Machine' />
-                    </ListItem>
-                    <ListItem button component={RouterLink} to='/machines'>
-                        <ListItemIcon><TuneIcon /></ListItemIcon>
-                        <ListItemText primary='Manage Machines' />
-                    </ListItem>
-                    <ListItem button component={RouterLink} to='/about'>
-                        <ListItemIcon><InfoIcon /></ListItemIcon>
-                        <ListItemText primary='About' />
-                    </ListItem>
-                </List>
-            </Drawer>
-            <main className={classes.content}>
-                <div className={classes.toolbar} />
-                <Container maxWidth='lg' className={classes.container}>
-                    <Switch>
-                        <Route exact path="/">
-                            <Redirect to="/machines/active" />
-                        </Route>
-
-                        <Route path="/machines/active">
-                            <Machine pdp8={props.pdp8} />
-                        </Route>
-
-                        <Route path="/machines">
-                            <MachineManager pdp8={props.pdp8}/>
-                        </Route>
-
-                        <Route path="/about">
-                            <About />
-                        </Route>
-                    </Switch>
-                </Container>
-                <Copyright />
-            </main>
-        </Router>
-    );
-});
 
 const Copyright: React.FunctionComponent = () =>
     <Box pt={4}>

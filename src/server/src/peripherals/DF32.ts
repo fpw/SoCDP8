@@ -20,13 +20,15 @@ import { Peripheral, IOContext, DeviceRegister, DeviceID } from '../drivers/IO/P
 import { existsSync, readFileSync, fstat, promises } from 'fs';
 import { sleepMs, sleepUs } from '../sleep';
 
-export class DF32 implements Peripheral {
+export class DF32 extends Peripheral {
     private readonly DEBUG = true;
     private readonly BRK_ADDR = 0o7750;
     private readonly DATA_FILE: string;
     private data = Buffer.alloc(4 * 16 * 2048 * 2); // 4 disks, each with 16 tracks of 2048 words, stored as 2 bytes each
 
     constructor(dir: string) {
+        super();
+
         this.DATA_FILE = dir + '/df32.dat';
 
         if (existsSync(this.DATA_FILE)) {
@@ -47,11 +49,8 @@ export class DF32 implements Peripheral {
         return [0o60, 0o61, 0o62];
     }
 
-    public requestAction(action: string, data: any): void {
-    }
-
     public async run(io: IOContext): Promise<void> {
-        while (true) {
+        while (this.keepAlive) {
             const regA = io.readRegister(DeviceRegister.REG_A);
 
             if (regA & (1 << 15)) {

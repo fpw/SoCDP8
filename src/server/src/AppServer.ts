@@ -37,12 +37,10 @@ export class AppServer {
 
     private lastConsoleState?: ConsoleState;
 
-    constructor(port: number) {
+    constructor() {
         this.pdp8 = new SoCDP8(this.DATA_DIR, {
             onPeripheralEvent: (id, action, data) => this.onPeripheralEvent(id, action, data)
         });
-
-        this.pdp8.activateState('default');
 
         let clientDir = './public';
         if (process.env.SOCDP8_CLIENT_DIR) {
@@ -58,11 +56,11 @@ export class AppServer {
         this.httpServer = new Server(this.app);
         this.socket = io(this.httpServer);
         this.setupSocketAPI();
-
-        this.httpServer.listen(port);
     }
 
-    public start(): void {
+    public async start(port: number) {
+        await this.pdp8.activateState('default');
+        this.httpServer.listen(port);
         this.startConsoleCheckLoop();
     }
 
@@ -135,6 +133,7 @@ export class AppServer {
     private setupJSONApi(): void {
         this.app.get('/machine-states', (req, res) => this.requestStateList(req, res));
         this.app.post('/machine-states', (req, res) => this.postNewState(req, res));
+        this.app.post('/machine-states/activate', (req, res) => this.requestStateActivate(req, res));
         this.app.get('/machine-states/active', (req, res) => this.requestActiveState(req, res));
     }
 
@@ -166,7 +165,23 @@ export class AppServer {
         }
     }
 
-    // State maintenance
+    private async requestStateActivate(request: Request, response: Response) {
+        try {
+            console.log('Changing state');
+            await this.pdp8.activateState(request.body.name);
+            response.json({success: true});
+            this.socket.emit('state', {action: 'active-state-changed'});
+            console.log('State changed');
+        } catch (e) {
+            if (e instanceof Error) {
+                response.json({success: false, error: e.message});
+            } else {
+                response.json({success: false});
+            }
+        }
+    }
+
+    // Console maintenance
 
     private async startConsoleCheckLoop(): Promise<void> {
         const sleepMs = promisify(setTimeout);
