@@ -54,12 +54,13 @@ begin
 
 pc04_uart: entity work.uart
 generic map(
-    baud_rate => 4800,
     data_bits => 8,
     stop_bits => 2
 )
 port map(
     clk => clk,
+    
+    baud_cycles => baud_sel_to_cycles(regB(11 downto 9)),
     
     rx => uart_rx,
     tx => uart_tx,

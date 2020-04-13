@@ -16,13 +16,10 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, DeviceRegister, IOContext, DeviceID } from '../drivers/IO/Peripheral';
+import { Peripheral, DeviceRegister, IOContext, DeviceID, BaudSelect } from '../drivers/IO/Peripheral';
 import { sleepMs } from '../sleep';
 
 export class ASR33 extends Peripheral {
-    private readonly READER_CPS = 10;
-    private readonly PUNCH_CPS = 12; // with 10, Focal69 identifies as PDP-8/L
-
     private readerActive: boolean = false;
     private readerTape: number[] = [];
     private readerTapePos: number = 0;
@@ -73,6 +70,8 @@ export class ASR33 extends Peripheral {
     }
 
     public async run(io: IOContext): Promise<void> {
+        io.writeRegister(DeviceRegister.REG_B, BaudSelect.BAUD_110 << 9);
+
         this.runReader(io);
         this.runPunch(io);
     }
@@ -80,12 +79,13 @@ export class ASR33 extends Peripheral {
     private async runReader(io: IOContext) {
         while (this.keepAlive) {
             const data = this.readNext();
+            const regB = io.readRegister(DeviceRegister.REG_B);
             if (data !== null) {
                 io.writeRegister(DeviceRegister.REG_A, data);
-                io.writeRegister(DeviceRegister.REG_B, 1);
+                io.writeRegister(DeviceRegister.REG_B, regB & 0o7000 | 1);
             }
 
-            await sleepMs(1000 / this.READER_CPS);
+            await sleepMs(1000 / this.baudToCPS(regB >> 9));
         }
     }
 
@@ -129,7 +129,8 @@ export class ASR33 extends Peripheral {
             io.writeRegister(DeviceRegister.REG_D, regD & ~1); // remove request
             const punchData = io.readRegister(DeviceRegister.REG_C);
 
-            await sleepMs(1000 / this.PUNCH_CPS);
+            const baud = io.readRegister(DeviceRegister.REG_B) >> 9;
+            await sleepMs(1000 / this.baudToCPS(baud));
 
             regD = io.readRegister(DeviceRegister.REG_D);
             io.writeRegister(DeviceRegister.REG_D, regD | 2); // ack data

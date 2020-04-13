@@ -29,12 +29,13 @@ begin
 
 dut: entity work.uart
 generic map (
-    baud_rate => 300,
     data_bits => 8,
     stop_bits => 2
 )
 port map (
     clk => clk,
+    
+    baud_cycles => baud_sel_to_cycles(o"2"),
     
     rx => rx,
     tx => tx,

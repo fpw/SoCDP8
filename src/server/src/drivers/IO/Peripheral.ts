@@ -42,6 +42,17 @@ export enum DeviceID {
     DEV_ID_RK8      = 11,
 }
 
+export enum BaudSelect {
+    BAUD_110        = 0,
+    BAUD_150        = 1,
+    BAUD_300        = 2,
+    BAUD_1200       = 3,
+    BAUD_2400       = 4,
+    BAUD_4800       = 5,
+    BAUD_9600       = 6,
+    BAUD_19200      = 7,
+}
+
 export interface IOContext {
     readRegister(reg: DeviceRegister): number;
     writeRegister(reg: DeviceRegister, value: number): void;
@@ -65,6 +76,21 @@ export abstract class Peripheral {
 
     public stop(): void {
         this.keepRunning = false;
+    }
+
+    protected baudToCPS(sel: BaudSelect): number {
+        const symbolsPerChar = 10;
+
+        switch (sel) {
+            case BaudSelect.BAUD_110:   return 110 / symbolsPerChar;
+            case BaudSelect.BAUD_150:   return 150 / symbolsPerChar;
+            case BaudSelect.BAUD_300:   return 300 / symbolsPerChar;
+            case BaudSelect.BAUD_1200:  return 1200 / symbolsPerChar;
+            case BaudSelect.BAUD_2400:  return 2400 / symbolsPerChar;
+            case BaudSelect.BAUD_4800:  return 4800 / symbolsPerChar;
+            case BaudSelect.BAUD_9600:  return 9600 / symbolsPerChar;
+            case BaudSelect.BAUD_19200: return 19200 / symbolsPerChar;
+        }
     }
 
     protected get keepAlive(): boolean {

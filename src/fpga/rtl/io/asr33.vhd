@@ -46,7 +46,7 @@ architecture Behavioral of asr33 is
     signal regB: std_logic_vector(15 downto 0);
     signal regC: std_logic_vector(15 downto 0);
     signal regD: std_logic_vector(15 downto 0);
-    
+
     signal uart_tx_ready: std_logic;
     signal uart_tx_data: std_logic_vector(7 downto 0) := x"00";
     signal uart_tx_send: std_logic := '0';
@@ -57,12 +57,13 @@ begin
 
 asr_uart: entity work.uart
 generic map(
-    baud_rate => 300,
     data_bits => 8,
     stop_bits => 2
 )
 port map(
     clk => clk,
+    
+    baud_cycles => baud_sel_to_cycles(regB(11 downto 9)),
     
     rx => uart_rx,
     tx => uart_tx,

@@ -9,13 +9,14 @@ use work.socdp8_package.all;
 
 entity uart is
     generic (
-        baud_rate: positive := 300;
         data_bits: positive := 8;
         stop_bits: positive := 2
     );
 
     port (
         clk: in std_logic;
+        
+        baud_cycles: integer range 0 to clk_frq;
         
         rx: in std_logic;
         tx: out std_logic;
@@ -29,8 +30,6 @@ entity uart is
         rx_data: out std_logic_vector(data_bits - 1 downto 0);
         rx_recv: out std_logic
     );
-    
-    constant num_cycles: natural := period_to_cycles(clk_frq, 1.0 / real(baud_rate));
 end uart;
 
 architecture Behavioral of uart is
@@ -39,19 +38,19 @@ architecture Behavioral of uart is
     signal tx_state: uart_state := IDLE;
     signal tx_buf: std_logic_vector(data_bits - 1 downto 0) := (others => '0');
     signal tx_idx: integer range 0 to data_bits - 1 := 0;
-    signal tx_counter: integer range 0 to num_cycles - 1 := 0;
+    signal tx_counter: integer range 0 to clk_frq := 0;
     
     signal rx_state: uart_state := IDLE;
     signal rx_buf: std_logic_vector(data_bits - 1 downto 0) := (others => '0');
     signal rx_idx: integer range 0 to data_bits - 1 := 0;
-    signal rx_counter: integer range 0 to num_cycles - 1 := 0;
+    signal rx_counter: integer range 0 to clk_frq := 0;
 begin
 
 send: process
 begin
     wait until rising_edge(clk);
     
-    if tx_counter < num_cycles - 1 then
+    if tx_counter < baud_cycles - 1 then
         tx_counter <= tx_counter + 1;
     else
         tx_counter <= 0;
@@ -106,7 +105,7 @@ begin
     -- defaults
     rx_recv <= '0';
     
-    if rx_counter < num_cycles - 1 then
+    if rx_counter < baud_cycles - 1 then
         rx_counter <= rx_counter + 1;
     else
         rx_counter <= 0;
@@ -115,7 +114,7 @@ begin
     case rx_state is
         when IDLE =>
             if rx = '0' then
-                rx_counter <= (num_cycles - 1) / 2;
+                rx_counter <= (baud_cycles - 1) / 2;
                 rx_state <= START;
             end if;
         when START =>

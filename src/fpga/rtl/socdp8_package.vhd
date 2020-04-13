@@ -238,6 +238,9 @@ package socdp8_package is
     
     --- given a clock frequency and a period (e.g. 1.0-e6 for 1 us), calculate a counter value to generate the period
     function period_to_cycles(frq: in natural; period: in real) return natural;
+    
+    -- given a baud rate selection code, return number of cycles
+    function baud_sel_to_cycles(sel: in std_logic_vector(2 downto 0)) return natural;
 end socdp8_package;
 
 package body socdp8_package is
@@ -255,5 +258,19 @@ package body socdp8_package is
     begin
         return natural(ceil(real(frq) * real(period)));
     end period_to_cycles;
-
+    
+    function baud_sel_to_cycles(sel: in std_logic_vector(2 downto 0)) return natural is
+    begin
+        case sel is
+            when o"0" => return period_to_cycles(clk_frq, 1.0 / real(110));
+            when o"1" => return period_to_cycles(clk_frq, 1.0 / real(150));
+            when o"2" => return period_to_cycles(clk_frq, 1.0 / real(300));
+            when o"3" => return period_to_cycles(clk_frq, 1.0 / real(1200));
+            when o"4" => return period_to_cycles(clk_frq, 1.0 / real(2400));
+            when o"5" => return period_to_cycles(clk_frq, 1.0 / real(4800));
+            when o"6" => return period_to_cycles(clk_frq, 1.0 / real(9600));
+            when o"7" => return period_to_cycles(clk_frq, 1.0 / real(19200));
+            when others => return 0;
+        end case;
+    end baud_sel_to_cycles;
 end package body;

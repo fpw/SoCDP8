@@ -16,13 +16,10 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, IOContext, DeviceRegister, DeviceID } from '../drivers/IO/Peripheral';
+import { Peripheral, IOContext, DeviceRegister, DeviceID, BaudSelect } from '../drivers/IO/Peripheral';
 import { sleepMs } from '../sleep';
 
 export class PC04 extends Peripheral {
-    private readonly READER_CPS = 300;
-    private readonly PUNCH_CPS = 50;
-
     private readerData: number[] = [];
 
     public getDeviceID(): DeviceID {
@@ -45,6 +42,8 @@ export class PC04 extends Peripheral {
     }
 
     public async run(io: IOContext): Promise<void> {
+        io.writeRegister(DeviceRegister.REG_B, BaudSelect.BAUD_4800 << 9);
+
         this.runReader(io);
         this.runPunch(io);
     }
@@ -59,13 +58,14 @@ export class PC04 extends Peripheral {
 
             // current word was retrieved, get next
             const data = this.readerData.shift();
+            const regB = io.readRegister(DeviceRegister.REG_B);
             if (data != undefined) {
                 console.log(`PC04 reader: Next ${data.toString(16)}, ${this.readerData.length} remaining`);
                 io.writeRegister(DeviceRegister.REG_A, data);
-                io.writeRegister(DeviceRegister.REG_B, 2); // notify of new data
+                io.writeRegister(DeviceRegister.REG_B, regB & 0o7000 | 2); // notify of new data
             }
 
-            await sleepMs(1000 / this.READER_CPS);
+            await sleepMs(1000 / this.baudToCPS(regB >> 9));
         }
     }
 
@@ -82,7 +82,8 @@ export class PC04 extends Peripheral {
             io.writeRegister(DeviceRegister.REG_D, regD & ~1); // remove request
             const punchData = io.readRegister(DeviceRegister.REG_C) & 0xFF;
 
-            await sleepMs(1000 / this.PUNCH_CPS);
+            const baud = io.readRegister(DeviceRegister.REG_B) >> 9;
+            await sleepMs(1000 / this.baudToCPS(baud));
 
             regD = io.readRegister(DeviceRegister.REG_D);
             io.writeRegister(DeviceRegister.REG_D, regD | 2); // ack data
