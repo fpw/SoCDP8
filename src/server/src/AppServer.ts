@@ -24,6 +24,7 @@ import { SoCDP8, ConsoleState } from './models/SoCDP8';
 import { Response, Request } from 'express-serve-static-core';
 import { isDeepStrictEqual, promisify } from 'util';
 import { MachineState } from './models/MachineState';
+import { DeviceID } from './drivers/IO/Peripheral';
 
 export class AppServer {
     private readonly DATA_DIR = '/home/socdp8/'
@@ -146,7 +147,12 @@ export class AppServer {
     private requestActiveState(request: Request, response: Response): void {
         console.log('Sending active state');
         const state = this.pdp8.getActiveState();
-        response.json(state.toJSONObject());
+        const obj = state.toJSONObject() as any;
+        obj.peripheralConf = this.pdp8.getPeripherals().map(perph => {return {
+            id: DeviceID[perph.getDeviceID()],
+            data: perph.getConfigurationObject(),
+        }});
+        response.json(obj);
     }
 
     private postNewState(request: Request, response: Response): void {

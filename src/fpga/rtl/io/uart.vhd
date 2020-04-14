@@ -62,7 +62,7 @@ begin
     case tx_state is
         when IDLE =>
             tx <= '1';
-            tx_ready <= '1';
+            tx_ready <= not rts;
             tx_buf <= tx_data;
             if tx_send = '1' then
                 tx_counter <= 1;

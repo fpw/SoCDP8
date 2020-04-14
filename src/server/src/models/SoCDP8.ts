@@ -187,6 +187,10 @@ export class SoCDP8 {
         this.stateList.addState(state);
     }
 
+    public getPeripherals(): Peripheral[] {
+        return this.io.getRegisteredDevices();
+    }
+
     public clearCoreMemory() {
         this.mem.clear();
     }

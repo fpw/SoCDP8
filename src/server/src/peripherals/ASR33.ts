@@ -25,8 +25,7 @@ export class ASR33 extends Peripheral {
     private readerTapePos: number = 0;
     private keyBuffer: number[] = [];
 
-    private punchBuffer: number[] = [];
-    private punchTape: number[] = [];
+    private baud: BaudSelect = BaudSelect.BAUD_110;
 
     constructor(public readonly id: DeviceID) {
         super();
@@ -46,6 +45,16 @@ export class ASR33 extends Peripheral {
         }
 
         throw Error(`Invalid ASR-33 id: ${this.id}`)
+    }
+
+    public getConfigurationObject(): any {
+        return {
+            baud: this.baud
+        };
+    }
+
+    public setConfigurationObject(obj: any) {
+
     }
 
     public requestAction(action: string, data: any): void {

@@ -1,5 +1,5 @@
 {
-  "name": "socdp8",
+  "name": "socdp8-server",
   "version": "0.0.1",
   "lockfileVersion": 1,
   "requires": true,
@@ -60,9 +60,9 @@
       "dev": true
     },
     "@types/node": {
-      "version": "10.17.6",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-10.17.6.tgz",
-      "integrity": "sha512-0a2X6cgN3RdPBL2MIlR6Lt0KlM7fOFsutuXcdglcOq6WvLnYXgPQSh0Mx6tO1KCAE8MxbHSOSTWDoUxRq+l3DA==",
+      "version": "12.12.35",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-12.12.35.tgz",
+      "integrity": "sha512-ASYsaKecA7TUsDrqIGPNk3JeEox0z/0XR/WsJJ8BIX/9+SkMSImQXKWfU/yBrSyc7ZSE/NPqLu36Nur0miCFfQ==",
       "dev": true
     },
     "@types/range-parser": {

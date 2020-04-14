@@ -7,7 +7,6 @@ LICENSE = "AGPL-3.0 & MIT"
 LIC_FILES_CHKSUM = "file://COPYING;md5=eb1e647870add0502f8f010b19de32af"
 
 SRC_URI = "file://socdp8-client-${PV}.tgz \
-           npm://registry.npmjs.org;name=bulma;version=0.8.1;subdir=node_modules/bulma \
            npm://registry.npmjs.org;name=mobx;version=5.15.4;subdir=node_modules/mobx \
            npm://registry.npmjs.org;name=mobx-react;version=6.2.0;subdir=node_modules/mobx-react \
            npm://registry.npmjs.org;name=react;version=16.13.1;subdir=node_modules/react \

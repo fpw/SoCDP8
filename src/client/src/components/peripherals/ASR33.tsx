@@ -16,7 +16,9 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import React from 'react';
 import { observer } from 'mobx-react-lite';
+
 import { createStyles, makeStyles } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import Box from "@material-ui/core/Box";
@@ -25,7 +27,6 @@ import FormGroup from "@material-ui/core/FormGroup";
 import FormControl from "@material-ui/core/FormControl";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Switch from "@material-ui/core/Switch";
-import React from 'react';
 
 export interface ASR33Props {
     punchData: string;
@@ -82,7 +83,7 @@ export const ASR33: React.FunctionComponent<ASR33Props> = observer((props) => {
                         labelPlacement='start'
                         label='Reader On'
                     />
-            </FormGroup>
+                </FormGroup>
             </Box>
         </section>
     );

@@ -71,6 +71,13 @@ export abstract class Peripheral {
     public requestAction(action: string, data: any): void {
     }
 
+    public getConfigurationObject(): any {
+        return {};
+    }
+
+    public setConfigurationObject(obj: any) {
+    }
+
     public async saveState(): Promise<void> {
     }
 

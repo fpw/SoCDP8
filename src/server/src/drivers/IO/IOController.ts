@@ -112,7 +112,7 @@ export class IOController {
         });
     }
 
-    public getRegisteredDevices(): readonly Peripheral[] {
+    public getRegisteredDevices(): Peripheral[] {
         const res: Peripheral[] = [];
         for (const p of this.peripherals) {
             if (p) {
