@@ -16,8 +16,6 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { MachineState, DeviceID } from '../../models/MachineState';
-
 import React from 'react';
 
 import FormGroup from '@material-ui/core/FormGroup';
@@ -31,10 +29,12 @@ import RadioGroup from '@material-ui/core/RadioGroup';
 import Radio from '@material-ui/core/Radio';
 import Button from '@material-ui/core/Button';
 import { createStyles, makeStyles } from '@material-ui/core/styles';
+import { peripheralConfToName, PeripheralName, PT08Configuration, PeripheralType, PC04Configuration, KW8IConfiguration, TC08Configuration, DF32Configuration, RF08Configuration, RK8Configuration, PeripheralConfiguration } from '../../types/PeripheralTypes';
+import { SystemConfiguration, DEFAULT_SYSTEM_CONF } from '../../types/SystemConfiguration';
 
 export interface MachineFormProps {
-    initialState: MachineState;
-    onSubmit(state: MachineState): void;
+    initialState: SystemConfiguration;
+    onSubmit(state: SystemConfiguration): void;
     buttonEnabled: boolean;
 }
 
@@ -62,18 +62,20 @@ export const MachineForm: React.FunctionComponent<MachineFormProps> = (props) =>
 
     const s = props.initialState;
 
+    const peripherals: PeripheralName[] = s.peripherals.map(p => peripheralConfToName(p));
+
     return (
         <form autoComplete='off' onSubmit={(ev) => props.onSubmit(toMachineState(ev))}>
             <FormGroup>
                 <FormControl component='fieldset' className={classes.fieldset}>
                     <FormLabel component='legend'>Machine Name</FormLabel>
-                    <TextField required name='name' label='Name' variant='outlined' defaultValue={s.name} />
+                    <TextField required name='name' label='Name' variant='outlined' />
                 </FormControl>
 
                 <FormControl component='fieldset' className={classes.fieldset}>
                     <FormLabel component='legend'>CPU Extensions</FormLabel>
-                    <FormControlLabel control={<Switch name='eae' color='primary' defaultChecked={s.eaePresent} />} label='KE8/I (EAE)' />
-                    <FormControlLabel control={<Switch name='kt8i' color='primary' defaultChecked={s.kt8iPresent} />} label='KT8/I (Time Sharing Option)' />
+                    <FormControlLabel control={<Switch name='eae' color='primary' defaultChecked={s.cpuExtensions.eae} />} label='KE8/I (EAE)' />
+                    <FormControlLabel control={<Switch name='kt8i' color='primary' defaultChecked={s.cpuExtensions.kt8i} />} label='KT8/I (Time Sharing Option)' />
                 </FormControl>
 
                 <FormControl component='fieldset' className={classes.fieldset}>
@@ -92,27 +94,27 @@ export const MachineForm: React.FunctionComponent<MachineFormProps> = (props) =>
                 <FormControl component='fieldset' className={classes.fieldset}>
                     <FormLabel component='legend'>Basic I/O</FormLabel>
                     <FormControlLabel control={
-                        <Switch name='asr33' color='primary' defaultChecked={s.peripherals.includes(DeviceID.DEV_ID_ASR33) } />
+                        <Switch name='asr33' color='primary' defaultChecked={peripherals.includes('SerialLine') } />
                     } label='ASR-33 Teletype' />
                     <FormControlLabel control={
-                        <Switch name='pc04' color='primary' defaultChecked={s.peripherals.includes(DeviceID.DEV_ID_PC04)} />
+                        <Switch name='pc04' color='primary' defaultChecked={peripherals.includes('PC04')} />
                     } label='PC04 Reader / Punch' />
                 </FormControl>
 
                 <FormControl component='fieldset' className={classes.fieldset}>
                     <FormLabel component='legend'>DECtape</FormLabel>
                     <FormControlLabel control={
-                        <Switch name='tc08' color='primary' defaultChecked={s.peripherals.includes(DeviceID.DEV_ID_TC08)} />
+                        <Switch name='tc08' color='primary' defaultChecked={peripherals.includes('TC08')} />
                     } label='TC08 DECtape Controller' />
                 </FormControl>
 
                 <FormControl component='fieldset' className={classes.fieldset}>
                     <FormLabel component='legend'>Hard Disk</FormLabel>
-                    <RadioGroup name='disk' defaultValue={DeviceID[getDiskType(s.peripherals)]} row>
-                        <FormControlLabel value={DeviceID[DeviceID.DEV_ID_NULL]} control={<Radio />} label='None' />
-                        <FormControlLabel value={DeviceID[DeviceID.DEV_ID_DF32]} control={<Radio />} label='DF32' />
-                        <FormControlLabel value={DeviceID[DeviceID.DEV_ID_RF08]} control={<Radio />} label='RF08' />
-                        <FormControlLabel value={DeviceID[DeviceID.DEV_ID_RK8]} control={<Radio />} label='RK8' />
+                    <RadioGroup name='disk' defaultValue={getDiskType(s.peripherals)} row>
+                        <FormControlLabel value='None' control={<Radio />} label='None' />
+                        <FormControlLabel value='DF32' control={<Radio />} label='DF32' />
+                        <FormControlLabel value='RF08' control={<Radio />} label='RF08' />
+                        <FormControlLabel value='RK8' control={<Radio />} label='RK8' />
                     </RadioGroup>
                 </FormControl>
 
@@ -132,7 +134,7 @@ export const MachineForm: React.FunctionComponent<MachineFormProps> = (props) =>
                 <FormControl component='fieldset' className={classes.fieldset}>
                     <FormLabel component='legend'>Real-Time Clock</FormLabel>
                     <FormControlLabel control={
-                        <Switch name='kw8i' color='primary'defaultChecked={s.peripherals.includes(DeviceID.DEV_ID_KW8I)} />
+                        <Switch name='kw8i' color='primary'defaultChecked={peripherals.includes('KW8I')} />
                     } label='KW8/I' />
                 </FormControl>
             </FormGroup>
@@ -143,58 +145,118 @@ export const MachineForm: React.FunctionComponent<MachineFormProps> = (props) =>
     );
 }
 
-function toMachineState(ev: React.FormEvent<HTMLFormElement>): MachineState {
+function toMachineState(ev: React.FormEvent<HTMLFormElement>): SystemConfiguration {
     const form = ev.currentTarget;
-    const s = new MachineState();
+    const s = DEFAULT_SYSTEM_CONF;
+    s.peripherals = [];
 
     s.name = (form.elements.namedItem('name') as HTMLInputElement).value;
 
-    s.eaePresent = (form.elements.namedItem('eae') as HTMLInputElement).checked;
-    s.kt8iPresent = (form.elements.namedItem('kt8i') as HTMLInputElement).checked;
+    s.cpuExtensions.eae = (form.elements.namedItem('eae') as HTMLInputElement).checked;
+    s.cpuExtensions.kt8i = (form.elements.namedItem('kt8i') as HTMLInputElement).checked;
     s.maxMemField = Number.parseInt((form.elements.namedItem('maxMemField') as HTMLInputElement).value);
 
     if ((form.elements.namedItem('asr33') as HTMLInputElement).checked) {
-        s.peripherals.push(DeviceID.DEV_ID_ASR33);
+        const conf: PT08Configuration = {
+            kind: PeripheralType.PERPH_PT08,
+            bus: 0o03,
+            baudRate: 110,
+        }
+        s.peripherals.push(conf);
     }
 
     if ((form.elements.namedItem('pc04') as HTMLInputElement).checked) {
-        s.peripherals.push(DeviceID.DEV_ID_PC04);
+        const conf: PC04Configuration = {
+            kind: PeripheralType.PERPH_PC04,
+            baudRate: 4800,
+        }
+        s.peripherals.push(conf);
     }
 
     if ((form.elements.namedItem('kw8i') as HTMLInputElement).checked) {
-        s.peripherals.push(DeviceID.DEV_ID_KW8I);
+        const conf: KW8IConfiguration =  {
+            kind: PeripheralType.PERPH_KW8I
+        }
+        s.peripherals.push(conf);
     }
 
     if ((form.elements.namedItem('tc08') as HTMLInputElement).checked) {
-        s.peripherals.push(DeviceID.DEV_ID_TC08);
+        const conf: TC08Configuration = {
+            kind: PeripheralType.PERPH_TC08,
+            numTapes: 2,
+        }
+        s.peripherals.push(conf);
     }
 
     switch (Number.parseInt((form.elements.namedItem('pt08') as HTMLInputElement).value)) {
-        case 4:
-            s.peripherals.push(DeviceID.DEV_ID_TT4);
-        case 3:
-            s.peripherals.push(DeviceID.DEV_ID_TT3);
-        case 2:
-            s.peripherals.push(DeviceID.DEV_ID_TT2);
-        case 1:
-            s.peripherals.push(DeviceID.DEV_ID_TT1);
+        case 4: {
+            const conf: PT08Configuration = {
+                kind: PeripheralType.PERPH_PT08,
+                bus: 0o46,
+                baudRate: 9600,
+            }
+            s.peripherals.push(conf);
+        }
+        case 3: {
+            const conf: PT08Configuration = {
+                kind: PeripheralType.PERPH_PT08,
+                bus: 0o44,
+                baudRate: 9600,
+            }
+            s.peripherals.push(conf);
+        }
+        case 2: {
+            const conf: PT08Configuration = {
+                kind: PeripheralType.PERPH_PT08,
+                bus: 0o42,
+                baudRate: 9600,
+            }
+            s.peripherals.push(conf);
+        }
+        case 1: {
+            const conf: PT08Configuration = {
+                kind: PeripheralType.PERPH_PT08,
+                bus: 0o40,
+                baudRate: 9600,
+            }
+            s.peripherals.push(conf);
+        }
     }
 
     const diskStr = (form.elements.namedItem('disk') as HTMLInputElement).value;
-    const diskId = DeviceID[diskStr as keyof typeof DeviceID];
-    if (diskId != DeviceID.DEV_ID_NULL) {
-        s.peripherals.push(diskId);
+    switch (diskStr) {
+        case 'DF32': {
+            const conf: DF32Configuration = {
+                kind: PeripheralType.PERPH_DF32
+            }
+            s.peripherals.push(conf);
+            break;
+        }
+        case 'RF08': {
+            const conf: RF08Configuration = {
+                kind: PeripheralType.PERPH_RF08
+            }
+            s.peripherals.push(conf);
+            break;
+        }
+        case 'RK8': {
+            const conf: RK8Configuration = {
+                kind: PeripheralType.PERPH_RK8
+            }
+            s.peripherals.push(conf);
+            break;
+        }
     }
 
     ev.preventDefault();
     return s;
 }
 
-function countPT08(list: DeviceID[]): number {
+function countPT08(list: PeripheralConfiguration[]): number {
     let count = 0;
 
-    for (const id of list) {
-        if (id >= DeviceID.DEV_ID_TT1 && id <= DeviceID.DEV_ID_TT4) {
+    for (const conf of list) {
+        if (conf.kind == PeripheralType.PERPH_PT08 && conf.bus != 0o03) {
             count++;
         }
     }
@@ -202,13 +264,13 @@ function countPT08(list: DeviceID[]): number {
     return count;
 }
 
-function getDiskType(list: DeviceID[]): DeviceID {
-    for (const id of list) {
-        switch (id) {
-            case DeviceID.DEV_ID_DF32: return id;
-            case DeviceID.DEV_ID_RF08: return id;
-            case DeviceID.DEV_ID_RK8: return id;
+function getDiskType(list: PeripheralConfiguration[]): string {
+    for (const conf of list) {
+        switch (conf.kind) {
+            case PeripheralType.PERPH_DF32: return 'DF32';
+            case PeripheralType.PERPH_RF08: return 'RF08';
+            case PeripheralType.PERPH_RK8:  return 'RK8';
         }
     }
-    return DeviceID.DEV_ID_NULL;
+    return 'None';
 }

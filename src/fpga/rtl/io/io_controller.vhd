@@ -156,7 +156,7 @@ iop_code <= IO1 when iop(0) = '1' else
             IO4 when iop(2) = '1' else
             IO_NONE;
 
-asr33_inst: entity work.asr33
+pt08_inst: entity work.pt08
     generic map(
         bus_addr => o"03"
     )
@@ -165,30 +165,30 @@ asr33_inst: entity work.asr33
         rstn => S_AXI_ARESETN,
         
         reg_sel => perph_reg_sel,
-        reg_out => peripheral_out(DEV_ID_ASR33).reg_out,
+        reg_out => peripheral_out(DEV_ID_PT08).reg_out,
         reg_in => perph_reg_in,
-        reg_write => perph_reg_write(DEV_ID_ASR33),
+        reg_write => perph_reg_write(DEV_ID_PT08),
         
-        enable => dev_enable(DEV_ID_ASR33),
+        enable => dev_enable(DEV_ID_PT08),
         iop => iop_code,
         io_mb => io_mb,
         io_ac => io_ac,
         
-        io_skip => peripheral_out(DEV_ID_ASR33).io_skip,
-        io_ac_clear => peripheral_out(DEV_ID_ASR33).io_ac_clear,
-        io_bus_out => peripheral_out(DEV_ID_ASR33).io_bus_out,
+        io_skip => peripheral_out(DEV_ID_PT08).io_skip,
+        io_ac_clear => peripheral_out(DEV_ID_PT08).io_ac_clear,
+        io_bus_out => peripheral_out(DEV_ID_PT08).io_bus_out,
         
         uart_rx => uart_rx(0),
         uart_tx => uart_tx(0),
         uart_rts => uart_rts(0),
         uart_cts => uart_cts(0),
         
-        pdp8_irq => dev_interrupts(DEV_ID_ASR33),
-        soc_attention => dev_attention(DEV_ID_ASR33)
+        pdp8_irq => dev_interrupts(DEV_ID_PT08),
+        soc_attention => dev_attention(DEV_ID_PT08)
     );
 
 tt_insts: for i in 0 to 3 generate
-    tt_inst: entity work.asr33
+    tt_inst: entity work.pt08
         generic map(
             bus_addr => o"40" + 2 * i
         )

@@ -17,8 +17,9 @@
  */
 
 import { Peripheral, IOContext, DeviceRegister, DeviceID } from '../drivers/IO/Peripheral';
-import { existsSync, readFileSync, fstat, promises } from 'fs';
+import { existsSync, readFileSync, promises } from 'fs';
 import { sleepMs, sleepUs } from '../sleep';
+import { DF32Configuration } from '../types/PeripheralTypes';
 
 export class DF32 extends Peripheral {
     private readonly DEBUG = true;
@@ -26,8 +27,8 @@ export class DF32 extends Peripheral {
     private readonly DATA_FILE: string;
     private data = Buffer.alloc(4 * 16 * 2048 * 2); // 4 disks, each with 16 tracks of 2048 words, stored as 2 bytes each
 
-    constructor(dir: string) {
-        super();
+    constructor(private conf: DF32Configuration, dir: string) {
+        super(DeviceID.DEV_ID_DF32);
 
         this.DATA_FILE = dir + '/df32.dat';
 
@@ -37,12 +38,12 @@ export class DF32 extends Peripheral {
         }
     }
 
-    public async saveState() {
-        await promises.writeFile(this.DATA_FILE, this.data);
+    public getConfiguration(): DF32Configuration {
+        return this.conf;
     }
 
-    public getDeviceID(): DeviceID {
-        return DeviceID.DEV_ID_DF32;
+    public async saveState() {
+        await promises.writeFile(this.DATA_FILE, this.data);
     }
 
     public getBusConnections(): number[] {

@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, DeviceRegister } from './Peripheral';
+import { DeviceRegister, DeviceID } from './Peripheral';
 import { DataBreakRequest, DataBreakReply } from './DataBreak';
 import { sleepUs } from '../../sleep';
 
@@ -24,10 +24,6 @@ export interface CPUExtensions {
     eae: boolean;
     kt8i: boolean;
     maxMemField: number;
-}
-
-export interface IOListener {
-    onPeripheralEvent(devId: number, action: string, data: any): void
 }
 
 export class IOController {
@@ -46,11 +42,12 @@ export class IOController {
     private readonly NUM_BUS_IDS = 64;
 
     private readonly maxDevices: number;
-    private peripherals: Peripheral[] = [];
     private brkBusy = false;
 
-    public constructor(private ioMem: Buffer, private listener: IOListener) {
+    public constructor(private ioMem: Buffer) {
         this.maxDevices = this.readSystemRegister(this.SYS_REG_MAX_DEV);
+
+        this.clearDeviceTable();
 
         // clear pending data breaks
         this.writeSystemRegister(this.SYS_REG_BRK_CTRL, 0);
@@ -83,56 +80,22 @@ export class IOController {
         for (let busId = 1; busId < this.NUM_BUS_IDS; busId++) {
             this.writeMappingTable(busId, this.TBL_MAPPING_DEV_ID, 0);
         }
-
-        this.peripherals = [];
     }
 
     public getMaxDeviceCount(): number {
         return this.maxDevices;
     }
 
-    public registerPeripheral(perph: Peripheral): void {
-        const devId = perph.getDeviceID();
-
-        this.peripherals[devId] = perph;
-
+    public registerPeripheral(busIds: number[], devId: DeviceID): void {
         this.writePeripheralReg(devId, DeviceRegister.REG_ENABLED, 1);
 
         // connect peripheral to bus at desired locations
-        const mapping = perph.getBusConnections();
-        for (const busId of mapping) {
+        for (const busId of busIds) {
             this.writeMappingTable(busId, this.TBL_MAPPING_DEV_ID, devId);
         }
-
-        perph.run({
-            readRegister: reg => this.readPeripheralReg(devId, reg),
-            writeRegister: (reg, val) => this.writePeripheralReg(devId, reg, val),
-            dataBreak: req => this.doDataBreak(req),
-            emitEvent: (action, data) => this.listener.onPeripheralEvent(devId, action, data)
-        });
     }
 
-    public getRegisteredDevices(): Peripheral[] {
-        const res: Peripheral[] = [];
-        for (const p of this.peripherals) {
-            if (p) {
-                res.push(p);
-            }
-        }
-        return res;
-    }
-
-    public requestDeviceAction(devId: number, action: string, data: any) {
-        const peripheral = this.peripherals[devId];
-        if (!peripheral) {
-            return;
-        }
-
-        peripheral.requestAction(action, data);
-    }
-
-    // this must not be async - the lowest sleep resolution is 1ms and we need to be faster...
-    private async doDataBreak(req: DataBreakRequest): Promise<DataBreakReply> {
+    public async doDataBreak(req: DataBreakRequest): Promise<DataBreakReply> {
         while (this.brkBusy) {
             await sleepUs(10);
         }
@@ -225,11 +188,11 @@ export class IOController {
         this.ioMem.writeUInt16LE(val, this.getMappingTableAddr(busId, reg));
     }
 
-    private readPeripheralReg(devId: number, reg: number): number {
+    public readPeripheralReg(devId: number, reg: number): number {
         return this.ioMem.readUInt16LE(this.getPeripheralRegAddr(devId, reg));
     }
 
-    private writePeripheralReg(devId: number, reg: number,  data: number): void {
+    public writePeripheralReg(devId: number, reg: number,  data: number): void {
         this.ioMem.writeUInt16LE(data, this.getPeripheralRegAddr(devId, reg));
     }
 

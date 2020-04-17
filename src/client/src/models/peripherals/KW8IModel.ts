@@ -17,8 +17,13 @@
  */
 
 import { PeripheralModel } from './PeripheralModel';
+import { KW8IConfiguration } from '../../types/PeripheralTypes';
 
 export class KW8IModel extends PeripheralModel {
+    constructor(socket: SocketIOClient.Socket, private conf: KW8IConfiguration) {
+        super(socket);
+    }
+
     public get connections(): number[] {
         return [0o13];
     }

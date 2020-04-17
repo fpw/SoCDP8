@@ -19,6 +19,7 @@
 import { Peripheral, IOContext, DeviceRegister, DeviceID } from '../drivers/IO/Peripheral';
 import { existsSync, readFileSync, promises } from 'fs';
 import { sleepMs, sleepUs } from '../sleep';
+import { RK8Configuration } from '../types/PeripheralTypes';
 
 export class RK8 extends Peripheral {
     private readonly DEBUG = true;
@@ -28,8 +29,8 @@ export class RK8 extends Peripheral {
     private readonly NUM_DISKS = 4;
     private data = Buffer.alloc(this.NUM_DISKS * this.SECTORS_PER_DISK * this.WORDS_PER_SECTOR * 2);
 
-    constructor(dir: string) {
-        super();
+    constructor(private conf: RK8Configuration, dir: string) {
+        super(DeviceID.DEV_ID_RK8);
 
         this.DATA_FILE = dir + '/rk8.dat';
 
@@ -39,8 +40,8 @@ export class RK8 extends Peripheral {
         }
     }
 
-    public getDeviceID(): DeviceID {
-        return DeviceID.DEV_ID_RK8;
+    public getConfiguration(): RK8Configuration {
+        return this.conf;
     }
 
     public getBusConnections(): number[] {

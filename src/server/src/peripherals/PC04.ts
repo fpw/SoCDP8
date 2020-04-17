@@ -18,12 +18,17 @@
 
 import { Peripheral, IOContext, DeviceRegister, DeviceID, BaudSelect } from '../drivers/IO/Peripheral';
 import { sleepMs } from '../sleep';
+import { PC04Configuration, PeripheralConfiguration } from '../types/PeripheralTypes';
 
 export class PC04 extends Peripheral {
     private readerData: number[] = [];
 
-    public getDeviceID(): DeviceID {
-        return DeviceID.DEV_ID_PC04;
+    constructor(private conf: PC04Configuration) {
+        super(DeviceID.DEV_ID_PC04);
+    }
+
+    public getConfiguration(): PeripheralConfiguration {
+        return this.conf;
     }
 
     public getBusConnections(): number[] {

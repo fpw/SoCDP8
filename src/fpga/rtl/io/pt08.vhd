@@ -7,7 +7,7 @@ use IEEE.NUMERIC_STD.ALL;
 
 use work.socdp8_package.all;
 
-entity asr33 is
+entity pt08 is
     generic (
         bus_addr: unsigned(5 downto 0)
     );
@@ -38,9 +38,9 @@ entity asr33 is
         pdp8_irq: out std_logic;
         soc_attention: out std_logic
     );
-end asr33;
+end pt08;
 
-architecture Behavioral of asr33 is
+architecture Behavioral of pt08 is
     signal iop_last: io_state;
     signal regA: std_logic_vector(15 downto 0);
     signal regB: std_logic_vector(15 downto 0);
@@ -55,7 +55,7 @@ architecture Behavioral of asr33 is
     signal uart_rx_recv: std_logic;
 begin
 
-asr_uart: entity work.uart
+pt08_uart: entity work.uart
 generic map(
     data_bits => 8,
     stop_bits => 2
@@ -92,7 +92,7 @@ pdp8_irq <= regB(0) or regD(1) when enable = '1' else '0';
 soc_attention <= not regB(0) or regD(0) when enable = '1' else '0';
 iop_last <= iop when rising_edge(clk);
 
-asr33_proc: process
+pt08_proc: process
 begin
     wait until rising_edge(clk);
 

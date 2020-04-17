@@ -29,7 +29,8 @@ import { RF08Model } from './peripherals/RF08Model';
 import { DF32Model } from './peripherals/DF32Model';
 import { RK8Model } from './peripherals/RK8Model';
 import { KW8IModel } from './peripherals/KW8IModel';
-import { MachineState, DeviceID } from './MachineState';
+import { SystemConfiguration } from '../types/SystemConfiguration';
+import { PeripheralType, peripheralConfToName } from '../types/PeripheralTypes';
 
 export class PDP8Model {
     private readonly BASE_URL: string = '';
@@ -42,10 +43,10 @@ export class PDP8Model {
     private frontPanel?: FrontPanelState;
 
     @observable
-    private peripheralModels: Map<number, PeripheralModel> = new Map();
+    private peripheralModels: Map<string, PeripheralModel> = new Map();
 
     @observable
-    private activeState: MachineState;
+    private activeSystem: SystemConfiguration | undefined;
 
     constructor() {
         if (window.location.toString().includes('localhost')) {
@@ -54,14 +55,13 @@ export class PDP8Model {
 
         this.socket = io.connect(this.BASE_URL);
         this.coreMemory = new CoreMemoryModel(this.socket);
-        this.activeState = new MachineState();
 
-        this.socket.on('connect', async () => {
-            await this.readActiveState();
+        this.socket.on('connect', () => {
+            this.readActiveState();
         });
 
-        this.socket.on('disconnect', async() => {
-            await this.onDisconnected();
+        this.socket.on('disconnect', () => {
+            this.onDisconnected();
         });
 
         this.socket.on('console-state', (state: FrontPanelState) => {
@@ -69,9 +69,9 @@ export class PDP8Model {
         });
 
         this.socket.on('peripheral-event', (data: any) => {
-            const devId = data.devId as number;
+            const name = data.peripheral as string;
             const action = data.action as string;
-            this.onPeripheralEvent(devId, action, data);
+            this.onPeripheralEvent(name, action, data);
         });
 
         this.socket.on('state', (data: any) => {
@@ -83,18 +83,25 @@ export class PDP8Model {
         return this.coreMemory;
     }
 
-    public get currentState() {
-        return this.activeState;
+    public get currentState(): SystemConfiguration {
+        if (!this.activeSystem) {
+            throw Error('No active system');
+        }
+
+        return this.activeSystem;
     }
 
     private async readActiveState(): Promise<void> {
-        const response = await fetch(this.BASE_URL + '/machine-states/active');
-        const stateObj = await response.json();
-        this.setMachineState(stateObj);
+        return new Promise<void>((accept, reject) => {
+            this.socket.emit('active-system', (sys: SystemConfiguration) => {
+                this.onActiveSystemChanged(sys);
+                accept();
+            });
+        });
     }
 
     @action
-    private async onDisconnected(): Promise<void> {
+    private onDisconnected(): void {
         this.frontPanel = undefined;
         this.peripheralModels.clear();
     }
@@ -105,50 +112,43 @@ export class PDP8Model {
     }
 
     @action
-    private setMachineState(stateObj: any) {
-        const state = MachineState.fromJSONObject(stateObj);
-        this.activeState = state;
+    private onActiveSystemChanged(sys: SystemConfiguration) {
+        this.activeSystem = sys;
         this.peripheralModels.clear();
 
-        for (const id of state.peripherals) {
+        for (const conf of sys.peripherals) {
             let peripheral: PeripheralModel;
 
-            switch (id) {
-                case DeviceID.DEV_ID_ASR33:
-                case DeviceID.DEV_ID_TT1:
-                case DeviceID.DEV_ID_TT2:
-                case DeviceID.DEV_ID_TT3:
-                case DeviceID.DEV_ID_TT4:
-                    peripheral = new ASR33Model(id, this.socket);
+            switch (conf.kind) {
+                case PeripheralType.PERPH_PT08:
+                    peripheral = new ASR33Model(this.socket, conf);
                     break;
-                case DeviceID.DEV_ID_PC04:
-                    peripheral = new PC04Model(id, this.socket);
+                case PeripheralType.PERPH_PC04:
+                    peripheral = new PC04Model(this.socket, conf);
                     break;
-                case DeviceID.DEV_ID_TC08:
-                    peripheral = new TC08Model(id, this.socket);
+                case PeripheralType.PERPH_TC08:
+                    peripheral = new TC08Model(this.socket, conf);
                     break;
-                case DeviceID.DEV_ID_RF08:
-                    peripheral = new RF08Model(id, this.socket);
+                case PeripheralType.PERPH_RF08:
+                    peripheral = new RF08Model(this.socket, conf);
                     break;
-                case DeviceID.DEV_ID_DF32:
-                    peripheral = new DF32Model(id, this.socket);
+                case PeripheralType.PERPH_DF32:
+                    peripheral = new DF32Model(this.socket, conf);
                     break;
-                case DeviceID.DEV_ID_RK8:
-                    peripheral = new RK8Model(id, this.socket);
+                case PeripheralType.PERPH_RK8:
+                    peripheral = new RK8Model(this.socket, conf);
                     break;
-                case DeviceID.DEV_ID_KW8I:
-                    peripheral = new KW8IModel(id, this.socket);
+                case PeripheralType.PERPH_KW8I:
+                    peripheral = new KW8IModel(this.socket, conf);
                     break;
-                default:
-                    continue;
             }
 
-            this.peripheralModels.set(id, peripheral);
+            this.peripheralModels.set(peripheralConfToName(conf), peripheral);
         }
     }
 
-    private onPeripheralEvent(devId: number, action: string, data: any) {
-        const peripheral = this.peripheralModels.get(devId);
+    private onPeripheralEvent(name: string, action: string, data: any) {
+        const peripheral = this.peripheralModels.get(name);
         if (!peripheral) {
             return;
         }
@@ -156,21 +156,24 @@ export class PDP8Model {
         peripheral.onPeripheralAction(action, data);
     }
 
-    public async fetchStateList(): Promise<MachineState[]> {
-        const res: MachineState[] = [];
-
-        const response = await fetch(this.BASE_URL + '/machine-states');
-        const listObj = await response.json();
-        for (const obj of listObj) {
-            const state = MachineState.fromJSONObject(obj);
-            res.push(state);
-        }
-
-        return res;
+    public async fetchStateList(): Promise<SystemConfiguration[]> {
+        return new Promise<SystemConfiguration[]>((accept, reject) => {
+            this.socket.emit('system-list', (list: SystemConfiguration[]) => {
+                accept(list);
+            })
+        });
     }
 
     public async saveCurrentState() {
-        this.socket.emit('state', {action: 'save'});
+        return new Promise<void>((accept, reject) => {
+            this.socket.emit('save-active-system', (res: boolean) => {
+                if (res) {
+                    accept();
+                } else {
+                    reject();
+                }
+            })
+        });
     }
 
     @computed
@@ -193,7 +196,7 @@ export class PDP8Model {
 
     @computed
     public get ready(): boolean {
-        if (!this.frontPanel) {
+        if (!this.frontPanel || !this.activeSystem) {
             return false;
         }
 
@@ -204,34 +207,28 @@ export class PDP8Model {
         this.socket.emit('console-switch', {'switch': sw, 'state': state});
     }
 
-    public async createNewState(state: MachineState) {
-        const location = this.BASE_URL + '/machine-states';
-        const settings: RequestInit = {
-            method: 'post',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(state.toJSONObject())
-        }
-
-        const response = await fetch(location, settings);
-        const data = await response.json();
-        if (!data.success) {
-            throw new Error(data.error);
-        }
+    public async createNewState(state: SystemConfiguration) {
+        return new Promise<boolean>((accept, reject) => {
+            this.socket.emit('create-system', state, (res: boolean) => {
+                if (res) {
+                    accept();
+                } else {
+                    reject();
+                }
+            });
+        });
     }
 
-    public async activateState(state: MachineState) {
-        const location = this.BASE_URL + '/machine-states/activate';
-        const settings: RequestInit = {
-            method: 'post',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({name: state.name})
-        };
-
-        const response = await fetch(location, settings);
-        const data = await response.json();
-        if (!data.success) {
-            throw new Error(data.error);
-        }
+    public async activateState(id: string) {
+        return new Promise<boolean>((accept, reject) => {
+            this.socket.emit('set-active-system', id, (res: boolean) => {
+                if (res) {
+                    accept();
+                } else {
+                    reject();
+                }
+            });
+        });
     }
 
     private onStateEvent(data: any) {

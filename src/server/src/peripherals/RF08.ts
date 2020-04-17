@@ -1,3 +1,4 @@
+import { RF08Configuration } from './../types/PeripheralTypes';
 /*
  *   SoCDP8 - A PDP-8/I implementation on a SoC
  *   Copyright (C) 2019 Folke Will <folko@solhost.org>
@@ -26,8 +27,8 @@ export class RF08 extends Peripheral {
     private readonly DATA_FILE: string;
     private data = Buffer.alloc(4 * 128 * 2048 * 2); // 4 disks, each with 128 tracks of 2048 words stored in 2 bytes
 
-    constructor(dir: string) {
-        super();
+    constructor(private conf: RF08Configuration, dir: string) {
+        super(DeviceID.DEV_ID_RF08);
 
         this.DATA_FILE = dir + '/rf08.dat';
 
@@ -37,8 +38,8 @@ export class RF08 extends Peripheral {
         }
     }
 
-    public getDeviceID(): DeviceID {
-        return DeviceID.DEV_ID_RF08;
+    public getConfiguration(): RF08Configuration {
+        return this.conf;
     }
 
     public getBusConnections(): number[] {

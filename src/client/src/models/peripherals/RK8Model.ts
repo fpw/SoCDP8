@@ -17,8 +17,13 @@
  */
 
 import { PeripheralModel } from './PeripheralModel';
+import { RK8Configuration } from '../../types/PeripheralTypes';
 
 export class RK8Model extends PeripheralModel {
+    constructor(socket: SocketIOClient.Socket, private conf: RK8Configuration) {
+        super(socket);
+    }
+
     public get connections(): number[] {
         return [0o73, 0o74, 0o75];
     }

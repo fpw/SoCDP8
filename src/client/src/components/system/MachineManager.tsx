@@ -19,7 +19,6 @@
 import React from 'react';
 import { PDP8Model } from '../../models/PDP8Model';
 import { useEffect, useState } from "react";
-import { MachineState, deviceIdToString } from '../../models/MachineState';
 import { MachineForm } from './MachineForm';
 
 import Typography from "@material-ui/core/Typography";
@@ -38,6 +37,8 @@ import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 import Button from '@material-ui/core/Button';
+import { SystemConfiguration, DEFAULT_SYSTEM_CONF } from '../../types/SystemConfiguration';
+import { peripheralConfToName } from '../../types/PeripheralTypes';
 
 export interface MachineManagerProps {
     pdp8: PDP8Model
@@ -58,13 +59,14 @@ const StyledTableCell = withStyles(theme => ({
 }))(TableCell);
 
 export const MachineManager: React.FunctionComponent<MachineManagerProps> = (props) => {
-    const [states, setStates] = useState<MachineState[]>([]);
+    const [states, setStates] = useState<SystemConfiguration[]>([]);
     const [formBusy, setFormBusy] = useState<boolean>(false);
     const classes = useStyles();
 
     useEffect(() => {
         async function fetchList() {
             const list = await props.pdp8.fetchStateList();
+            console.log(list);
             setStates(list);
         }
         fetchList();
@@ -81,7 +83,7 @@ export const MachineManager: React.FunctionComponent<MachineManagerProps> = (pro
                 <ExpansionPanelDetails>
                     <Box width='75%' pl={4}>
                         <MachineForm
-                            initialState={MachineState.defaultNewState}
+                            initialState={DEFAULT_SYSTEM_CONF}
                             onSubmit={async (s) => {
                                 setFormBusy(true);
                                 await onNewState(props.pdp8, s);
@@ -115,7 +117,7 @@ export const MachineManager: React.FunctionComponent<MachineManagerProps> = (pro
     );
 };
 
-const MachineEntry: React.FunctionComponent<{pdp8: PDP8Model, state: MachineState}> = (props) => {
+const MachineEntry: React.FunctionComponent<{pdp8: PDP8Model, state: SystemConfiguration}> = (props) => {
     const [busy, setBusy] = React.useState<boolean>(false);
 
     return (
@@ -132,12 +134,12 @@ const MachineEntry: React.FunctionComponent<{pdp8: PDP8Model, state: MachineStat
                         }
                     })()}
                     {(() => {
-                        if (props.state.eaePresent) {
+                        if (props.state.cpuExtensions.eae) {
                             return <li>KE8/I</li>
                         }
                     })()}
                     {(() => {
-                        if (props.state.kt8iPresent) {
+                        if (props.state.cpuExtensions.kt8i) {
                             return <li>KT8/I</li>
                         }
                     })()}
@@ -145,8 +147,8 @@ const MachineEntry: React.FunctionComponent<{pdp8: PDP8Model, state: MachineStat
             </StyledTableCell>
             <StyledTableCell>
                 <ul>
-                    { props.state.peripherals.map(id =>
-                        <li>{deviceIdToString(id)}</li>
+                    { props.state.peripherals.map(conf =>
+                        <li>{peripheralConfToName(conf)}</li>
                     )}
                 </ul>
             </StyledTableCell>
@@ -165,7 +167,7 @@ const MachineEntry: React.FunctionComponent<{pdp8: PDP8Model, state: MachineStat
     );
 };
 
-async function onNewState(pdp8: PDP8Model, state: MachineState) {
+async function onNewState(pdp8: PDP8Model, state: SystemConfiguration) {
     try {
         await pdp8.createNewState(state);
     } catch (e) {
@@ -177,9 +179,9 @@ async function onNewState(pdp8: PDP8Model, state: MachineState) {
     }
 }
 
-async function activateState(pdp8: PDP8Model, state: MachineState) {
+async function activateState(pdp8: PDP8Model, state: SystemConfiguration) {
     try {
-        await pdp8.activateState(state);
+        await pdp8.activateState(state.id);
     } catch (e) {
         if (e instanceof Error) {
             alert(`Activating state failed: ${e.message}`);

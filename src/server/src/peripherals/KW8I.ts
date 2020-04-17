@@ -17,10 +17,15 @@
  */
 
 import { Peripheral, IOContext, DeviceID } from '../drivers/IO/Peripheral';
+import { KW8IConfiguration } from '../types/PeripheralTypes';
 
 export class KW8I extends Peripheral {
-    public getDeviceID(): DeviceID {
-        return DeviceID.DEV_ID_KW8I;
+    constructor(private conf: KW8IConfiguration) {
+        super(DeviceID.DEV_ID_KW8I);
+    }
+
+    public getConfiguration(): KW8IConfiguration {
+        return this.conf;
     }
 
     public getBusConnections(): number[] {

@@ -18,10 +18,15 @@
 
 import { PeripheralModel } from './PeripheralModel';
 import { observable, action, computed } from 'mobx';
+import { PC04Configuration, peripheralConfToName } from '../../types/PeripheralTypes';
 
 export class PC04Model extends PeripheralModel {
     @observable
     private punchData: number[] = [];
+
+    constructor(socket: SocketIOClient.Socket, private conf: PC04Configuration) {
+        super(socket);
+    }
 
     public get connections(): number[] {
         return [0o01, 0o02];
@@ -53,7 +58,7 @@ export class PC04Model extends PeripheralModel {
     public readonly loadTape = async (tape: File): Promise<void> => {
         let data = await this.loadFile(tape);
         this.socket.emit('peripheral-action', {
-            devId: this.id,
+            peripheral: peripheralConfToName(this.conf),
             action: 'set-data',
             data: data
         });

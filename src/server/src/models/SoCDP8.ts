@@ -20,20 +20,24 @@ import { UIOMapper } from '../drivers/UIO/UIOMapper';
 import { Console } from '../drivers/Console/Console';
 import { SwitchState } from "../drivers/Console/SwitchState";
 import { CoreMemory } from "../drivers/CoreMemory/CoreMemory";
-import { IOController, IOListener } from '../drivers/IO/IOController';
-import { DeviceID, Peripheral } from '../drivers/IO/Peripheral';
+import { IOController } from '../drivers/IO/IOController';
+import { Peripheral, IOContext } from '../drivers/IO/Peripheral';
 import { promises } from 'fs';
 import { LampBrightness } from '../drivers/Console/LampBrightness';
-import { MachineStateList } from './MachineStateList';
-import { MachineState } from './MachineState';
 import { TC08 } from '../peripherals/TC08';
-import { ASR33 } from '../peripherals/ASR33';
+import { PT08 } from '../peripherals/PT08';
 import { PC04 } from '../peripherals/PC04';
 import { RF08 } from '../peripherals/RF08';
 import { DF32 } from '../peripherals/DF32';
 import { KW8I } from '../peripherals/KW8I';
 import { RK8 } from '../peripherals/RK8';
 import { sleepMs } from '../sleep';
+import { SystemConfiguration } from '../types/SystemConfiguration';
+import { PeripheralConfiguration, PeripheralType, peripheralConfToName } from '../types/PeripheralTypes';
+
+export interface IOListener {
+    onPeripheralEvent(peripheral: string, action: string, data: any): void
+}
 
 export interface ConsoleState {
     lamps: LampBrightness;
@@ -48,8 +52,8 @@ export class SoCDP8 {
     private mem: CoreMemory;
     private io: IOController;
 
-    private stateList: MachineStateList;
-    private currentState: MachineState;
+    private currentConf?: SystemConfiguration;
+    private peripherals: Peripheral[] = [];
 
     public constructor(private readonly dataDir: string, private ioListener: IOListener) {
         const uio = new UIOMapper();
@@ -59,27 +63,27 @@ export class SoCDP8 {
 
         this.cons = new Console(consBuf);
         this.mem = new CoreMemory(memBuf);
-        this.io = new IOController(ioBuf, this.ioListener);
-
-        this.stateList = new MachineStateList(this.dataDir);
-        this.currentState = this.stateList.getStateByName('default');
+        this.io = new IOController(ioBuf);
     }
 
-    public async saveState() {
-        const dir = this.currentState.directory;
+    public async saveState(dir: string) {
+        if (!this.currentConf) {
+            throw Error(`No system loaded`);
+        }
 
         console.log('Saving state to ' + dir);
 
         try {
             // Save config
-            await this.currentState.save();
+            const json = JSON.stringify(this.currentConf, null, 2);
+            await promises.writeFile(`${dir}/system.json`, json);
 
             // Save core memory
             const memory = this.mem.dumpCore();
-            await promises.writeFile(dir + '/core.dat', Buffer.from(memory.buffer));
+            await promises.writeFile(`${dir}/core.dat`, Buffer.from(memory.buffer));
 
             // Save all peripherals
-            for (const peripheral of this.io.getRegisteredDevices()) {
+            for (const peripheral of this.peripherals) {
                 await peripheral.saveState();
             }
         } catch (e) {
@@ -89,41 +93,52 @@ export class SoCDP8 {
         console.log('State saved');
     }
 
-    public async activateState(stateName: string) {
-        const state = this.stateList.getStateByName(stateName);
-
-        // Stop current machine
+    public async activateState(sys: SystemConfiguration, dir: string) {
+        // Stop current system
         await this.stopCPU();
 
         // Stop current peripherals
-        for (const perph of this.io.getRegisteredDevices()) {
+        for (const perph of this.peripherals) {
             perph.stop();
         }
 
         // Restore config
         this.io.configureExtensions({
-            eae: state.eaePresent,
-            kt8i: state.kt8iPresent,
-            maxMemField: state.maxMemField
+            eae: sys.cpuExtensions.eae,
+            kt8i: sys.cpuExtensions.kt8i,
+            maxMemField: sys.maxMemField
         });
 
         // Restore peripherals
+        this.peripherals = [];
         this.io.clearDeviceTable();
-        for (const id of state.peripherals) {
-            const peripheral = this.createPeripheral(state.directory, id);
-            this.io.registerPeripheral(peripheral);
+
+        for (const perph of sys.peripherals) {
+            const peripheral = this.createPeripheral(perph, dir);
+
+            const devId = peripheral.getDeviceID();
+            this.io.registerPeripheral(peripheral.getBusConnections(), devId);
+            const context: IOContext = {
+                readRegister: reg => this.io.readPeripheralReg(devId, reg),
+                writeRegister: (reg, val) => this.io.writePeripheralReg(devId, reg, val),
+                dataBreak: req => this.io.doDataBreak(req),
+                emitEvent: (action, data) => this.ioListener.onPeripheralEvent(peripheralConfToName(perph), action, data),
+            };
+
+            this.peripherals.push(peripheral);
+            peripheral.run(context);
         }
 
         // Restore core memory
         try {
-            const core = await promises.readFile(state.directory + '/core.dat');
+            const core = await promises.readFile(`${dir}/core.dat`);
             this.mem.loadCore(new Uint16Array(core.buffer));
         } catch (e) {
             console.warn('Core memory not loaded: ' + e);
             this.mem.clear();
         }
 
-        this.currentState = state;
+        this.currentConf = sys;
     }
 
     private async stopCPU() {
@@ -144,51 +159,34 @@ export class SoCDP8 {
         this.cons.setSwitchOverride(wasOverride);
     }
 
-    private createPeripheral(dir: string, id: DeviceID): Peripheral {
-        switch (id) {
-            case DeviceID.DEV_ID_ASR33:
-            case DeviceID.DEV_ID_TT1:
-            case DeviceID.DEV_ID_TT2:
-            case DeviceID.DEV_ID_TT3:
-            case DeviceID.DEV_ID_TT4:
-                return new ASR33(id);
-            case DeviceID.DEV_ID_PC04:
-                return new PC04();
-            case DeviceID.DEV_ID_TC08:
-                return new TC08();
-            case DeviceID.DEV_ID_DF32:
-                return new DF32(dir);
-            case DeviceID.DEV_ID_RF08:
-                return new RF08(dir);
-            case DeviceID.DEV_ID_RK8:
-                return new RK8(dir);
-            case DeviceID.DEV_ID_KW8I:
-                return new KW8I();
-            default:
-                throw new Error('No implementation for device ID ' + id);
+    private createPeripheral(conf: PeripheralConfiguration, dir: string): Peripheral {
+        switch (conf.kind) {
+            case PeripheralType.PERPH_PT08:
+                return new PT08(conf);
+            case PeripheralType.PERPH_PC04:
+                return new PC04(conf);
+            case PeripheralType.PERPH_TC08:
+                return new TC08(conf);
+            case PeripheralType.PERPH_DF32:
+                return new DF32(conf, dir);
+            case PeripheralType.PERPH_RF08:
+                return new RF08(conf, dir);
+            case PeripheralType.PERPH_RK8:
+                return new RK8(conf, dir);
+            case PeripheralType.PERPH_KW8I:
+                return new KW8I(conf);
         }
     }
 
-    public getStateList(): MachineState[] {
-        const res: MachineState[] = [];
-
-        for (const state of this.stateList.getStates()) {
-            res.push(state);
+    public getActiveSystem(): SystemConfiguration {
+        if (!this.currentConf) {
+            throw Error('No active system');
         }
-
-        return res;
-    }
-
-    public getActiveState(): MachineState {
-        return this.currentState;
-    }
-
-    public createState(state: MachineState) {
-        this.stateList.addState(state);
+        return this.currentConf;
     }
 
     public getPeripherals(): Peripheral[] {
-        return this.io.getRegisteredDevices();
+        return this.peripherals;
     }
 
     public clearCoreMemory() {
@@ -209,8 +207,14 @@ export class SoCDP8 {
         }
     }
 
-    public requestDeviceAction(devId: number, action: string, data: any) {
-        this.io.requestDeviceAction(devId, action, data);
+    public requestDeviceAction(name: string, action: string, data: any) {
+        for (const peripheral of this.peripherals) {
+            if (peripheralConfToName(peripheral.getConfiguration()) == name) {
+                peripheral.requestAction(action, data);
+                return;
+            }
+        }
+        console.log(`Event ${action}: Device ${name} not found`);
     }
 
     public setSwitch(sw: string, state: boolean): void {

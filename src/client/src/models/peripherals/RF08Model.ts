@@ -17,8 +17,13 @@
  */
 
 import { PeripheralModel } from './PeripheralModel';
+import { RF08Configuration } from '../../types/PeripheralTypes';
 
 export class RF08Model extends PeripheralModel {
+    constructor(socket: SocketIOClient.Socket, private conf: RF08Configuration) {
+        super(socket);
+    }
+
     public get connections(): number[] {
         return [0o60, 0o61, 0o62, 0o64];
     }

@@ -18,6 +18,7 @@
 
 import { Peripheral, DeviceRegister, IOContext, DeviceID } from '../drivers/IO/Peripheral';
 import { sleepMs, sleepUs } from '../sleep';
+import { TC08Configuration } from '../types/PeripheralTypes';
 
 enum TapeDirection {
     FORWARD = 0,
@@ -87,8 +88,12 @@ export class TC08 extends Peripheral {
 
     private tapes: TapeState[] = [];
 
-    public getDeviceID(): DeviceID {
-        return DeviceID.DEV_ID_TC08;
+    constructor(private conf: TC08Configuration) {
+        super(DeviceID.DEV_ID_TC08);
+    }
+
+    public getConfiguration(): TC08Configuration {
+        return this.conf;
     }
 
     public getBusConnections(): number[] {

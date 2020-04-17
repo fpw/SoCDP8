@@ -18,43 +18,44 @@
 
 import { Peripheral, DeviceRegister, IOContext, DeviceID, BaudSelect } from '../drivers/IO/Peripheral';
 import { sleepMs } from '../sleep';
+import { PT08Configuration } from '../types/PeripheralTypes';
 
-export class ASR33 extends Peripheral {
+export class PT08 extends Peripheral {
     private readerActive: boolean = false;
     private readerTape: number[] = [];
     private readerTapePos: number = 0;
     private keyBuffer: number[] = [];
 
-    private baud: BaudSelect = BaudSelect.BAUD_110;
-
-    constructor(public readonly id: DeviceID) {
-        super();
+    constructor(private conf: PT08Configuration) {
+        super(PT08.toDeviceId(conf));
     }
 
-    public getDeviceID(): DeviceID {
-        return this.id;
+    private static toDeviceId(conf: PT08Configuration): DeviceID {
+        switch (conf.bus) {
+            case 0o03: return DeviceID.DEV_ID_PT08;
+            case 0o40: return DeviceID.DEV_ID_TT1;
+            case 0o42: return DeviceID.DEV_ID_TT2;
+            case 0o44: return DeviceID.DEV_ID_TT3;
+            case 0o46: return DeviceID.DEV_ID_TT4;
+
+            default: throw new Error(`Invalid PT08 bus: ${conf.bus}`);
+        }
     }
 
     public getBusConnections(): number[] {
         switch (this.id) {
-            case DeviceID.DEV_ID_ASR33: return [0o03, 0o04];
+            case DeviceID.DEV_ID_PT08:  return [0o03, 0o04];
             case DeviceID.DEV_ID_TT1:   return [0o40, 0o41];
             case DeviceID.DEV_ID_TT2:   return [0o42, 0o43];
             case DeviceID.DEV_ID_TT3:   return [0o44, 0o45];
             case DeviceID.DEV_ID_TT4:   return [0o46, 0o47];
         }
 
-        throw Error(`Invalid ASR-33 id: ${this.id}`)
+        throw Error(`Invalid PT08 id: ${this.id}`)
     }
 
-    public getConfigurationObject(): any {
-        return {
-            baud: this.baud
-        };
-    }
-
-    public setConfigurationObject(obj: any) {
-
+    public getConfiguration(): PT08Configuration {
+        return this.conf;
     }
 
     public requestAction(action: string, data: any): void {
@@ -118,7 +119,7 @@ export class ASR33 extends Peripheral {
     private readNextFromTape(): number | null {
         if (this.readerTapePos < this.readerTape.length) {
             const data = this.readerTape[this.readerTapePos++];
-            console.log(`ASR-33 reader: Read ${data.toString(16)}, ${this.readerTapePos} / ${this.readerTape.length}`);
+            console.log(`PT08: Read ${data.toString(16)}, ${this.readerTapePos} / ${this.readerTape.length}`);
             return data;
         } else {
             return null;

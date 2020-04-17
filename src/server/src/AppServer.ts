@@ -21,10 +21,10 @@ import * as express from 'express';
 import * as cors from 'cors';
 import { Server } from 'http';
 import { SoCDP8, ConsoleState } from './models/SoCDP8';
-import { Response, Request } from 'express-serve-static-core';
 import { isDeepStrictEqual, promisify } from 'util';
-import { MachineState } from './models/MachineState';
-import { DeviceID } from './drivers/IO/Peripheral';
+import { SystemConfigurationList } from './models/SystemConfigurationList';
+import { SystemConfiguration } from './types/SystemConfiguration';
+import { mkdirSync } from 'fs';
 
 export class AppServer {
     private readonly DATA_DIR = '/home/socdp8/'
@@ -33,14 +33,17 @@ export class AppServer {
 
     private app: express.Application;
     private pdp8: SoCDP8;
+    private systems: SystemConfigurationList;
     private socket: io.Server;
     private httpServer: Server;
 
     private lastConsoleState?: ConsoleState;
 
     constructor() {
+        this.systems = new SystemConfigurationList(this.DATA_DIR);
+
         this.pdp8 = new SoCDP8(this.DATA_DIR, {
-            onPeripheralEvent: (id, action, data) => this.onPeripheralEvent(id, action, data)
+            onPeripheralEvent: (name, action, data) => this.onPeripheralEvent(name, action, data)
         });
 
         let clientDir = './public';
@@ -51,8 +54,6 @@ export class AppServer {
         this.app = express();
         this.app.use(cors());
         this.app.use(express.static(clientDir));
-        this.app.use(express.json());
-        this.setupJSONApi();
 
         this.httpServer = new Server(this.app);
         this.socket = io(this.httpServer);
@@ -60,14 +61,17 @@ export class AppServer {
     }
 
     public async start(port: number) {
-        await this.pdp8.activateState('default');
+        const defaultSystem = this.systems.findSystemById('default');
+        const dir = this.systems.getDirForSystem(defaultSystem);
+
+        await this.pdp8.activateState(defaultSystem, dir);
         this.httpServer.listen(port);
         this.startConsoleCheckLoop();
     }
 
-    private onPeripheralEvent(devId: number, action: string, data: any): void {
+    private onPeripheralEvent(name: string, action: string, data: any): void {
         this.socket.emit('peripheral-event', {
-            devId: devId,
+            peripheral: name,
             action: action,
             data: data
         });
@@ -83,10 +87,68 @@ export class AppServer {
 
         client.on('console-switch', data => this.onConsoleSwitch(client, data));
         client.on('peripheral-action', data => this.onPeripheralAction(client, data));
-        client.on('core', (data) => this.onCoreMemoryAction(client, data));
-        client.on('state', (data) => this.onStateAction(client, data));
+        client.on('core', data => this.onCoreMemoryAction(client, data));
+
+        client.on('system-list', reply => reply(this.requestSystemList(client)));
+        client.on('create-system', (sys, reply) => reply(this.requestSystemCreate(client, sys)));
+        client.on('active-system', reply => reply(this.requestActiveSystem(client)));
+        client.on('set-active-system', (id, reply) => reply(this.requestSetActiveSystem(client, id)));
+        client.on('save-active-system', (reply) => reply(this.saveActiveSate(client)));
 
         client.emit('console-state', this.pdp8.readConsoleState());
+    }
+
+    private requestSystemCreate(client: io.Socket, sys: SystemConfiguration): boolean {
+        console.log(`${client.id}: System create`);
+
+        try {
+            sys.id = this.systems.generateId();
+            this.systems.addState(sys);
+
+            const dir = this.systems.getDirForSystem(sys);
+            mkdirSync(dir, {recursive: true});
+
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    private requestSystemList(client: io.Socket): SystemConfiguration[] {
+        console.log(`${client.id}: System list`);
+        return this.systems.getSystems();
+    }
+
+    private requestActiveSystem(client: io.Socket): SystemConfiguration {
+        console.log(`${client.id}: Active system`);
+        return this.pdp8.getActiveSystem();
+    }
+
+    private async requestSetActiveSystem(client: io.Socket, id: string) {
+        console.log(`${client.id}: Set active system`);
+
+        try {
+            const system = this.systems.findSystemById(id);
+            const dir = this.systems.getDirForSystem(system);
+            await this.pdp8.activateState(system, dir);
+            this.socket.emit('state', {action: 'active-state-changed'});
+            console.log('State changed');
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    private saveActiveSate(client: io.Socket): boolean {
+        console.log(`${client.id}: Save active system`);
+        const system = this.pdp8.getActiveSystem();
+        const dir = this.systems.getDirForSystem(system);
+        try {
+            this.pdp8.saveState(dir);
+            return true;
+        }  catch (e) {
+            return false;
+        }
     }
 
     private onConsoleSwitch(client: io.Socket, data: any): void {
@@ -102,10 +164,8 @@ export class AppServer {
     }
 
     private onPeripheralAction(client: io.Socket, data: any): void {
-        console.log(`${client.id}: Peripheral action ${data.action} on ${data.devId}`);
-        const devId = data.devId as number;
-        const action = data.action as string;
-        this.pdp8.requestDeviceAction(devId, action, data.data);
+        console.log(`${client.id}: Peripheral action ${data.action} on ${data.peripheral}`);
+        this.pdp8.requestDeviceAction(data.peripheral, data.action, data.data);
     }
 
     private onCoreMemoryAction(client: io.Socket, data: any): void {
@@ -117,73 +177,6 @@ export class AppServer {
             case 'write':
                 this.pdp8.writeCoreMemory(data.addr, data.fragment);
                 break;
-        }
-    }
-
-    private onStateAction(client: io.Socket, data: any): void {
-        console.log(`${client.id}: State action: ${data.action}`);
-        switch (data.action) {
-            case 'save':
-                this.pdp8.saveState();
-                break;
-        }
-    }
-
-    // JSON REST API
-
-    private setupJSONApi(): void {
-        this.app.get('/machine-states', (req, res) => this.requestStateList(req, res));
-        this.app.post('/machine-states', (req, res) => this.postNewState(req, res));
-        this.app.post('/machine-states/activate', (req, res) => this.requestStateActivate(req, res));
-        this.app.get('/machine-states/active', (req, res) => this.requestActiveState(req, res));
-    }
-
-    private requestStateList(request: Request, response: Response): void {
-        console.log('Sending state list');
-        const list = this.pdp8.getStateList().map(e => e.toJSONObject());
-        response.json(list);
-    }
-
-    private requestActiveState(request: Request, response: Response): void {
-        console.log('Sending active state');
-        const state = this.pdp8.getActiveState();
-        const obj = state.toJSONObject() as any;
-        obj.peripheralConf = this.pdp8.getPeripherals().map(perph => {return {
-            id: DeviceID[perph.getDeviceID()],
-            data: perph.getConfigurationObject(),
-        }});
-        response.json(obj);
-    }
-
-    private postNewState(request: Request, response: Response): void {
-        console.log('Creating new state');
-
-        try {
-            const state = MachineState.fromJSONObject(request.body);
-            this.pdp8.createState(state);
-            response.json({success: true});
-        } catch (e) {
-            if (e instanceof Error) {
-                response.json({success: false, error: e.message});
-            } else {
-                response.json({success: false});
-            }
-        }
-    }
-
-    private async requestStateActivate(request: Request, response: Response) {
-        try {
-            console.log('Changing state');
-            await this.pdp8.activateState(request.body.name);
-            response.json({success: true});
-            this.socket.emit('state', {action: 'active-state-changed'});
-            console.log('State changed');
-        } catch (e) {
-            if (e instanceof Error) {
-                response.json({success: false, error: e.message});
-            } else {
-                response.json({success: false});
-            }
         }
     }
 

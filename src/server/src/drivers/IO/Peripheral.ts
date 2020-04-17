@@ -17,6 +17,7 @@
  */
 
 import { DataBreakRequest, DataBreakReply } from "./DataBreak";
+import { PeripheralConfiguration } from '../../types/PeripheralTypes';
 
 export enum DeviceRegister {
     REG_ENABLED     = 0,
@@ -29,7 +30,7 @@ export enum DeviceRegister {
 
 export enum DeviceID {
     DEV_ID_NULL     = 0,
-    DEV_ID_ASR33    = 1,
+    DEV_ID_PT08     = 1,
     DEV_ID_PC04     = 2,
     DEV_ID_TC08     = 3,
     DEV_ID_RF08     = 4,
@@ -64,19 +65,21 @@ export interface IOContext {
 export abstract class Peripheral {
     private keepRunning = true;
 
-    public abstract getDeviceID(): DeviceID;
+    constructor(protected readonly id: DeviceID) {
+    }
+
     public abstract getBusConnections(): number[];
+
     public abstract run(io: IOContext): Promise<void>;
+
+    public getDeviceID(): DeviceID {
+        return this.id;
+    }
 
     public requestAction(action: string, data: any): void {
     }
 
-    public getConfigurationObject(): any {
-        return {};
-    }
-
-    public setConfigurationObject(obj: any) {
-    }
+    public abstract getConfiguration(): PeripheralConfiguration;
 
     public async saveState(): Promise<void> {
     }
