@@ -58,34 +58,7 @@ export class SoCDP8 {
         this.io = new IOController(ioBuf);
     }
 
-    public async saveState(dir: string) {
-        if (!this.currentConf) {
-            throw Error(`No system loaded`);
-        }
-
-        console.log('Saving state to ' + dir);
-
-        try {
-            // Save config
-            const json = JSON.stringify(this.currentConf, null, 2);
-            await promises.writeFile(`${dir}/system.json`, json);
-
-            // Save core memory
-            const memory = this.mem.dumpCore();
-            await promises.writeFile(`${dir}/core.dat`, Buffer.from(memory.buffer));
-
-            // Save all peripherals
-            for (const peripheral of this.peripherals) {
-                await peripheral.saveState();
-            }
-        } catch (e) {
-            console.warn('Error saving state: ' + e);
-        }
-
-        console.log('State saved');
-    }
-
-    public async activateState(sys: SystemConfiguration, dir: string) {
+    public async activateSystem(sys: SystemConfiguration, dir: string) {
         // Stop current system
         await this.stopCPU();
 
@@ -131,6 +104,29 @@ export class SoCDP8 {
         }
 
         this.currentConf = sys;
+    }
+
+    public async saveSystemState(dir: string) {
+        if (!this.currentConf) {
+            throw Error(`No system loaded`);
+        }
+
+        console.log('Saving state to ' + dir);
+
+        try {
+            // Save core memory
+            const memory = this.mem.dumpCore();
+            await promises.writeFile(`${dir}/core.dat`, Buffer.from(memory.buffer));
+
+            // Save all peripherals
+            for (const peripheral of this.peripherals) {
+                await peripheral.saveState();
+            }
+        } catch (e) {
+            console.warn('Error saving state: ' + e);
+        }
+
+        console.log('State saved');
     }
 
     private async stopCPU() {

@@ -39,6 +39,7 @@ import ButtonGroup from '@material-ui/core/ButtonGroup';
 import Button from '@material-ui/core/Button';
 import { SystemConfiguration, DEFAULT_SYSTEM_CONF } from '../../types/SystemConfiguration';
 import { DeviceID } from '../../types/PeripheralTypes';
+import { observer } from 'mobx-react-lite';
 
 export interface MachineManagerProps {
     pdp8: SoCDP8
@@ -58,8 +59,8 @@ const StyledTableCell = withStyles(theme => ({
     },
 }))(TableCell);
 
-export const SystemManager: React.FunctionComponent<MachineManagerProps> = (props) => {
-    const [states, setStates] = useState<SystemConfiguration[]>([]);
+export const SystemManager: React.FunctionComponent<MachineManagerProps> = observer(props => {
+    const [systems, setSystems] = useState<SystemConfiguration[]>([]);
     const [formBusy, setFormBusy] = useState<boolean>(false);
     const classes = useStyles();
 
@@ -67,7 +68,7 @@ export const SystemManager: React.FunctionComponent<MachineManagerProps> = (prop
         async function fetchList() {
             const list = await props.pdp8.fetchStateList();
             console.log(list);
-            setStates(list);
+            setSystems(list);
         }
         fetchList();
     }, []);
@@ -86,7 +87,7 @@ export const SystemManager: React.FunctionComponent<MachineManagerProps> = (prop
                             initialState={DEFAULT_SYSTEM_CONF}
                             onSubmit={async (s) => {
                                 setFormBusy(true);
-                                await onNewState(props.pdp8, s);
+                                await onNewSystem(props.pdp8, s);
                                 setFormBusy(false);
                             }}
                             buttonEnabled={!formBusy}
@@ -108,38 +109,38 @@ export const SystemManager: React.FunctionComponent<MachineManagerProps> = (prop
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            { states.map(s => <MachineEntry pdp8={props.pdp8} state={s} />)}
+                            { systems.map(s => <SystemEntry pdp8={props.pdp8} system={s} />)}
                         </TableBody>
                     </Table>
                 </TableContainer>
             </Box>
         </section>
     );
-};
+});
 
-const MachineEntry: React.FunctionComponent<{pdp8: SoCDP8, state: SystemConfiguration}> = (props) => {
+const SystemEntry: React.FunctionComponent<{pdp8: SoCDP8, system: SystemConfiguration}> = (props) => {
     const [busy, setBusy] = React.useState<boolean>(false);
 
     return (
         <TableRow>
-            <StyledTableCell>{props.state.name}</StyledTableCell>
+            <StyledTableCell>{props.system.name}</StyledTableCell>
             <StyledTableCell>
-                {(props.state.maxMemField + 1) * 4} kiW
+                {(props.system.maxMemField + 1) * 4} kiW
             </StyledTableCell>
             <StyledTableCell>
                 <ul>
                     {(() => {
-                        if (props.state.maxMemField > 0) {
+                        if (props.system.maxMemField > 0) {
                             return <li>MC8/I</li>
                         }
                     })()}
                     {(() => {
-                        if (props.state.cpuExtensions.eae) {
+                        if (props.system.cpuExtensions.eae) {
                             return <li>KE8/I</li>
                         }
                     })()}
                     {(() => {
-                        if (props.state.cpuExtensions.kt8i) {
+                        if (props.system.cpuExtensions.kt8i) {
                             return <li>KT8/I</li>
                         }
                     })()}
@@ -147,7 +148,7 @@ const MachineEntry: React.FunctionComponent<{pdp8: SoCDP8, state: SystemConfigur
             </StyledTableCell>
             <StyledTableCell>
                 <ul>
-                    { props.state.peripherals.map(conf =>
+                    { props.system.peripherals.map(conf =>
                         <li>{getPeripheralName(conf.id)}</li>
                     )}
                 </ul>
@@ -156,10 +157,17 @@ const MachineEntry: React.FunctionComponent<{pdp8: SoCDP8, state: SystemConfigur
                 <ButtonGroup variant='outlined' orientation='vertical'>
                     <Button disabled={busy} onClick={async () => {
                         setBusy(true);
-                        await activateState(props.pdp8, props.state);
+                        await activateSystem(props.pdp8, props.system);
                         setBusy(false);
                     }}>
                         Activate
+                    </Button>
+                    <Button disabled={busy} onClick={async () => {
+                        setBusy(true);
+                        await deleteSystem(props.pdp8, props.system);
+                        setBusy(false);
+                    }}>
+                        Delete
                     </Button>
                 </ButtonGroup>
             </StyledTableCell>
@@ -184,9 +192,9 @@ function getPeripheralName(id: DeviceID): string {
     }
 }
 
-async function onNewState(pdp8: SoCDP8, state: SystemConfiguration) {
+async function onNewSystem(pdp8: SoCDP8, state: SystemConfiguration) {
     try {
-        await pdp8.createNewState(state);
+        await pdp8.createNewSystem(state);
     } catch (e) {
         if (e instanceof Error) {
             alert(`Creating state failed: ${e.message}`);
@@ -196,14 +204,30 @@ async function onNewState(pdp8: SoCDP8, state: SystemConfiguration) {
     }
 }
 
-async function activateState(pdp8: SoCDP8, state: SystemConfiguration) {
+async function activateSystem(pdp8: SoCDP8, state: SystemConfiguration) {
     try {
-        await pdp8.activateState(state.id);
+        await pdp8.activateSystem(state.id);
     } catch (e) {
         if (e instanceof Error) {
             alert(`Activating state failed: ${e.message}`);
         } else {
             alert('Activating state failed');
+        }
+    }
+}
+
+async function deleteSystem(pdp8: SoCDP8, state: SystemConfiguration) {
+    if (!window.confirm(`Delete system '${state.name}'?`)) {
+        return;
+    }
+
+    try {
+        await pdp8.deleteSystem(state.id);
+    } catch (e) {
+        if (e instanceof Error) {
+            alert(`Deleting system failed: ${e.message}`);
+        } else {
+            alert('Deleting system failed');
         }
     }
 }

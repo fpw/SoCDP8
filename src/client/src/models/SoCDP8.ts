@@ -210,7 +210,7 @@ export class SoCDP8 {
         this.socket.emit('console-switch', {'switch': sw, 'state': state});
     }
 
-    public async createNewState(state: SystemConfiguration) {
+    public async createNewSystem(state: SystemConfiguration) {
         return new Promise<boolean>((accept, reject) => {
             this.socket.emit('create-system', state, (res: boolean) => {
                 if (res) {
@@ -222,9 +222,21 @@ export class SoCDP8 {
         });
     }
 
-    public async activateState(id: string) {
+    public async activateSystem(id: string) {
         return new Promise<boolean>((accept, reject) => {
             this.socket.emit('set-active-system', id, (res: boolean) => {
+                if (res) {
+                    accept();
+                } else {
+                    reject();
+                }
+            });
+        });
+    }
+
+    public async deleteSystem(id: string) {
+        return new Promise<boolean>((accept, reject) => {
+            this.socket.emit('delete-system', id, (res: boolean) => {
                 if (res) {
                     accept();
                 } else {

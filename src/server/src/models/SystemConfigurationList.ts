@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { mkdirSync, readdirSync, readFileSync } from 'fs';
+import { mkdirSync, readdirSync, readFileSync, promises, rmdirSync } from 'fs';
 import { SystemConfiguration, DEFAULT_SYSTEM_CONF } from '../types/SystemConfiguration';
 import { randomBytes } from 'crypto';
 
@@ -35,13 +35,15 @@ export class SystemConfigurationList {
         }
     }
 
-    public generateId() {
-        return randomBytes(16).toString('hex');
-    }
-
     public getDirForSystem(sys: SystemConfiguration) {
         const cleanName = sys.name.replace(/[^a-zA-Z0-9_]/g, '').replace(/ /g, '_');
         return `${this.sysDir}/${cleanName}-${sys.id}/`;
+    }
+
+    public async saveSystem(sys: SystemConfiguration) {
+        const dir = this.getDirForSystem(sys);
+        const json = JSON.stringify(sys, null, 2);
+        await promises.writeFile(`${dir}/system.json`, json);
     }
 
     private loadSystems() {
@@ -79,10 +81,23 @@ export class SystemConfigurationList {
     }
 
     public addSystem(sys: SystemConfiguration) {
-        if (this.systems.has(sys.id)) {
-            throw Error('ID already exists');
-        }
+        sys.id = this.generateSystemId();
+
+        const dir = this.getDirForSystem(sys);
+        mkdirSync(dir, {recursive: true});
+
+        this.saveSystem(sys);
 
         this.systems.set(sys.id, sys);
+    }
+
+    public deleteSystem(sys: SystemConfiguration) {
+        const dir = this.getDirForSystem(sys);
+        rmdirSync(dir, {recursive: true});
+        this.systems.delete(sys.id);
+    }
+
+    private generateSystemId() {
+        return randomBytes(5).toString('hex');
     }
 }

@@ -65,7 +65,7 @@ export class AppServer {
         const defaultSystem = this.systems.findSystemById('default');
         const dir = this.systems.getDirForSystem(defaultSystem);
 
-        await this.pdp8.activateState(defaultSystem, dir);
+        await this.pdp8.activateSystem(defaultSystem, dir);
         this.httpServer.listen(port);
         this.startConsoleCheckLoop();
     }
@@ -94,7 +94,8 @@ export class AppServer {
         client.on('create-system', (sys, reply) => reply(this.createSystem(client, sys)));
         client.on('active-system', reply => reply(this.getActiveSystem(client)));
         client.on('set-active-system', (id, reply) => reply(this.setActiveSystem(client, id)));
-        client.on('save-active-system', (reply) => reply(this.saveActiveSystem(client)));
+        client.on('save-active-system', reply => reply(this.saveActiveSystem(client)));
+        client.on('delete-system', (id, reply) => reply(this.deleteSystem(client, id)));
 
         client.emit('console-state', this.pdp8.readConsoleState());
     }
@@ -108,16 +109,33 @@ export class AppServer {
         console.log(`${client.id}: Create system`);
 
         try {
-            sys.id = this.systems.generateId();
             this.systems.addSystem(sys);
-
-            const dir = this.systems.getDirForSystem(sys);
-            mkdirSync(dir, {recursive: true});
-
+            this.sendSystemListChange();
             return true;
         } catch (e) {
             return false;
         }
+    }
+
+    private deleteSystem(client: io.Socket, id: string): boolean {
+        console.log(`${client.id}: Delete system`);
+        try {
+            const sys = this.systems.findSystemById(id);
+            if (sys == this.pdp8.getActiveSystem()) {
+                return false;
+            } else if (sys.id == 'default') {
+                return false;
+            }
+            this.systems.deleteSystem(sys);
+            this.sendSystemListChange();
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    private sendSystemListChange() {
+        this.socket.emit('state', {action: 'state-list-changed'});
     }
 
     private getActiveSystem(client: io.Socket): SystemConfiguration {
@@ -131,7 +149,7 @@ export class AppServer {
         try {
             const system = this.systems.findSystemById(id);
             const dir = this.systems.getDirForSystem(system);
-            await this.pdp8.activateState(system, dir);
+            await this.pdp8.activateSystem(system, dir);
             this.socket.emit('state', {action: 'active-state-changed'});
             console.log('State changed');
             return true;
@@ -140,12 +158,13 @@ export class AppServer {
         }
     }
 
-    private saveActiveSystem(client: io.Socket): boolean {
+    private async saveActiveSystem(client: io.Socket): Promise<boolean> {
         console.log(`${client.id}: Save active system`);
         const system = this.pdp8.getActiveSystem();
         const dir = this.systems.getDirForSystem(system);
         try {
-            this.pdp8.saveState(dir);
+            await this.systems.saveSystem(system);
+            await this.pdp8.saveSystemState(dir);
             return true;
         }  catch (e) {
             return false;
