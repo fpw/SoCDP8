@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PeripheralConfiguration, PeripheralType, PC04Configuration, PT08Configuration, TC08Configuration, RF08Configuration } from './PeripheralTypes';
+import { PeripheralConfiguration, PC04Configuration, PT08Configuration, TC08Configuration, RF08Configuration, DeviceID } from './PeripheralTypes';
 
 export interface SystemConfiguration {
     id: string,
@@ -45,20 +45,19 @@ export const DEFAULT_SYSTEM_CONF: SystemConfiguration = {
     peripherals: [
         <PT08Configuration>
         {
-            kind: PeripheralType.PERPH_PT08,
+            id: DeviceID.DEV_ID_PT08,
             baudRate: 110,
-            bus: 0o03
         },
         <PC04Configuration> {
-            kind: PeripheralType.PERPH_PC04,
+            id: DeviceID.DEV_ID_PC04,
             baudRate: 4800,
         },
         <TC08Configuration> {
-            kind: PeripheralType.PERPH_TC08,
+            id: DeviceID.DEV_ID_TC08,
             numTapes: 2,
         },
         <RF08Configuration> {
-            kind: PeripheralType.PERPH_RF08,
+            id: DeviceID.DEV_ID_RF08,
         },
     ]
 };

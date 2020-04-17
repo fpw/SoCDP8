@@ -18,7 +18,7 @@
 
 import { PeripheralModel } from './PeripheralModel';
 import { observable, action, computed } from 'mobx';
-import { PC04Configuration, peripheralConfToName } from '../../types/PeripheralTypes';
+import { PC04Configuration } from '../../types/PeripheralTypes';
 
 export class PC04Model extends PeripheralModel {
     @observable
@@ -58,7 +58,7 @@ export class PC04Model extends PeripheralModel {
     public readonly loadTape = async (tape: File): Promise<void> => {
         let data = await this.loadFile(tape);
         this.socket.emit('peripheral-action', {
-            peripheral: peripheralConfToName(this.conf),
+            id: this.conf.id,
             action: 'set-data',
             data: data
         });

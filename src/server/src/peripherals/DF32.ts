@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, IOContext, DeviceRegister, DeviceID } from '../drivers/IO/Peripheral';
+import { Peripheral, IOContext, DeviceRegister } from '../drivers/IO/Peripheral';
 import { existsSync, readFileSync, promises } from 'fs';
 import { sleepMs, sleepUs } from '../sleep';
 import { DF32Configuration } from '../types/PeripheralTypes';
@@ -28,7 +28,7 @@ export class DF32 extends Peripheral {
     private data = Buffer.alloc(4 * 16 * 2048 * 2); // 4 disks, each with 16 tracks of 2048 words, stored as 2 bytes each
 
     constructor(private conf: DF32Configuration, dir: string) {
-        super(DeviceID.DEV_ID_DF32);
+        super(conf.id);
 
         this.DATA_FILE = dir + '/df32.dat';
 

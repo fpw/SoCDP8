@@ -17,7 +17,7 @@
  */
 
 import { PeripheralModel } from './PeripheralModel';
-import { peripheralConfToName, TC08Configuration } from '../../types/PeripheralTypes';
+import { TC08Configuration } from '../../types/PeripheralTypes';
 
 export class TC08Model extends PeripheralModel {
     constructor(socket: SocketIOClient.Socket, private conf: TC08Configuration) {
@@ -34,7 +34,7 @@ export class TC08Model extends PeripheralModel {
     public readonly loadTape = async (tape: File, unit: number): Promise<void> => {
         let data = await this.loadFile(tape);
         this.socket.emit('peripheral-action', {
-            peripheral: peripheralConfToName(this.conf),
+            id: this.conf.id,
             action: 'load-tape',
             data: {
                 unit: unit,

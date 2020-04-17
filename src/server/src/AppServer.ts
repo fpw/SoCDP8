@@ -44,7 +44,7 @@ export class AppServer {
         this.systems = new SystemConfigurationList(this.DATA_DIR);
 
         this.pdp8 = new SoCDP8(this.DATA_DIR, {
-            onPeripheralEvent: (name, action, data) => this.sendPeripheralEvent(name, action, data)
+            onPeripheralEvent: (id, action, data) => this.sendPeripheralEvent(id, action, data)
         });
 
         let clientDir = './public';
@@ -70,9 +70,9 @@ export class AppServer {
         this.startConsoleCheckLoop();
     }
 
-    private sendPeripheralEvent(name: string, action: string, data: any): void {
+    private sendPeripheralEvent(id: number, action: string, data: any): void {
         this.socket.emit('peripheral-event', {
-            peripheral: name,
+            id: id,
             action: action,
             data: data
         });
@@ -165,8 +165,8 @@ export class AppServer {
     }
 
     private execPeripheralAction(client: io.Socket, data: any): void {
-        console.log(`${client.id}: Peripheral action ${data.action} on ${data.peripheral}`);
-        this.pdp8.requestDeviceAction(data.peripheral, data.action, data.data);
+        console.log(`${client.id}: Peripheral action ${data.action} on ${data.id}`);
+        this.pdp8.requestDeviceAction(data.id, data.action, data.data);
     }
 
     private execCoreMemoryAction(client: io.Socket, data: any): void {

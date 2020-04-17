@@ -17,7 +17,7 @@ import { RF08Configuration } from './../types/PeripheralTypes';
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, IOContext, DeviceRegister, DeviceID } from '../drivers/IO/Peripheral';
+import { Peripheral, IOContext, DeviceRegister } from '../drivers/IO/Peripheral';
 import { existsSync, readFileSync, promises } from 'fs';
 import { sleepMs } from '../sleep';
 
@@ -28,7 +28,7 @@ export class RF08 extends Peripheral {
     private data = Buffer.alloc(4 * 128 * 2048 * 2); // 4 disks, each with 128 tracks of 2048 words stored in 2 bytes
 
     constructor(private conf: RF08Configuration, dir: string) {
-        super(DeviceID.DEV_ID_RF08);
+        super(conf.id);
 
         this.DATA_FILE = dir + '/rf08.dat';
 

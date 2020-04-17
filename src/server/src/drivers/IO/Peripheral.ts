@@ -17,7 +17,7 @@
  */
 
 import { DataBreakRequest, DataBreakReply } from "./DataBreak";
-import { PeripheralConfiguration } from '../../types/PeripheralTypes';
+import { PeripheralConfiguration, DeviceID } from '../../types/PeripheralTypes';
 
 export enum DeviceRegister {
     REG_ENABLED     = 0,
@@ -26,21 +26,6 @@ export enum DeviceRegister {
     REG_C           = 3,
     REG_D           = 4,
     REG_E           = 5,
-}
-
-export enum DeviceID {
-    DEV_ID_NULL     = 0,
-    DEV_ID_PT08     = 1,
-    DEV_ID_PC04     = 2,
-    DEV_ID_TC08     = 3,
-    DEV_ID_RF08     = 4,
-    DEV_ID_DF32     = 5,
-    DEV_ID_TT1      = 6,
-    DEV_ID_TT2      = 7,
-    DEV_ID_TT3      = 8,
-    DEV_ID_TT4      = 9,
-    DEV_ID_KW8I     = 10,
-    DEV_ID_RK8      = 11,
 }
 
 export enum BaudSelect {

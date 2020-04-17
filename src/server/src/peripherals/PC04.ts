@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, IOContext, DeviceRegister, DeviceID, BaudSelect } from '../drivers/IO/Peripheral';
+import { Peripheral, IOContext, DeviceRegister, BaudSelect } from '../drivers/IO/Peripheral';
 import { sleepMs } from '../sleep';
 import { PC04Configuration, PeripheralConfiguration } from '../types/PeripheralTypes';
 
@@ -24,7 +24,7 @@ export class PC04 extends Peripheral {
     private readerData: number[] = [];
 
     constructor(private conf: PC04Configuration) {
-        super(DeviceID.DEV_ID_PC04);
+        super(conf.id);
     }
 
     public getConfiguration(): PeripheralConfiguration {

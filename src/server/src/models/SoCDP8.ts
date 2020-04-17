@@ -1,3 +1,4 @@
+import { DeviceID } from './../types/PeripheralTypes';
 /*
  *   SoCDP8 - A PDP-8/I implementation on a SoC
  *   Copyright (C) 2019 Folke Will <folko@solhost.org>
@@ -31,11 +32,11 @@ import { KW8I } from '../peripherals/KW8I';
 import { RK8 } from '../peripherals/RK8';
 import { sleepMs } from '../sleep';
 import { SystemConfiguration } from '../types/SystemConfiguration';
-import { PeripheralConfiguration, PeripheralType, peripheralConfToName } from '../types/PeripheralTypes';
+import { PeripheralConfiguration } from '../types/PeripheralTypes';
 import { ConsoleState } from '../types/ConsoleTypes';
 
 export interface IOListener {
-    onPeripheralEvent(peripheral: string, action: string, data: any): void
+    onPeripheralEvent(id: number, action: string, data: any): void
 }
 
 export class SoCDP8 {
@@ -113,7 +114,7 @@ export class SoCDP8 {
                 readRegister: reg => this.io.readPeripheralReg(devId, reg),
                 writeRegister: (reg, val) => this.io.writePeripheralReg(devId, reg, val),
                 dataBreak: req => this.io.doDataBreak(req),
-                emitEvent: (action, data) => this.ioListener.onPeripheralEvent(peripheralConfToName(perph), action, data),
+                emitEvent: (action, data) => this.ioListener.onPeripheralEvent(devId, action, data),
             };
 
             this.peripherals.push(peripheral);
@@ -151,20 +152,24 @@ export class SoCDP8 {
     }
 
     private createPeripheral(conf: PeripheralConfiguration, dir: string): Peripheral {
-        switch (conf.kind) {
-            case PeripheralType.PERPH_PT08:
+        switch (conf.id) {
+            case DeviceID.DEV_ID_PT08:
+            case DeviceID.DEV_ID_TT1:
+            case DeviceID.DEV_ID_TT2:
+            case DeviceID.DEV_ID_TT3:
+            case DeviceID.DEV_ID_TT4:
                 return new PT08(conf);
-            case PeripheralType.PERPH_PC04:
+            case DeviceID.DEV_ID_PC04:
                 return new PC04(conf);
-            case PeripheralType.PERPH_TC08:
+            case DeviceID.DEV_ID_TC08:
                 return new TC08(conf);
-            case PeripheralType.PERPH_DF32:
+            case DeviceID.DEV_ID_DF32:
                 return new DF32(conf, dir);
-            case PeripheralType.PERPH_RF08:
+            case DeviceID.DEV_ID_RF08:
                 return new RF08(conf, dir);
-            case PeripheralType.PERPH_RK8:
+            case DeviceID.DEV_ID_RK8:
                 return new RK8(conf, dir);
-            case PeripheralType.PERPH_KW8I:
+            case DeviceID.DEV_ID_KW8I:
                 return new KW8I(conf);
         }
     }
@@ -198,14 +203,14 @@ export class SoCDP8 {
         }
     }
 
-    public requestDeviceAction(name: string, action: string, data: any) {
+    public requestDeviceAction(id: number, action: string, data: any) {
         for (const peripheral of this.peripherals) {
-            if (peripheralConfToName(peripheral.getConfiguration()) == name) {
+            if (peripheral.getDeviceID() == id) {
                 peripheral.requestAction(action, data);
                 return;
             }
         }
-        console.log(`Event ${action}: Device ${name} not found`);
+        console.log(`Event ${action}: Device ${id} not found`);
     }
 
     public setSwitch(sw: string, state: boolean): void {

@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, DeviceRegister, IOContext, DeviceID } from '../drivers/IO/Peripheral';
+import { Peripheral, DeviceRegister, IOContext } from '../drivers/IO/Peripheral';
 import { sleepMs, sleepUs } from '../sleep';
 import { TC08Configuration } from '../types/PeripheralTypes';
 
@@ -89,7 +89,7 @@ export class TC08 extends Peripheral {
     private tapes: TapeState[] = [];
 
     constructor(private conf: TC08Configuration) {
-        super(DeviceID.DEV_ID_TC08);
+        super(conf.id);
     }
 
     public getConfiguration(): TC08Configuration {

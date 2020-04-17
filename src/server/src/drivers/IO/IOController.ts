@@ -16,9 +16,10 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { DeviceRegister, DeviceID } from './Peripheral';
+import { DeviceRegister } from './Peripheral';
 import { DataBreakRequest, DataBreakReply } from './DataBreak';
 import { sleepUs } from '../../sleep';
+import { DeviceID } from '../../types/PeripheralTypes';
 
 export interface CPUExtensions {
     eae: boolean;

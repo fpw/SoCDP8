@@ -18,7 +18,7 @@
 
 import { observable, action, computed } from 'mobx';
 import { PeripheralModel } from './PeripheralModel';
-import { PT08Configuration, peripheralConfToName } from '../../types/PeripheralTypes';
+import { PT08Configuration, DeviceID } from '../../types/PeripheralTypes';
 
 export class ASR33Model extends PeripheralModel {
     @observable
@@ -29,12 +29,12 @@ export class ASR33Model extends PeripheralModel {
     }
 
     public get connections(): number[] {
-        switch (this.conf.bus) {
-            case 0o03: return [0o03, 0o04];
-            case 0o40: return [0o40, 0o41];
-            case 0o42: return [0o42, 0o43];
-            case 0o44: return [0o44, 0o45];
-            case 0o46: return [0o46, 0o47];
+        switch (this.conf.id) {
+            case DeviceID.DEV_ID_PT08: return [0o03, 0o04];
+            case DeviceID.DEV_ID_TT1:  return [0o40, 0o41];
+            case DeviceID.DEV_ID_TT2:  return [0o42, 0o43];
+            case DeviceID.DEV_ID_TT3:  return [0o44, 0o45];
+            case DeviceID.DEV_ID_TT4:  return [0o46, 0o47];
         }
     }
 
@@ -74,7 +74,7 @@ export class ASR33Model extends PeripheralModel {
 
     public readonly appendReaderKey = async (chr: number): Promise<void> => {
         this.socket.emit('peripheral-action', {
-            peripheral: peripheralConfToName(this.conf),
+            id: this.conf.id,
             action: 'key-press',
             data: chr
         });
@@ -83,7 +83,7 @@ export class ASR33Model extends PeripheralModel {
     public readonly loadTape = async (tape: File): Promise<void> => {
         let data = await this.loadFile(tape);
         this.socket.emit('peripheral-action', {
-            peripheral: peripheralConfToName(this.conf),
+            id: this.conf.id,
             action: 'reader-tape-set',
             data: data
         });
@@ -91,7 +91,7 @@ export class ASR33Model extends PeripheralModel {
 
     public readonly setReaderActive = async (active: boolean): Promise<void> => {
         this.socket.emit('peripheral-action', {
-            peripheral: peripheralConfToName(this.conf),
+            id: this.conf.id,
             action: 'reader-set-active',
             data: active
         });

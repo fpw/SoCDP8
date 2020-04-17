@@ -38,7 +38,7 @@ import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 import Button from '@material-ui/core/Button';
 import { SystemConfiguration, DEFAULT_SYSTEM_CONF } from '../../types/SystemConfiguration';
-import { peripheralConfToName } from '../../types/PeripheralTypes';
+import { DeviceID } from '../../types/PeripheralTypes';
 
 export interface MachineManagerProps {
     pdp8: SoCDP8
@@ -148,7 +148,7 @@ const MachineEntry: React.FunctionComponent<{pdp8: SoCDP8, state: SystemConfigur
             <StyledTableCell>
                 <ul>
                     { props.state.peripherals.map(conf =>
-                        <li>{peripheralConfToName(conf)}</li>
+                        <li>{getPeripheralName(conf.id)}</li>
                     )}
                 </ul>
             </StyledTableCell>
@@ -166,6 +166,23 @@ const MachineEntry: React.FunctionComponent<{pdp8: SoCDP8, state: SystemConfigur
         </TableRow>
     );
 };
+
+function getPeripheralName(id: DeviceID): string {
+    switch (id) {
+        case DeviceID.DEV_ID_NULL:  return '';
+        case DeviceID.DEV_ID_PT08:  return 'PT08';
+        case DeviceID.DEV_ID_PC04:  return 'PC04';
+        case DeviceID.DEV_ID_TC08:  return 'TC08';
+        case DeviceID.DEV_ID_RF08:  return 'RF08';
+        case DeviceID.DEV_ID_DF32:  return 'DF32';
+        case DeviceID.DEV_ID_TT1:   return 'TT1';
+        case DeviceID.DEV_ID_TT2:   return 'TT2';
+        case DeviceID.DEV_ID_TT3:   return 'TT3';
+        case DeviceID.DEV_ID_TT4:   return 'TT4';
+        case DeviceID.DEV_ID_KW8I:  return 'KW8I';
+        case DeviceID.DEV_ID_RK8:   return 'RK8';
+    }
+}
 
 async function onNewState(pdp8: SoCDP8, state: SystemConfiguration) {
     try {

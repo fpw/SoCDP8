@@ -16,9 +16,9 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, DeviceRegister, IOContext, DeviceID, BaudSelect } from '../drivers/IO/Peripheral';
+import { Peripheral, DeviceRegister, IOContext, BaudSelect } from '../drivers/IO/Peripheral';
 import { sleepMs } from '../sleep';
-import { PT08Configuration } from '../types/PeripheralTypes';
+import { PT08Configuration, DeviceID } from '../types/PeripheralTypes';
 
 export class PT08 extends Peripheral {
     private readerActive: boolean = false;
@@ -27,19 +27,7 @@ export class PT08 extends Peripheral {
     private keyBuffer: number[] = [];
 
     constructor(private conf: PT08Configuration) {
-        super(PT08.toDeviceId(conf));
-    }
-
-    private static toDeviceId(conf: PT08Configuration): DeviceID {
-        switch (conf.bus) {
-            case 0o03: return DeviceID.DEV_ID_PT08;
-            case 0o40: return DeviceID.DEV_ID_TT1;
-            case 0o42: return DeviceID.DEV_ID_TT2;
-            case 0o44: return DeviceID.DEV_ID_TT3;
-            case 0o46: return DeviceID.DEV_ID_TT4;
-
-            default: throw new Error(`Invalid PT08 bus: ${conf.bus}`);
-        }
+        super(conf.id);
     }
 
     public getBusConnections(): number[] {

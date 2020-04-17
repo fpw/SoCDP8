@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, IOContext, DeviceRegister, DeviceID } from '../drivers/IO/Peripheral';
+import { Peripheral, IOContext, DeviceRegister } from '../drivers/IO/Peripheral';
 import { existsSync, readFileSync, promises } from 'fs';
 import { sleepMs, sleepUs } from '../sleep';
 import { RK8Configuration } from '../types/PeripheralTypes';
@@ -30,7 +30,7 @@ export class RK8 extends Peripheral {
     private data = Buffer.alloc(this.NUM_DISKS * this.SECTORS_PER_DISK * this.WORDS_PER_SECTOR * 2);
 
     constructor(private conf: RK8Configuration, dir: string) {
-        super(DeviceID.DEV_ID_RK8);
+        super(conf.id);
 
         this.DATA_FILE = dir + '/rk8.dat';
 

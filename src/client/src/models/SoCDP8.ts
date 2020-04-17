@@ -29,8 +29,8 @@ import { DF32Model } from './peripherals/DF32Model';
 import { RK8Model } from './peripherals/RK8Model';
 import { KW8IModel } from './peripherals/KW8IModel';
 import { SystemConfiguration } from '../types/SystemConfiguration';
-import { PeripheralType, peripheralConfToName } from '../types/PeripheralTypes';
 import { ConsoleState } from '../types/ConsoleTypes';
+import { DeviceID } from '../types/PeripheralTypes';
 
 export class SoCDP8 {
     private socket: SocketIOClient.Socket;
@@ -41,7 +41,7 @@ export class SoCDP8 {
     private frontPanel?: ConsoleState;
 
     @observable
-    private peripheralModels: Map<string, PeripheralModel> = new Map();
+    private peripheralModels: Map<DeviceID, PeripheralModel> = new Map();
 
     @observable
     private activeSystem: SystemConfiguration | undefined;
@@ -68,9 +68,9 @@ export class SoCDP8 {
         });
 
         this.socket.on('peripheral-event', (data: any) => {
-            const name = data.peripheral as string;
+            const id = data.id as number;
             const action = data.action as string;
-            this.onPeripheralEvent(name, action, data);
+            this.onPeripheralEvent(id, action, data);
         });
 
         this.socket.on('state', (data: any) => {
@@ -118,36 +118,40 @@ export class SoCDP8 {
         for (const conf of sys.peripherals) {
             let peripheral: PeripheralModel;
 
-            switch (conf.kind) {
-                case PeripheralType.PERPH_PT08:
+            switch (conf.id) {
+                case DeviceID.DEV_ID_PT08:
+                case DeviceID.DEV_ID_TT1:
+                case DeviceID.DEV_ID_TT2:
+                case DeviceID.DEV_ID_TT3:
+                case DeviceID.DEV_ID_TT4:
                     peripheral = new ASR33Model(this.socket, conf);
                     break;
-                case PeripheralType.PERPH_PC04:
+                case DeviceID.DEV_ID_PC04:
                     peripheral = new PC04Model(this.socket, conf);
                     break;
-                case PeripheralType.PERPH_TC08:
+                case DeviceID.DEV_ID_TC08:
                     peripheral = new TC08Model(this.socket, conf);
                     break;
-                case PeripheralType.PERPH_RF08:
+                case DeviceID.DEV_ID_RF08:
                     peripheral = new RF08Model(this.socket, conf);
                     break;
-                case PeripheralType.PERPH_DF32:
+                case DeviceID.DEV_ID_DF32:
                     peripheral = new DF32Model(this.socket, conf);
                     break;
-                case PeripheralType.PERPH_RK8:
+                case DeviceID.DEV_ID_RK8:
                     peripheral = new RK8Model(this.socket, conf);
                     break;
-                case PeripheralType.PERPH_KW8I:
+                case DeviceID.DEV_ID_KW8I:
                     peripheral = new KW8IModel(this.socket, conf);
                     break;
             }
 
-            this.peripheralModels.set(peripheralConfToName(conf), peripheral);
+            this.peripheralModels.set(conf.id, peripheral);
         }
     }
 
-    private onPeripheralEvent(name: string, action: string, data: any) {
-        const peripheral = this.peripheralModels.get(name);
+    private onPeripheralEvent(id: number, action: string, data: any) {
+        const peripheral = this.peripheralModels.get(id);
         if (!peripheral) {
             return;
         }

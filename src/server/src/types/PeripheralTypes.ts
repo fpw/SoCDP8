@@ -16,17 +16,19 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export enum PeripheralType {
-    PERPH_PT08,
-    PERPH_PC04,
-
-    PERPH_TC08,
-
-    PERPH_DF32,
-    PERPH_RF08,
-    PERPH_RK8,
-
-    PERPH_KW8I,
+export enum DeviceID {
+    DEV_ID_NULL     = 0,
+    DEV_ID_PT08     = 1,
+    DEV_ID_PC04     = 2,
+    DEV_ID_TC08     = 3,
+    DEV_ID_RF08     = 4,
+    DEV_ID_DF32     = 5,
+    DEV_ID_TT1      = 6,
+    DEV_ID_TT2      = 7,
+    DEV_ID_TT3      = 8,
+    DEV_ID_TT4      = 9,
+    DEV_ID_KW8I     = 10,
+    DEV_ID_RK8      = 11,
 }
 
 export type BaudRate = 110 | 150 | 300 | 1200 | 2400 | 4800 | 9600 | 19200;
@@ -43,35 +45,34 @@ export enum BaudRateConf {
 }
 
 export interface PT08Configuration {
-    kind: PeripheralType.PERPH_PT08,
-    bus: 0o03 | 0o40 | 0o42 | 0o44 | 0o46,
-    baudRate: BaudRate,
+    id: DeviceID.DEV_ID_PT08 | DeviceID.DEV_ID_TT1 | DeviceID.DEV_ID_TT2 | DeviceID.DEV_ID_TT3 | DeviceID.DEV_ID_TT4;
+    baudRate: BaudRate;
 }
 
 export interface PC04Configuration {
-    kind: PeripheralType.PERPH_PC04,
-    baudRate: BaudRate,
+    id: DeviceID.DEV_ID_PC04;
+    baudRate: BaudRate;
 }
 
 export interface TC08Configuration {
-    kind: PeripheralType.PERPH_TC08,
-    numTapes: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8,
+    id: DeviceID.DEV_ID_TC08;
+    numTapes: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 }
 
 export interface DF32Configuration {
-    kind: PeripheralType.PERPH_DF32,
+    id: DeviceID.DEV_ID_DF32
 }
 
 export interface RF08Configuration {
-    kind: PeripheralType.PERPH_RF08,
+    id: DeviceID.DEV_ID_RF08;
 }
 
 export interface RK8Configuration {
-    kind: PeripheralType.PERPH_RK8,
+    id: DeviceID.DEV_ID_RK8;
 }
 
 export interface KW8IConfiguration {
-    kind: PeripheralType.PERPH_KW8I,
+    id: DeviceID.DEV_ID_KW8I;
 }
 
 export type PeripheralConfiguration =
@@ -79,36 +80,3 @@ export type PeripheralConfiguration =
     TC08Configuration |
     DF32Configuration | RF08Configuration | RK8Configuration |
     KW8IConfiguration;
-
-export type PeripheralName =
-    'SerialLine' |
-    'PT08.1' | 'PT08.2' | 'PT08.3' | 'PT08.4' | 'PC04' |
-    'TC08' |
-    'RF08' | 'DF32' | 'RK8' |
-    'KW8I';
-
-export function peripheralConfToName(conf: PeripheralConfiguration): PeripheralName {
-    switch (conf.kind) {
-        case PeripheralType.PERPH_PT08:
-            switch (conf.bus) {
-                case 0o03:  return 'SerialLine';
-                case 0o40:  return 'PT08.1';
-                case 0o42:  return 'PT08.2';
-                case 0o44:  return 'PT08.3';
-                case 0o46:  return 'PT08.4';
-            }
-            break;
-        case PeripheralType.PERPH_PC04:
-            return 'PC04';
-        case PeripheralType.PERPH_TC08:
-            return 'TC08';
-        case PeripheralType.PERPH_RF08:
-            return 'RF08';
-        case PeripheralType.PERPH_DF32:
-            return 'DF32';
-        case PeripheralType.PERPH_RK8:
-            return 'RK8';
-        case PeripheralType.PERPH_KW8I:
-            return 'KW8I';
-    }
-}

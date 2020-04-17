@@ -16,12 +16,12 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, IOContext, DeviceID } from '../drivers/IO/Peripheral';
+import { Peripheral, IOContext } from '../drivers/IO/Peripheral';
 import { KW8IConfiguration } from '../types/PeripheralTypes';
 
 export class KW8I extends Peripheral {
     constructor(private conf: KW8IConfiguration) {
-        super(DeviceID.DEV_ID_KW8I);
+        super(conf.id);
     }
 
     public getConfiguration(): KW8IConfiguration {
