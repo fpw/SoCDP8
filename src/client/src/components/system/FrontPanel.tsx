@@ -17,7 +17,7 @@
  */
 
 import React from 'react';
-import { LampBrightness, SwitchState } from '../../models/FrontPanelState';
+import { LampBrightness, SwitchState } from '../../types/ConsoleTypes';
 
 export interface FrontPanelProps {
     lamps: LampBrightness;

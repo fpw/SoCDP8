@@ -32,7 +32,7 @@ import { createStyles, makeStyles } from '@material-ui/core/styles';
 import { peripheralConfToName, PeripheralName, PT08Configuration, PeripheralType, PC04Configuration, KW8IConfiguration, TC08Configuration, DF32Configuration, RF08Configuration, RK8Configuration, PeripheralConfiguration } from '../../types/PeripheralTypes';
 import { SystemConfiguration, DEFAULT_SYSTEM_CONF } from '../../types/SystemConfiguration';
 
-export interface MachineFormProps {
+export interface SystemFormProps {
     initialState: SystemConfiguration;
     onSubmit(state: SystemConfiguration): void;
     buttonEnabled: boolean;
@@ -45,7 +45,7 @@ const useStyles = makeStyles(theme => createStyles({
     }
 }));
 
-export const MachineForm: React.FunctionComponent<MachineFormProps> = (props) => {
+export const SystemForm: React.FunctionComponent<SystemFormProps> = (props) => {
     const classes = useStyles();
 
     const coreMemoryMarks: Mark[] = [0, 1, 2, 3, 4, 5, 6, 7].map(i => {return {

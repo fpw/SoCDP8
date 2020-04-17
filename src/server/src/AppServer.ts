@@ -20,11 +20,12 @@ import * as io from 'socket.io';
 import * as express from 'express';
 import * as cors from 'cors';
 import { Server } from 'http';
-import { SoCDP8, ConsoleState } from './models/SoCDP8';
+import { SoCDP8 } from './models/SoCDP8';
 import { isDeepStrictEqual, promisify } from 'util';
 import { SystemConfigurationList } from './models/SystemConfigurationList';
 import { SystemConfiguration } from './types/SystemConfiguration';
 import { mkdirSync } from 'fs';
+import { ConsoleState } from './types/ConsoleTypes';
 
 export class AppServer {
     private readonly DATA_DIR = '/home/socdp8/'
@@ -43,7 +44,7 @@ export class AppServer {
         this.systems = new SystemConfigurationList(this.DATA_DIR);
 
         this.pdp8 = new SoCDP8(this.DATA_DIR, {
-            onPeripheralEvent: (name, action, data) => this.onPeripheralEvent(name, action, data)
+            onPeripheralEvent: (name, action, data) => this.sendPeripheralEvent(name, action, data)
         });
 
         let clientDir = './public';
@@ -69,7 +70,7 @@ export class AppServer {
         this.startConsoleCheckLoop();
     }
 
-    private onPeripheralEvent(name: string, action: string, data: any): void {
+    private sendPeripheralEvent(name: string, action: string, data: any): void {
         this.socket.emit('peripheral-event', {
             peripheral: name,
             action: action,
@@ -85,25 +86,30 @@ export class AppServer {
     private onClientConnect(client: io.Socket) {
         console.log(`Connection ${client.id} from ${client.handshake.address}`);
 
-        client.on('console-switch', data => this.onConsoleSwitch(client, data));
-        client.on('peripheral-action', data => this.onPeripheralAction(client, data));
-        client.on('core', data => this.onCoreMemoryAction(client, data));
+        client.on('console-switch', data => this.setConsoleSwitch(client, data));
+        client.on('peripheral-action', data => this.execPeripheralAction(client, data));
+        client.on('core', data => this.execCoreMemoryAction(client, data));
 
-        client.on('system-list', reply => reply(this.requestSystemList(client)));
-        client.on('create-system', (sys, reply) => reply(this.requestSystemCreate(client, sys)));
-        client.on('active-system', reply => reply(this.requestActiveSystem(client)));
-        client.on('set-active-system', (id, reply) => reply(this.requestSetActiveSystem(client, id)));
-        client.on('save-active-system', (reply) => reply(this.saveActiveSate(client)));
+        client.on('system-list', reply => reply(this.getSystemList(client)));
+        client.on('create-system', (sys, reply) => reply(this.createSystem(client, sys)));
+        client.on('active-system', reply => reply(this.getActiveSystem(client)));
+        client.on('set-active-system', (id, reply) => reply(this.setActiveSystem(client, id)));
+        client.on('save-active-system', (reply) => reply(this.saveActiveSystem(client)));
 
         client.emit('console-state', this.pdp8.readConsoleState());
     }
 
-    private requestSystemCreate(client: io.Socket, sys: SystemConfiguration): boolean {
-        console.log(`${client.id}: System create`);
+    private getSystemList(client: io.Socket): SystemConfiguration[] {
+        console.log(`${client.id}: Get system list`);
+        return this.systems.getSystems();
+    }
+
+    private createSystem(client: io.Socket, sys: SystemConfiguration): boolean {
+        console.log(`${client.id}: Create system`);
 
         try {
             sys.id = this.systems.generateId();
-            this.systems.addState(sys);
+            this.systems.addSystem(sys);
 
             const dir = this.systems.getDirForSystem(sys);
             mkdirSync(dir, {recursive: true});
@@ -114,17 +120,12 @@ export class AppServer {
         }
     }
 
-    private requestSystemList(client: io.Socket): SystemConfiguration[] {
-        console.log(`${client.id}: System list`);
-        return this.systems.getSystems();
-    }
-
-    private requestActiveSystem(client: io.Socket): SystemConfiguration {
-        console.log(`${client.id}: Active system`);
+    private getActiveSystem(client: io.Socket): SystemConfiguration {
+        console.log(`${client.id}: Get active system`);
         return this.pdp8.getActiveSystem();
     }
 
-    private async requestSetActiveSystem(client: io.Socket, id: string) {
+    private async setActiveSystem(client: io.Socket, id: string) {
         console.log(`${client.id}: Set active system`);
 
         try {
@@ -139,7 +140,7 @@ export class AppServer {
         }
     }
 
-    private saveActiveSate(client: io.Socket): boolean {
+    private saveActiveSystem(client: io.Socket): boolean {
         console.log(`${client.id}: Save active system`);
         const system = this.pdp8.getActiveSystem();
         const dir = this.systems.getDirForSystem(system);
@@ -151,7 +152,7 @@ export class AppServer {
         }
     }
 
-    private onConsoleSwitch(client: io.Socket, data: any): void {
+    private setConsoleSwitch(client: io.Socket, data: any): void {
         console.log(`${client.id}: Setting switch ${data.switch} to ${data.state ? '1' : '0'}`);
         this.pdp8.setSwitch(data.switch, data.state);
 
@@ -163,12 +164,12 @@ export class AppServer {
         }
     }
 
-    private onPeripheralAction(client: io.Socket, data: any): void {
+    private execPeripheralAction(client: io.Socket, data: any): void {
         console.log(`${client.id}: Peripheral action ${data.action} on ${data.peripheral}`);
         this.pdp8.requestDeviceAction(data.peripheral, data.action, data.data);
     }
 
-    private onCoreMemoryAction(client: io.Socket, data: any): void {
+    private execCoreMemoryAction(client: io.Socket, data: any): void {
         console.log(`${client.id}: Core memory action: ${data.action}`);
         switch (data.action) {
             case 'clear':

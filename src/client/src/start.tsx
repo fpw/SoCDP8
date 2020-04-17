@@ -19,9 +19,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { App } from "./components/App";
-import { PDP8Model } from './models/PDP8Model';
+import { SoCDP8 } from './models/SoCDP8';
 
-const pdp8 = new PDP8Model();
+const pdp8 = new SoCDP8();
 
 ReactDOM.render((
     <App pdp8={pdp8} />

@@ -80,7 +80,12 @@ export type PeripheralConfiguration =
     DF32Configuration | RF08Configuration | RK8Configuration |
     KW8IConfiguration;
 
-export type PeripheralName = 'SerialLine' | 'PT08.1' | 'PT08.2' | 'PT08.3' | 'PT08.4' | 'PC04' | 'TC08' | 'RF08' | 'DF32' | 'RK8' | 'KW8I';
+export type PeripheralName =
+    'SerialLine' |
+    'PT08.1' | 'PT08.2' | 'PT08.3' | 'PT08.4' | 'PC04' |
+    'TC08' |
+    'RF08' | 'DF32' | 'RK8' |
+    'KW8I';
 
 export function peripheralConfToName(conf: PeripheralConfiguration): PeripheralName {
     switch (conf.kind) {

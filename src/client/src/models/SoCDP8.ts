@@ -18,7 +18,6 @@
 
 import * as io from 'socket.io-client';
 
-import { FrontPanelState } from './FrontPanelState';
 import { observable, action, computed } from 'mobx';
 import { ASR33Model } from './peripherals/ASR33Model';
 import { PeripheralModel } from './peripherals/PeripheralModel';
@@ -31,16 +30,15 @@ import { RK8Model } from './peripherals/RK8Model';
 import { KW8IModel } from './peripherals/KW8IModel';
 import { SystemConfiguration } from '../types/SystemConfiguration';
 import { PeripheralType, peripheralConfToName } from '../types/PeripheralTypes';
+import { ConsoleState } from '../types/ConsoleTypes';
 
-export class PDP8Model {
-    private readonly BASE_URL: string = '';
-
+export class SoCDP8 {
     private socket: SocketIOClient.Socket;
 
     private coreMemory: CoreMemoryModel;
 
     @observable
-    private frontPanel?: FrontPanelState;
+    private frontPanel?: ConsoleState;
 
     @observable
     private peripheralModels: Map<string, PeripheralModel> = new Map();
@@ -49,11 +47,12 @@ export class PDP8Model {
     private activeSystem: SystemConfiguration | undefined;
 
     constructor() {
+        let url = '';
         if (window.location.toString().includes('localhost')) {
-            this.BASE_URL = 'http://192.168.178.68:8000';
+            url = 'http://192.168.178.68:8000';
         }
 
-        this.socket = io.connect(this.BASE_URL);
+        this.socket = io.connect(url);
         this.coreMemory = new CoreMemoryModel(this.socket);
 
         this.socket.on('connect', () => {
@@ -64,7 +63,7 @@ export class PDP8Model {
             this.onDisconnected();
         });
 
-        this.socket.on('console-state', (state: FrontPanelState) => {
+        this.socket.on('console-state', (state: ConsoleState) => {
             this.onFrontPanelChange(state);
         });
 
@@ -107,7 +106,7 @@ export class PDP8Model {
     }
 
     @action
-    private onFrontPanelChange(newState: FrontPanelState): void {
+    private onFrontPanelChange(newState: ConsoleState): void {
         this.frontPanel = newState;
     }
 
@@ -177,7 +176,7 @@ export class PDP8Model {
     }
 
     @computed
-    public get panel(): FrontPanelState {
+    public get panel(): ConsoleState {
         if (!this.frontPanel) {
             throw Error("Panel state not loaded");
         }

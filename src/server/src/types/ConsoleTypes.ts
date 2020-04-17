@@ -16,7 +16,24 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
- export interface SwitchState {
+export interface LampBrightness {
+    dataField: number[];
+    instField: number[];
+    pc: number[];
+    memAddr: number[];
+    memBuf: number[];
+    link: number;
+    ac: number[];
+    stepCounter: number[];
+    mqr: number[];
+    instruction: number[];
+    state: number[];
+    ion: number;
+    pause: number;
+    run: number;
+}
+
+export interface SwitchState {
     dataField: number;
     instField: number;
     swr: number;
@@ -28,4 +45,12 @@
     stop: number;
     singStep: number;
     singInst: number;
+}
+
+export interface ConsoleState {
+    lamps: LampBrightness;
+    lampOverride: boolean;
+
+    switches: SwitchState;
+    switchOverride: boolean;
 }

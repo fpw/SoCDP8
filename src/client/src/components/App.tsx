@@ -17,12 +17,12 @@
  */
 
 import React from 'react';
-import { Machine } from './system/Machine';
-import { PDP8Model } from '../models/PDP8Model';
+import { System } from './system/System';
+import { SoCDP8 } from '../models/SoCDP8';
 import { observer } from 'mobx-react-lite';
 import { HashRouter as Router, Route, Link as RouterLink, Switch, Redirect } from 'react-router-dom';
-import { About } from './system/About';
-import { MachineManager } from './system/MachineManager';
+import { About } from './About';
+import { SystemManager } from './system/SystemManager';
 
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import InfoIcon from '@material-ui/icons/Info';
@@ -69,7 +69,7 @@ const useStyles = makeStyles(theme => createStyles({
 }));
 
 export interface AppProps {
-    pdp8: PDP8Model;
+    pdp8: SoCDP8;
 }
 
 export const App: React.FunctionComponent<AppProps> = observer(props => {
@@ -111,18 +111,18 @@ export const App: React.FunctionComponent<AppProps> = observer(props => {
                 </Drawer>
                 <main className={classes.content}>
                     <Toolbar />
-                    <Container maxWidth='lg' className={classes.container}>
+                    <Container className={classes.container}>
                         <Switch>
                             <Route exact path="/">
                                 <Redirect to="/machines/active" />
                             </Route>
 
                             <Route path="/machines/active">
-                                <Machine pdp8={props.pdp8} />
+                                <System pdp8={props.pdp8} />
                             </Route>
 
                             <Route path="/machines">
-                                <MachineManager pdp8={props.pdp8}/>
+                                <SystemManager pdp8={props.pdp8}/>
                             </Route>
 
                             <Route path="/about">

@@ -22,7 +22,7 @@ import { randomBytes } from 'crypto';
 
 export class SystemConfigurationList {
     private readonly sysDir: string;
-    private configs: Map<string, SystemConfiguration> = new Map();
+    private systems: Map<string, SystemConfiguration> = new Map();
 
     constructor(private readonly baseDir: string) {
         this.sysDir = this.baseDir + '/systems/';
@@ -30,8 +30,8 @@ export class SystemConfigurationList {
 
         this.loadSystems();
 
-        if (!this.configs.has('default')) {
-            this.addState(DEFAULT_SYSTEM_CONF);
+        if (!this.systems.has('default')) {
+            this.addSystem(DEFAULT_SYSTEM_CONF);
         }
     }
 
@@ -52,7 +52,7 @@ export class SystemConfigurationList {
                 const configJson = readFileSync(dir + '/system.json');
                 const sys = JSON.parse(configJson.toString()) as SystemConfiguration;
 
-                this.configs.set(sys.id, sys);
+                this.systems.set(sys.id, sys);
             } catch (e) {
                 console.log('Skipping system ' + stateDir + ': ' + e);
             }
@@ -62,7 +62,7 @@ export class SystemConfigurationList {
     public getSystems(): SystemConfiguration[] {
         const res: SystemConfiguration[] = [];
 
-        for (const conf of this.configs.values()) {
+        for (const conf of this.systems.values()) {
             res.push(conf);
         }
 
@@ -70,7 +70,7 @@ export class SystemConfigurationList {
     }
 
     public findSystemById(id: string): SystemConfiguration {
-        const config = this.configs.get(id);
+        const config = this.systems.get(id);
         if (!config) {
             throw Error('Unknown system');
         }
@@ -78,11 +78,11 @@ export class SystemConfigurationList {
         return config;
     }
 
-    public addState(sys: SystemConfiguration) {
-        if (this.configs.has(sys.id)) {
+    public addSystem(sys: SystemConfiguration) {
+        if (this.systems.has(sys.id)) {
             throw Error('ID already exists');
         }
 
-        this.configs.set(sys.id, sys);
+        this.systems.set(sys.id, sys);
     }
 }

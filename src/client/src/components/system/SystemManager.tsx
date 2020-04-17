@@ -17,9 +17,9 @@
  */
 
 import React from 'react';
-import { PDP8Model } from '../../models/PDP8Model';
+import { SoCDP8 } from '../../models/SoCDP8';
 import { useEffect, useState } from "react";
-import { MachineForm } from './MachineForm';
+import { SystemForm } from './SystemForm';
 
 import Typography from "@material-ui/core/Typography";
 import Box from '@material-ui/core/Box';
@@ -41,7 +41,7 @@ import { SystemConfiguration, DEFAULT_SYSTEM_CONF } from '../../types/SystemConf
 import { peripheralConfToName } from '../../types/PeripheralTypes';
 
 export interface MachineManagerProps {
-    pdp8: PDP8Model
+    pdp8: SoCDP8
 }
 
 const useStyles = makeStyles(theme => createStyles({
@@ -58,7 +58,7 @@ const StyledTableCell = withStyles(theme => ({
     },
 }))(TableCell);
 
-export const MachineManager: React.FunctionComponent<MachineManagerProps> = (props) => {
+export const SystemManager: React.FunctionComponent<MachineManagerProps> = (props) => {
     const [states, setStates] = useState<SystemConfiguration[]>([]);
     const [formBusy, setFormBusy] = useState<boolean>(false);
     const classes = useStyles();
@@ -82,7 +82,7 @@ export const MachineManager: React.FunctionComponent<MachineManagerProps> = (pro
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Box width='75%' pl={4}>
-                        <MachineForm
+                        <SystemForm
                             initialState={DEFAULT_SYSTEM_CONF}
                             onSubmit={async (s) => {
                                 setFormBusy(true);
@@ -117,7 +117,7 @@ export const MachineManager: React.FunctionComponent<MachineManagerProps> = (pro
     );
 };
 
-const MachineEntry: React.FunctionComponent<{pdp8: PDP8Model, state: SystemConfiguration}> = (props) => {
+const MachineEntry: React.FunctionComponent<{pdp8: SoCDP8, state: SystemConfiguration}> = (props) => {
     const [busy, setBusy] = React.useState<boolean>(false);
 
     return (
@@ -167,7 +167,7 @@ const MachineEntry: React.FunctionComponent<{pdp8: PDP8Model, state: SystemConfi
     );
 };
 
-async function onNewState(pdp8: PDP8Model, state: SystemConfiguration) {
+async function onNewState(pdp8: SoCDP8, state: SystemConfiguration) {
     try {
         await pdp8.createNewState(state);
     } catch (e) {
@@ -179,7 +179,7 @@ async function onNewState(pdp8: PDP8Model, state: SystemConfiguration) {
     }
 }
 
-async function activateState(pdp8: PDP8Model, state: SystemConfiguration) {
+async function activateState(pdp8: SoCDP8, state: SystemConfiguration) {
     try {
         await pdp8.activateState(state.id);
     } catch (e) {

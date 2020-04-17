@@ -17,9 +17,8 @@
  */
 
 import { LampState } from "./LampState";
-import { SwitchState } from "./SwitchState";
-import { LampBrightness } from "./LampBrightness";
 import { SW_OVERRIDE_MASK, LAMP_OVERRIDE_MASK, LampGroupIndex, SwitchIndex, LampBrightnessIndex } from "./ConsoleConstants";
+import { SwitchState, LampBrightness } from "../../types/ConsoleTypes";
 
 export class Console {
     private map: Buffer;

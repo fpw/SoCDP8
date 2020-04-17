@@ -18,12 +18,10 @@
 
 import { UIOMapper } from '../drivers/UIO/UIOMapper';
 import { Console } from '../drivers/Console/Console';
-import { SwitchState } from "../drivers/Console/SwitchState";
 import { CoreMemory } from "../drivers/CoreMemory/CoreMemory";
 import { IOController } from '../drivers/IO/IOController';
 import { Peripheral, IOContext } from '../drivers/IO/Peripheral';
 import { promises } from 'fs';
-import { LampBrightness } from '../drivers/Console/LampBrightness';
 import { TC08 } from '../peripherals/TC08';
 import { PT08 } from '../peripherals/PT08';
 import { PC04 } from '../peripherals/PC04';
@@ -34,17 +32,10 @@ import { RK8 } from '../peripherals/RK8';
 import { sleepMs } from '../sleep';
 import { SystemConfiguration } from '../types/SystemConfiguration';
 import { PeripheralConfiguration, PeripheralType, peripheralConfToName } from '../types/PeripheralTypes';
+import { ConsoleState } from '../types/ConsoleTypes';
 
 export interface IOListener {
     onPeripheralEvent(peripheral: string, action: string, data: any): void
-}
-
-export interface ConsoleState {
-    lamps: LampBrightness;
-    lampOverride: boolean;
-
-    switches: SwitchState;
-    switchOverride: boolean;
 }
 
 export class SoCDP8 {

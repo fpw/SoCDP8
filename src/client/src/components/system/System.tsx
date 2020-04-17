@@ -25,7 +25,7 @@ import { PC04Model } from '../../models/peripherals/PC04Model';
 import { PC04 } from "../peripherals/PC04";
 import { TC08Model } from '../../models/peripherals/TC08Model';
 import { TC08 } from '../peripherals/TC08';
-import { PDP8Model } from '../../models/PDP8Model';
+import { SoCDP8 } from '../../models/SoCDP8';
 import { PeripheralModel } from '../../models/peripherals/PeripheralModel';
 import { RF08 } from '../peripherals/RF08';
 import { RF08Model } from '../../models/peripherals/RF08Model';
@@ -35,10 +35,9 @@ import { RK8Model } from '../../models/peripherals/RK8Model';
 import { RK8 } from '../peripherals/RK8';
 import { KW8IModel } from '../../models/peripherals/KW8IModel';
 import { KW8I } from '../peripherals/KW8I';
-import { CoreMemorySnippets, CoreMemorySnippet } from '../../models/CoreMemorySnippet';
+import { ProgramSnippets, ProgramSnippet } from '../../models/ProgramSnippets';
 
 import Typography from '@material-ui/core/Typography';
-import Container from '@material-ui/core/Container';
 import Box from '@material-ui/core/Box';
 import Card from "@material-ui/core/Card";
 import CardHeader from "@material-ui/core/CardHeader";
@@ -53,71 +52,78 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 
-export interface MachineProps {
-    pdp8: PDP8Model;
+export interface SystemProps {
+    pdp8: SoCDP8;
 }
 
-export const Machine: React.FunctionComponent<MachineProps> = observer(props => {
-    const [busy, setBusy] = React.useState<boolean>(false);
-    const [showSnippets, setShowSnippets] = React.useState<boolean>(false);
-
+export const System: React.FunctionComponent<SystemProps> = observer(props => {
     return (
-        <Container>
+        <React.Fragment>
             <Typography component='h1' variant='h4' gutterBottom>
                 Machine: {props.pdp8.currentState.name}
             </Typography>
 
-            <Box mb={4}>
-                <Card variant='outlined'>
-                    <CardHeader title='PDP-8/I' />
-                    <CardMedia>
-                        <FrontPanel lamps={props.pdp8.panel.lamps}
-                                    switches={props.pdp8.panel.switches}
-                                    onSwitch={props.pdp8.setPanelSwitch.bind(props.pdp8)}
-                        />
-                    </CardMedia>
-                    <CardActions>
-                        <ButtonGroup color='primary' variant='outlined'>
-                            <Button onClick={async () => {
-                                        setBusy(true);
-                                        await props.pdp8.saveCurrentState();
-                                        setBusy(false);
-                                    }}
-                                    disabled={busy}
-                            >
-                                Save State
-                            </Button>
+            <FrontPanelBox pdp8={props.pdp8} />
 
-                            <Button onClick={() => setShowSnippets(true)}>
-                                Load Snippet
-                            </Button>
-
-                            <Button onClick={() => props.pdp8.core.clear()}>
-                                Clear Core
-                            </Button>
-                        </ButtonGroup>
-                        <SnippetDialog
-                                open={showSnippets}
-                                onClose={() => setShowSnippets(false)}
-                                onSelect={(snippet) => {
-                                    props.pdp8.core.write(snippet.start, snippet.data);
-                                    setShowSnippets(false);
-                                }}
-                        />
-                    </CardActions>
-                </Card>
-            </Box>
             <PeripheralList list={props.pdp8.peripherals} />
-        </Container>
+        </React.Fragment>
     );
 });
 
-const SnippetDialog: React.FunctionComponent<{onSelect: ((s: CoreMemorySnippet) => void), open: boolean, onClose: (() => void)}> = (props) => {
+const FrontPanelBox: React.FunctionComponent<SystemProps> = observer(props => {
+    const [busy, setBusy] = React.useState<boolean>(false);
+    const [showSnippets, setShowSnippets] = React.useState<boolean>(false);
+
+    return (
+        <Box mb={4}>
+            <Card variant='outlined'>
+                <CardHeader title='PDP-8/I' />
+                <CardMedia>
+                    <FrontPanel lamps={props.pdp8.panel.lamps}
+                                switches={props.pdp8.panel.switches}
+                                onSwitch={props.pdp8.setPanelSwitch.bind(props.pdp8)}
+                    />
+                </CardMedia>
+                <CardActions>
+                    <ButtonGroup color='primary' variant='outlined'>
+                        <Button onClick={async () => {
+                                    setBusy(true);
+                                    await props.pdp8.saveCurrentState();
+                                    setBusy(false);
+                                }}
+                                disabled={busy}
+                        >
+                            Save State
+                        </Button>
+
+                        <Button onClick={() => setShowSnippets(true)}>
+                            Load Snippet
+                        </Button>
+
+                        <Button onClick={() => props.pdp8.core.clear()}>
+                            Clear Core
+                        </Button>
+                    </ButtonGroup>
+                    <SnippetDialog
+                            open={showSnippets}
+                            onClose={() => setShowSnippets(false)}
+                            onSelect={(snippet) => {
+                                props.pdp8.core.write(snippet.start, snippet.data);
+                                setShowSnippets(false);
+                            }}
+                    />
+                </CardActions>
+            </Card>
+        </Box>
+    );
+});
+
+const SnippetDialog: React.FunctionComponent<{onSelect: ((s: ProgramSnippet) => void), open: boolean, onClose: (() => void)}> = (props) => {
     return (
         <Dialog open={props.open} onClose={props.onClose}>
             <DialogTitle>Select Snippet</DialogTitle>
             <List>
-                { CoreMemorySnippets.map(snippet =>
+                { ProgramSnippets.map(snippet =>
                     <ListItem button onClick={() => props.onSelect(snippet)}>
                         <ListItemText primary={snippet.label} secondary={snippet.desc} />
                     </ListItem>

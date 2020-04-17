@@ -16,14 +16,14 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export interface CoreMemorySnippet {
+export interface ProgramSnippet {
     label: string;
     desc: string;
     start: number,
     data: number[];
 }
 
-export const CoreMemorySnippets: CoreMemorySnippet[] = [
+export const ProgramSnippets: ProgramSnippet[] = [
     {
         label: 'AC/MQ Blinker',
         desc: 'Lamp blink program from dustyoldcomputers.com, start at 0000',
