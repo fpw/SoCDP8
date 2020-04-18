@@ -94,8 +94,8 @@ export const SystemForm: React.FunctionComponent<SystemFormProps> = (props) => {
                 <FormControl component='fieldset' className={classes.fieldset}>
                     <FormLabel component='legend'>Basic I/O</FormLabel>
                     <FormControlLabel control={
-                        <Switch name='asr33' color='primary' defaultChecked={peripherals.includes(DeviceID.DEV_ID_PT08) } />
-                    } label='ASR-33 Teletype' />
+                        <Switch name='serialLine' color='primary' defaultChecked={peripherals.includes(DeviceID.DEV_ID_PT08) } />
+                    } label='Serial Current Loop' />
                     <FormControlLabel control={
                         <Switch name='pc04' color='primary' defaultChecked={peripherals.includes(DeviceID.DEV_ID_PC04)} />
                     } label='PC04 Reader / Punch' />
@@ -156,7 +156,7 @@ function toSystemConf(ev: React.FormEvent<HTMLFormElement>): SystemConfiguration
     s.cpuExtensions.kt8i = (form.elements.namedItem('kt8i') as HTMLInputElement).checked;
     s.maxMemField = Number.parseInt((form.elements.namedItem('maxMemField') as HTMLInputElement).value);
 
-    if ((form.elements.namedItem('asr33') as HTMLInputElement).checked) {
+    if ((form.elements.namedItem('serialLine') as HTMLInputElement).checked) {
         s.peripherals.push({id: DeviceID.DEV_ID_PT08, baudRate: 110});
     }
 

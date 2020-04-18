@@ -19,7 +19,7 @@
 import * as io from 'socket.io-client';
 
 import { observable, action, computed } from 'mobx';
-import { ASR33Model } from './peripherals/ASR33Model';
+import { PT08Model } from './peripherals/PT08Model';
 import { PeripheralModel } from './peripherals/PeripheralModel';
 import { PC04Model } from './peripherals/PC04Model';
 import { TC08Model } from './peripherals/TC08Model';
@@ -137,7 +137,7 @@ export class SoCDP8 {
                 case DeviceID.DEV_ID_TT2:
                 case DeviceID.DEV_ID_TT3:
                 case DeviceID.DEV_ID_TT4:
-                    peripheral = new ASR33Model(this.socket, conf);
+                    peripheral = new PT08Model(this.socket, conf);
                     break;
                 case DeviceID.DEV_ID_PC04:
                     peripheral = new PC04Model(this.socket, conf);

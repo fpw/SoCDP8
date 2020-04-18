@@ -19,8 +19,8 @@
 import React from 'react';
 import { observer } from "mobx-react-lite";
 import { FrontPanel } from "./FrontPanel";
-import { ASR33Model } from '../../models/peripherals/ASR33Model';
-import { ASR33 } from "../peripherals/ASR33";
+import { PT08Model } from '../../models/peripherals/PT08Model';
+import { PT08 } from "../peripherals/PT08";
 import { PC04Model } from '../../models/peripherals/PC04Model';
 import { PC04 } from "../peripherals/PC04";
 import { TC08Model } from '../../models/peripherals/TC08Model';
@@ -135,8 +135,8 @@ const SnippetDialog: React.FunctionComponent<{onSelect: ((s: ProgramSnippet) => 
 
 const PeripheralList: React.FunctionComponent<{list: PeripheralModel[]}> = ({list}) => {
     const components = list.map(dev => {
-        if (dev instanceof ASR33Model) {
-            return <ASR33Box model={dev} />
+        if (dev instanceof PT08Model) {
+            return <PT08Box model={dev} />
         } else if (dev instanceof PC04Model) {
             return <PC04Box model={dev} />
         } else if (dev instanceof TC08Model) {
@@ -156,9 +156,9 @@ const PeripheralList: React.FunctionComponent<{list: PeripheralModel[]}> = ({lis
     return <React.Fragment>{components}</React.Fragment>
 }
 
-const ASR33Box: React.FunctionComponent<{model: ASR33Model}> = observer(({model}) =>
-    <PeripheralBox name='ASR-33 Teletype' model={model}>
-        <ASR33
+const PT08Box: React.FunctionComponent<{model: PT08Model}> = observer(({model}) =>
+    <PeripheralBox name='Serial Line' model={model}>
+        <PT08
             onReaderKey={model.appendReaderKey}
             onReaderClear={model.clearPunch}
             onTapeLoad={model.loadTape}

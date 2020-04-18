@@ -28,7 +28,7 @@ import FormControl from "@material-ui/core/FormControl";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Switch from "@material-ui/core/Switch";
 
-export interface ASR33Props {
+export interface PT08Props {
     punchData: string;
     onReaderKey(chr: number): void;
     onReaderClear(): void;
@@ -45,7 +45,7 @@ const useStyles = makeStyles(theme => createStyles({
     }
 }));
 
-export const ASR33: React.FunctionComponent<ASR33Props> = observer((props) => {
+export const PT08: React.FunctionComponent<PT08Props> = observer((props) => {
     const classes = useStyles();
     const textRef = React.useRef<HTMLInputElement>(null);
     const tapeInput = React.useRef<HTMLInputElement>(null);
@@ -100,7 +100,7 @@ function scrollToBottomOnChange(textRef: React.RefObject<HTMLInputElement>) {
     });
 }
 
-function onKeyUp(ev: React.KeyboardEvent, props: ASR33Props): boolean {
+function onKeyUp(ev: React.KeyboardEvent, props: PT08Props): boolean {
     if (ev.key == 'Enter') {
         (ev.target as HTMLInputElement).value = '';
         sendPunch(0x0D, props);
@@ -113,7 +113,7 @@ function onKeyUp(ev: React.KeyboardEvent, props: ASR33Props): boolean {
     return false;
 }
 
-function onKeyPress(ev: React.KeyboardEvent, props: ASR33Props): boolean {
+function onKeyPress(ev: React.KeyboardEvent, props: PT08Props): boolean {
     if (ev.key.length == 1) {
         const ascii = ev.key.charCodeAt(0);
         if ((ascii & 0x60) == 0x60) {
@@ -128,7 +128,7 @@ function onKeyPress(ev: React.KeyboardEvent, props: ASR33Props): boolean {
     return false;
 }
 
-function onLoadFile(evt: React.ChangeEvent, props: ASR33Props): void {
+function onLoadFile(evt: React.ChangeEvent, props: PT08Props): void {
     const target = evt.target as HTMLInputElement;
     if (!target.files || target.files.length < 1) {
         return;
@@ -137,6 +137,6 @@ function onLoadFile(evt: React.ChangeEvent, props: ASR33Props): void {
     props.onTapeLoad(target.files[0]);
 }
 
-function sendPunch(code: number, props: ASR33Props) {
+function sendPunch(code: number, props: PT08Props) {
     props.onReaderKey(code | 0x80);
 }

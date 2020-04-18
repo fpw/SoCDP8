@@ -24,7 +24,6 @@ import { SoCDP8 } from './models/SoCDP8';
 import { isDeepStrictEqual, promisify } from 'util';
 import { SystemConfigurationList } from './models/SystemConfigurationList';
 import { SystemConfiguration } from './types/SystemConfiguration';
-import { mkdirSync } from 'fs';
 import { ConsoleState } from './types/ConsoleTypes';
 
 export class AppServer {

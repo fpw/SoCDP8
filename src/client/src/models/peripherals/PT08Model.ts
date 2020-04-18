@@ -20,7 +20,7 @@ import { observable, action, computed } from 'mobx';
 import { PeripheralModel } from './PeripheralModel';
 import { PT08Configuration, DeviceID } from '../../types/PeripheralTypes';
 
-export class ASR33Model extends PeripheralModel {
+export class PT08Model extends PeripheralModel {
     @observable
     private punchData: string = '';
 
