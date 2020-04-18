@@ -65,10 +65,10 @@ export const SystemForm: React.FunctionComponent<SystemFormProps> = (props) => {
     const peripherals: DeviceID[] = s.peripherals.map(p => p.id);
 
     return (
-        <form autoComplete='off' onSubmit={(ev) => props.onSubmit(toMachineState(ev))}>
+        <form autoComplete='off' onSubmit={(ev) => props.onSubmit(toSystemConf(ev))}>
             <FormGroup>
                 <FormControl component='fieldset' className={classes.fieldset}>
-                    <FormLabel component='legend'>Machine Name</FormLabel>
+                    <FormLabel component='legend'>System Name</FormLabel>
                     <TextField required name='name' label='Name' variant='outlined' />
                 </FormControl>
 
@@ -110,7 +110,7 @@ export const SystemForm: React.FunctionComponent<SystemFormProps> = (props) => {
 
                 <FormControl component='fieldset' className={classes.fieldset}>
                     <FormLabel component='legend'>Hard Disk</FormLabel>
-                    <RadioGroup name='disk' defaultValue={getDiskType(s.peripherals)} row>
+                    <RadioGroup name='disk' defaultValue={DeviceID[getDiskType(s.peripherals)]} row>
                         <FormControlLabel value={DeviceID[DeviceID.DEV_ID_NULL]} control={<Radio />} label='None' />
                         <FormControlLabel value={DeviceID[DeviceID.DEV_ID_DF32]} control={<Radio />} label='DF32' />
                         <FormControlLabel value={DeviceID[DeviceID.DEV_ID_RF08]} control={<Radio />} label='RF08' />
@@ -139,13 +139,13 @@ export const SystemForm: React.FunctionComponent<SystemFormProps> = (props) => {
                 </FormControl>
             </FormGroup>
             <Button type='submit' variant='contained' color='primary' disabled={!props.buttonEnabled}>
-                Create Machine
+                Create System
             </Button>
         </form>
     );
 }
 
-function toMachineState(ev: React.FormEvent<HTMLFormElement>): SystemConfiguration {
+function toSystemConf(ev: React.FormEvent<HTMLFormElement>): SystemConfiguration {
     const form = ev.currentTarget;
     const s = DEFAULT_SYSTEM_CONF;
     s.peripherals = [];
@@ -157,89 +157,46 @@ function toMachineState(ev: React.FormEvent<HTMLFormElement>): SystemConfigurati
     s.maxMemField = Number.parseInt((form.elements.namedItem('maxMemField') as HTMLInputElement).value);
 
     if ((form.elements.namedItem('asr33') as HTMLInputElement).checked) {
-        const conf: PT08Configuration = {
-            id: DeviceID.DEV_ID_PT08,
-            baudRate: 110,
-        }
-        s.peripherals.push(conf);
+        s.peripherals.push({id: DeviceID.DEV_ID_PT08, baudRate: 110});
     }
 
     if ((form.elements.namedItem('pc04') as HTMLInputElement).checked) {
-        const conf: PC04Configuration = {
-            id: DeviceID.DEV_ID_PC04,
-            baudRate: 4800,
-        }
-        s.peripherals.push(conf);
+        s.peripherals.push({id: DeviceID.DEV_ID_PC04, baudRate: 4800});
     }
 
     if ((form.elements.namedItem('kw8i') as HTMLInputElement).checked) {
-        const conf: KW8IConfiguration =  {
-            id: DeviceID.DEV_ID_KW8I,
-        }
-        s.peripherals.push(conf);
+        s.peripherals.push({id: DeviceID.DEV_ID_KW8I});
     }
 
     if ((form.elements.namedItem('tc08') as HTMLInputElement).checked) {
-        const conf: TC08Configuration = {
-            id: DeviceID.DEV_ID_TC08,
-            numTapes: 2,
-        }
-        s.peripherals.push(conf);
+        s.peripherals.push({id: DeviceID.DEV_ID_TC08, numTapes: 2});
     }
 
     switch (Number.parseInt((form.elements.namedItem('pt08') as HTMLInputElement).value)) {
-        case 4: {
-            const conf: PT08Configuration = {
-                id: DeviceID.DEV_ID_TT4,
-                baudRate: 9600,
-            }
-            s.peripherals.push(conf);
-        }
-        case 3: {
-            const conf: PT08Configuration = {
-                id: DeviceID.DEV_ID_TT3,
-                baudRate: 9600,
-            }
-            s.peripherals.push(conf);
-        }
-        case 2: {
-            const conf: PT08Configuration = {
-                id: DeviceID.DEV_ID_TT2,
-                baudRate: 9600,
-            }
-            s.peripherals.push(conf);
-        }
-        case 1: {
-            const conf: PT08Configuration = {
-                id: DeviceID.DEV_ID_TT1,
-                baudRate: 9600,
-            }
-            s.peripherals.push(conf);
-        }
+        // fall-throughs are intentional
+        case 4:
+            s.peripherals.push({id: DeviceID.DEV_ID_TT4, baudRate: 9600});
+        case 3:
+            s.peripherals.push({id: DeviceID.DEV_ID_TT3, baudRate: 9600});
+        case 2:
+            s.peripherals.push({id: DeviceID.DEV_ID_TT2, baudRate: 9600});
+        case 1:
+            s.peripherals.push({id: DeviceID.DEV_ID_TT1, baudRate: 9600});
     }
 
     const diskStr = (form.elements.namedItem('disk') as HTMLInputElement).value;
     const diskId = DeviceID[diskStr as keyof typeof DeviceID];
     switch (diskId) {
         case DeviceID.DEV_ID_DF32: {
-            const conf: DF32Configuration = {
-                id: DeviceID.DEV_ID_DF32,
-            }
-            s.peripherals.push(conf);
+            s.peripherals.push({id: DeviceID.DEV_ID_DF32});
             break;
         }
         case DeviceID.DEV_ID_RF08: {
-            const conf: RF08Configuration = {
-                id: DeviceID.DEV_ID_RF08,
-            }
-            s.peripherals.push(conf);
+            s.peripherals.push({id: DeviceID.DEV_ID_RF08});
             break;
         }
         case DeviceID.DEV_ID_RK8: {
-            const conf: RK8Configuration = {
-                id: DeviceID.DEV_ID_RK8,
-            }
-            s.peripherals.push(conf);
+            s.peripherals.push({id: DeviceID.DEV_ID_RK8});
             break;
         }
     }

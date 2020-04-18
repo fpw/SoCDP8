@@ -17,9 +17,12 @@
  */
 
 import React from 'react';
+import { observer } from 'mobx-react-lite';
 import { SoCDP8 } from '../../models/SoCDP8';
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SystemForm } from './SystemForm';
+import { SystemConfiguration, DEFAULT_SYSTEM_CONF } from '../../types/SystemConfiguration';
+import { DeviceID } from '../../types/PeripheralTypes';
 
 import Typography from "@material-ui/core/Typography";
 import Box from '@material-ui/core/Box';
@@ -37,11 +40,8 @@ import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
 import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 import Button from '@material-ui/core/Button';
-import { SystemConfiguration, DEFAULT_SYSTEM_CONF } from '../../types/SystemConfiguration';
-import { DeviceID } from '../../types/PeripheralTypes';
-import { observer } from 'mobx-react-lite';
 
-export interface MachineManagerProps {
+export interface SystemManagerProps {
     pdp8: SoCDP8
 }
 
@@ -59,27 +59,19 @@ const StyledTableCell = withStyles(theme => ({
     },
 }))(TableCell);
 
-export const SystemManager: React.FunctionComponent<MachineManagerProps> = observer(props => {
-    const [systems, setSystems] = useState<SystemConfiguration[]>([]);
+export const SystemManager: React.FunctionComponent<SystemManagerProps> = observer(props => {
     const [formBusy, setFormBusy] = useState<boolean>(false);
+    const [open, setOpen] = useState<boolean>(false);
     const classes = useStyles();
-
-    useEffect(() => {
-        async function fetchList() {
-            const list = await props.pdp8.fetchStateList();
-            console.log(list);
-            setSystems(list);
-        }
-        fetchList();
-    }, []);
+    const activeSys = props.pdp8.activeSystem;
 
     return (
         <section>
-            <Typography component='h1' variant='h4' gutterBottom>Manage Machines</Typography>
+            <Typography component='h1' variant='h4' gutterBottom>Manage Systems</Typography>
 
-            <ExpansionPanel>
+            <ExpansionPanel expanded={open} onChange={() => setOpen(!open)}>
                 <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography variant='body1'>New Machine</Typography>
+                    <Typography variant='body1'>New System</Typography>
                 </ExpansionPanelSummary>
                 <ExpansionPanelDetails>
                     <Box width='75%' pl={4}>
@@ -89,6 +81,7 @@ export const SystemManager: React.FunctionComponent<MachineManagerProps> = obser
                                 setFormBusy(true);
                                 await onNewSystem(props.pdp8, s);
                                 setFormBusy(false);
+                                setOpen(false);
                             }}
                             buttonEnabled={!formBusy}
                         />
@@ -109,7 +102,7 @@ export const SystemManager: React.FunctionComponent<MachineManagerProps> = obser
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            { systems.map(s => <SystemEntry pdp8={props.pdp8} system={s} />)}
+                            { props.pdp8.systems.map(s => <SystemEntry pdp8={props.pdp8} system={s} active={s.id == activeSys.id} />)}
                         </TableBody>
                     </Table>
                 </TableContainer>
@@ -118,12 +111,16 @@ export const SystemManager: React.FunctionComponent<MachineManagerProps> = obser
     );
 });
 
-const SystemEntry: React.FunctionComponent<{pdp8: SoCDP8, system: SystemConfiguration}> = (props) => {
+const SystemEntry: React.FunctionComponent<{pdp8: SoCDP8, system: SystemConfiguration, active: boolean}> = (props) => {
     const [busy, setBusy] = React.useState<boolean>(false);
 
     return (
         <TableRow>
-            <StyledTableCell>{props.system.name}</StyledTableCell>
+            <StyledTableCell>
+                <Box fontWeight={props.active ? 'bold' : null}>
+                    {props.system.name}
+                </Box>
+            </StyledTableCell>
             <StyledTableCell>
                 {(props.system.maxMemField + 1) * 4} kiW
             </StyledTableCell>

@@ -60,7 +60,7 @@ export const System: React.FunctionComponent<SystemProps> = observer(props => {
     return (
         <React.Fragment>
             <Typography component='h1' variant='h4' gutterBottom>
-                Machine: {props.pdp8.currentState.name}
+                System: {props.pdp8.activeSystem.name}
             </Typography>
 
             <FrontPanelBox pdp8={props.pdp8} />

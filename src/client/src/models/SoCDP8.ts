@@ -44,7 +44,10 @@ export class SoCDP8 {
     private peripheralModels: Map<DeviceID, PeripheralModel> = new Map();
 
     @observable
-    private activeSystem: SystemConfiguration | undefined;
+    private activeSystem_: SystemConfiguration | undefined;
+
+    @observable
+    private systemList: SystemConfiguration[] = [];
 
     constructor() {
         let url = '';
@@ -57,6 +60,7 @@ export class SoCDP8 {
 
         this.socket.on('connect', () => {
             this.readActiveState();
+            this.fetchStateList();
         });
 
         this.socket.on('disconnect', () => {
@@ -82,12 +86,12 @@ export class SoCDP8 {
         return this.coreMemory;
     }
 
-    public get currentState(): SystemConfiguration {
-        if (!this.activeSystem) {
+    public get activeSystem(): SystemConfiguration {
+        if (!this.activeSystem_) {
             throw Error('No active system');
         }
 
-        return this.activeSystem;
+        return this.activeSystem_;
     }
 
     private async readActiveState(): Promise<void> {
@@ -96,6 +100,15 @@ export class SoCDP8 {
                 this.onActiveSystemChanged(sys);
                 accept();
             });
+        });
+    }
+
+    private async fetchStateList(): Promise<void> {
+        return new Promise<void>((accept, reject) => {
+            this.socket.emit('system-list', (list: SystemConfiguration[]) => {
+                this.onSystemListChanged(list);
+                accept();
+            })
         });
     }
 
@@ -112,7 +125,7 @@ export class SoCDP8 {
 
     @action
     private onActiveSystemChanged(sys: SystemConfiguration) {
-        this.activeSystem = sys;
+        this.activeSystem_ = sys;
         this.peripheralModels.clear();
 
         for (const conf of sys.peripherals) {
@@ -150,6 +163,11 @@ export class SoCDP8 {
         }
     }
 
+    @action
+    private onSystemListChanged(list: SystemConfiguration[]) {
+        this.systemList = list;
+    }
+
     private onPeripheralEvent(id: number, action: string, data: any) {
         const peripheral = this.peripheralModels.get(id);
         if (!peripheral) {
@@ -157,14 +175,6 @@ export class SoCDP8 {
         }
 
         peripheral.onPeripheralAction(action, data);
-    }
-
-    public async fetchStateList(): Promise<SystemConfiguration[]> {
-        return new Promise<SystemConfiguration[]>((accept, reject) => {
-            this.socket.emit('system-list', (list: SystemConfiguration[]) => {
-                accept(list);
-            })
-        });
     }
 
     public async saveCurrentState() {
@@ -177,6 +187,11 @@ export class SoCDP8 {
                 }
             })
         });
+    }
+
+    @computed
+    public get systems(): SystemConfiguration[] {
+        return this.systemList;
     }
 
     @computed
@@ -199,7 +214,7 @@ export class SoCDP8 {
 
     @computed
     public get ready(): boolean {
-        if (!this.frontPanel || !this.activeSystem) {
+        if (!this.frontPanel || !this.activeSystem_) {
             return false;
         }
 
@@ -250,6 +265,9 @@ export class SoCDP8 {
         switch (data.action) {
             case 'active-state-changed':
                 this.readActiveState();
+                break;
+            case 'state-list-changed':
+                this.fetchStateList();
                 break;
         }
     }
