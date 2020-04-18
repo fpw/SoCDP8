@@ -16,16 +16,16 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { observable, action, computed } from 'mobx';
 import { PeripheralModel } from './PeripheralModel';
 import { PT08Configuration, DeviceID } from '../../types/PeripheralTypes';
+import { Terminal } from 'xterm';
 
 export class PT08Model extends PeripheralModel {
-    @observable
-    private punchData: string = '';
+    private xterm: Terminal;
 
     constructor(socket: SocketIOClient.Socket, private conf: PT08Configuration) {
         super(socket);
+        this.xterm = new Terminal();
     }
 
     public get connections(): number[] {
@@ -38,6 +38,10 @@ export class PT08Model extends PeripheralModel {
         }
     }
 
+    public get terminal(): Terminal {
+        return this.xterm;
+    }
+
     public onPeripheralAction(action: string, data: any) {
         switch (action) {
             case 'punch':
@@ -46,30 +50,9 @@ export class PT08Model extends PeripheralModel {
         }
     }
 
-    @action
     private onPunch(data: number) {
         const chr = data & 0x7F;
-        const old = this.punchData;
-        if (chr == 0x7F) {
-            // Rub-out
-            this.punchData = old.slice(0, old.length);
-        } else if (chr == 0x00) {
-            // nothing
-        } else {
-            // punch character
-            const str = String.fromCharCode(chr);
-            this.punchData = old + str;
-        }
-    }
-
-    @action
-    private setPunchData(data: string) {
-        this.punchData = '';
-    }
-
-    @computed
-    public get punchOutput() {
-        return this.punchData;
+        this.xterm.write(Uint8Array.from([chr]));
     }
 
     public readonly appendReaderKey = async (chr: number): Promise<void> => {
@@ -98,6 +81,6 @@ export class PT08Model extends PeripheralModel {
     };
 
     public readonly clearPunch = async (): Promise<void> => {
-        this.setPunchData('');
+        this.xterm.reset();
     }
 }

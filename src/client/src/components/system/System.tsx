@@ -162,7 +162,7 @@ const PT08Box: React.FunctionComponent<{model: PT08Model}> = observer(({model}) 
             onReaderKey={model.appendReaderKey}
             onReaderClear={model.clearPunch}
             onTapeLoad={model.loadTape}
-            punchData={model.punchOutput}
+            terminal={model.terminal}
             onReaderActivationChange={model.setReaderActive}
         />
     </PeripheralBox>);

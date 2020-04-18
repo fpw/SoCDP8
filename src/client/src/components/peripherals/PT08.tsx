@@ -17,19 +17,20 @@
  */
 
 import React from 'react';
-import { observer } from 'mobx-react-lite';
 
-import { createStyles, makeStyles } from "@material-ui/core/styles";
-import TextField from "@material-ui/core/TextField";
+import { createStyles, makeStyles, StylesProvider } from "@material-ui/core/styles";
 import Box from "@material-ui/core/Box";
 import Button from "@material-ui/core/Button";
 import FormGroup from "@material-ui/core/FormGroup";
 import FormControl from "@material-ui/core/FormControl";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Switch from "@material-ui/core/Switch";
+import { Terminal } from 'xterm';
+
+import '../../../node_modules/xterm/css/xterm.css';
 
 export interface PT08Props {
-    punchData: string;
+    terminal: Terminal;
     onReaderKey(chr: number): void;
     onReaderClear(): void;
     onTapeLoad(tape: File): void;
@@ -45,34 +46,33 @@ const useStyles = makeStyles(theme => createStyles({
     }
 }));
 
-export const PT08: React.FunctionComponent<PT08Props> = observer((props) => {
+export const PT08: React.FunctionComponent<PT08Props> = (props => {
     const classes = useStyles();
-    const textRef = React.useRef<HTMLInputElement>(null);
     const tapeInput = React.useRef<HTMLInputElement>(null);
+    const termRef = React.useRef<HTMLDivElement>(null);
 
-    scrollToBottomOnChange(textRef);
+    React.useEffect(() => {
+        if (!termRef.current) {
+            return;
+        }
+        const term = props.terminal;
+        term.resize(80, 25);
+        term.open(termRef.current);
+        term.onData(data => {
+            for (let i = 0; i < data.length; i++) {
+                sendPunch(data.charCodeAt(i), props);
+            }
+        });
+    }, []);
 
     return (
         <section>
             <Box mb={4}>
-                <TextField label='Output' variant='outlined'
-                    InputProps={{
-                        className: classes.output,
-                        spellCheck: false,
-                    }}
-                    inputRef={textRef}
-                    multiline
-                    rows={8} fullWidth
-                    value={props.punchData}
-                />
+                <div ref={termRef}></div>
                 <Button variant='contained' onClick={() => props.onReaderClear()}>Clear Output</Button>
             </Box>
 
             <Box>
-                <TextField label='Input' variant='outlined'
-                    fullWidth
-                    onKeyUp={evt => onKeyUp(evt, props)} onKeyPress={evt => onKeyPress(evt, props)}
-                />
                 <FormGroup row>
                     <FormControl>
                         <input ref={tapeInput} className={classes.fileInput} type='file' onChange={evt => onLoadFile(evt, props)}/>
@@ -88,45 +88,6 @@ export const PT08: React.FunctionComponent<PT08Props> = observer((props) => {
         </section>
     );
 });
-
-function scrollToBottomOnChange(textRef: React.RefObject<HTMLInputElement>) {
-    React.useEffect(() => {
-        const textElem = textRef.current;
-        if (!textElem) {
-            return;
-        }
-
-        textElem.scrollTop = textElem.scrollHeight - textElem.clientHeight;
-    });
-}
-
-function onKeyUp(ev: React.KeyboardEvent, props: PT08Props): boolean {
-    if (ev.key == 'Enter') {
-        (ev.target as HTMLInputElement).value = '';
-        sendPunch(0x0D, props);
-    } else if (ev.key == 'Backspace') {
-        sendPunch(0x7F, props);
-    } else if (ev.key == 'Escape') {
-        sendPunch(0x1B, props);
-    }
-
-    return false;
-}
-
-function onKeyPress(ev: React.KeyboardEvent, props: PT08Props): boolean {
-    if (ev.key.length == 1) {
-        const ascii = ev.key.charCodeAt(0);
-        if ((ascii & 0x60) == 0x60) {
-            // lowercase -> convert to uppercase
-            sendPunch(ascii & (~0x20), props);
-        } else {
-            // uppercase -> convert to ctrl
-            sendPunch(ascii & (~0x40), props);
-        }
-    }
-
-    return false;
-}
 
 function onLoadFile(evt: React.ChangeEvent, props: PT08Props): void {
     const target = evt.target as HTMLInputElement;
