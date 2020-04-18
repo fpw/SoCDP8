@@ -1,4 +1,3 @@
-import { RF08Configuration } from './../types/PeripheralTypes';
 /*
  *   SoCDP8 - A PDP-8/I implementation on a SoC
  *   Copyright (C) 2019 Folke Will <folko@solhost.org>
@@ -20,6 +19,7 @@ import { RF08Configuration } from './../types/PeripheralTypes';
 import { Peripheral, IOContext, DeviceRegister } from '../drivers/IO/Peripheral';
 import { existsSync, readFileSync, promises } from 'fs';
 import { sleepMs } from '../sleep';
+import { RF08Configuration } from '../types/PeripheralTypes';
 
 export class RF08 extends Peripheral {
     private readonly DEBUG = true;
@@ -27,7 +27,7 @@ export class RF08 extends Peripheral {
     private readonly DATA_FILE: string;
     private data = Buffer.alloc(4 * 128 * 2048 * 2); // 4 disks, each with 128 tracks of 2048 words stored in 2 bytes
 
-    constructor(private conf: RF08Configuration, dir: string) {
+    constructor(private readonly conf: RF08Configuration, dir: string) {
         super(conf.id);
 
         this.DATA_FILE = dir + '/rf08.dat';
@@ -42,6 +42,10 @@ export class RF08 extends Peripheral {
         return this.conf;
     }
 
+    public reconfigure(newConf: RF08Configuration) {
+        Object.assign(this.conf, newConf);
+    }
+
     public getBusConnections(): number[] {
         return [0o60, 0o61, 0o62, 0o64];
     }
@@ -50,7 +54,9 @@ export class RF08 extends Peripheral {
         await promises.writeFile(this.DATA_FILE, this.data);
     }
 
-    public async run(io: IOContext): Promise<void> {
+    public async run(): Promise<void> {
+        const io = this.io;
+
         while (this.keepAlive) {
             const regA = io.readRegister(DeviceRegister.REG_A);
 

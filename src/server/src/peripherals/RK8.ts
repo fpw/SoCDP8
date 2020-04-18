@@ -29,7 +29,7 @@ export class RK8 extends Peripheral {
     private readonly NUM_DISKS = 4;
     private data = Buffer.alloc(this.NUM_DISKS * this.SECTORS_PER_DISK * this.WORDS_PER_SECTOR * 2);
 
-    constructor(private conf: RK8Configuration, dir: string) {
+    constructor(private readonly conf: RK8Configuration, dir: string) {
         super(conf.id);
 
         this.DATA_FILE = dir + '/rk8.dat';
@@ -44,6 +44,10 @@ export class RK8 extends Peripheral {
         return this.conf;
     }
 
+    public reconfigure(newConf: RK8Configuration) {
+        Object.assign(this.conf, newConf);
+    }
+
     public getBusConnections(): number[] {
         return [0o73, 0o74, 0o75];
     }
@@ -52,7 +56,9 @@ export class RK8 extends Peripheral {
         await promises.writeFile(this.DATA_FILE, this.data);
     }
 
-    public async run(io: IOContext): Promise<void> {
+    public async run(): Promise<void> {
+        const io = this.io;
+
         while (this.keepAlive) {
             const regA = io.readRegister(DeviceRegister.REG_A);
 

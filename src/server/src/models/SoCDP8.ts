@@ -82,16 +82,19 @@ export class SoCDP8 {
             const peripheral = this.createPeripheral(perph, dir);
 
             const devId = peripheral.getDeviceID();
-            this.io.registerPeripheral(peripheral.getBusConnections(), devId);
-            const context: IOContext = {
+
+            const ioCtx: IOContext = {
                 readRegister: reg => this.io.readPeripheralReg(devId, reg),
                 writeRegister: (reg, val) => this.io.writePeripheralReg(devId, reg, val),
                 dataBreak: req => this.io.doDataBreak(req),
                 emitEvent: (action, data) => this.ioListener.onPeripheralEvent(devId, action, data),
             };
+            peripheral.setIOContext(ioCtx);
+
+            this.io.registerPeripheral(peripheral.getBusConnections(), devId);
 
             this.peripherals.push(peripheral);
-            peripheral.run(context);
+            peripheral.run();
         }
 
         // Restore core memory
@@ -199,14 +202,23 @@ export class SoCDP8 {
         }
     }
 
-    public requestDeviceAction(id: number, action: string, data: any) {
+    private findPeripheral(id: number): Peripheral {
         for (const peripheral of this.peripherals) {
             if (peripheral.getDeviceID() == id) {
-                peripheral.requestAction(action, data);
-                return;
+                return peripheral;
             }
         }
-        console.log(`Event ${action}: Device ${id} not found`);
+        throw Error(`Unknown peripheral id ${id}`);
+    }
+
+    public requestDeviceAction(id: number, action: string, data: any) {
+        const peripheral = this.findPeripheral(id);
+        peripheral.requestAction(action, data);
+    }
+
+    public updatePeripheralConfig(id: number, config: PeripheralConfiguration) {
+        const peripheral = this.findPeripheral(id);
+        peripheral.reconfigure(config);
     }
 
     public setSwitch(sw: string, state: boolean): void {

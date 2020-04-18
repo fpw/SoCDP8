@@ -23,12 +23,16 @@ import { PC04Configuration, PeripheralConfiguration } from '../types/PeripheralT
 export class PC04 extends Peripheral {
     private readerData: number[] = [];
 
-    constructor(private conf: PC04Configuration) {
+    constructor(private readonly conf: PC04Configuration) {
         super(conf.id);
     }
 
-    public getConfiguration(): PeripheralConfiguration {
+    public getConfiguration(): PC04Configuration {
         return this.conf;
+    }
+
+    public reconfigure(newConf: PC04Configuration) {
+        Object.assign(this.conf, newConf);
     }
 
     public getBusConnections(): number[] {
@@ -46,7 +50,9 @@ export class PC04 extends Peripheral {
         }
     }
 
-    public async run(io: IOContext): Promise<void> {
+    public async run(): Promise<void> {
+        const io = this.io;
+
         io.writeRegister(DeviceRegister.REG_B, BaudSelect.BAUD_4800 << 9);
 
         this.runReader(io);
@@ -87,11 +93,13 @@ export class PC04 extends Peripheral {
             io.writeRegister(DeviceRegister.REG_D, regD & ~1); // remove request
             const punchData = io.readRegister(DeviceRegister.REG_C) & 0xFF;
 
-            const baud = io.readRegister(DeviceRegister.REG_B) >> 9;
+            const baudSel = io.readRegister(DeviceRegister.REG_B) >> 9;
+            const baud = this.toBaudRate(baudSel);
             await sleepMs(1000 / this.baudToCPS(baud));
 
             regD = io.readRegister(DeviceRegister.REG_D);
             io.writeRegister(DeviceRegister.REG_D, regD | 2); // ack data
+
             console.log(`PC04: Punch ${punchData.toString(16)}`);
             io.emitEvent('punch', punchData);
         }

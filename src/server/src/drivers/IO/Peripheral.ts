@@ -49,13 +49,25 @@ export interface IOContext {
 
 export abstract class Peripheral {
     private keepRunning = true;
+    private ctx?: IOContext;
 
     constructor(protected readonly id: DeviceID) {
     }
 
+    public setIOContext(ctx: IOContext) {
+        this.ctx = ctx;
+    }
+
+    protected get io(): IOContext {
+        if (!this.ctx) {
+            throw Error('No I/O context');
+        }
+        return this.ctx;
+    }
+
     public abstract getBusConnections(): number[];
 
-    public abstract run(io: IOContext): Promise<void>;
+    public abstract run(): Promise<void>;
 
     public getDeviceID(): DeviceID {
         return this.id;
@@ -65,6 +77,7 @@ export abstract class Peripheral {
     }
 
     public abstract getConfiguration(): PeripheralConfiguration;
+    public abstract reconfigure(conf: PeripheralConfiguration): void;
 
     public async saveState(): Promise<void> {
     }
@@ -73,19 +86,36 @@ export abstract class Peripheral {
         this.keepRunning = false;
     }
 
+    protected toBaudRate(sel: BaudSelect): number {
+        switch (sel) {
+            case BaudSelect.BAUD_110:   return 110;
+            case BaudSelect.BAUD_150:   return 150;
+            case BaudSelect.BAUD_300:   return 300;
+            case BaudSelect.BAUD_1200:  return 1200;
+            case BaudSelect.BAUD_2400:  return 2400;
+            case BaudSelect.BAUD_4800:  return 4800;
+            case BaudSelect.BAUD_9600:  return 9600;
+            case BaudSelect.BAUD_19200: return 19200;
+        }
+    }
+
+    protected toBaudSel(rate: number): BaudSelect {
+        switch (rate) {
+            case 110:   return BaudSelect.BAUD_110;
+            case 150:   return BaudSelect.BAUD_150;
+            case 300:   return BaudSelect.BAUD_300;
+            case 1200:  return BaudSelect.BAUD_1200;
+            case 2400:  return BaudSelect.BAUD_2400;
+            case 4800:  return BaudSelect.BAUD_4800;
+            case 9600:  return BaudSelect.BAUD_9600;
+            case 19200: return BaudSelect.BAUD_19200;
+            default:    throw Error('Invalid baud select');
+        }
+    }
+
     protected baudToCPS(sel: BaudSelect): number {
         const symbolsPerChar = 10;
-
-        switch (sel) {
-            case BaudSelect.BAUD_110:   return 110 / symbolsPerChar;
-            case BaudSelect.BAUD_150:   return 150 / symbolsPerChar;
-            case BaudSelect.BAUD_300:   return 300 / symbolsPerChar;
-            case BaudSelect.BAUD_1200:  return 1200 / symbolsPerChar;
-            case BaudSelect.BAUD_2400:  return 2400 / symbolsPerChar;
-            case BaudSelect.BAUD_4800:  return 4800 / symbolsPerChar;
-            case BaudSelect.BAUD_9600:  return 9600 / symbolsPerChar;
-            case BaudSelect.BAUD_19200: return 19200 / symbolsPerChar;
-        }
+        return this.toBaudRate(sel) / symbolsPerChar;
     }
 
     protected get keepAlive(): boolean {

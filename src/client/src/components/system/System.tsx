@@ -159,11 +159,11 @@ const PeripheralList: React.FunctionComponent<{list: PeripheralModel[]}> = ({lis
 const PT08Box: React.FunctionComponent<{model: PT08Model}> = observer(({model}) =>
     <PeripheralBox name='Serial Line' model={model}>
         <PT08
-            onReaderKey={model.appendReaderKey}
-            onReaderClear={model.clearPunch}
-            onTapeLoad={model.loadTape}
+            conf={model.config}
+            onConfigChange={conf => model.updateConfig(conf)}
             terminal={model.terminal}
-            onReaderActivationChange={model.setReaderActive}
+            onTapeLoad={model.loadTape}
+            onTapeStateChange={model.setTapeActive}
         />
     </PeripheralBox>);
 

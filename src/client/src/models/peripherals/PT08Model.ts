@@ -19,13 +19,34 @@
 import { PeripheralModel } from './PeripheralModel';
 import { PT08Configuration, DeviceID } from '../../types/PeripheralTypes';
 import { Terminal } from 'xterm';
+import { observable, computed, action } from 'mobx';
 
 export class PT08Model extends PeripheralModel {
+    @observable
+    private conf: PT08Configuration;
+
     private xterm: Terminal;
 
-    constructor(socket: SocketIOClient.Socket, private conf: PT08Configuration) {
+    constructor(socket: SocketIOClient.Socket, conf: PT08Configuration) {
         super(socket);
+        this.conf = conf;
         this.xterm = new Terminal();
+
+        this.xterm.onData(data => {
+            for (let i = 0; i < data.length; i++) {
+                let chr = data.charCodeAt(i);
+
+                if (this.conf.eightBit) {
+                    chr |= 0x80;
+                }
+
+                this.socket.emit('peripheral-action', {
+                    id: this.conf.id,
+                    action: 'key-press',
+                    data: chr
+                });
+            }
+        });
     }
 
     public get connections(): number[] {
@@ -36,6 +57,20 @@ export class PT08Model extends PeripheralModel {
             case DeviceID.DEV_ID_TT3:  return [0o44, 0o45];
             case DeviceID.DEV_ID_TT4:  return [0o46, 0o47];
         }
+    }
+
+    @computed
+    public get config(): PT08Configuration {
+        return this.conf;
+    }
+
+    @action
+    public updateConfig(newConf: PT08Configuration) {
+        this.conf = newConf;
+        this.socket.emit('peripheral-change-conf', {
+            id: this.conf.id,
+            config: this.conf,
+        });
     }
 
     public get terminal(): Terminal {
@@ -52,15 +87,7 @@ export class PT08Model extends PeripheralModel {
 
     private onPunch(data: number) {
         const chr = data & 0x7F;
-        this.xterm.write(Uint8Array.from([chr]));
-    }
-
-    public readonly appendReaderKey = async (chr: number): Promise<void> => {
-        this.socket.emit('peripheral-action', {
-            id: this.conf.id,
-            action: 'key-press',
-            data: chr
-        });
+        this.xterm.write(String.fromCodePoint(chr));
     }
 
     public readonly loadTape = async (tape: File): Promise<void> => {
@@ -72,15 +99,11 @@ export class PT08Model extends PeripheralModel {
         });
     }
 
-    public readonly setReaderActive = async (active: boolean): Promise<void> => {
+    public readonly setTapeActive = async (active: boolean): Promise<void> => {
         this.socket.emit('peripheral-action', {
             id: this.conf.id,
             action: 'reader-set-active',
             data: active
         });
     };
-
-    public readonly clearPunch = async (): Promise<void> => {
-        this.xterm.reset();
-    }
 }

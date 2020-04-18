@@ -88,12 +88,16 @@ export class TC08 extends Peripheral {
 
     private tapes: TapeState[] = [];
 
-    constructor(private conf: TC08Configuration) {
+    constructor(private readonly conf: TC08Configuration) {
         super(conf.id);
     }
 
     public getConfiguration(): TC08Configuration {
         return this.conf;
+    }
+
+    public reconfigure(newConf: TC08Configuration) {
+        Object.assign(this.conf, newConf);
     }
 
     public getBusConnections(): number[] {
@@ -119,7 +123,9 @@ export class TC08 extends Peripheral {
 
     private lastRegA: number = 0;
 
-    public async run(io: IOContext): Promise<void> {
+    public async run(): Promise<void> {
+        const io = this.io;
+
         while (this.keepAlive) {
             const regA = io.readRegister(DeviceRegister.REG_A);
 

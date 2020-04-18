@@ -16,38 +16,42 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
+import { Terminal } from 'xterm';
+import { PT08Configuration, BaudRate, BAUD_RATES } from '../../types/PeripheralTypes';
 
-import { createStyles, makeStyles, StylesProvider } from "@material-ui/core/styles";
+import React from 'react';
+import { observer } from 'mobx-react-lite';
+import { createStyles, makeStyles } from "@material-ui/core/styles";
 import Box from "@material-ui/core/Box";
 import Button from "@material-ui/core/Button";
 import FormGroup from "@material-ui/core/FormGroup";
 import FormControl from "@material-ui/core/FormControl";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Switch from "@material-ui/core/Switch";
-import { Terminal } from 'xterm';
+import Divider from '@material-ui/core/Divider';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormLabel from '@material-ui/core/FormLabel';
 
 import '../../../node_modules/xterm/css/xterm.css';
 
 export interface PT08Props {
+    conf: PT08Configuration;
     terminal: Terminal;
-    onReaderKey(chr: number): void;
-    onReaderClear(): void;
+    onConfigChange(conf: PT08Configuration): void;
     onTapeLoad(tape: File): void;
-    onReaderActivationChange(state: boolean): void;
+    onTapeStateChange(state: boolean): void;
 }
 
 const useStyles = makeStyles(theme => createStyles({
-    output: {
-        fontFamily: 'monospace',
-    },
     fileInput: {
         display: 'none',
     }
 }));
 
-export const PT08: React.FunctionComponent<PT08Props> = (props => {
+export const PT08: React.FunctionComponent<PT08Props> = observer(props => {
     const classes = useStyles();
+
     const tapeInput = React.useRef<HTMLInputElement>(null);
     const termRef = React.useRef<HTMLDivElement>(null);
 
@@ -56,30 +60,59 @@ export const PT08: React.FunctionComponent<PT08Props> = (props => {
             return;
         }
         const term = props.terminal;
+        term.setOption('bellStyle', 'both');
         term.resize(80, 25);
         term.open(termRef.current);
-        term.onData(data => {
-            for (let i = 0; i < data.length; i++) {
-                sendPunch(data.charCodeAt(i), props);
-            }
-        });
     }, []);
 
     return (
         <section>
-            <Box mb={4}>
-                <div ref={termRef}></div>
-                <Button variant='contained' onClick={() => props.onReaderClear()}>Clear Output</Button>
+            <Box>
+                <FormGroup row>
+                    <FormControl>
+                        <FormLabel component='legend'>Baud Rate</FormLabel>
+                        <Select
+                            value={props.conf.baudRate}
+                            onChange={evt => {
+                                props.conf.baudRate = Number.parseInt(evt.target.value as string) as BaudRate;
+                                props.onConfigChange(props.conf);
+                        }}>
+                            {BAUD_RATES.map(b => <MenuItem value={b}>{b}</MenuItem>)}
+                        </Select>
+                    </FormControl>
+
+                    <FormControlLabel
+                        control={<Switch
+                            defaultChecked={props.conf.eightBit}
+                            onChange={evt => {
+                                props.conf.eightBit = evt.target.checked;
+                                props.onConfigChange(props.conf);
+                            }}
+                        />}
+                        labelPlacement='start'
+                        label='Set 8th bit'
+                    />
+                </FormGroup>
             </Box>
 
-            <Box>
+            <Box mt={1}>
+                <div ref={termRef}></div>
+            </Box>
+
+            <Box mt={1} mb={3}>
+                <Button variant='contained' onClick={() => props.terminal.clear()}>Clear Output</Button>
+            </Box>
+
+            <Divider />
+
+            <Box mt={2}>
                 <FormGroup row>
                     <FormControl>
                         <input ref={tapeInput} className={classes.fileInput} type='file' onChange={evt => onLoadFile(evt, props)}/>
                         <Button variant='outlined' color='primary' onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
                     </FormControl>
                     <FormControlLabel
-                        control={<Switch onChange={evt => props.onReaderActivationChange(evt.target.checked)} />}
+                        control={<Switch onChange={evt => props.onTapeStateChange(evt.target.checked)} />}
                         labelPlacement='start'
                         label='Reader On'
                     />
@@ -96,8 +129,4 @@ function onLoadFile(evt: React.ChangeEvent, props: PT08Props): void {
     }
 
     props.onTapeLoad(target.files[0]);
-}
-
-function sendPunch(code: number, props: PT08Props) {
-    props.onReaderKey(code | 0x80);
 }

@@ -143,7 +143,7 @@ begin
         case iop is
             when IO1 =>
                 -- Set skip if data acked
-                io_skip <= regD(1) and uart_tx_ready;
+                io_skip <= regD(1); -- and uart_tx_ready;
             when IO2 =>
                 -- Clear ack flag 
                 regD(1) <= '0';

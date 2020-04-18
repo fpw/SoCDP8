@@ -20,7 +20,7 @@ import { Peripheral, IOContext } from '../drivers/IO/Peripheral';
 import { KW8IConfiguration } from '../types/PeripheralTypes';
 
 export class KW8I extends Peripheral {
-    constructor(private conf: KW8IConfiguration) {
+    constructor(private readonly conf: KW8IConfiguration) {
         super(conf.id);
     }
 
@@ -28,10 +28,14 @@ export class KW8I extends Peripheral {
         return this.conf;
     }
 
+    public reconfigure(newConf: KW8IConfiguration) {
+        Object.assign(this.conf, newConf);
+    }
+
     public getBusConnections(): number[] {
         return [0o13];
     }
 
-    public async run(io: IOContext): Promise<void> {
+    public async run(): Promise<void> {
     }
 }

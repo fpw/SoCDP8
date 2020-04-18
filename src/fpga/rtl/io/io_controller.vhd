@@ -212,9 +212,9 @@ tt_insts: for i in 0 to 3 generate
 
             uart_rx => '1',
             uart_tx => open,
-            uart_rts => '1',
+            uart_rts => '0',
             uart_cts => open,
-                
+
             pdp8_irq => dev_interrupts(DEV_ID_TT1 + i),
             soc_attention => dev_attention(DEV_ID_TT1 + i)
         );

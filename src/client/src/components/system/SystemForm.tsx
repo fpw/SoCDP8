@@ -157,7 +157,7 @@ function toSystemConf(ev: React.FormEvent<HTMLFormElement>): SystemConfiguration
     s.maxMemField = Number.parseInt((form.elements.namedItem('maxMemField') as HTMLInputElement).value);
 
     if ((form.elements.namedItem('serialLine') as HTMLInputElement).checked) {
-        s.peripherals.push({id: DeviceID.DEV_ID_PT08, baudRate: 110});
+        s.peripherals.push({id: DeviceID.DEV_ID_PT08, baudRate: 110, eightBit: true});
     }
 
     if ((form.elements.namedItem('pc04') as HTMLInputElement).checked) {
@@ -175,13 +175,13 @@ function toSystemConf(ev: React.FormEvent<HTMLFormElement>): SystemConfiguration
     switch (Number.parseInt((form.elements.namedItem('pt08') as HTMLInputElement).value)) {
         // fall-throughs are intentional
         case 4:
-            s.peripherals.push({id: DeviceID.DEV_ID_TT4, baudRate: 9600});
+            s.peripherals.push({id: DeviceID.DEV_ID_TT4, baudRate: 9600, eightBit: false});
         case 3:
-            s.peripherals.push({id: DeviceID.DEV_ID_TT3, baudRate: 9600});
+            s.peripherals.push({id: DeviceID.DEV_ID_TT3, baudRate: 9600, eightBit: false});
         case 2:
-            s.peripherals.push({id: DeviceID.DEV_ID_TT2, baudRate: 9600});
+            s.peripherals.push({id: DeviceID.DEV_ID_TT2, baudRate: 9600, eightBit: false});
         case 1:
-            s.peripherals.push({id: DeviceID.DEV_ID_TT1, baudRate: 9600});
+            s.peripherals.push({id: DeviceID.DEV_ID_TT1, baudRate: 9600, eightBit: false});
     }
 
     const diskStr = (form.elements.namedItem('disk') as HTMLInputElement).value;

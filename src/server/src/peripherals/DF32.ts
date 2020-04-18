@@ -27,7 +27,7 @@ export class DF32 extends Peripheral {
     private readonly DATA_FILE: string;
     private data = Buffer.alloc(4 * 16 * 2048 * 2); // 4 disks, each with 16 tracks of 2048 words, stored as 2 bytes each
 
-    constructor(private conf: DF32Configuration, dir: string) {
+    constructor(private readonly conf: DF32Configuration, dir: string) {
         super(conf.id);
 
         this.DATA_FILE = dir + '/df32.dat';
@@ -42,6 +42,10 @@ export class DF32 extends Peripheral {
         return this.conf;
     }
 
+    public reconfigure(newConf: DF32Configuration) {
+        Object.assign(this.conf, newConf);
+    }
+
     public async saveState() {
         await promises.writeFile(this.DATA_FILE, this.data);
     }
@@ -50,7 +54,9 @@ export class DF32 extends Peripheral {
         return [0o60, 0o61, 0o62];
     }
 
-    public async run(io: IOContext): Promise<void> {
+    public async run(): Promise<void> {
+        const io = this.io;
+
         while (this.keepAlive) {
             const regA = io.readRegister(DeviceRegister.REG_A);
 

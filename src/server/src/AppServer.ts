@@ -87,6 +87,7 @@ export class AppServer {
 
         client.on('console-switch', data => this.setConsoleSwitch(client, data));
         client.on('peripheral-action', data => this.execPeripheralAction(client, data));
+        client.on('peripheral-change-conf', data => this.changePeripheralConfig(client, data));
         client.on('core', data => this.execCoreMemoryAction(client, data));
 
         client.on('system-list', reply => reply(this.getSystemList(client)));
@@ -185,6 +186,11 @@ export class AppServer {
     private execPeripheralAction(client: io.Socket, data: any): void {
         console.log(`${client.id}: Peripheral action ${data.action} on ${data.id}`);
         this.pdp8.requestDeviceAction(data.id, data.action, data.data);
+    }
+
+    private changePeripheralConfig(client: io.Socket, data: any): void {
+        console.log(`${client.id}: Change peripheral config on ${data.id}`);
+        this.pdp8.updatePeripheralConfig(data.id, data.config);
     }
 
     private execCoreMemoryAction(client: io.Socket, data: any): void {

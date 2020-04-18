@@ -26,7 +26,7 @@ export class PT08 extends Peripheral {
     private readerTapePos: number = 0;
     private keyBuffer: number[] = [];
 
-    constructor(private conf: PT08Configuration) {
+    constructor(private readonly conf: PT08Configuration) {
         super(conf.id);
     }
 
@@ -44,6 +44,15 @@ export class PT08 extends Peripheral {
 
     public getConfiguration(): PT08Configuration {
         return this.conf;
+    }
+
+    public reconfigure(newConf: PT08Configuration) {
+        const io = this.io;
+
+        const baudSel = this.toBaudSel(newConf.baudRate);
+        io.writeRegister(DeviceRegister.REG_B, baudSel << 9);
+
+        Object.assign(this.conf, newConf);
     }
 
     public requestAction(action: string, data: any): void {
@@ -67,8 +76,10 @@ export class PT08 extends Peripheral {
         }
     }
 
-    public async run(io: IOContext): Promise<void> {
-        io.writeRegister(DeviceRegister.REG_B, BaudSelect.BAUD_110 << 9);
+    public async run(): Promise<void> {
+        const io = this.io;
+
+        this.reconfigure(this.conf);
 
         this.runReader(io);
         this.runPunch(io);
@@ -77,13 +88,13 @@ export class PT08 extends Peripheral {
     private async runReader(io: IOContext) {
         while (this.keepAlive) {
             const data = this.readNext();
-            const regB = io.readRegister(DeviceRegister.REG_B);
             if (data !== null) {
+                const regB = io.readRegister(DeviceRegister.REG_B);
                 io.writeRegister(DeviceRegister.REG_A, data);
                 io.writeRegister(DeviceRegister.REG_B, regB & 0o7000 | 1);
             }
 
-            await sleepMs(1000 / this.baudToCPS(regB >> 9));
+            await sleepMs(1000 / this.baudToCPS(this.conf.baudRate));
         }
     }
 
@@ -127,8 +138,7 @@ export class PT08 extends Peripheral {
             io.writeRegister(DeviceRegister.REG_D, regD & ~1); // remove request
             const punchData = io.readRegister(DeviceRegister.REG_C);
 
-            const baud = io.readRegister(DeviceRegister.REG_B) >> 9;
-            await sleepMs(1000 / this.baudToCPS(baud));
+            await sleepMs(1000 / this.baudToCPS(this.conf.baudRate));
 
             regD = io.readRegister(DeviceRegister.REG_D);
             io.writeRegister(DeviceRegister.REG_D, regD | 2); // ack data
