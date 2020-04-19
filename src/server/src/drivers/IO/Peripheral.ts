@@ -113,9 +113,9 @@ export abstract class Peripheral {
         }
     }
 
-    protected baudToCPS(sel: BaudSelect): number {
+    protected baudRateToCPS(rate: number): number {
         const symbolsPerChar = 10;
-        return this.toBaudRate(sel) / symbolsPerChar;
+        return rate / symbolsPerChar;
     }
 
     protected get keepAlive(): boolean {

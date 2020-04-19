@@ -10,7 +10,8 @@ use work.socdp8_package.all;
 entity uart is
     generic (
         data_bits: positive := 8;
-        stop_bits: positive := 2
+        stop_bits: positive := 2;
+        obey_rts: boolean := false
     );
 
     port (
@@ -62,7 +63,11 @@ begin
     case tx_state is
         when IDLE =>
             tx <= '1';
-            tx_ready <= not rts;
+            if obey_rts then
+                tx_ready <= not rts;
+            else
+                tx_ready <= '1';
+            end if;
             tx_buf <= tx_data;
             if tx_send = '1' then
                 tx_counter <= 1;

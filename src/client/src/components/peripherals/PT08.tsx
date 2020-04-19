@@ -16,8 +16,12 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Terminal } from 'xterm';
 import { PT08Configuration, BaudRate, BAUD_RATES } from '../../types/PeripheralTypes';
+import { PaperTape } from './PaperTape';
+import { PaperTapePainter } from './PaperTapePainter';
+import { Terminal } from 'xterm';
+
+import '../../../node_modules/xterm/css/xterm.css';
 
 import React from 'react';
 import { observer } from 'mobx-react-lite';
@@ -32,15 +36,20 @@ import Divider from '@material-ui/core/Divider';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormLabel from '@material-ui/core/FormLabel';
-
-import '../../../node_modules/xterm/css/xterm.css';
+import Typography from '@material-ui/core/Typography';
+import LinearProgress from '@material-ui/core/LinearProgress';
 
 export interface PT08Props {
     conf: PT08Configuration;
     terminal: Terminal;
+
+    readerTape?: PaperTape;
+    readerActive: boolean;
+
     onConfigChange(conf: PT08Configuration): void;
+
     onTapeLoad(tape: File): void;
-    onTapeStateChange(state: boolean): void;
+    onReaderActivationChange(state: boolean): void;
 }
 
 const useStyles = makeStyles(theme => createStyles({
@@ -49,10 +58,58 @@ const useStyles = makeStyles(theme => createStyles({
     }
 }));
 
-export const PT08: React.FunctionComponent<PT08Props> = observer(props => {
-    const classes = useStyles();
+export const PT08: React.FunctionComponent<PT08Props> = (props) => {
+    return (
+        <section>
+            <ConfigBox {...props} />
 
-    const tapeInput = React.useRef<HTMLInputElement>(null);
+            <TerminalBox {...props} />
+
+            <Divider />
+
+            <TapeBox {...props} />
+        </section>
+    );
+};
+
+const ConfigBox: React.FunctionComponent<PT08Props> = observer(props => {
+    return (
+        <Box>
+            <FormGroup row>
+                <FormControl>
+                    <FormLabel component="legend">Baud Rate</FormLabel>
+                    <Select
+                        value={props.conf.baudRate}
+                        onChange={(evt) => {
+                            props.conf.baudRate = Number.parseInt(evt.target.value as string) as BaudRate;
+                            props.onConfigChange(props.conf);
+                        }}
+                    >
+                        {BAUD_RATES.map((b) => (
+                            <MenuItem value={b}>{b}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+
+                <FormControlLabel
+                    control={
+                        <Switch
+                            defaultChecked={props.conf.eightBit}
+                            onChange={(evt) => {
+                                props.conf.eightBit = evt.target.checked;
+                                props.onConfigChange(props.conf);
+                            }}
+                        />
+                    }
+                    labelPlacement="start"
+                    label="Set 8th bit"
+                />
+            </FormGroup>
+        </Box>
+    );
+});
+
+const TerminalBox: React.FunctionComponent<PT08Props> = (props) => {
     const termRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
@@ -66,61 +123,81 @@ export const PT08: React.FunctionComponent<PT08Props> = observer(props => {
     }, []);
 
     return (
-        <section>
-            <Box>
-                <FormGroup row>
-                    <FormControl>
-                        <FormLabel component='legend'>Baud Rate</FormLabel>
-                        <Select
-                            value={props.conf.baudRate}
-                            onChange={evt => {
-                                props.conf.baudRate = Number.parseInt(evt.target.value as string) as BaudRate;
-                                props.onConfigChange(props.conf);
-                        }}>
-                            {BAUD_RATES.map(b => <MenuItem value={b}>{b}</MenuItem>)}
-                        </Select>
-                    </FormControl>
-
-                    <FormControlLabel
-                        control={<Switch
-                            defaultChecked={props.conf.eightBit}
-                            onChange={evt => {
-                                props.conf.eightBit = evt.target.checked;
-                                props.onConfigChange(props.conf);
-                            }}
-                        />}
-                        labelPlacement='start'
-                        label='Set 8th bit'
-                    />
-                </FormGroup>
-            </Box>
-
+        <React.Fragment>
             <Box mt={1}>
                 <div ref={termRef}></div>
             </Box>
 
             <Box mt={1} mb={3}>
-                <Button variant='contained' onClick={() => props.terminal.clear()}>Clear Output</Button>
+                <Button variant="contained" onClick={() => props.terminal.reset()}>
+                    Clear Output
+                </Button>
             </Box>
+        </React.Fragment>
+    );
+};
 
-            <Divider />
+const TapeBox: React.FunctionComponent<PT08Props> = observer(props => {
+    const classes = useStyles();
+    const tapeInput = React.useRef<HTMLInputElement>(null);
+    const canvasRef = React.useRef<HTMLCanvasElement>(null);
+    const [drawer] = React.useState<PaperTapePainter>(new PaperTapePainter());
 
-            <Box mt={2}>
-                <FormGroup row>
-                    <FormControl>
-                        <input ref={tapeInput} className={classes.fileInput} type='file' onChange={evt => onLoadFile(evt, props)}/>
-                        <Button variant='outlined' color='primary' onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
-                    </FormControl>
-                    <FormControlLabel
-                        control={<Switch onChange={evt => props.onTapeStateChange(evt.target.checked)} />}
-                        labelPlacement='start'
-                        label='Reader On'
-                    />
-                </FormGroup>
-            </Box>
-        </section>
+    let tapeInfo: JSX.Element;
+    if (!props.readerTape) {
+        tapeInfo = <p>No tape loaded</p>;
+    } else {
+        const tape: PaperTape = props.readerTape;
+        let progress = 100;
+        if (tape.buffer.byteLength > 0) {
+            progress = Math.round(tape.pos / tape.buffer.byteLength * 100);
+        }
+        tapeInfo =
+            <Box mb={1}>
+                Tape { tape.name }
+                <LinearProgress variant='determinate' value={progress} />
+                <canvas ref={canvasRef} />
+            </Box>;
+    }
+
+    React.useEffect(() => {
+        if (canvasRef.current && props.readerTape) {
+            const canvas = canvasRef.current;
+            if (!canvas) {
+                return;
+            }
+
+            if (canvas.parentElement) {
+                canvas.width = canvas.parentElement.scrollWidth;
+                canvas.height = 100;
+            }
+
+            const tape = props.readerTape;
+            drawer.setState(canvas, tape);
+        }
+    });
+
+    return (
+        <Box mt={2}>
+            <Typography component='h6' variant='h6'>Reader</Typography>
+
+            { tapeInfo }
+
+            <FormGroup row>
+                <FormControl>
+                    <input ref={tapeInput} className={classes.fileInput} type='file' onChange={evt => onLoadFile(evt, props)} />
+                    <Button variant='outlined' color='primary' onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
+                </FormControl>
+                <FormControlLabel
+                    control={<Switch onChange={evt => props.onReaderActivationChange(evt.target.checked)} defaultChecked={props.readerActive} />}
+                    labelPlacement='start'
+                    label='Reader On'
+                />
+            </FormGroup>
+        </Box>
     );
 });
+
 
 function onLoadFile(evt: React.ChangeEvent, props: PT08Props): void {
     const target = evt.target as HTMLInputElement;

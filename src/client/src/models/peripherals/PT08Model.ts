@@ -18,12 +18,19 @@
 
 import { PeripheralModel } from './PeripheralModel';
 import { PT08Configuration, DeviceID } from '../../types/PeripheralTypes';
+import { PaperTape } from '../../components/peripherals/PaperTape';
 import { Terminal } from 'xterm';
 import { observable, computed, action } from 'mobx';
 
 export class PT08Model extends PeripheralModel {
     @observable
     private conf: PT08Configuration;
+
+    @observable
+    private readerTape_?: PaperTape;
+
+    @observable
+    private readerActive_: boolean = false;
 
     private xterm: Terminal;
 
@@ -82,6 +89,9 @@ export class PT08Model extends PeripheralModel {
             case 'punch':
                 this.onPunch(data.data);
                 break;
+            case 'readerPos':
+                this.setReaderPos(data.data);
+                break;
         }
     }
 
@@ -90,20 +100,50 @@ export class PT08Model extends PeripheralModel {
         this.xterm.write(String.fromCodePoint(chr));
     }
 
-    public readonly loadTape = async (tape: File): Promise<void> => {
-        let data = await this.loadFile(tape);
+    public readonly loadTape = async (file: File): Promise<void> => {
+        const tape = await PaperTape.fromFile(file);
         this.socket.emit('peripheral-action', {
             id: this.conf.id,
             action: 'reader-tape-set',
-            data: data
+            data: tape.buffer.buffer
         });
+        this.setReaderTape(tape);
     }
 
-    public readonly setTapeActive = async (active: boolean): Promise<void> => {
+    @action
+    private setReaderTape(tape: PaperTape) {
+        this.readerTape_ = tape;
+    }
+
+    @action
+    private setReaderPos(pos: number) {
+        if (this.readerTape_) {
+            this.readerTape_.pos = pos;
+        }
+    }
+
+    @computed
+    public get readerTape(): PaperTape | undefined {
+        return this.readerTape_;
+    }
+
+    @computed
+    public get readerPos(): number {
+        return this.readerPos;
+    }
+
+    @action
+    public setReaderActive(active: boolean) {
+        this.readerActive_ = active;
         this.socket.emit('peripheral-action', {
             id: this.conf.id,
             action: 'reader-set-active',
             data: active
         });
     };
+
+    @computed
+    public get readerActive(): boolean {
+        return this.readerActive_;
+    }
 }

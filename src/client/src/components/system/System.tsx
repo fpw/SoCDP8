@@ -161,9 +161,15 @@ const PT08Box: React.FunctionComponent<{model: PT08Model}> = observer(({model}) 
         <PT08
             conf={model.config}
             onConfigChange={conf => model.updateConfig(conf)}
+
+            readerTape={model.readerTape}
+
             terminal={model.terminal}
+
             onTapeLoad={model.loadTape}
-            onTapeStateChange={model.setTapeActive}
+
+            onReaderActivationChange={active => model.setReaderActive(active)}
+            readerActive={model.readerActive}
         />
     </PeripheralBox>);
 

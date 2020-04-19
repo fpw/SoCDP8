@@ -94,7 +94,7 @@ export class PT08 extends Peripheral {
                 io.writeRegister(DeviceRegister.REG_B, regB & 0o7000 | 1);
             }
 
-            await sleepMs(1000 / this.baudToCPS(this.conf.baudRate));
+            await sleepMs(1000 / this.baudRateToCPS(this.conf.baudRate));
         }
     }
 
@@ -119,6 +119,7 @@ export class PT08 extends Peripheral {
         if (this.readerTapePos < this.readerTape.length) {
             const data = this.readerTape[this.readerTapePos++];
             console.log(`PT08: Read ${data.toString(16)}, ${this.readerTapePos} / ${this.readerTape.length}`);
+            this.io.emitEvent('readerPos', this.readerTapePos);
             return data;
         } else {
             return null;
@@ -138,7 +139,7 @@ export class PT08 extends Peripheral {
             io.writeRegister(DeviceRegister.REG_D, regD & ~1); // remove request
             const punchData = io.readRegister(DeviceRegister.REG_C);
 
-            await sleepMs(1000 / this.baudToCPS(this.conf.baudRate));
+            await sleepMs(1000 / this.baudRateToCPS(this.conf.baudRate));
 
             regD = io.readRegister(DeviceRegister.REG_D);
             io.writeRegister(DeviceRegister.REG_D, regD | 2); // ack data

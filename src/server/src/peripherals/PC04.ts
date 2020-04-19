@@ -69,14 +69,15 @@ export class PC04 extends Peripheral {
 
             // current word was retrieved, get next
             const data = this.readerData.shift();
-            const regB = io.readRegister(DeviceRegister.REG_B);
             if (data != undefined) {
                 console.log(`PC04 reader: Next ${data.toString(16)}, ${this.readerData.length} remaining`);
                 io.writeRegister(DeviceRegister.REG_A, data);
+
+                const regB = io.readRegister(DeviceRegister.REG_B);
                 io.writeRegister(DeviceRegister.REG_B, regB & 0o7000 | 2); // notify of new data
             }
 
-            await sleepMs(1000 / this.baudToCPS(regB >> 9));
+            await sleepMs(1000 / this.baudRateToCPS(this.conf.baudRate));
         }
     }
 
@@ -93,9 +94,7 @@ export class PC04 extends Peripheral {
             io.writeRegister(DeviceRegister.REG_D, regD & ~1); // remove request
             const punchData = io.readRegister(DeviceRegister.REG_C) & 0xFF;
 
-            const baudSel = io.readRegister(DeviceRegister.REG_B) >> 9;
-            const baud = this.toBaudRate(baudSel);
-            await sleepMs(1000 / this.baudToCPS(baud));
+            await sleepMs(1000 / this.baudRateToCPS(this.conf.baudRate));
 
             regD = io.readRegister(DeviceRegister.REG_D);
             io.writeRegister(DeviceRegister.REG_D, regD | 2); // ack data
