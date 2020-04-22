@@ -16,28 +16,26 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PaperTape } from './PaperTape';
-
 export class PaperTapePainter {
-    private canvas?: HTMLCanvasElement;
-    private tape?: PaperTape;
     private drawPending: boolean = false;
 
 
-    public setState(canvas: HTMLCanvasElement, tape: PaperTape) {
-        this.canvas = canvas;
-        this.tape = tape;
+    constructor(private canvas: HTMLCanvasElement) {
+
+    }
+
+    public update(buf: Uint8Array, pos: number) {
         if (!this.drawPending) {
             this.drawPending = true;
-            requestAnimationFrame(() => this.draw());
+            requestAnimationFrame(() => this.draw(buf, pos));
         }
     }
 
-    private draw() {
+    private draw(buf: Uint8Array, pos: number) {
         this.drawPending = false;
 
-        const ctx = this.canvas?.getContext('2d');
-        if (!ctx || !this.tape) {
+        const ctx = this.canvas.getContext('2d');
+        if (!ctx) {
             return;
         }
 
@@ -50,10 +48,10 @@ export class PaperTapePainter {
         ctx.fillStyle = 'rgba(255, 255, 255, 255)';
 
         for (let i = 0; i < w / 10; i++) {
-            const idx = this.tape.pos + i;
-            if (idx < this.tape.buffer.byteLength) {
+            const idx = pos + i;
+            if (idx < buf.byteLength) {
                 const x = 2 + 10 * i;
-                const byte = this.tape.buffer[idx];
+                const byte = buf[idx];
                 this.drawByte(ctx, x, byte);
             }
         }

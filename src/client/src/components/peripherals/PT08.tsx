@@ -141,7 +141,7 @@ const TapeBox: React.FunctionComponent<PT08Props> = observer(props => {
     const classes = useStyles();
     const tapeInput = React.useRef<HTMLInputElement>(null);
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
-    const [drawer] = React.useState<PaperTapePainter>(new PaperTapePainter());
+    const [painter, setPainter] = React.useState<PaperTapePainter | null>(null);
 
     let tapeInfo: JSX.Element;
     if (!props.readerTape) {
@@ -160,20 +160,21 @@ const TapeBox: React.FunctionComponent<PT08Props> = observer(props => {
             </Box>;
     }
 
+
     React.useEffect(() => {
-        if (canvasRef.current && props.readerTape) {
+        if (!painter && canvasRef.current) {
             const canvas = canvasRef.current;
-            if (!canvas) {
-                return;
-            }
+            setPainter(new PaperTapePainter(canvas));
 
             if (canvas.parentElement) {
                 canvas.width = canvas.parentElement.scrollWidth;
                 canvas.height = 100;
             }
+        }
 
-            const tape = props.readerTape;
-            drawer.setState(canvas, tape);
+        const tape = props.readerTape;
+        if (tape) {
+            painter?.update(tape.buffer, tape.pos);
         }
     });
 

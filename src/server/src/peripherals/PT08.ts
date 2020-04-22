@@ -87,23 +87,24 @@ export class PT08 extends Peripheral {
 
     private async runReader(io: IOContext) {
         while (this.keepAlive) {
-            const data = this.readNext();
+            let data: number | null = null;
+            if (this.readerActive) {
+                const readerRun = (io.readRegister(DeviceRegister.REG_B) & 1) == 0;
+                if (readerRun) {
+                    data = this.readNextFromTape();
+                }
+            } else {
+                data = this.readNextKey();
+            }
+
+            await sleepMs(1000 / this.baudRateToCPS(this.conf.baudRate));
+
             if (data !== null) {
                 const regB = io.readRegister(DeviceRegister.REG_B);
                 io.writeRegister(DeviceRegister.REG_A, data);
                 io.writeRegister(DeviceRegister.REG_B, regB & 0o7000 | 1);
             }
-
-            await sleepMs(1000 / this.baudRateToCPS(this.conf.baudRate));
-        }
     }
-
-    private readNext(): number | null {
-        if (this.readerActive) {
-            return this.readNextFromTape();
-        } else {
-            return this.readNextKey();
-        }
     }
 
     private readNextKey(): number | null {
