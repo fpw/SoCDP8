@@ -17,11 +17,10 @@
  */
 
 import { PT08Configuration, BaudRate, BAUD_RATES } from '../../types/PeripheralTypes';
-import { PaperTape } from './PaperTape';
-import { PaperTapePainter } from './PaperTapePainter';
+import { PaperTape } from '../../models/PaperTape';
 import { Terminal } from 'xterm';
-
-import '../../../node_modules/xterm/css/xterm.css';
+import { PaperTapeBox } from './PaperTapeBox';
+import { downloadData } from '../../util';
 
 import React from 'react';
 import { observer } from 'mobx-react-lite';
@@ -37,7 +36,13 @@ import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormLabel from '@material-ui/core/FormLabel';
 import Typography from '@material-ui/core/Typography';
-import LinearProgress from '@material-ui/core/LinearProgress';
+import ExpansionPanel from '@material-ui/core/ExpansionPanel';
+import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
+import Container from '@material-ui/core/Container';
+
+import '../../../node_modules/xterm/css/xterm.css';
 
 export interface PT08Props {
     conf: PT08Configuration;
@@ -45,11 +50,17 @@ export interface PT08Props {
 
     readerTape?: PaperTape;
     readerActive: boolean;
+    onReaderActivationChange(state: boolean): void;
+    onReaderTapeLoad(tape: File): void;
+
+    punchTape: PaperTape;
+    punchActive: boolean;
+    onPunchActivationChange(state: boolean): void;
+    onPunchClear(): void;
+    onPunchLeader(): void;
 
     onConfigChange(conf: PT08Configuration): void;
 
-    onTapeLoad(tape: File): void;
-    onReaderActivationChange(state: boolean): void;
 }
 
 const useStyles = makeStyles(theme => createStyles({
@@ -65,49 +76,56 @@ export const PT08: React.FunctionComponent<PT08Props> = (props) => {
 
             <TerminalBox {...props} />
 
-            <Divider />
-
-            <TapeBox {...props} />
+            <ExpansionPanel>
+                <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography variant='body1'>Reader &amp; Punch</Typography>
+                </ExpansionPanelSummary>
+                <ExpansionPanelDetails>
+                    <Container>
+                        <ReaderBox {...props} />
+                        <Divider />
+                        <PunchBox {...props} />
+                    </Container>
+                </ExpansionPanelDetails>
+            </ExpansionPanel>
         </section>
     );
 };
 
-const ConfigBox: React.FunctionComponent<PT08Props> = observer(props => {
-    return (
-        <Box>
-            <FormGroup row>
-                <FormControl>
-                    <FormLabel component="legend">Baud Rate</FormLabel>
-                    <Select
-                        value={props.conf.baudRate}
+const ConfigBox: React.FunctionComponent<PT08Props> = observer(props =>
+    <Box>
+        <FormGroup row>
+            <FormControl>
+                <FormLabel component="legend">Baud Rate</FormLabel>
+                <Select
+                    value={props.conf.baudRate}
+                    onChange={(evt) => {
+                        props.conf.baudRate = Number.parseInt(evt.target.value as string) as BaudRate;
+                        props.onConfigChange(props.conf);
+                    }}
+                >
+                    {BAUD_RATES.map((b) => (
+                        <MenuItem value={b}>{b}</MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+
+            <FormControlLabel
+                control={
+                    <Switch
+                        defaultChecked={props.conf.eightBit}
                         onChange={(evt) => {
-                            props.conf.baudRate = Number.parseInt(evt.target.value as string) as BaudRate;
+                            props.conf.eightBit = evt.target.checked;
                             props.onConfigChange(props.conf);
                         }}
-                    >
-                        {BAUD_RATES.map((b) => (
-                            <MenuItem value={b}>{b}</MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-
-                <FormControlLabel
-                    control={
-                        <Switch
-                            defaultChecked={props.conf.eightBit}
-                            onChange={(evt) => {
-                                props.conf.eightBit = evt.target.checked;
-                                props.onConfigChange(props.conf);
-                            }}
-                        />
-                    }
-                    labelPlacement="start"
-                    label="Set 8th bit"
-                />
-            </FormGroup>
-        </Box>
-    );
-});
+                    />
+                }
+                labelPlacement="start"
+                label="Set 8th bit"
+            />
+        </FormGroup>
+    </Box>
+);
 
 const TerminalBox: React.FunctionComponent<PT08Props> = (props) => {
     const termRef = React.useRef<HTMLDivElement>(null);
@@ -137,52 +155,15 @@ const TerminalBox: React.FunctionComponent<PT08Props> = (props) => {
     );
 };
 
-const TapeBox: React.FunctionComponent<PT08Props> = observer(props => {
+const ReaderBox: React.FunctionComponent<PT08Props> = observer(props => {
     const classes = useStyles();
     const tapeInput = React.useRef<HTMLInputElement>(null);
-    const canvasRef = React.useRef<HTMLCanvasElement>(null);
-    const [painter, setPainter] = React.useState<PaperTapePainter | null>(null);
-
-    let tapeInfo: JSX.Element;
-    if (!props.readerTape) {
-        tapeInfo = <p>No tape loaded</p>;
-    } else {
-        const tape: PaperTape = props.readerTape;
-        let progress = 100;
-        if (tape.buffer.byteLength > 0) {
-            progress = Math.round(tape.pos / tape.buffer.byteLength * 100);
-        }
-        tapeInfo =
-            <Box mb={1}>
-                Tape { tape.name }
-                <LinearProgress variant='determinate' value={progress} />
-                <canvas ref={canvasRef} />
-            </Box>;
-    }
-
-
-    React.useEffect(() => {
-        if (!painter && canvasRef.current) {
-            const canvas = canvasRef.current;
-            setPainter(new PaperTapePainter(canvas));
-
-            if (canvas.parentElement) {
-                canvas.width = canvas.parentElement.scrollWidth;
-                canvas.height = 100;
-            }
-        }
-
-        const tape = props.readerTape;
-        if (tape) {
-            painter?.update(tape.buffer, tape.pos);
-        }
-    });
 
     return (
         <Box mt={2}>
             <Typography component='h6' variant='h6'>Reader</Typography>
 
-            { tapeInfo }
+            <PaperTapeBox tape={props.readerTape} reverse={false} />
 
             <FormGroup row>
                 <FormControl>
@@ -199,12 +180,36 @@ const TapeBox: React.FunctionComponent<PT08Props> = observer(props => {
     );
 });
 
-
 function onLoadFile(evt: React.ChangeEvent, props: PT08Props): void {
     const target = evt.target as HTMLInputElement;
     if (!target.files || target.files.length < 1) {
         return;
     }
 
-    props.onTapeLoad(target.files[0]);
+    props.onReaderTapeLoad(target.files[0]);
 }
+
+const PunchBox: React.FunctionComponent<PT08Props> = observer(props =>
+    <Box mt={2}>
+        <Typography component='h6' variant='h6'>Punch</Typography>
+
+        <PaperTapeBox tape={props.punchTape} reverse={true} />
+
+        <FormGroup row>
+            <FormControl>
+                <Button variant='outlined' color='primary' onClick={() => props.onPunchClear()}>New Tape</Button>
+            </FormControl>
+            <FormControl>
+                <Button variant='outlined' color='primary' onClick={() => downloadData(Uint8Array.from(props.punchTape.buffer), 'punch.bin')}>Download Tape</Button>
+            </FormControl>
+            <FormControl>
+                <Button variant='outlined' color='primary' onClick={() => props.onPunchLeader()}>Leader</Button>
+            </FormControl>
+            <FormControlLabel
+                control={<Switch onChange={evt => props.onPunchActivationChange(evt.target.checked)} defaultChecked={props.punchActive} />}
+                labelPlacement='start'
+                label='Punch On'
+            />
+        </FormGroup>
+    </Box>
+);

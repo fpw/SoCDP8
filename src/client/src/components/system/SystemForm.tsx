@@ -29,7 +29,7 @@ import RadioGroup from '@material-ui/core/RadioGroup';
 import Radio from '@material-ui/core/Radio';
 import Button from '@material-ui/core/Button';
 import { createStyles, makeStyles } from '@material-ui/core/styles';
-import { PT08Configuration, PC04Configuration, KW8IConfiguration, TC08Configuration, DF32Configuration, RF08Configuration, RK8Configuration, PeripheralConfiguration, DeviceID } from '../../types/PeripheralTypes';
+import { PeripheralConfiguration, DeviceID } from '../../types/PeripheralTypes';
 import { SystemConfiguration, DEFAULT_SYSTEM_CONF } from '../../types/SystemConfiguration';
 
 export interface SystemFormProps {

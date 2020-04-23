@@ -51,6 +51,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
+import { PaperTape } from '../../models/PaperTape';
 
 export interface SystemProps {
     pdp8: SoCDP8;
@@ -162,14 +163,20 @@ const PT08Box: React.FunctionComponent<{model: PT08Model}> = observer(({model}) 
             conf={model.config}
             onConfigChange={conf => model.updateConfig(conf)}
 
+            readerActive={model.readerActive}
             readerTape={model.readerTape}
+            onReaderTapeLoad={tape => model.loadTape(tape)}
+            onReaderActivationChange={active => model.setReaderActive(active)}
+
+            punchActive={model.punchActive}
+            punchTape={model.punchTape}
+            onPunchActivationChange={active => model.setPunchActive(active)}
+            onPunchClear={() => model.clearPunch()}
+            onPunchLeader={() => model.addPunchLeader()}
 
             terminal={model.terminal}
 
-            onTapeLoad={model.loadTape}
 
-            onReaderActivationChange={active => model.setReaderActive(active)}
-            readerActive={model.readerActive}
         />
     </PeripheralBox>);
 

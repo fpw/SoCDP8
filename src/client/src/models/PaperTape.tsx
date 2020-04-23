@@ -20,7 +20,9 @@ import { observable } from "mobx";
 
 export class PaperTape {
     public name: string = '';
-    public buffer: Uint8Array = new Uint8Array();
+
+    @observable
+    public buffer: number[] = [];
 
     @observable
     public pos: number = 0;
@@ -35,7 +37,7 @@ export class PaperTape {
 
             const reader = new FileReader();
             reader.onload = () => {
-                tape.buffer = new Uint8Array(reader.result as ArrayBuffer);
+                tape.buffer = Array.from(new Uint8Array(reader.result as ArrayBuffer));
                 resolve(tape);
             };
             reader.onerror = () => {
