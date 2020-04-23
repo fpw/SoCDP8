@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, DeviceRegister, IOContext, BaudSelect } from '../drivers/IO/Peripheral';
+import { Peripheral, DeviceRegister, IOContext } from '../drivers/IO/Peripheral';
 import { sleepMs } from '../sleep';
 import { PT08Configuration, DeviceID } from '../types/PeripheralTypes';
 
@@ -50,7 +50,8 @@ export class PT08 extends Peripheral {
         const io = this.io;
 
         const baudSel = this.toBaudSel(newConf.baudRate);
-        io.writeRegister(DeviceRegister.REG_B, baudSel << 9);
+        const regB = io.readRegister(DeviceRegister.REG_B);
+        io.writeRegister(DeviceRegister.REG_B, regB | (baudSel << 9));
 
         Object.assign(this.conf, newConf);
     }

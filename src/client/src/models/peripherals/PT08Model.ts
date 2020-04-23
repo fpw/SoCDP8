@@ -43,7 +43,7 @@ export class PT08Model extends PeripheralModel {
     constructor(socket: SocketIOClient.Socket, conf: PT08Configuration) {
         super(socket);
         this.conf = conf;
-        this.punchTape.name = 'Punch';
+        this.punchTape_.name = 'Punch';
         this.xterm = new Terminal();
 
         this.xterm.onData(data => {

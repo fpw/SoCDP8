@@ -46,6 +46,8 @@ import '../../../node_modules/xterm/css/xterm.css';
 
 export interface PT08Props {
     conf: PT08Configuration;
+    onConfigChange(conf: PT08Configuration): void;
+
     terminal: Terminal;
 
     readerTape?: PaperTape;
@@ -58,9 +60,6 @@ export interface PT08Props {
     onPunchActivationChange(state: boolean): void;
     onPunchClear(): void;
     onPunchLeader(): void;
-
-    onConfigChange(conf: PT08Configuration): void;
-
 }
 
 const useStyles = makeStyles(theme => createStyles({

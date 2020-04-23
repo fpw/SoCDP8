@@ -19,48 +19,137 @@
 import { PeripheralModel } from './PeripheralModel';
 import { observable, action, computed } from 'mobx';
 import { PC04Configuration } from '../../types/PeripheralTypes';
+import { PaperTape } from '../PaperTape';
 
 export class PC04Model extends PeripheralModel {
     @observable
-    private punchData: number[] = [];
+    private conf: PC04Configuration;
 
-    constructor(socket: SocketIOClient.Socket, private conf: PC04Configuration) {
+    @observable
+    private readerTape_?: PaperTape;
+
+    @observable
+    private readerActive_: boolean = false;
+
+    @observable
+    private punchTape_: PaperTape = new PaperTape();
+
+    @observable
+    private punchActive_: boolean = false;
+
+    constructor(socket: SocketIOClient.Socket, conf: PC04Configuration) {
         super(socket);
+        this.conf = conf;
+        this.punchTape_.name = 'Punch';
     }
 
     public get connections(): number[] {
         return [0o01, 0o02];
     }
 
+    public get config(): PC04Configuration {
+        return this.conf;
+    }
+
+    @action
+    public updateConfig(newConf: PC04Configuration) {
+        this.conf = newConf;
+        this.socket.emit('peripheral-change-conf', {
+            id: this.conf.id,
+            config: this.conf,
+        });
+    }
+
     @action
     public onPeripheralAction(action: string, data: any): void {
         switch (action) {
             case 'punch':
-                this.punchData.push(data.data);
+                this.onPunch(data.data);
                 break;
+            case 'readerPos':
+                this.setReaderPos(data.data);
+                break;
+            }
         }
-    }
 
-    @action
-    private setPunchData(data: number[]) {
-        this.punchData = data;
-    }
+        @action
+        private onPunch(data: number) {
+            if (this.punchActive_) {
+                this.punchTape.buffer.push(data);
+            }
+        }
 
-    public readonly clearPunch = async (): Promise<void> => {
-        this.setPunchData([]);
-    }
+        public async loadTape(file: File): Promise<void> {
+            const tape = await PaperTape.fromFile(file);
+            this.socket.emit('peripheral-action', {
+                id: this.conf.id,
+                action: 'reader-tape-set',
+                data: Uint8Array.from(tape.buffer).buffer
+            });
+            this.setReaderTape(tape);
+        }
 
-    @computed
-    public get punchOutput(): Uint8Array {
-        return Uint8Array.from(this.punchData);
-    }
+        @computed
+        public get readerActive(): boolean {
+            return this.readerActive_;
+        }
 
-    public readonly loadTape = async (tape: File): Promise<void> => {
-        let data = await this.loadFile(tape);
-        this.socket.emit('peripheral-action', {
-            id: this.conf.id,
-            action: 'set-data',
-            data: data
-        });
+        @action
+        private setReaderTape(tape: PaperTape) {
+            this.readerTape_ = tape;
+        }
+
+        @action
+        private setReaderPos(pos: number) {
+            if (this.readerTape_) {
+                this.readerTape_.pos = pos;
+            }
+        }
+
+        @computed
+        public get readerTape(): PaperTape | undefined {
+            return this.readerTape_;
+        }
+
+        @computed
+        public get readerPos(): number {
+            return this.readerPos;
+        }
+
+        @computed
+        public get punchTape(): PaperTape {
+            return this.punchTape_;
+        }
+
+        @computed
+        public get punchActive(): boolean {
+            return this.punchActive_;
+        }
+
+        @action
+        public addPunchLeader(): void {
+            for (let i = 0; i < 10; i++) {
+                this.punchTape.buffer.push(0);
+            }
+        }
+
+        @action
+        public clearPunch(): void {
+            this.punchTape.buffer = []
+        }
+
+        @action
+        public setPunchActive(active: boolean) {
+            this.punchActive_ = active;
+        }
+
+        @action
+        public setReaderActive(active: boolean) {
+            this.readerActive_ = active;
+            this.socket.emit('peripheral-action', {
+                id: this.conf.id,
+                action: 'reader-set-active',
+                data: active
+            });
+        };
     }
-}

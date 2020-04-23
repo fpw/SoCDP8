@@ -51,7 +51,6 @@ import ListItemText from '@material-ui/core/ListItemText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import { PaperTape } from '../../models/PaperTape';
 
 export interface SystemProps {
     pdp8: SoCDP8;
@@ -175,14 +174,26 @@ const PT08Box: React.FunctionComponent<{model: PT08Model}> = observer(({model}) 
             onPunchLeader={() => model.addPunchLeader()}
 
             terminal={model.terminal}
-
-
         />
     </PeripheralBox>);
 
 const PC04Box: React.FunctionComponent<{model: PC04Model}> = observer(({model}) =>
     <PeripheralBox name='PC04 High-Speed Paper-Tape Reader and Punch' model={model}>
-        <PC04 onTapeLoad={model.loadTape} punchData={model.punchOutput} clearPunch={model.clearPunch} />
+        <PC04
+            conf={model.config}
+            onConfigChange={(conf) => model.updateConfig(conf)}
+
+            readerActive={model.readerActive}
+            readerTape={model.readerTape}
+            onReaderTapeLoad={tape => model.loadTape(tape)}
+            onReaderActivationChange={active => model.setReaderActive(active)}
+
+            punchActive={model.punchActive}
+            punchTape={model.punchTape}
+            onPunchActivationChange={active => model.setPunchActive(active)}
+            onPunchClear={() => model.clearPunch()}
+            onPunchLeader={() => model.addPunchLeader()}
+        />
     </PeripheralBox>);
 
 const TC08Box: React.FunctionComponent<{model: TC08Model}> = observer(({model}) =>

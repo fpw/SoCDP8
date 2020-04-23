@@ -16,12 +16,14 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Peripheral, IOContext, DeviceRegister, BaudSelect } from '../drivers/IO/Peripheral';
+import { Peripheral, IOContext, DeviceRegister } from '../drivers/IO/Peripheral';
 import { sleepMs } from '../sleep';
-import { PC04Configuration, PeripheralConfiguration } from '../types/PeripheralTypes';
+import { PC04Configuration } from '../types/PeripheralTypes';
 
 export class PC04 extends Peripheral {
-    private readerData: number[] = [];
+    private readerActive: boolean = false;
+    private readerTape: number[] = [];
+    private readerTapePos: number = 0;
 
     constructor(private readonly conf: PC04Configuration) {
         super(conf.id);
@@ -32,6 +34,12 @@ export class PC04 extends Peripheral {
     }
 
     public reconfigure(newConf: PC04Configuration) {
+        const io = this.io;
+
+        const baudSel = this.toBaudSel(newConf.baudRate);
+        const regB = io.readRegister(DeviceRegister.REG_B);
+        io.writeRegister(DeviceRegister.REG_B, regB | (baudSel << 9));
+
         Object.assign(this.conf, newConf);
     }
 
@@ -41,36 +49,36 @@ export class PC04 extends Peripheral {
 
     public requestAction(action: string, data: any): any {
         switch (action) {
-            case 'append-data':
-                this.readerData.push(...data);
+            case 'reader-tape-set':
+                this.readerTape = Array.from(data as Buffer);
+                this.readerTapePos = 0;
                 break;
-            case 'set-data':
-                this.readerData = Array.from(data as Buffer);
+            case 'reader-set-active':
+                this.readerActive = data;
                 break;
         }
     }
 
     public async run(): Promise<void> {
+        this.reconfigure(this.conf);
+
         const io = this.io;
-
-        io.writeRegister(DeviceRegister.REG_B, BaudSelect.BAUD_4800 << 9);
-
         this.runReader(io);
         this.runPunch(io);
     }
 
     public async runReader(io: IOContext): Promise<void> {
         while (this.keepAlive) {
-            if ((io.readRegister(DeviceRegister.REG_B) & 1) == 0) {
+            const wantData =(io.readRegister(DeviceRegister.REG_B) & 1) != 0;
+            if (!wantData || !this.readerActive) {
                 // no data request
                 await sleepMs(1);
                 continue;
             }
 
             // current word was retrieved, get next
-            const data = this.readerData.shift();
-            if (data != undefined) {
-                console.log(`PC04 reader: Next ${data.toString(16)}, ${this.readerData.length} remaining`);
+            const data = this.readNextFromTape();
+            if (data !== null) {
                 io.writeRegister(DeviceRegister.REG_A, data);
 
                 const regB = io.readRegister(DeviceRegister.REG_B);
@@ -80,6 +88,18 @@ export class PC04 extends Peripheral {
             await sleepMs(1000 / this.baudRateToCPS(this.conf.baudRate));
         }
     }
+
+    private readNextFromTape(): number | null {
+        if (this.readerTapePos < this.readerTape.length) {
+            const data = this.readerTape[this.readerTapePos++];
+            console.log(`PC04: Read ${data.toString(16)}, ${this.readerTapePos} / ${this.readerTape.length}`);
+            this.io.emitEvent('readerPos', this.readerTapePos);
+            return data;
+        } else {
+            return null;
+        }
+    }
+
 
     private async runPunch(io: IOContext) {
         while (this.keepAlive) {
