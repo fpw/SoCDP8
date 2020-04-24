@@ -38,7 +38,7 @@ export class PC04 extends Peripheral {
 
         const baudSel = this.toBaudSel(newConf.baudRate);
         const regB = io.readRegister(DeviceRegister.REG_B);
-        io.writeRegister(DeviceRegister.REG_B, regB | (baudSel << 9));
+        io.writeRegister(DeviceRegister.REG_B, (regB & 0o0777) | (baudSel << 9));
 
         Object.assign(this.conf, newConf);
     }
