@@ -1,0 +1,13 @@
+ GNT-28 baud rate configuration DIP switch register SWB:
+
+ 1   2   3   4       Rate
+ -------------------------
+ Off Off Off Off     110
+ On  Off Off Off     150
+ Off On  Off Off     300
+ Off Off On  Off     1200
+ On  Off On  Off     1800
+ On  On  Off Off     2400
+ Off On  On  Off     4800
+ Off On  On  On      9600
+

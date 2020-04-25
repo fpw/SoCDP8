@@ -55,7 +55,8 @@ begin
 pc04_uart: entity work.uart
 generic map(
     data_bits => 8,
-    stop_bits => 2
+    stop_bits => 2,
+    obey_rts => true
 )
 port map(
     clk => clk,

@@ -89,6 +89,7 @@ export class AppServer {
         client.on('peripheral-action', data => this.execPeripheralAction(client, data));
         client.on('peripheral-change-conf', data => this.changePeripheralConfig(client, data));
         client.on('core', data => this.execCoreMemoryAction(client, data));
+        client.on('read-disk-block', (id: number, block: number, reply) => reply(this.readDiskBlock(client, id, block)));
 
         client.on('system-list', reply => reply(this.getSystemList(client)));
         client.on('create-system', (sys, reply) => reply(this.createSystem(client, sys)));
@@ -202,6 +203,16 @@ export class AppServer {
             case 'write':
                 this.pdp8.writeCoreMemory(data.addr, data.fragment);
                 break;
+        }
+    }
+
+    private readDiskBlock(client: io.Socket, id: number, block: number): Uint16Array {
+        console.log(`${client.id}: Read disk ${id} block ${block}`);
+        try {
+            return this.pdp8.readPeripheralBlock(id, block);
+        } catch (e) {
+            console.warn(e);
+            return e;
         }
     }
 

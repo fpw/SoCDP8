@@ -16,27 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PeripheralModel } from './PeripheralModel';
-import { RF08Configuration } from '../../types/PeripheralTypes';
-
-export class RF08Model extends PeripheralModel {
-    constructor(socket: SocketIOClient.Socket, private conf: RF08Configuration) {
-        super(socket);
-        this.readBlock(1);
-    }
-
-    public get connections(): number[] {
-        return [0o60, 0o61, 0o62, 0o64];
-    }
-
-    public onPeripheralAction(action: string, data: any): void {
-    }
-
-    public async readBlock(block: number): Promise<Uint16Array> {
-        return new Promise<Uint16Array>(accept => {
-            this.socket.emit('read-disk-block', this.conf.id, block, (res: Uint16Array) => {
-                accept(res);
-            });
-        });
-    }
+export interface Disk {
+    readBlock(block: number): Uint16Array;
+    writeBlock(block: number, data: Uint16Array): void;
 }

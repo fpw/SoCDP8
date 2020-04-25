@@ -39,14 +39,14 @@ set_property -dict {PACKAGE_PIN V7 IOSTANDARD LVCMOS33}  [get_ports {led_row[7]}
 # PmodB
 # 1: ASR-33
 set_property -dict { PACKAGE_PIN V16   IOSTANDARD LVCMOS33 } [get_ports { uart_cts[0] }];
-set_property -dict { PACKAGE_PIN W16 PULLUP true  IOSTANDARD LVCMOS33 } [get_ports { uart_rts[0] }];
-set_property -dict { PACKAGE_PIN V12 PULLUP true  IOSTANDARD LVCMOS33 } [get_ports { uart_rx[0] }];
+set_property -dict { PACKAGE_PIN W16 PULLDOWN true  IOSTANDARD LVCMOS33 } [get_ports { uart_rts[0] }];
+set_property -dict { PACKAGE_PIN V12 PULLDOWN true  IOSTANDARD LVCMOS33 } [get_ports { uart_rx[0] }];
 set_property -dict { PACKAGE_PIN W13   IOSTANDARD LVCMOS33 } [get_ports { uart_tx[0] }];
 
 # 2: PC04
 set_property -dict { PACKAGE_PIN W14   IOSTANDARD LVCMOS33 } [get_ports { uart_cts[1] }];
-set_property -dict { PACKAGE_PIN Y14 PULLUP true  IOSTANDARD LVCMOS33 } [get_ports { uart_rts[1] }];
-set_property -dict { PACKAGE_PIN T11 PULLUP true  IOSTANDARD LVCMOS33 } [get_ports { uart_rx[1] }];
+set_property -dict { PACKAGE_PIN Y14 PULLDOWN true  IOSTANDARD LVCMOS33 } [get_ports { uart_rts[1] }];
+set_property -dict { PACKAGE_PIN T11 PULLDOWN true  IOSTANDARD LVCMOS33 } [get_ports { uart_rx[1] }];
 set_property -dict { PACKAGE_PIN T10   IOSTANDARD LVCMOS33 } [get_ports { uart_tx[1] }];
 
 # Arduino connector AR0 .. AR7

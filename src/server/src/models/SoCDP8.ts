@@ -34,6 +34,7 @@ import { sleepMs } from '../sleep';
 import { SystemConfiguration } from '../types/SystemConfiguration';
 import { PeripheralConfiguration } from '../types/PeripheralTypes';
 import { ConsoleState } from '../types/ConsoleTypes';
+import { Disk } from '../drivers/IO/Disk';
 
 export interface IOListener {
     onPeripheralEvent(id: number, action: string, data: any): void
@@ -214,6 +215,12 @@ export class SoCDP8 {
     public requestDeviceAction(id: number, action: string, data: any) {
         const peripheral = this.findPeripheral(id);
         peripheral.requestAction(action, data);
+    }
+
+    public readPeripheralBlock(id: number, block: number): Uint16Array {
+        const peripheral = this.findPeripheral(id);
+        const disk = peripheral as unknown as Disk;
+        return disk.readBlock(block);
     }
 
     public updatePeripheralConfig(id: number, config: PeripheralConfiguration) {

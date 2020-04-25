@@ -20,6 +20,8 @@ import React from 'react';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import ButtonGroup from "@material-ui/core/ButtonGroup";
 import Button from "@material-ui/core/Button";
+import { TU56 } from './TU56';
+import { DECTape } from '../../models/DECTape';
 
 export interface TC08Props {
     onTapeLoad(tape: File, unit: number): void;
@@ -38,6 +40,21 @@ export const TC08: React.FunctionComponent<TC08Props> = (props) => {
     const b2 = React.useRef<HTMLInputElement>(null);
     const b3 = React.useRef<HTMLInputElement>(null);
 
+    const left = new DECTape();
+    left.address = 0;
+    left.moving = true;
+    left.normalizedPosition = 0.3;
+    left.selected = true;
+    left.writing = false;
+
+    const right = new DECTape();
+    right.address = 1;
+    right.moving = true;
+    right.normalizedPosition = 0.8;
+    right.selected = false;
+    right.writing = true;
+    right.reverse = true;
+
     return (
         <section>
             <input ref={b0} className={classes.fileInput} type='file' onChange={evt => onLoadFile(evt, props, 0)}/>
@@ -51,6 +68,8 @@ export const TC08: React.FunctionComponent<TC08Props> = (props) => {
                 <Button onClick={() => b2?.current?.click()}>Load DECtape 2</Button>>
                 <Button onClick={() => b3?.current?.click()}>Load DECtape 3</Button>>
             </ButtonGroup>
+
+            <TU56 left={left} right={right} />
         </section>
     );
 }

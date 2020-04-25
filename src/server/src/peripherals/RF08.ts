@@ -20,8 +20,9 @@ import { Peripheral, IOContext, DeviceRegister } from '../drivers/IO/Peripheral'
 import { existsSync, readFileSync, promises } from 'fs';
 import { sleepMs } from '../sleep';
 import { RF08Configuration } from '../types/PeripheralTypes';
+import { Disk } from '../drivers/IO/Disk';
 
-export class RF08 extends Peripheral {
+export class RF08 extends Peripheral implements Disk {
     private readonly DEBUG = true;
     private readonly BRK_ADDR = 0o7750;
     private readonly DATA_FILE: string;
@@ -52,6 +53,17 @@ export class RF08 extends Peripheral {
 
     public async saveState() {
         await promises.writeFile(this.DATA_FILE, this.data);
+    }
+
+    public readBlock(block: number): Uint16Array {
+        const blockSize = 256;
+        const start = block * blockSize * 2;
+        return new Uint16Array(this.data.buffer, start, blockSize);
+    }
+
+    public writeBlock(block: number, data: Uint16Array): void {
+        const view = this.readBlock(block);
+        view.set(data);
     }
 
     public async run(): Promise<void> {
