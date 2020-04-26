@@ -31,7 +31,7 @@ export class SystemConfigurationList {
         this.loadSystems();
 
         if (!this.systems.has('default')) {
-            this.addSystem(DEFAULT_SYSTEM_CONF);
+            this.addSystem(DEFAULT_SYSTEM_CONF, DEFAULT_SYSTEM_CONF.id);
         }
     }
 
@@ -80,8 +80,12 @@ export class SystemConfigurationList {
         return config;
     }
 
-    public addSystem(sys: SystemConfiguration) {
-        sys.id = this.generateSystemId();
+    public addSystem(sys: SystemConfiguration, id?: string) {
+        if (id) {
+            sys.id = id;
+        } else {
+            sys.id = this.generateSystemId();
+        }
 
         const dir = this.getDirForSystem(sys);
         mkdirSync(dir, {recursive: true});

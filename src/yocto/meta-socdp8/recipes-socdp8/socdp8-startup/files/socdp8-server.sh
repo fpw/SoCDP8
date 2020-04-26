@@ -14,7 +14,7 @@ PIDFILE=/var/run/$NAME.pid
 
 DAEMON=/usr/bin/node
 DAEMON_OPTS=/usr/lib/node_modules/socdp8-server/lib/main.js
-DAEMON_ENV="SOCDP8_CLIENT_DIR=/usr/lib/node_modules/socdp8-client/dist"
+DAEMON_ENV=""
 DAEMON_USER=socdp8
 DAEMON_HOME=/home/socdp8
 

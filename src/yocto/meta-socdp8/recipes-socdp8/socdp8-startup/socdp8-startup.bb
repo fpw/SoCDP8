@@ -9,7 +9,7 @@ PR = "r3"
 #
 # Add a line similar to the following to ensure any packages needed for the scripts to run are installed in the image.
 #
-RDEPENDS_${PN} = "initscripts socdp8-client socdp8-server"
+RDEPENDS_${PN} = "initscripts socdp8-server"
 
 # SRC_URI specifies the files that are to be used as the scripts.
 #

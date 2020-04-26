@@ -28,6 +28,10 @@ export class KW8IModel extends PeripheralModel {
         return [0o13];
     }
 
+    public get config(): KW8IConfiguration {
+        return this.conf;
+    }
+
     public onPeripheralAction(action: string, data: any) {
     }
 }

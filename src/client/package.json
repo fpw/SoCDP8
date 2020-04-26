@@ -11,8 +11,7 @@
     "deploy": "npx webpack && cp -av dist/. /home/folko/fuse/app/public",
     "start": "webpack-dev-server"
   },
-  "dependencies": {},
-  "devDependencies": {
+  "dependencies": {
     "mobx": "^5.15.4",
     "mobx-react": "^6.1.8",
     "react": "^16.13.1",
@@ -21,7 +20,9 @@
     "@material-ui/core": "^4.9.10",
     "@material-ui/icons": "^4.9.1",
     "socket.io-client": "^2.3.0",
-    "xterm": "^4.5.0",
+    "xterm": "^4.5.0"
+  },
+  "devDependencies": {
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.10.3",

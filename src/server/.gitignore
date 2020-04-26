@@ -1,3 +1,5 @@
 node_modules
 lib
 socdp8-server*.tgz
+public
+.vscode

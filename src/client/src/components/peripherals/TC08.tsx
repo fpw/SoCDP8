@@ -41,8 +41,6 @@ export const TC08: React.FunctionComponent<TC08Props> = observer(props => {
     const classes = useStyles();
     const b0 = React.useRef<HTMLInputElement>(null);
     const b1 = React.useRef<HTMLInputElement>(null);
-    const b2 = React.useRef<HTMLInputElement>(null);
-    const b3 = React.useRef<HTMLInputElement>(null);
 
     return (
         <section>

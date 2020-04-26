@@ -22,11 +22,14 @@ import { RF08Configuration } from '../../types/PeripheralTypes';
 export class RF08Model extends PeripheralModel {
     constructor(socket: SocketIOClient.Socket, private conf: RF08Configuration) {
         super(socket);
-        this.readBlock(1);
     }
 
     public get connections(): number[] {
         return [0o60, 0o61, 0o62, 0o64];
+    }
+
+    public get config(): RF08Configuration {
+        return this.conf;
     }
 
     public onPeripheralAction(action: string, data: any): void {

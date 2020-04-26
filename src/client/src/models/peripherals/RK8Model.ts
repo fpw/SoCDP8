@@ -28,6 +28,10 @@ export class RK8Model extends PeripheralModel {
         return [0o73, 0o74, 0o75];
     }
 
+    public get config(): RK8Configuration {
+        return this.conf;
+    }
+
     public onPeripheralAction(action: string, data: any): void {
     }
 }

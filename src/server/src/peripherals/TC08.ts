@@ -182,12 +182,11 @@ export class TC08 extends Peripheral {
             }
 
             this.lastRegA = regA;
+            const state = this.decodeRegA(regA);
 
             if (this.DEBUG) {
                 console.log(`TC08: DTXA ${regA.toString(8)}`);
             }
-
-            const state = this.decodeRegA(regA);
 
             if (state.run) {
                 try {

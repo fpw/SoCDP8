@@ -212,6 +212,14 @@ export class SoCDP8 {
         return res;
     }
 
+    public getPeripheralById(id: number): PeripheralModel {
+        const res = this.peripheralModels.get(id);
+        if (!res) {
+            throw Error('Unknown peripheral id');
+        }
+        return res;
+    }
+
     @computed
     public get ready(): boolean {
         if (!this.frontPanel || !this.activeSystem_) {

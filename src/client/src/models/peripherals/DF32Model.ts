@@ -24,6 +24,10 @@ export class DF32Model extends PeripheralModel {
         super(socket);
     }
 
+    public get config(): DF32Configuration {
+        return this.conf;
+    }
+
     public onPeripheralAction(action: string, data: any): void {
     }
 

@@ -20,7 +20,7 @@ import React from 'react';
 import { System } from './system/System';
 import { SoCDP8 } from '../models/SoCDP8';
 import { observer } from 'mobx-react-lite';
-import { HashRouter as Router, Route, Link as RouterLink, Switch, Redirect } from 'react-router-dom';
+import { HashRouter as Router, Route, Link as RouterLink, Switch, Redirect, useParams } from 'react-router-dom';
 import { About } from './About';
 import { SystemManager } from './system/SystemManager';
 
@@ -39,6 +39,7 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import Box from '@material-ui/core/Box';
+import { PeripheralBox } from './peripherals/PeripheralBox';
 
 const drawerWidth = 240;
 const useStyles = makeStyles(theme => createStyles({
@@ -125,6 +126,10 @@ export const App: React.FunctionComponent<AppProps> = observer(props => {
                                 <SystemManager pdp8={props.pdp8}/>
                             </Route>
 
+                            <Route path="/peripherals/:id">
+                                <PeripheralById pdp8={props.pdp8} />
+                            </Route>
+
                             <Route path="/about">
                                 <About />
                             </Route>
@@ -136,6 +141,13 @@ export const App: React.FunctionComponent<AppProps> = observer(props => {
         </div>
     )
 });
+
+const PeripheralById: React.FunctionComponent<{pdp8: SoCDP8}> = (props) => {
+    const idString = useParams<{id: string}>().id;
+    const id = Number.parseInt(idString);
+
+    return <PeripheralBox model={props.pdp8.getPeripheralById(id)} />
+}
 
 const ConnectingInfo: React.FunctionComponent = () => {
     const classes = useStyles();

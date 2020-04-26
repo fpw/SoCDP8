@@ -13,12 +13,12 @@ IMAGE_INSTALL = "packagegroup-core-boot kernel-modules \
     packagegroup-base-wifi \
     haveged \
     openssh-sftp-server \
-    sudo \
+    sudo nano \
     socat \
     devmem2 \
     uio-udev-rules \
     nodejs nodejs-npm \
-    socdp8-server socdp8-client socdp8-startup \
+    socdp8-server socdp8-startup \
     "
 
 DISTRO_FEATURES = "wifi"

@@ -46,14 +46,9 @@ export class AppServer {
             onPeripheralEvent: (id, action, data) => this.sendPeripheralEvent(id, action, data)
         });
 
-        let clientDir = './public';
-        if (process.env.SOCDP8_CLIENT_DIR) {
-            clientDir = process.env.SOCDP8_CLIENT_DIR;
-        }
-
         this.app = express();
         this.app.use(cors());
-        this.app.use(express.static(clientDir));
+        this.app.use(express.static(__dirname + '/../public'));
 
         this.httpServer = new Server(this.app);
         this.socket = io(this.httpServer);

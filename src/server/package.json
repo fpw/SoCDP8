@@ -8,7 +8,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "prepublish": "tsc",
+    "prepack": "tsc && cp -av ../client/dist public",
     "deploy": "npm run build && cp -Rv lib/. /home/folko/fuse/app"
   },
   "dependencies": {

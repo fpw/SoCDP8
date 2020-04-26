@@ -33,6 +33,10 @@ export class TC08Model extends PeripheralModel {
         return [0o76, 0o77];
     }
 
+    public get config(): TC08Configuration {
+        return this.conf;
+    }
+
     @action
     public onPeripheralAction(action: string, data: any): void {
         if (action != 'status') {
