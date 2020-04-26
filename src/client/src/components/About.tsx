@@ -32,6 +32,9 @@ export const About: React.FunctionComponent = () =>
           Vince Slyngstad for his <a href='http://so-much-stuff.com/pdp8/index.php'>PDP-8 software library</a> and letting me use it for this project
         </li>
         <li>
+          Willem van der Mark for his <a href='http://www.vandermark.ch/pdp8/index.php?n=Emulator.TD8E'>TD8E emulator</a>, the visualization was ported to this project
+        </li>
+        <li>
           <a href='http://www.bitsavers.org/'>BitSavers</a> for their preservation of documentation
         </li>
       </ul>

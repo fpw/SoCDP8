@@ -26,23 +26,27 @@ export interface TU56Props {
 }
 
 export const TU56: React.FunctionComponent<TU56Props> = observer(props => {
-    const [painter, setPainter] = React.useState<TU56Painter | null>(null);
+    const [painter, setPainter] = React.useState<TU56Painter>(new TU56Painter());
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
 
     React.useEffect(() => {
-        if (!painter && canvasRef.current) {
+        if (canvasRef.current) {
             const canvas = canvasRef.current;
-            setPainter(new TU56Painter(canvas));
 
             if (canvas.parentElement) {
                 canvas.width = canvas.parentElement.scrollWidth;
                 canvas.height = canvas.width * 0.5;
             }
+            painter.setCanvas(canvas);
         }
 
-        painter?.update(props.left, props.right);
+        return () => {
+            painter?.stop();
+        };
+    }, []);
 
-        return () => painter?.stop();
+    React.useEffect(() => {
+        painter.update(props.left, props.right);
     });
 
     return <canvas ref={canvasRef} />;
@@ -65,12 +69,13 @@ class TU56Painter {
     private readonly HEAD_BOTTOM_Y  = 0.30;
     private readonly MIL            = 0.0015;
 
+    private canvas?: HTMLCanvasElement;
     private leftTape?: DECTape;
     private rightTape?: DECTape;
     private stopped: boolean = false;
 
-
-    constructor(private canvas: HTMLCanvasElement) {
+    public setCanvas(canvas: HTMLCanvasElement) {
+        this.canvas = canvas;
         requestAnimationFrame((t) => this.draw(t));
     }
 
@@ -84,8 +89,8 @@ class TU56Painter {
     }
 
     private draw(t: number) {
-        const ctx = this.canvas.getContext('2d');
-        if (!ctx) {
+        const ctx = this.canvas?.getContext('2d');
+        if (!ctx || this.stopped) {
             return;
         }
 

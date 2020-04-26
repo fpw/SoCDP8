@@ -19,6 +19,7 @@
 import { Peripheral, DeviceRegister, IOContext } from '../drivers/IO/Peripheral';
 import { sleepMs, sleepUs } from '../sleep';
 import { TC08Configuration } from '../types/PeripheralTypes';
+import { isDeepStrictEqual } from 'util';
 
 enum TapeDirection {
     FORWARD = 0,
@@ -87,6 +88,7 @@ export class TC08 extends Peripheral {
     private readonly BRK_ADDR   = 0o7754;
 
     private tapes: TapeState[] = [];
+    private lastRegA: number = 0;
 
     constructor(private readonly conf: TC08Configuration) {
         super(conf.id);
@@ -112,6 +114,51 @@ export class TC08 extends Peripheral {
         }
     }
 
+    private async runStatusReport() {
+        let lastStatus: Object[] = [];
+
+        while (this.keepAlive) {
+            await sleepMs(50);
+
+            const status = this.getStatus();
+
+            if (isDeepStrictEqual(status, lastStatus)) {
+                continue;
+            }
+
+            this.io.emitEvent('status', status);
+            lastStatus = status;
+        }
+    }
+
+    private getStatus(): Object[] {
+        const regA = this.io.readRegister(DeviceRegister.REG_A);
+        const state = this.decodeRegA(regA);
+
+        const tapeStatus = this.tapes.map((t, i) => {
+            if (state.transportUnit == t.unit) {
+                return {
+                    address: t.unit,
+                    selected: true,
+                    moving: state.run,
+                    reverse: state.direction == TapeDirection.REVERSE,
+                    writing: (state.func == TapeFunction.WRITE) && state.run,
+                    normalizedPosition: t.curLine / this.TAPE_LINES
+                };
+            } else {
+                return {
+                    address: t.unit,
+                    selected: false,
+                    moving: false,
+                    reverse: false,
+                    writing: false,
+                    normalizedPosition: t.curLine / this.TAPE_LINES
+                };
+            }
+        });
+        return tapeStatus;
+    }
+
     private loadTape(unit: number, data: Buffer) {
         console.log(`TC08: Tape loaded`);
         this.tapes[unit] = {
@@ -121,10 +168,10 @@ export class TC08 extends Peripheral {
         }
     }
 
-    private lastRegA: number = 0;
-
     public async run(): Promise<void> {
         const io = this.io;
+
+        this.runStatusReport();
 
         while (this.keepAlive) {
             const regA = io.readRegister(DeviceRegister.REG_A);
@@ -135,11 +182,12 @@ export class TC08 extends Peripheral {
             }
 
             this.lastRegA = regA;
-            const state = this.decodeRegA(regA);
 
             if (this.DEBUG) {
                 console.log(`TC08: DTXA ${regA.toString(8)}`);
             }
+
+            const state = this.decodeRegA(regA);
 
             if (state.run) {
                 try {
@@ -480,7 +528,9 @@ export class TC08 extends Peripheral {
 
     private clearMotionFlag(io: IOContext) {
         const regA = io.readRegister(DeviceRegister.REG_A);
-        io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 7));
+        const newReg = regA & ~(1 << 7);
+        io.writeRegister(DeviceRegister.REG_A, newReg);
+        this.lastRegA = newReg;
     }
 
     private setDECTapeFlag(io: IOContext) {

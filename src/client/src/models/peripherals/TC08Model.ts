@@ -18,8 +18,13 @@
 
 import { PeripheralModel } from './PeripheralModel';
 import { TC08Configuration } from '../../types/PeripheralTypes';
+import { DECTape } from '../DECTape';
+import { observable, action } from 'mobx';
 
 export class TC08Model extends PeripheralModel {
+    @observable
+    private tapes: DECTape[] = [];
+
     constructor(socket: SocketIOClient.Socket, private conf: TC08Configuration) {
         super(socket);
     }
@@ -28,7 +33,35 @@ export class TC08Model extends PeripheralModel {
         return [0o76, 0o77];
     }
 
+    @action
     public onPeripheralAction(action: string, data: any): void {
+        if (action != 'status') {
+            return;
+        }
+
+        this.tapes = [];
+
+        for (const state of (data.data as any[])) {
+            const tape: DECTape = {
+                name: '',
+                address: state.address,
+                selected: state.selected,
+                moving: state.moving,
+                reverse: state.reverse,
+                writing: state.writing,
+                normalizedPosition: state.normalizedPosition,
+            };
+
+            this.tapes[tape.address] = tape;
+        }
+    }
+
+    public getTape(idx: number): DECTape | undefined {
+        if (idx < this.tapes.length) {
+            return this.tapes[idx];
+        } else {
+            return undefined;
+        }
     }
 
     public readonly loadTape = async (tape: File, unit: number): Promise<void> => {

@@ -198,7 +198,11 @@ const PC04Box: React.FunctionComponent<{model: PC04Model}> = observer(({model}) 
 
 const TC08Box: React.FunctionComponent<{model: TC08Model}> = observer(({model}) =>
     <PeripheralBox name='TC08 DECtape Control' model={model}>
-        <TC08 onTapeLoad={model.loadTape} />
+        <TC08
+            leftTape={model.getTape(0)}
+            rightTape={model.getTape(1)}
+            onTapeLoad={model.loadTape}
+        />
     </PeripheralBox>);
 
 const RF08Box: React.FunctionComponent<{model: RF08Model}> = observer(({model}) =>
