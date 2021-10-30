@@ -276,6 +276,23 @@ begin
     );
     assert led_inst_field = o"1" and led_data_field = o"2" and led_accu = o"1234" and ram(8#10010#) = o"0000" report "Fail CIF JMP" severity failure;
 
+    -- Test CIF and jump with IRQ
+    int_rqst <= '1';
+    test((
+        8#00000# => o"5003",        -- int addr / JMP 3
+        8#00001# => o"2000",        -- ISZ 0 (to inc [0])
+        8#00002# => o"5400",        -- JMP I 0
+        8#00003# => o"6212",        -- CIF1
+        8#00004# => o"6001",        -- ION
+        8#00005# => o"7000",        -- NOP
+        8#00006# => o"5007",        -- JMP +1
+        8#00007# => o"7402",        -- HLT
+        8#00010# => o"6234",        -- RIB
+        others   => o"7402")
+    );
+    int_rqst <= '0';
+    assert led_inst_field = o"0" and led_pc = o"0012" and led_accu = o"0010" report "Fail CIF" severity failure;
+
 
     -- Test IR
     int_rqst <= '1';

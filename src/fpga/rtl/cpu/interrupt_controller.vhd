@@ -82,31 +82,27 @@ begin
             int_delay <= int_enable_int;
             if inst = INST_IOT and mb(8 downto 3) = o"00" and kt8i_uf = '0' then
                 if mb(0) = '1' then
+                    -- 6001: ION
                     int_enable_int <= '1';
                 elsif mb(1) = '1' then
+                    -- 6002: IOFF
                     int_enable_int <= '0';
                 end if;
             end if;
         end if;
     end if;
-
-    -- disable ION in the interrupt's fetch cycle
-    if ts = TS1 and tp = '1' then    
-        if int_ok_int = '1' then
-            int_enable_int <= '0';
-        end if;
+ 
+    -- disable ION in the interrupt's fetch cycle or when the start switch is used
+   if (ts = TS1 and tp = '1' and int_ok_int = '1') or (switch_start = '1' and mftp2 = '1') then    
+        int_enable_int <= '0';
     end if;
-   
+    
     if int_enable_int = '0' then
         int_delay <= '0';
     end if;
-    
+
     if manual_preset = '1' then
         int_sync <= '0';
-    end if;
-    
-    if switch_start = '1' and mftp2 = '1' then
-        int_enable_int <= '0';
     end if;
     
     if rstn = '0' then

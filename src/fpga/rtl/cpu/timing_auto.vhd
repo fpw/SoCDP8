@@ -83,7 +83,7 @@ architecture Behavioral of timing_auto is
     -- synchronous design.
     -- For this reason, we delay the state change by one clock cycle so the pulse comes when the
     -- active TS phase is still the one matching the pulse.
-    type state_int is (TS1, TS1_WAIT, TS2, TS2_WAIT, TS3, TS3_WAIT, TS3_WAIT_IO, TS4, TS4_WAIT);
+    type state_int is (TS1, TS1_WAIT, TS2, TS2_WAIT, TS3, TS3_WAIT, TS3_WAIT_IO, TS3_WAIT2, TS4, TS4_WAIT);
     signal state: state_int;
     signal pulse: std_logic; 
     
@@ -139,8 +139,10 @@ begin
             -- delay TS3 if slow_cycle is active
             if io_state = IO_IDLE and io_start = '0' and eae_start = '0' and eae_on_int = '0' then
                 int_strobe <= '1';
-                state <= TS4;
+                state <= TS3_WAIT2;
             end if;
+        when TS3_WAIT2 =>
+            state <= TS4;
         when TS4 =>
             if run = '1' and pause = '0' and mem_idle = '1' then
                 pulse <= '1'; -- TP4
@@ -309,7 +311,7 @@ with io_state select io_state_o <=
 with state select ts <=
     TS1 when TS1 | TS1_WAIT,
     TS2 when TS2 | TS2_WAIT,
-    TS3 when TS3 | TS3_WAIT | TS3_WAIT_IO,
+    TS3 when TS3 | TS3_WAIT | TS3_WAIT_IO | TS3_WAIT2,
     TS4 when TS4 | TS4_WAIT,
     TS1 when others;
 
