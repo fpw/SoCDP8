@@ -1,4 +1,3 @@
-import { DeviceID } from './../types/PeripheralTypes';
 /*
  *   SoCDP8 - A PDP-8/I implementation on a SoC
  *   Copyright (C) 2019 Folke Will <folko@solhost.org>
@@ -17,6 +16,7 @@ import { DeviceID } from './../types/PeripheralTypes';
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { DeviceID } from './../types/PeripheralTypes';
 import { UIOMapper } from '../drivers/UIO/UIOMapper';
 import { Console } from '../drivers/Console/Console';
 import { CoreMemory } from "../drivers/CoreMemory/CoreMemory";

@@ -25,7 +25,7 @@ export interface FrontPanelProps {
     onSwitch(sw: string, state: boolean): void;
 }
 
-export const FrontPanel: React.FunctionComponent<FrontPanelProps> = (props) => {
+export function FrontPanel(props: FrontPanelProps) {
     const [svgRoot, setSVGRoot] = React.useState<SVGSVGElement|null>(null);
     const [lamps, setLamps] = React.useState<Record<string, SVGSVGElement>>({});
     const [switches, setSwitches] = React.useState<Record<string, SVGSVGElement>>({});
@@ -70,7 +70,10 @@ export const FrontPanel: React.FunctionComponent<FrontPanelProps> = (props) => {
         updateSwitches(props.switches, switches, svgRoot);
     });
 
-    return <object ref={ref} type="image/svg+xml" data={require('public/img/front_panel.svg')}></object>;
+    return (
+        <object ref={ref} type="image/svg+xml" data={process.env.PUBLIC_URL + '/img/front_panel.svg'}>
+        </object>
+    );
 };
 
 function findElements(svg: SVGSVGElement): [Record<string, SVGSVGElement>, Record<string, SVGSVGElement>] {

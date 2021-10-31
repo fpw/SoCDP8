@@ -16,9 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import * as io from 'socket.io-client';
-
-import { observable, action, computed } from 'mobx';
+import { observable, action, computed, makeObservable } from 'mobx';
 import { PT08Model } from './peripherals/PT08Model';
 import { PeripheralModel } from './peripherals/PeripheralModel';
 import { PC04Model } from './peripherals/PC04Model';
@@ -31,31 +29,25 @@ import { KW8IModel } from './peripherals/KW8IModel';
 import { SystemConfiguration } from '../types/SystemConfiguration';
 import { ConsoleState } from '../types/ConsoleTypes';
 import { DeviceID } from '../types/PeripheralTypes';
+import { io, Socket } from 'socket.io-client';
 
 export class SoCDP8 {
-    private socket: SocketIOClient.Socket;
+    private socket: Socket;
 
     private coreMemory: CoreMemoryModel;
 
-    @observable
     private frontPanel?: ConsoleState;
-
-    @observable
     private peripheralModels: Map<DeviceID, PeripheralModel> = new Map();
-
-    @observable
     private activeSystem_: SystemConfiguration | undefined;
-
-    @observable
     private systemList: SystemConfiguration[] = [];
 
     constructor() {
         let url = '';
         if (window.location.toString().includes('localhost')) {
-            url = 'http://192.168.178.68:8000';
+            url = 'http://192.168.178.22:8000';
         }
 
-        this.socket = io.connect(url);
+        this.socket = io(url);
         this.coreMemory = new CoreMemoryModel(this.socket);
 
         this.socket.on('connect', () => {
@@ -79,6 +71,24 @@ export class SoCDP8 {
 
         this.socket.on('state', (data: any) => {
             this.onStateEvent(data);
+        });
+
+        makeObservable<SoCDP8, "frontPanel" | "peripheralModels" | "activeSystem_" | "systemList">(this, {
+            frontPanel: observable,
+            peripheralModels: observable,
+            activeSystem_: observable,
+            systemList: observable,
+
+            onDisconnected: action,
+            onFrontPanelChange: action,
+            onActiveSystemChanged: action,
+            onSystemListChanged: action,
+
+            systems: computed,
+            panel: computed,
+            peripherals: computed,
+            ready: computed,
+
         });
     }
 
@@ -112,19 +122,16 @@ export class SoCDP8 {
         });
     }
 
-    @action
-    private onDisconnected(): void {
+    public onDisconnected(): void {
         this.frontPanel = undefined;
         this.peripheralModels.clear();
     }
 
-    @action
-    private onFrontPanelChange(newState: ConsoleState): void {
+    public onFrontPanelChange(newState: ConsoleState): void {
         this.frontPanel = newState;
     }
 
-    @action
-    private onActiveSystemChanged(sys: SystemConfiguration) {
+    public onActiveSystemChanged(sys: SystemConfiguration) {
         this.activeSystem_ = sys;
         this.peripheralModels.clear();
 
@@ -163,8 +170,7 @@ export class SoCDP8 {
         }
     }
 
-    @action
-    private onSystemListChanged(list: SystemConfiguration[]) {
+    public onSystemListChanged(list: SystemConfiguration[]) {
         this.systemList = list;
     }
 
@@ -189,12 +195,10 @@ export class SoCDP8 {
         });
     }
 
-    @computed
     public get systems(): SystemConfiguration[] {
         return this.systemList;
     }
 
-    @computed
     public get panel(): ConsoleState {
         if (!this.frontPanel) {
             throw Error("Panel state not loaded");
@@ -203,7 +207,6 @@ export class SoCDP8 {
         return this.frontPanel;
     }
 
-    @computed
     public get peripherals(): PeripheralModel[] {
         let res: PeripheralModel[] = [];
         this.peripheralModels.forEach(entry => {
@@ -220,7 +223,6 @@ export class SoCDP8 {
         return res;
     }
 
-    @computed
     public get ready(): boolean {
         if (!this.frontPanel || !this.activeSystem_) {
             return false;
@@ -233,8 +235,8 @@ export class SoCDP8 {
         this.socket.emit('console-switch', {'switch': sw, 'state': state});
     }
 
-    public async createNewSystem(state: SystemConfiguration) {
-        return new Promise<boolean>((accept, reject) => {
+    public async createNewSystem(state: SystemConfiguration): Promise<void> {
+        return new Promise<void>((accept, reject) => {
             this.socket.emit('create-system', state, (res: boolean) => {
                 if (res) {
                     accept();
@@ -245,8 +247,8 @@ export class SoCDP8 {
         });
     }
 
-    public async activateSystem(id: string) {
-        return new Promise<boolean>((accept, reject) => {
+    public async activateSystem(id: string): Promise<void> {
+        return new Promise<void>((accept, reject) => {
             this.socket.emit('set-active-system', id, (res: boolean) => {
                 if (res) {
                     accept();
@@ -257,8 +259,8 @@ export class SoCDP8 {
         });
     }
 
-    public async deleteSystem(id: string) {
-        return new Promise<boolean>((accept, reject) => {
+    public async deleteSystem(id: string): Promise<void> {
+        return new Promise<void>((accept, reject) => {
             this.socket.emit('delete-system', id, (res: boolean) => {
                 if (res) {
                     accept();

@@ -16,8 +16,10 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { Socket } from "socket.io-client";
+
 export class CoreMemoryModel {
-    constructor(private socket: SocketIOClient.Socket) {
+    constructor(private socket: Socket) {
     }
 
     public clear() {

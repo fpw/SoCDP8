@@ -18,9 +18,10 @@
 
 import { PeripheralModel } from './PeripheralModel';
 import { DF32Configuration } from '../../types/PeripheralTypes';
+import { Socket } from 'socket.io-client';
 
 export class DF32Model extends PeripheralModel {
-    constructor(socket: SocketIOClient.Socket, private conf: DF32Configuration) {
+    constructor(socket: Socket, private conf: DF32Configuration) {
         super(socket);
     }
 

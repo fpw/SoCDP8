@@ -38,9 +38,9 @@ import Box from '@material-ui/core/Box';
 import Card from "@material-ui/core/Card";
 import CardHeader from "@material-ui/core/CardHeader";
 import CardContent from "@material-ui/core/CardContent";
-import { HashRouter as Router, Route, Link as RouterLink, Switch, Redirect, useParams } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 
-export const PeripheralBox: React.FunctionComponent<{model: PeripheralModel}> = (props) => {
+export function PeripheralBox(props: {model: PeripheralModel}) {
     const model = props.model;
 
     if (model instanceof PT08Model) {
@@ -131,7 +131,8 @@ const KW8IBox: React.FunctionComponent<{model: KW8IModel}> = observer(({model}) 
         <KW8I />
     </CaptionBox>);
 
-const CaptionBox: React.FunctionComponent<{model: PeripheralModel, name: string, children: React.ReactNode}> = ({model, name, children}) => {
+function CaptionBox(props: {model: PeripheralModel, name: string, children: React.ReactNode}) {
+    const {model, name, children} = props;
     const titleStr = `${name} @ Bus ${model.connections.map(x => x.toString(8)).join(', ')}`;
     return (
         <Box mb={4}>
@@ -143,4 +144,4 @@ const CaptionBox: React.FunctionComponent<{model: PeripheralModel, name: string,
             </Card>
         </Box>
     );
-};
+}

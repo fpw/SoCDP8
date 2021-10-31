@@ -30,7 +30,7 @@ import Radio from '@material-ui/core/Radio';
 import Button from '@material-ui/core/Button';
 import { createStyles, makeStyles } from '@material-ui/core/styles';
 import { PeripheralConfiguration, DeviceID } from '../../types/PeripheralTypes';
-import { SystemConfiguration, DEFAULT_SYSTEM_CONF } from '../../types/SystemConfiguration';
+import { SystemConfiguration, getDefaultSysConf } from '../../types/SystemConfiguration';
 
 export interface SystemFormProps {
     initialState: SystemConfiguration;
@@ -45,7 +45,7 @@ const useStyles = makeStyles(theme => createStyles({
     }
 }));
 
-export const SystemForm: React.FunctionComponent<SystemFormProps> = (props) => {
+export function SystemForm(props: SystemFormProps) {
     const classes = useStyles();
 
     const coreMemoryMarks: Mark[] = [0, 1, 2, 3, 4, 5, 6, 7].map(i => {return {
@@ -147,7 +147,7 @@ export const SystemForm: React.FunctionComponent<SystemFormProps> = (props) => {
 
 function toSystemConf(ev: React.FormEvent<HTMLFormElement>): SystemConfiguration {
     const form = ev.currentTarget;
-    const s = DEFAULT_SYSTEM_CONF;
+    const s: SystemConfiguration = getDefaultSysConf();
     s.peripherals = [];
 
     s.name = (form.elements.namedItem('name') as HTMLInputElement).value;
@@ -172,16 +172,18 @@ function toSystemConf(ev: React.FormEvent<HTMLFormElement>): SystemConfiguration
         s.peripherals.push({id: DeviceID.DEV_ID_TC08, numTapes: 2});
     }
 
-    switch (Number.parseInt((form.elements.namedItem('pt08') as HTMLInputElement).value)) {
-        // fall-throughs are intentional
-        case 4:
-            s.peripherals.push({id: DeviceID.DEV_ID_TT4, baudRate: 9600, eightBit: false});
-        case 3:
-            s.peripherals.push({id: DeviceID.DEV_ID_TT3, baudRate: 9600, eightBit: false});
-        case 2:
-            s.peripherals.push({id: DeviceID.DEV_ID_TT2, baudRate: 9600, eightBit: false});
-        case 1:
-            s.peripherals.push({id: DeviceID.DEV_ID_TT1, baudRate: 9600, eightBit: false});
+    const pt08Count = Number.parseInt((form.elements.namedItem('pt08') as HTMLInputElement).value);
+    if (pt08Count >= 4) {
+        s.peripherals.push({id: DeviceID.DEV_ID_TT4, baudRate: 9600, eightBit: false});
+    }
+    if (pt08Count >= 3) {
+        s.peripherals.push({id: DeviceID.DEV_ID_TT3, baudRate: 9600, eightBit: false});
+    }
+    if (pt08Count >= 2) {
+        s.peripherals.push({id: DeviceID.DEV_ID_TT2, baudRate: 9600, eightBit: false});
+    }
+    if (pt08Count >= 1) {
+        s.peripherals.push({id: DeviceID.DEV_ID_TT1, baudRate: 9600, eightBit: false});
     }
 
     const diskStr = (form.elements.namedItem('disk') as HTMLInputElement).value;

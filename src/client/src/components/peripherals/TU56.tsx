@@ -43,11 +43,11 @@ export const TU56: React.FunctionComponent<TU56Props> = observer(props => {
         return () => {
             painter?.stop();
         };
-    }, []);
+    }, [painter]);
 
     React.useEffect(() => {
         painter.update(props.left, props.right);
-    });
+    }, [painter, props.left, props.right]);
 
     return <canvas ref={canvasRef} />;
 });

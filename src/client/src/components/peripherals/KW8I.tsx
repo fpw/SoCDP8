@@ -16,11 +16,6 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
-
-export interface KW8IProps {
+export function KW8I() {
+    return <section></section>;
 }
-
-export const KW8I: React.FunctionComponent<KW8IProps> = (props) =>
-    <section>
-    </section>

@@ -26,9 +26,3 @@ DISTRO_FEATURES = "wifi"
 BAD_RECOMMENDATIONS = "rng-tools"
 
 inherit core-image
-inherit extrausers
-
-EXTRA_USERS_PARAMS = "\
-    useradd -P socdp8 socdp8; \
-    usermod -aG sudo socdp8; \
-    "

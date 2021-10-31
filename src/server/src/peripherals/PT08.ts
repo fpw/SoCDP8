@@ -105,7 +105,7 @@ export class PT08 extends Peripheral {
                 io.writeRegister(DeviceRegister.REG_A, data);
                 io.writeRegister(DeviceRegister.REG_B, regB & 0o7000 | 1);
             }
-    }
+        }
     }
 
     private readNextKey(): number | null {

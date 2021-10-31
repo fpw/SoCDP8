@@ -85,17 +85,22 @@ export const FrontPanelBox: React.FunctionComponent<{pdp8: SoCDP8}> = observer(p
     );
 });
 
-const SnippetDialog: React.FunctionComponent<{onSelect: ((s: ProgramSnippet) => void), open: boolean, onClose: (() => void)}> = (props) => {
+interface SnippetProps {
+    onSelect: ((s: ProgramSnippet) => void);
+    open: boolean, onClose: (() => void);
+}
+
+function SnippetDialog(props: SnippetProps) {
     return (
         <Dialog open={props.open} onClose={props.onClose}>
             <DialogTitle>Select Snippet</DialogTitle>
             <List>
                 { ProgramSnippets.map(snippet =>
-                    <ListItem button onClick={() => props.onSelect(snippet)}>
+                    <ListItem button key={snippet.label} onClick={() => props.onSelect(snippet)}>
                         <ListItemText primary={snippet.label} secondary={snippet.desc} />
                     </ListItem>
             )};
             </List>
         </Dialog>
     );
-};
+}

@@ -16,13 +16,41 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { App } from "./components/App";
-import { SoCDP8 } from './models/SoCDP8';
+export interface LampBrightness {
+    dataField: number[];
+    instField: number[];
+    pc: number[];
+    memAddr: number[];
+    memBuf: number[];
+    link: number;
+    ac: number[];
+    stepCounter: number[];
+    mqr: number[];
+    instruction: number[];
+    state: number[];
+    ion: number;
+    pause: number;
+    run: number;
+}
 
-const pdp8 = new SoCDP8();
+export interface SwitchState {
+    dataField: number;
+    instField: number;
+    swr: number;
+    start: number;
+    load: number;
+    dep: number;
+    exam: number;
+    cont: number;
+    stop: number;
+    singStep: number;
+    singInst: number;
+}
 
-ReactDOM.render((
-    <App pdp8={pdp8} />
-), document.getElementById("app"));
+export interface ConsoleState {
+    lamps: LampBrightness;
+    lampOverride: boolean;
+
+    switches: SwitchState;
+    switchOverride: boolean;
+}

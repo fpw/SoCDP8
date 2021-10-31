@@ -142,14 +142,14 @@ export const App: React.FunctionComponent<AppProps> = observer(props => {
     )
 });
 
-const PeripheralById: React.FunctionComponent<{pdp8: SoCDP8}> = (props) => {
+function PeripheralById(props: {pdp8: SoCDP8}) {
     const idString = useParams<{id: string}>().id;
     const id = Number.parseInt(idString);
 
-    return <PeripheralBox model={props.pdp8.getPeripheralById(id)} />
+    return <PeripheralBox model={props.pdp8.getPeripheralById(id)} />;
 }
 
-const ConnectingInfo: React.FunctionComponent = () => {
+function ConnectingInfo() {
     const classes = useStyles();
 
     return (
@@ -167,9 +167,12 @@ const ConnectingInfo: React.FunctionComponent = () => {
     );
 };
 
-const Copyright: React.FunctionComponent = () =>
-    <Box pt={4}>
-        <Typography variant='body2' color='textSecondary' align='center'>
-            Copyright © Folke Will, 2020
-        </Typography>
-    </Box>
+function Copyright() {
+    return (
+        <Box pt={4}>
+            <Typography variant='body2' color='textSecondary' align='center'>
+                Copyright © Folke Will, 2021
+            </Typography>
+        </Box>
+    );
+}

@@ -38,7 +38,7 @@ export const System: React.FunctionComponent<SystemProps> = observer(props => {
 
             <FrontPanelBox pdp8={props.pdp8} />
 
-            { props.pdp8.peripherals.map(dev => <PeripheralBox model={dev} />) }
+            { props.pdp8.peripherals.map((dev, i) => <PeripheralBox key={i} model={dev} />) }
         </React.Fragment>
     );
 });

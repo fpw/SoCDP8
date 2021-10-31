@@ -18,9 +18,10 @@
 
 import { PeripheralModel } from './PeripheralModel';
 import { RF08Configuration } from '../../types/PeripheralTypes';
+import { Socket } from 'socket.io-client';
 
 export class RF08Model extends PeripheralModel {
-    constructor(socket: SocketIOClient.Socket, private conf: RF08Configuration) {
+    constructor(socket: Socket, private conf: RF08Configuration) {
         super(socket);
     }
 

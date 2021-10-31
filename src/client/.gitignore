@@ -1,4 +1,5 @@
 dist
+build
 node_modules
 socdp8-client*.tgz
 .vscode

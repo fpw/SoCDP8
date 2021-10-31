@@ -25,24 +25,10 @@ import { downloadData } from '../../util';
 import React from 'react';
 import { observer } from 'mobx-react-lite';
 import { createStyles, makeStyles } from "@material-ui/core/styles";
-import Box from "@material-ui/core/Box";
-import Button from "@material-ui/core/Button";
-import FormGroup from "@material-ui/core/FormGroup";
-import FormControl from "@material-ui/core/FormControl";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import Switch from "@material-ui/core/Switch";
-import Divider from '@material-ui/core/Divider';
-import Select from '@material-ui/core/Select';
-import MenuItem from '@material-ui/core/MenuItem';
-import FormLabel from '@material-ui/core/FormLabel';
-import Typography from '@material-ui/core/Typography';
-import ExpansionPanel from '@material-ui/core/ExpansionPanel';
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
-import Container from '@material-ui/core/Container';
 
 import '../../../node_modules/xterm/css/xterm.css';
+import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Container, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, Switch, Typography } from '@material-ui/core';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 
 export interface PT08Props {
     conf: PT08Configuration;
@@ -68,28 +54,28 @@ const useStyles = makeStyles(theme => createStyles({
     }
 }));
 
-export const PT08: React.FunctionComponent<PT08Props> = (props) => {
+export function PT08(props: PT08Props) {
     return (
         <section>
             <ConfigBox {...props} />
 
             <TerminalBox {...props} />
 
-            <ExpansionPanel>
-                <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+            <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <Typography variant='body1'>Reader &amp; Punch</Typography>
-                </ExpansionPanelSummary>
-                <ExpansionPanelDetails>
+                </AccordionSummary>
+                <AccordionDetails>
                     <Container>
                         <ReaderBox {...props} />
                         <Divider />
                         <PunchBox {...props} />
                     </Container>
-                </ExpansionPanelDetails>
-            </ExpansionPanel>
+                </AccordionDetails>
+            </Accordion>
         </section>
     );
-};
+}
 
 const ConfigBox: React.FunctionComponent<PT08Props> = observer(props =>
     <Box>
@@ -99,12 +85,12 @@ const ConfigBox: React.FunctionComponent<PT08Props> = observer(props =>
                 <Select
                     value={props.conf.baudRate}
                     onChange={(evt) => {
-                        props.conf.baudRate = Number.parseInt(evt.target.value as string) as BaudRate;
-                        props.onConfigChange(props.conf);
+                        const rate = Number.parseInt(evt.target.value as string) as BaudRate;
+                        props.onConfigChange({...props.conf, baudRate: rate});
                     }}
                 >
                     {BAUD_RATES.map((b) => (
-                        <MenuItem value={b}>{b}</MenuItem>
+                        <MenuItem key={b} value={b}>{b}</MenuItem>
                     ))}
                 </Select>
             </FormControl>
@@ -112,10 +98,10 @@ const ConfigBox: React.FunctionComponent<PT08Props> = observer(props =>
             <FormControlLabel
                 control={
                     <Switch
-                        defaultChecked={props.conf.eightBit}
+                        checked={props.conf.eightBit}
                         onChange={(evt) => {
-                            props.conf.eightBit = evt.target.checked;
-                            props.onConfigChange(props.conf);
+                            const bit8 = evt.target.checked;
+                            props.onConfigChange({...props.conf, eightBit: bit8});
                         }}
                     />
                 }
@@ -126,7 +112,7 @@ const ConfigBox: React.FunctionComponent<PT08Props> = observer(props =>
     </Box>
 );
 
-const TerminalBox: React.FunctionComponent<PT08Props> = (props) => {
+function TerminalBox(props: PT08Props) {
     const termRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
@@ -137,7 +123,7 @@ const TerminalBox: React.FunctionComponent<PT08Props> = (props) => {
         term.setOption('bellStyle', 'both');
         term.resize(80, 25);
         term.open(termRef.current);
-    }, []);
+    }, [props.terminal]);
 
     return (
         <React.Fragment>
@@ -170,7 +156,7 @@ const ReaderBox: React.FunctionComponent<PT08Props> = observer(props => {
                     <Button variant='outlined' color='primary' onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
                 </FormControl>
                 <FormControlLabel
-                    control={<Switch onChange={evt => props.onReaderActivationChange(evt.target.checked)} defaultChecked={props.readerActive} />}
+                    control={<Switch onChange={evt => props.onReaderActivationChange(evt.target.checked)} checked={props.readerActive} />}
                     labelPlacement='start'
                     label='Reader On'
                 />
@@ -205,7 +191,7 @@ const PunchBox: React.FunctionComponent<PT08Props> = observer(props =>
                 <Button variant='outlined' color='primary' onClick={() => props.onPunchLeader()}>Leader</Button>
             </FormControl>
             <FormControlLabel
-                control={<Switch onChange={evt => props.onPunchActivationChange(evt.target.checked)} defaultChecked={props.punchActive} />}
+                control={<Switch onChange={evt => props.onPunchActivationChange(evt.target.checked)} checked={props.punchActive} />}
                 labelPlacement='start'
                 label='Punch On'
             />

@@ -16,27 +16,26 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { observable } from "mobx";
+import { makeObservable, observable } from "mobx";
 
 export class DECTape {
-    @observable
     public address: number = 0;
-
-    @observable
     public name: string = '';
-
-    @observable
     public normalizedPosition: number = 0;
-
-    @observable
     public moving: boolean = false;
-
-    @observable
     public reverse: boolean = false;
-
-    @observable
     public selected: boolean = false;
-
-    @observable
     public writing: boolean = false;
+
+    public constructor() {
+        makeObservable(this, {
+            address: observable,
+            name: observable,
+            normalizedPosition: observable,
+            moving: observable,
+            reverse: observable,
+            selected: observable,
+            writing: observable,
+        });
+    }
 }

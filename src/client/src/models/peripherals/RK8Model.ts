@@ -18,9 +18,10 @@
 
 import { PeripheralModel } from './PeripheralModel';
 import { RK8Configuration } from '../../types/PeripheralTypes';
+import { Socket } from 'socket.io-client';
 
 export class RK8Model extends PeripheralModel {
-    constructor(socket: SocketIOClient.Socket, private conf: RK8Configuration) {
+    constructor(socket: Socket, private conf: RK8Configuration) {
         super(socket);
     }
 

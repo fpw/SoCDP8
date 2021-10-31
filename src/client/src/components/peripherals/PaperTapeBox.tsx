@@ -67,7 +67,7 @@ export const PaperTapeBox: React.FunctionComponent<PaperTapeBoxProps> = observer
                 painter?.update(tape.buffer, -1);
             }
         }
-    });
+    }, [painter, tape, tape?.buffer.length, tape?.pos, props.reverse]);
 
     return tapeInfo;
 });

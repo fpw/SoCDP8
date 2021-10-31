@@ -19,14 +19,18 @@
 import { PeripheralModel } from './PeripheralModel';
 import { TC08Configuration } from '../../types/PeripheralTypes';
 import { DECTape } from '../DECTape';
-import { observable, action } from 'mobx';
+import { action, makeObservable, observable } from 'mobx';
+import { Socket } from 'socket.io-client';
 
 export class TC08Model extends PeripheralModel {
-    @observable
     private tapes: DECTape[] = [];
 
-    constructor(socket: SocketIOClient.Socket, private conf: TC08Configuration) {
+    constructor(socket: Socket, private conf: TC08Configuration) {
         super(socket);
+        makeObservable<TC08Model, "tapes">(this, {
+            tapes: observable,
+            onPeripheralAction: action,
+        })
     }
 
     public get connections(): number[] {
@@ -37,7 +41,6 @@ export class TC08Model extends PeripheralModel {
         return this.conf;
     }
 
-    @action
     public onPeripheralAction(action: string, data: any): void {
         if (action != 'status') {
             return;

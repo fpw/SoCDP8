@@ -18,9 +18,10 @@
 
 import { PeripheralModel } from './PeripheralModel';
 import { KW8IConfiguration } from '../../types/PeripheralTypes';
+import { Socket } from 'socket.io-client';
 
 export class KW8IModel extends PeripheralModel {
-    constructor(socket: SocketIOClient.Socket, private conf: KW8IConfiguration) {
+    constructor(socket: Socket, private conf: KW8IConfiguration) {
         super(socket);
     }
 

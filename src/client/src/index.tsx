@@ -16,6 +16,12 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export function RF08() {
-    return <section></section>;
-}
+import ReactDOM from 'react-dom';
+import { App } from "./components/App";
+import { SoCDP8 } from './models/SoCDP8';
+
+const pdp8 = new SoCDP8();
+
+ReactDOM.render((
+    <App pdp8={pdp8} />
+), document.getElementById("app"));

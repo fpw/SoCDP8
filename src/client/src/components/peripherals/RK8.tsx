@@ -16,11 +16,6 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
-
-export interface RK8Props {
+export function RK8() {
+    return <section></section>;
 }
-
-export const RK8: React.FunctionComponent<RK8Props> = (props) =>
-    <section>
-    </section>

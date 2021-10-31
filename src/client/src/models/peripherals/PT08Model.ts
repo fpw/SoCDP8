@@ -20,27 +20,19 @@ import { PeripheralModel } from './PeripheralModel';
 import { PT08Configuration, DeviceID } from '../../types/PeripheralTypes';
 import { PaperTape } from '../PaperTape';
 import { Terminal } from 'xterm';
-import { observable, computed, action } from 'mobx';
+import { observable, computed, action, makeObservable } from 'mobx';
+import { Socket } from 'socket.io-client';
 
 export class PT08Model extends PeripheralModel {
-    @observable
     private conf: PT08Configuration;
-
-    @observable
     private readerTape_?: PaperTape;
-
-    @observable
     private readerActive_: boolean = false;
-
-    @observable
     private punchTape_: PaperTape = new PaperTape();
-
-    @observable
     private punchActive_: boolean = false;
 
     private xterm: Terminal;
 
-    constructor(socket: SocketIOClient.Socket, conf: PT08Configuration) {
+    constructor(socket: Socket, conf: PT08Configuration) {
         super(socket);
         this.conf = conf;
         this.punchTape_.name = 'Punch';
@@ -61,6 +53,32 @@ export class PT08Model extends PeripheralModel {
                 });
             }
         });
+
+        makeObservable<PT08Model, "conf" | "readerTape_" | "readerActive_" | "punchTape_" | "punchActive_">(this, {
+            conf: observable,
+            readerTape_: observable,
+            readerActive_: observable,
+            punchTape_: observable,
+            punchActive_: observable,
+
+            updateConfig: action,
+            onPunch: action,
+            setReaderTape: action,
+            setReaderPos: action,
+            addPunchLeader: action,
+            setPunchActive: action,
+            clearPunch: action,
+            setReaderActive: action,
+
+            config: computed,
+            readerActive: computed,
+            readerTape: computed,
+            readerPos: computed,
+            punchTape: computed,
+            punchActive: computed,
+
+
+        });
     }
 
     public get connections(): number[] {
@@ -70,15 +88,14 @@ export class PT08Model extends PeripheralModel {
             case DeviceID.DEV_ID_TT2:  return [0o42, 0o43];
             case DeviceID.DEV_ID_TT3:  return [0o44, 0o45];
             case DeviceID.DEV_ID_TT4:  return [0o46, 0o47];
+            default: return [];
         }
     }
 
-    @computed
     public get config(): PT08Configuration {
         return this.conf;
     }
 
-    @action
     public updateConfig(newConf: PT08Configuration) {
         this.conf = newConf;
         this.socket.emit('peripheral-change-conf', {
@@ -98,8 +115,7 @@ export class PT08Model extends PeripheralModel {
         }
     }
 
-    @action
-    private onPunch(data: number) {
+    public onPunch(data: number) {
         this.xterm.write(String.fromCodePoint(data & 0x7F));
         if (this.punchActive_) {
             this.punchTape.buffer.push(data);
@@ -120,61 +136,50 @@ export class PT08Model extends PeripheralModel {
         this.setReaderTape(tape);
     }
 
-    @computed
     public get readerActive(): boolean {
         return this.readerActive_;
     }
 
-    @action
-    private setReaderTape(tape: PaperTape) {
+    public setReaderTape(tape: PaperTape) {
         this.readerTape_ = tape;
     }
 
-    @action
-    private setReaderPos(pos: number) {
+    public setReaderPos(pos: number) {
         if (this.readerTape_) {
             this.readerTape_.pos = pos;
         }
     }
 
-    @computed
     public get readerTape(): PaperTape | undefined {
         return this.readerTape_;
     }
 
-    @computed
     public get readerPos(): number {
         return this.readerPos;
     }
 
-    @computed
     public get punchTape(): PaperTape {
         return this.punchTape_;
     }
 
-    @computed
     public get punchActive(): boolean {
         return this.punchActive_;
     }
 
-    @action
     public addPunchLeader(): void {
         for (let i = 0; i < 10; i++) {
             this.punchTape.buffer.push(0);
         }
     }
 
-    @action
     public clearPunch(): void {
         this.punchTape.buffer = []
     }
 
-    @action
     public setPunchActive(active: boolean) {
         this.punchActive_ = active;
     }
 
-    @action
     public setReaderActive(active: boolean) {
         this.readerActive_ = active;
         this.socket.emit('peripheral-action', {

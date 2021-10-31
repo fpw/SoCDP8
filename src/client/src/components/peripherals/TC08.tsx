@@ -48,8 +48,8 @@ export const TC08: React.FunctionComponent<TC08Props> = observer(props => {
             <input ref={b1} className={classes.fileInput} type='file' onChange={evt => onLoadFile(evt, props, 1)}/>
 
             <ButtonGroup variant='outlined' color='primary'>
-                <Button onClick={() => b0?.current?.click()}>Load DECtape 0</Button>>
-                <Button onClick={() => b1?.current?.click()}>Load DECtape 1</Button>>
+                <Button onClick={() => b0?.current?.click()}>Load DECtape 0</Button>
+                <Button onClick={() => b1?.current?.click()}>Load DECtape 1</Button>
             </ButtonGroup>
 
             <TU56 left={props.leftTape} right={props.rightTape} />

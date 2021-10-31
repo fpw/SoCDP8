@@ -58,7 +58,7 @@ const useStyles = makeStyles(theme => createStyles({
     }
 }));
 
-export const PC04: React.FunctionComponent<PC04Props> = props => {
+export function PC04(props: PC04Props) {
     const classes = useStyles();
     const tapeInput = React.useRef<HTMLInputElement>(null);
 
@@ -81,12 +81,12 @@ const ConfigBox: React.FunctionComponent<PC04Props> = observer(props =>
                 <Select
                     value={props.conf.baudRate}
                     onChange={(evt) => {
-                        props.conf.baudRate = Number.parseInt(evt.target.value as string) as BaudRate;
-                        props.onConfigChange(props.conf);
+                        const rate = Number.parseInt(evt.target.value as string) as BaudRate;
+                        props.onConfigChange({...props.conf, baudRate: rate});
                     }}
                 >
                     {BAUD_RATES.map((b) => (
-                        <MenuItem value={b}>{b}</MenuItem>
+                        <MenuItem key={b} value={b}>{b}</MenuItem>
                     ))}
                 </Select>
             </FormControl>
@@ -110,7 +110,7 @@ const ReaderBox: React.FunctionComponent<PC04Props> = observer(props => {
                     <Button variant='outlined' color='primary' onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
                 </FormControl>
                 <FormControlLabel
-                    control={<Switch onChange={evt => props.onReaderActivationChange(evt.target.checked)} defaultChecked={props.readerActive} />}
+                    control={<Switch onChange={evt => props.onReaderActivationChange(evt.target.checked)} checked={props.readerActive} />}
                     labelPlacement='start'
                     label='Reader On'
                 />
@@ -145,7 +145,7 @@ const PunchBox: React.FunctionComponent<PC04Props> = observer(props =>
                 <Button variant='outlined' color='primary' onClick={() => props.onPunchLeader()}>Leader</Button>
             </FormControl>
             <FormControlLabel
-                control={<Switch onChange={evt => props.onPunchActivationChange(evt.target.checked)} defaultChecked={props.punchActive} />}
+                control={<Switch onChange={evt => props.onPunchActivationChange(evt.target.checked)} checked={props.punchActive} />}
                 labelPlacement='start'
                 label='Punch On'
             />

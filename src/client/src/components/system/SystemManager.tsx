@@ -21,7 +21,7 @@ import { observer } from 'mobx-react-lite';
 import { SoCDP8 } from '../../models/SoCDP8';
 import { useState } from "react";
 import { SystemForm } from './SystemForm';
-import { SystemConfiguration, DEFAULT_SYSTEM_CONF } from '../../types/SystemConfiguration';
+import { SystemConfiguration, getDefaultSysConf } from '../../types/SystemConfiguration';
 import { DeviceID } from '../../types/PeripheralTypes';
 
 import Typography from "@material-ui/core/Typography";
@@ -35,11 +35,9 @@ import TableRow from '@material-ui/core/TableRow';
 import TableBody from '@material-ui/core/TableBody';
 import Paper from '@material-ui/core/Paper';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import ExpansionPanel from '@material-ui/core/ExpansionPanel';
-import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary';
-import ExpansionPanelDetails from '@material-ui/core/ExpansionPanelDetails';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
 import Button from '@material-ui/core/Button';
+import { Accordion, AccordionDetails, AccordionSummary } from '@material-ui/core';
 
 export interface SystemManagerProps {
     pdp8: SoCDP8
@@ -69,14 +67,14 @@ export const SystemManager: React.FunctionComponent<SystemManagerProps> = observ
         <section>
             <Typography component='h1' variant='h4' gutterBottom>Manage Systems</Typography>
 
-            <ExpansionPanel expanded={open} onChange={() => setOpen(!open)}>
-                <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
+            <Accordion expanded={open} onChange={() => setOpen(!open)}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <Typography variant='body1'>New System</Typography>
-                </ExpansionPanelSummary>
-                <ExpansionPanelDetails>
+                </AccordionSummary>
+                <AccordionDetails>
                     <Box width='75%' pl={4}>
                         <SystemForm
-                            initialState={DEFAULT_SYSTEM_CONF}
+                            initialState={getDefaultSysConf()}
                             onSubmit={async (s) => {
                                 setFormBusy(true);
                                 await onNewSystem(props.pdp8, s);
@@ -86,8 +84,8 @@ export const SystemManager: React.FunctionComponent<SystemManagerProps> = observ
                             buttonEnabled={!formBusy}
                         />
                     </Box>
-                </ExpansionPanelDetails>
-            </ExpansionPanel>
+                </AccordionDetails>
+            </Accordion>
 
             <Box mt={2}>
                 <TableContainer component={Paper}>
@@ -102,7 +100,7 @@ export const SystemManager: React.FunctionComponent<SystemManagerProps> = observ
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            { props.pdp8.systems.map(s => <SystemEntry pdp8={props.pdp8} system={s} active={s.id == activeSys.id} />)}
+                            { props.pdp8.systems.map(s => <SystemEntry key= {s.id} pdp8={props.pdp8} system={s} active={s.id == activeSys.id} />)}
                         </TableBody>
                     </Table>
                 </TableContainer>
@@ -111,7 +109,7 @@ export const SystemManager: React.FunctionComponent<SystemManagerProps> = observ
     );
 });
 
-const SystemEntry: React.FunctionComponent<{pdp8: SoCDP8, system: SystemConfiguration, active: boolean}> = (props) => {
+function SystemEntry(props: {pdp8: SoCDP8, system: SystemConfiguration, active: boolean}) {
     const [busy, setBusy] = React.useState<boolean>(false);
 
     return (
@@ -146,7 +144,7 @@ const SystemEntry: React.FunctionComponent<{pdp8: SoCDP8, system: SystemConfigur
             <StyledTableCell>
                 <ul>
                     { props.system.peripherals.map(conf =>
-                        <li>{getPeripheralName(conf.id)}</li>
+                        <li key={conf.id}>{getPeripheralName(conf.id)}</li>
                     )}
                 </ul>
             </StyledTableCell>
@@ -170,7 +168,7 @@ const SystemEntry: React.FunctionComponent<{pdp8: SoCDP8, system: SystemConfigur
             </StyledTableCell>
         </TableRow>
     );
-};
+}
 
 function getPeripheralName(id: DeviceID): string {
     switch (id) {

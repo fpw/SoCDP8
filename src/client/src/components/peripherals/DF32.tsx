@@ -16,11 +16,6 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
-
-export interface DF32Props {
+export function DF32() {
+    return <section></section>;
 }
-
-export const DF32: React.FunctionComponent<DF32Props> = (props) =>
-    <section>
-    </section>

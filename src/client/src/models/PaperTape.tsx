@@ -16,17 +16,20 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { observable } from "mobx";
+import { observable, makeObservable } from 'mobx';
 
 export class PaperTape {
     public name: string = '';
 
-    @observable
     public buffer: number[] = [];
-
-    @observable
     public pos: number = 0;
 
+    public constructor() {
+        makeObservable(this, {
+            buffer: observable,
+            pos: observable,
+        });
+    }
 
     static async fromFile(file: File): Promise<PaperTape> {
         return new Promise<PaperTape>((resolve, reject) => {
