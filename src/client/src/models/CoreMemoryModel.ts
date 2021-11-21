@@ -16,21 +16,17 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Socket } from "socket.io-client";
+import { Backend } from "./backends/Backend";
 
 export class CoreMemoryModel {
-    constructor(private socket: Socket) {
+    constructor(private backend: Backend) {
     }
 
     public clear() {
-        this.socket.emit('core', {action: 'clear'});
+        this.backend.clearCore();
     }
 
     public write(addr: number, fragment: number[]) {
-        this.socket.emit('core', {
-            action: 'write',
-            addr: addr,
-            fragment: fragment
-        });
+        this.backend.writeCore(addr, fragment);
     }
 }

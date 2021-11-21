@@ -18,11 +18,11 @@
 
 import { PeripheralModel } from './PeripheralModel';
 import { KW8IConfiguration } from '../../types/PeripheralTypes';
-import { Socket } from 'socket.io-client';
+import { Backend } from '../backends/Backend';
 
 export class KW8IModel extends PeripheralModel {
-    constructor(socket: Socket, private conf: KW8IConfiguration) {
-        super(socket);
+    constructor(backend: Backend, private conf: KW8IConfiguration) {
+        super(backend);
     }
 
     public get connections(): number[] {

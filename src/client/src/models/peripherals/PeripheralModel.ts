@@ -16,11 +16,11 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Socket } from 'socket.io-client';
+import { Backend } from '../backends/Backend';
 import { PeripheralConfiguration } from './../../types/PeripheralTypes';
 
  export abstract class PeripheralModel {
-    constructor(protected socket: Socket) {
+    constructor(protected backend: Backend) {
     }
 
     public abstract get connections(): number[];

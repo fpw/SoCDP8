@@ -29,49 +29,52 @@ import { KW8IModel } from './peripherals/KW8IModel';
 import { SystemConfiguration } from '../types/SystemConfiguration';
 import { ConsoleState } from '../types/ConsoleTypes';
 import { DeviceID } from '../types/PeripheralTypes';
-import { io, Socket } from 'socket.io-client';
+import { BackendListener } from './backends/BackendListener';
+import { Backend } from './backends/Backend';
 
 export class SoCDP8 {
-    private socket: Socket;
-
     private coreMemory: CoreMemoryModel;
 
     private frontPanel?: ConsoleState;
     private peripheralModels: Map<DeviceID, PeripheralModel> = new Map();
     private activeSystem_: SystemConfiguration | undefined;
     private systemList: SystemConfiguration[] = [];
+    private backend: Backend;
 
-    constructor() {
+    constructor(backend: Backend) {
         let url = '';
         if (window.location.toString().includes('localhost')) {
-            url = 'http://192.168.178.22:8000';
+            url = 'http://192.168.178.68:8000';
         }
 
-        this.socket = io(url);
-        this.coreMemory = new CoreMemoryModel(this.socket);
+        const listener: BackendListener = {
+            onConnect: () => {
+                this.readActiveState();
+                this.fetchStateList();
+            },
 
-        this.socket.on('connect', () => {
-            this.readActiveState();
-            this.fetchStateList();
-        });
+            onDisconnect: () => {
+                this.onDisconnected();
+            },
 
-        this.socket.on('disconnect', () => {
-            this.onDisconnected();
-        });
+            onConsoleState: (state: ConsoleState) => {
+                this.onFrontPanelChange(state);
+            },
 
-        this.socket.on('console-state', (state: ConsoleState) => {
-            this.onFrontPanelChange(state);
-        });
+            onPeripheralEvent: (data: any) => {
+                const id = data.id as number;
+                const action = data.action as string;
+                this.onPeripheralEvent(id, action, data);
+            },
 
-        this.socket.on('peripheral-event', (data: any) => {
-            const id = data.id as number;
-            const action = data.action as string;
-            this.onPeripheralEvent(id, action, data);
-        });
+            onStateChange: (data: any) => {
+                this.onStateEvent(data);
+            },
+        };
+        backend.connect(listener);
 
-        this.socket.on('state', (data: any) => {
-            this.onStateEvent(data);
-        });
+        this.backend = backend;
+        this.coreMemory = new CoreMemoryModel(this.backend);
 
         makeObservable<SoCDP8, "frontPanel" | "peripheralModels" | "activeSystem_" | "systemList">(this, {
             frontPanel: observable,
@@ -105,21 +108,13 @@ export class SoCDP8 {
     }
 
     private async readActiveState(): Promise<void> {
-        return new Promise<void>((accept, reject) => {
-            this.socket.emit('active-system', (sys: SystemConfiguration) => {
-                this.onActiveSystemChanged(sys);
-                accept();
-            });
-        });
+        const sys = await this.backend.readActiveSystem();
+        this.onActiveSystemChanged(sys);
     }
 
     private async fetchStateList(): Promise<void> {
-        return new Promise<void>((accept, reject) => {
-            this.socket.emit('system-list', (list: SystemConfiguration[]) => {
-                this.onSystemListChanged(list);
-                accept();
-            })
-        });
+        const list = await this.backend.readSystems();
+        this.onSystemListChanged(list);
     }
 
     public onDisconnected(): void {
@@ -144,25 +139,25 @@ export class SoCDP8 {
                 case DeviceID.DEV_ID_TT2:
                 case DeviceID.DEV_ID_TT3:
                 case DeviceID.DEV_ID_TT4:
-                    peripheral = new PT08Model(this.socket, conf);
+                    peripheral = new PT08Model(this.backend, conf);
                     break;
                 case DeviceID.DEV_ID_PC04:
-                    peripheral = new PC04Model(this.socket, conf);
+                    peripheral = new PC04Model(this.backend, conf);
                     break;
                 case DeviceID.DEV_ID_TC08:
-                    peripheral = new TC08Model(this.socket, conf);
+                    peripheral = new TC08Model(this.backend, conf);
                     break;
                 case DeviceID.DEV_ID_RF08:
-                    peripheral = new RF08Model(this.socket, conf);
+                    peripheral = new RF08Model(this.backend, conf);
                     break;
                 case DeviceID.DEV_ID_DF32:
-                    peripheral = new DF32Model(this.socket, conf);
+                    peripheral = new DF32Model(this.backend, conf);
                     break;
                 case DeviceID.DEV_ID_RK8:
-                    peripheral = new RK8Model(this.socket, conf);
+                    peripheral = new RK8Model(this.backend, conf);
                     break;
                 case DeviceID.DEV_ID_KW8I:
-                    peripheral = new KW8IModel(this.socket, conf);
+                    peripheral = new KW8IModel(this.backend, conf);
                     break;
             }
 
@@ -184,15 +179,10 @@ export class SoCDP8 {
     }
 
     public async saveCurrentState() {
-        return new Promise<void>((accept, reject) => {
-            this.socket.emit('save-active-system', (res: boolean) => {
-                if (res) {
-                    accept();
-                } else {
-                    reject();
-                }
-            })
-        });
+        const res = await this.backend.saveActiveSystem();
+        if (!res) {
+            throw Error("Couldn't save system state");
+        }
     }
 
     public get systems(): SystemConfiguration[] {
@@ -232,43 +222,19 @@ export class SoCDP8 {
     }
 
     public async setPanelSwitch(sw: string, state: boolean): Promise<void> {
-        this.socket.emit('console-switch', {'switch': sw, 'state': state});
+        await this.backend.setPanelSwitch(sw, state);
     }
 
     public async createNewSystem(state: SystemConfiguration): Promise<void> {
-        return new Promise<void>((accept, reject) => {
-            this.socket.emit('create-system', state, (res: boolean) => {
-                if (res) {
-                    accept();
-                } else {
-                    reject();
-                }
-            });
-        });
+        return await this.backend.createSystem(state);
     }
 
     public async activateSystem(id: string): Promise<void> {
-        return new Promise<void>((accept, reject) => {
-            this.socket.emit('set-active-system', id, (res: boolean) => {
-                if (res) {
-                    accept();
-                } else {
-                    reject();
-                }
-            });
-        });
+        await this.backend.setActiveSystem(id);
     }
 
     public async deleteSystem(id: string): Promise<void> {
-        return new Promise<void>((accept, reject) => {
-            this.socket.emit('delete-system', id, (res: boolean) => {
-                if (res) {
-                    accept();
-                } else {
-                    reject();
-                }
-            });
-        });
+        await this.backend.deleteSystem(id);
     }
 
     private onStateEvent(data: any) {

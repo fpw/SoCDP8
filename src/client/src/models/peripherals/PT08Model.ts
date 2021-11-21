@@ -21,7 +21,7 @@ import { PT08Configuration, DeviceID } from '../../types/PeripheralTypes';
 import { PaperTape } from '../PaperTape';
 import { Terminal } from 'xterm';
 import { observable, computed, action, makeObservable } from 'mobx';
-import { Socket } from 'socket.io-client';
+import { Backend } from '../backends/Backend';
 
 export class PT08Model extends PeripheralModel {
     private conf: PT08Configuration;
@@ -32,8 +32,8 @@ export class PT08Model extends PeripheralModel {
 
     private xterm: Terminal;
 
-    constructor(socket: Socket, conf: PT08Configuration) {
-        super(socket);
+    constructor(backend: Backend, conf: PT08Configuration) {
+        super(backend);
         this.conf = conf;
         this.punchTape_.name = 'Punch';
         this.xterm = new Terminal();
@@ -46,11 +46,7 @@ export class PT08Model extends PeripheralModel {
                     chr |= 0x80;
                 }
 
-                this.socket.emit('peripheral-action', {
-                    id: this.conf.id,
-                    action: 'key-press',
-                    data: chr
-                });
+                this.backend.sendPeripheralAction(this.conf.id, "key-press", chr);
             }
         });
 
@@ -98,10 +94,7 @@ export class PT08Model extends PeripheralModel {
 
     public updateConfig(newConf: PT08Configuration) {
         this.conf = newConf;
-        this.socket.emit('peripheral-change-conf', {
-            id: this.conf.id,
-            config: this.conf,
-        });
+        this.backend.changePeripheralConfig(this.conf.id, this.conf);
     }
 
     public onPeripheralAction(action: string, data: any) {
@@ -128,11 +121,11 @@ export class PT08Model extends PeripheralModel {
 
     public async loadTape(file: File): Promise<void> {
         const tape = await PaperTape.fromFile(file);
-        this.socket.emit('peripheral-action', {
-            id: this.conf.id,
-            action: 'reader-tape-set',
-            data: Uint8Array.from(tape.buffer).buffer
-        });
+        this.backend.sendPeripheralAction(
+            this.conf.id,
+            "reader-tape-set",
+            Uint8Array.from(tape.buffer).buffer
+        );
         this.setReaderTape(tape);
     }
 
@@ -182,10 +175,6 @@ export class PT08Model extends PeripheralModel {
 
     public setReaderActive(active: boolean) {
         this.readerActive_ = active;
-        this.socket.emit('peripheral-action', {
-            id: this.conf.id,
-            action: 'reader-set-active',
-            data: active
-        });
+        this.backend.sendPeripheralAction(this.conf.id, "reader-set-active", active);
     };
 }

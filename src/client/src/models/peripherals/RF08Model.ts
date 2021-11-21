@@ -18,11 +18,11 @@
 
 import { PeripheralModel } from './PeripheralModel';
 import { RF08Configuration } from '../../types/PeripheralTypes';
-import { Socket } from 'socket.io-client';
+import { Backend } from '../backends/Backend';
 
 export class RF08Model extends PeripheralModel {
-    constructor(socket: Socket, private conf: RF08Configuration) {
-        super(socket);
+    constructor(backend: Backend, private conf: RF08Configuration) {
+        super(backend);
     }
 
     public get connections(): number[] {
@@ -37,10 +37,6 @@ export class RF08Model extends PeripheralModel {
     }
 
     public async readBlock(block: number): Promise<Uint16Array> {
-        return new Promise<Uint16Array>(accept => {
-            this.socket.emit('read-disk-block', this.conf.id, block, (res: Uint16Array) => {
-                accept(res);
-            });
-        });
+        return await this.backend.readPeripheralBlock(this.conf.id, block);
     }
 }

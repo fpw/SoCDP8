@@ -18,9 +18,15 @@
 
 import ReactDOM from 'react-dom';
 import { App } from "./components/App";
+import { SocketBackend } from './models/backends/SocketBackend';
 import { SoCDP8 } from './models/SoCDP8';
 
-const pdp8 = new SoCDP8();
+let url = "";
+if (window.location.toString().includes("localhost")) {
+    url = "http://192.168.178.68:8000/"
+}
+const backend = new SocketBackend(url);
+const pdp8 = new SoCDP8(backend);
 
 ReactDOM.render((
     <App pdp8={pdp8} />

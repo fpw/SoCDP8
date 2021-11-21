@@ -1,6 +1,6 @@
 /*
  *   SoCDP8 - A PDP-8/I implementation on a SoC
- *   Copyright (C) 2019 Folke Will <folko@solhost.org>
+ *   Copyright (C) 2021 Folke Will <folko@solhost.org>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU Affero General Public License as published by
@@ -16,23 +16,12 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PeripheralModel } from './PeripheralModel';
-import { DF32Configuration } from '../../types/PeripheralTypes';
-import { Backend } from '../backends/Backend';
+import { ConsoleState } from "../../types/ConsoleTypes";
 
-export class DF32Model extends PeripheralModel {
-    constructor(backend: Backend, private conf: DF32Configuration) {
-        super(backend);
-    }
-
-    public get config(): DF32Configuration {
-        return this.conf;
-    }
-
-    public onPeripheralAction(action: string, data: any): void {
-    }
-
-    public get connections(): number[] {
-        return [0o60, 0o61, 0o62];
-    }
+export interface BackendListener {
+    onConnect(): void;
+    onDisconnect(): void;
+    onConsoleState(state: ConsoleState): void;
+    onPeripheralEvent(data: any): void;
+    onStateChange(data: any): void;
 }

@@ -20,7 +20,7 @@ import { PeripheralModel } from './PeripheralModel';
 import { observable, action, computed, makeObservable } from 'mobx';
 import { PC04Configuration } from '../../types/PeripheralTypes';
 import { PaperTape } from '../PaperTape';
-import { Socket } from 'socket.io-client';
+import { Backend } from '../backends/Backend';
 
 export class PC04Model extends PeripheralModel {
     private conf: PC04Configuration;
@@ -29,8 +29,8 @@ export class PC04Model extends PeripheralModel {
     private punchTape_: PaperTape = new PaperTape();
     private punchActive_: boolean = false;
 
-    constructor(socket: Socket, conf: PC04Configuration) {
-        super(socket);
+    constructor(backend: Backend, conf: PC04Configuration) {
+        super(backend);
         this.conf = conf;
         this.punchTape_.name = 'Punch';
 
@@ -70,10 +70,7 @@ export class PC04Model extends PeripheralModel {
 
     public updateConfig(newConf: PC04Configuration) {
         this.conf = newConf;
-        this.socket.emit('peripheral-change-conf', {
-            id: this.conf.id,
-            config: this.conf,
-        });
+        this.backend.changePeripheralConfig(this.conf.id, this.conf);
     }
 
     public onPeripheralAction(action: string, data: any): void {
@@ -95,11 +92,11 @@ export class PC04Model extends PeripheralModel {
 
     public async loadTape(file: File): Promise<void> {
         const tape = await PaperTape.fromFile(file);
-        this.socket.emit('peripheral-action', {
-            id: this.conf.id,
-            action: 'reader-tape-set',
-            data: Uint8Array.from(tape.buffer).buffer
-        });
+        this.backend.sendPeripheralAction(
+            this.conf.id,
+            "reader-tape-set",
+            Uint8Array.from(tape.buffer).buffer
+        );
         this.setReaderTape(tape);
     }
 
@@ -149,10 +146,6 @@ export class PC04Model extends PeripheralModel {
 
     public setReaderActive(active: boolean) {
         this.readerActive_ = active;
-        this.socket.emit('peripheral-action', {
-            id: this.conf.id,
-            action: 'reader-set-active',
-            data: active
-        });
+        this.backend.sendPeripheralAction(this.conf.id, "reader-set-active", active);
     };
 }

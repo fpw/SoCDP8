@@ -18,11 +18,11 @@
 
 import { PeripheralModel } from './PeripheralModel';
 import { RK8Configuration } from '../../types/PeripheralTypes';
-import { Socket } from 'socket.io-client';
+import { Backend } from '../backends/Backend';
 
 export class RK8Model extends PeripheralModel {
-    constructor(socket: Socket, private conf: RK8Configuration) {
-        super(socket);
+    constructor(backend: Backend, private conf: RK8Configuration) {
+        super(backend);
     }
 
     public get connections(): number[] {

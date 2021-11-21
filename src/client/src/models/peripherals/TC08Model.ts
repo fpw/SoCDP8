@@ -20,13 +20,13 @@ import { PeripheralModel } from './PeripheralModel';
 import { TC08Configuration } from '../../types/PeripheralTypes';
 import { DECTape } from '../DECTape';
 import { action, makeObservable, observable } from 'mobx';
-import { Socket } from 'socket.io-client';
+import { Backend } from '../backends/Backend';
 
 export class TC08Model extends PeripheralModel {
     private tapes: DECTape[] = [];
 
-    constructor(socket: Socket, private conf: TC08Configuration) {
-        super(socket);
+    constructor(backend: Backend, private conf: TC08Configuration) {
+        super(backend);
         makeObservable<TC08Model, "tapes">(this, {
             tapes: observable,
             onPeripheralAction: action,
@@ -73,13 +73,9 @@ export class TC08Model extends PeripheralModel {
 
     public readonly loadTape = async (tape: File, unit: number): Promise<void> => {
         let data = await this.loadFile(tape);
-        this.socket.emit('peripheral-action', {
-            id: this.conf.id,
-            action: 'load-tape',
-            data: {
-                unit: unit,
-                tapeData: data
-            }
+        this.backend.sendPeripheralAction(this.conf.id, "load-tape", {
+            unit: unit,
+            tapeData: data
         });
     }
 }
