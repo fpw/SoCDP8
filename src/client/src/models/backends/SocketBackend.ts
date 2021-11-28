@@ -34,7 +34,7 @@ export class SocketBackend implements Backend {
         }
     }
 
-    public connect(listener: BackendListener) {
+    public async connect(listener: BackendListener) {
         this.socket.on('connect', () => {
             listener.onConnect();
         });

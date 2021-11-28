@@ -21,7 +21,7 @@ import { SystemConfiguration } from "../../types/SystemConfiguration";
 import { BackendListener } from "./BackendListener";
 
 export interface Backend {
-    connect(listener: BackendListener): void;
+    connect(listener: BackendListener): Promise<void>;
 
     readActiveSystem(): Promise<SystemConfiguration>;
     saveActiveSystem(): Promise<boolean>;

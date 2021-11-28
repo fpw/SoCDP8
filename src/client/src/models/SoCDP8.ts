@@ -47,6 +47,8 @@ export class SoCDP8 {
             url = 'http://192.168.178.68:8000';
         }
 
+        this.backend = backend;
+
         const listener: BackendListener = {
             onConnect: () => {
                 this.readActiveState();
@@ -73,7 +75,6 @@ export class SoCDP8 {
         };
         backend.connect(listener);
 
-        this.backend = backend;
         this.coreMemory = new CoreMemoryModel(this.backend);
 
         makeObservable<SoCDP8, "frontPanel" | "peripheralModels" | "activeSystem_" | "systemList">(this, {
