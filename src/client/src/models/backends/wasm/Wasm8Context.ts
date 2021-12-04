@@ -24,12 +24,17 @@ interface Wasm8Calls {
     create(actionFunc: number): number;
     getConsoleOut(ctx: number): number;
     getConsoleIn(ctx: number): number;
+    clearCore(ctx: number): void;
     writeCore(ctx: number, addr: number, word: number): void;
-    peripheralAction(ctx: number, id: number, action: number, data: number): void;
+    peripheralAction(ctx: number, id: number, ev: number, p1: number, p2: number): void;
     destroy(ctx: number): void;
 
     readPointer(ptr: number, type: string): number;
     writePointer(ptr: number, value: number, type: string): void;
+
+    malloc(len: number): number;
+    free(buf: number): void;
+    writeArray(array: ArrayBufferLike, dst: number): void;
 }
 
 export class Wasm8Context {
@@ -38,31 +43,35 @@ export class Wasm8Context {
     private consoleOut?: number;
     private consoleIn?: number;
 
-    public async create(actionListener: (dev: number, action: number, data: number) => void) {
+    public async create(actionListener: (dev: number, action: number, p1: number, p2: number) => void) {
         const inst = await createWASM8({
             locateFile: (path: string) => {
                 return `${process.env.PUBLIC_URL}/${path}`;
             },
         });
 
-        const onActionPtr = inst.addFunction(actionListener, 'viii');
+        const onActionPtr = inst.addFunction(actionListener, 'viiii');
 
         this.calls = {
             create: inst.cwrap("pdp8_create", 'number', ['number']),
             getConsoleOut: inst.cwrap("pdp8_get_console_out", 'number', ['number']),
             getConsoleIn: inst.cwrap("pdp8_get_console_in", 'number', ['number']),
+            clearCore: inst.cwrap("pdp8_clear_core", '', ['number']),
             writeCore: inst.cwrap("pdp8_write_core", '', ['number', 'number', 'number']),
             peripheralAction: inst.cwrap("pdp8_peripheral_action", '', ['number', 'number', 'number', 'number']),
             destroy: inst.cwrap("pdp8_destroy", '', ['number']),
 
             readPointer: inst.getValue,
             writePointer: inst.setValue,
+
+            malloc: inst._malloc,
+            free: inst._free,
+            writeArray: inst.writeArrayToMemory,
         };
 
         this.ctx = this.calls.create(onActionPtr);
         this.consoleOut = this.calls.getConsoleOut(this.ctx);
         this.consoleIn = this.calls.getConsoleIn(this.ctx);
-        console.log(this.ctx, this.consoleOut, this.consoleIn);
     }
 
     public setSwitch(sw: string, state: boolean) {
@@ -179,6 +188,14 @@ export class Wasm8Context {
         this.calls.writePointer(this.consoleIn + offset, val, 'i16');
     }
 
+    public clearCore() {
+        if (!this.ctx || !this.calls) {
+            throw Error('Not conncted');
+        }
+
+        this.calls.clearCore(this.ctx);
+    }
+
     public writeCore(addr: number, value: number) {
         if (!this.ctx || !this.calls) {
             throw Error('Not conncted');
@@ -187,12 +204,26 @@ export class Wasm8Context {
         this.calls.writeCore(this.ctx, addr, value);
     }
 
-    public sendPeripheralAction(dev: number, action: number, data: number) {
+    public sendPeripheralAction(dev: number, action: number, p1: number, p2: number) {
         if (!this.ctx || !this.calls) {
             throw Error('Not conncted');
         }
 
-        this.calls.peripheralAction(this.ctx, dev, action, data);
+        this.calls.peripheralAction(this.ctx, dev, action, p1, p2);
+    }
+
+    public sendPeripheralActionBuffer(dev: number, action: number, buf: ArrayBufferLike) {
+        if (!this.ctx || !this.calls) {
+            throw Error('Not conncted');
+        }
+
+        const bufAddr = this.calls.malloc(buf.byteLength);
+        if (!bufAddr) {
+            throw Error('Out of virtual memory');
+        }
+        this.calls.writeArray(new Uint8Array(buf), bufAddr);
+        this.calls.peripheralAction(this.ctx, dev, action, bufAddr, buf.byteLength);
+        this.calls.free(bufAddr);
     }
 
     public destroy() {
