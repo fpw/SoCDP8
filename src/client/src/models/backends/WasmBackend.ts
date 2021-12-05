@@ -40,7 +40,7 @@ export class WasmBackend implements Backend {
                 {
                     id: DeviceID.DEV_ID_PT08,
                     eightBit: false,
-                    baudRate: 2400,
+                    baudRate: 110,
                 },
             ],
         },
@@ -126,6 +126,9 @@ export class WasmBackend implements Backend {
     }
 
     public async changePeripheralConfig(id: DeviceID, config: PeripheralConfiguration): Promise<void> {
+        if (config.id == DeviceID.DEV_ID_PT08) {
+            this.pdp8.sendPeripheralAction(DeviceID.DEV_ID_PT08, 6, config.baudRate, 0);
+        }
     }
 
     public async readPeripheralBlock(id: DeviceID, block: number): Promise<Uint16Array> {
