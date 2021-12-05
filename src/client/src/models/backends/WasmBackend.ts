@@ -72,9 +72,11 @@ export class WasmBackend implements Backend {
         });
         this.listener.onConnect();
 
-        setInterval(() => {
+        const updateConsole = () => {
             listener.onConsoleState(this.pdp8.getConsoleState());
-        }, 10);
+            requestAnimationFrame(updateConsole);
+        }
+        updateConsole();
     }
 
     public async readActiveSystem(): Promise<SystemConfiguration> {
