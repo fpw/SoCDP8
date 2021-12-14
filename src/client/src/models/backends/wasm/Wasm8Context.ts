@@ -23,6 +23,7 @@ declare const createWASM8: any;
 interface Wasm8Calls {
     create(actionFunc: number): number;
     getConsoleOut(ctx: number): number;
+    getLampsOut(ctx: number): number;
     getConsoleIn(ctx: number): number;
     clearCore(ctx: number): void;
     writeCore(ctx: number, addr: number, word: number): void;
@@ -42,6 +43,7 @@ export class Wasm8Context {
     private ctx?: number;
     private consoleOut?: number;
     private consoleIn?: number;
+    private lampsOut?: number;
 
     public async create(actionListener: (dev: number, action: number, p1: number, p2: number) => void) {
         const inst = await createWASM8({
@@ -54,8 +56,9 @@ export class Wasm8Context {
 
         this.calls = {
             create: inst.cwrap("pdp8_create", 'number', ['number']),
-            getConsoleOut: inst.cwrap("pdp8_get_console_out", 'number', ['number']),
             getConsoleIn: inst.cwrap("pdp8_get_console_in", 'number', ['number']),
+            getConsoleOut: inst.cwrap("pdp8_get_console_out", 'number', ['number']),
+            getLampsOut: inst.cwrap("pdp8_get_lamps_out", 'number', ['number']),
             clearCore: inst.cwrap("pdp8_clear_core", '', ['number']),
             writeCore: inst.cwrap("pdp8_write_core", '', ['number', 'number', 'number']),
             peripheralAction: inst.cwrap("pdp8_peripheral_action", '', ['number', 'number', 'number', 'number']),
@@ -70,8 +73,9 @@ export class Wasm8Context {
         };
 
         this.ctx = this.calls.create(onActionPtr);
-        this.consoleOut = this.calls.getConsoleOut(this.ctx);
         this.consoleIn = this.calls.getConsoleIn(this.ctx);
+        this.consoleOut = this.calls.getConsoleOut(this.ctx);
+        this.lampsOut = this.calls.getLampsOut(this.ctx);
     }
 
     public setSwitch(sw: string, state: boolean) {
@@ -125,19 +129,19 @@ export class Wasm8Context {
             switchOverride: false,
             lamps: {
                 dataField: this.wordToLamps(0, 3),
-                instField: this.wordToLamps(2, 3),
-                pc: this.wordToLamps(4, 12),
-                memAddr: this.wordToLamps(6, 12),
-                memBuf: this.wordToLamps(8, 12),
-                link: this.wordToLamp(10),
-                ac: this.wordToLamps(12, 12),
-                stepCounter: this.wordToLamps(14, 5),
-                mqr: this.wordToLamps(16, 12),
-                instruction: this.wordToLamps(18, 8),
-                state: this.wordToLamps(20, 6),
-                ion: this.wordToLamp(22),
-                pause: this.wordToLamp(24),
-                run: this.wordToLamp(26),
+                instField: this.wordToLamps(3, 3),
+                pc: this.wordToLamps(6, 12),
+                memAddr: this.wordToLamps(18, 12),
+                memBuf: this.wordToLamps(30, 12),
+                link: this.wordToLamp(42),
+                ac: this.wordToLamps(43, 12),
+                stepCounter: this.wordToLamps(55, 5),
+                mqr: this.wordToLamps(60, 12),
+                instruction: this.wordToLamps(72, 8),
+                state: this.wordToLamps(80, 6),
+                ion: this.wordToLamp(86),
+                pause: this.wordToLamp(87),
+                run: this.wordToLamp(88),
             },
             switches: {
                 dataField: this.calls.readPointer(this.consoleIn + 0, 'i16'),
@@ -155,20 +159,19 @@ export class Wasm8Context {
         };
     }
 
-    private wordToLamp(offset: number, lampIndex = 0): number {
-        if (!this.consoleOut || !this.calls) {
-            throw Error('Not conncted');
+    private wordToLamp(offset: number): number {
+        if (!this.lampsOut || !this.calls) {
+            throw Error('Not connected');
         }
 
-        const word = this.calls.readPointer(this.consoleOut + offset, 'i16');
-        return (word & (1 << lampIndex)) ? 15 : 0;
+        return this.calls.readPointer(this.lampsOut + offset, 'i8');
     }
 
     private wordToLamps(offset: number, size: number): number[] {
         const res: number[] = [];
 
         for (let i = size - 1; i >= 0; i--) {
-            res.push(this.wordToLamp(offset, i));
+            res.push(this.wordToLamp(offset + i));
         }
 
         return res;
@@ -176,7 +179,7 @@ export class Wasm8Context {
 
     private writeSwitch(offset: number, index: number, state: boolean) {
         if (!this.consoleIn || !this.calls) {
-            throw Error('Not conncted');
+            throw Error('Not connected');
         }
 
         let val = this.calls.readPointer(this.consoleIn + offset, 'i16');
@@ -190,7 +193,7 @@ export class Wasm8Context {
 
     public clearCore() {
         if (!this.ctx || !this.calls) {
-            throw Error('Not conncted');
+            throw Error('Not connected');
         }
 
         this.calls.clearCore(this.ctx);
@@ -198,7 +201,7 @@ export class Wasm8Context {
 
     public writeCore(addr: number, value: number) {
         if (!this.ctx || !this.calls) {
-            throw Error('Not conncted');
+            throw Error('Not connected');
         }
 
         this.calls.writeCore(this.ctx, addr, value);
@@ -206,7 +209,7 @@ export class Wasm8Context {
 
     public sendPeripheralAction(dev: number, action: number, p1: number, p2: number) {
         if (!this.ctx || !this.calls) {
-            throw Error('Not conncted');
+            throw Error('Not connected');
         }
 
         this.calls.peripheralAction(this.ctx, dev, action, p1, p2);
@@ -214,7 +217,7 @@ export class Wasm8Context {
 
     public sendPeripheralActionBuffer(dev: number, action: number, buf: ArrayBufferLike) {
         if (!this.ctx || !this.calls) {
-            throw Error('Not conncted');
+            throw Error('Not connected');
         }
 
         const bufAddr = this.calls.malloc(buf.byteLength);

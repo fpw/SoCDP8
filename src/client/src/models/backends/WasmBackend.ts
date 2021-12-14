@@ -28,12 +28,12 @@ export class WasmBackend implements Backend {
 
     private systems: SystemConfiguration[] = [
         {
-            id: "defauilt",
+            id: "default",
             name: "default",
             description: "default",
             maxMemField: 7,
             cpuExtensions: {
-                eae: false,
+                eae: true,
                 kt8i: false,
             },
             peripherals: [
@@ -42,6 +42,10 @@ export class WasmBackend implements Backend {
                     eightBit: false,
                     baudRate: 110,
                 },
+                {
+                    id: DeviceID.DEV_ID_TC08,
+                    numTapes: 2,
+                }
             ],
         },
     ];
@@ -70,6 +74,7 @@ export class WasmBackend implements Backend {
                 }
             }
         });
+        this.pdp8.sendPeripheralAction(0, 1, 0o0017, 0);
         this.listener.onConnect();
 
         const updateConsole = () => {
@@ -123,6 +128,12 @@ export class WasmBackend implements Backend {
                 this.pdp8.sendPeripheralActionBuffer(DeviceID.DEV_ID_PT08, 4, buf);
             } else if (action == "reader-set-active") {
                 this.pdp8.sendPeripheralAction(DeviceID.DEV_ID_PT08, 5, data, 0);
+            }
+        } else if (id == DeviceID.DEV_ID_TC08) {
+            if (action == "load-tape") {
+                const unit = data.unit as number;
+                const tapeData = data.tapeData as ArrayBuffer;
+                this.pdp8.sendPeripheralActionBuffer(DeviceID.DEV_ID_TC08, 1, tapeData);
             }
         }
     }
