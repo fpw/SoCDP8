@@ -45,6 +45,9 @@ export class WasmBackend implements Backend {
                 {
                     id: DeviceID.DEV_ID_TC08,
                     numTapes: 2,
+                },
+                {
+                    id: DeviceID.DEV_ID_RF08,
                 }
             ],
         },
