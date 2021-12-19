@@ -21,9 +21,7 @@ import { DECTape } from '../../models/DECTape';
 
 import React from 'react';
 import { observer } from 'mobx-react-lite';
-import { makeStyles, createStyles } from '@material-ui/core/styles';
-import ButtonGroup from "@material-ui/core/ButtonGroup";
-import Button from "@material-ui/core/Button";
+import { ButtonGroup, Button } from '@mui/material';
 
 export interface TC08Props {
     onTapeLoad(tape: File, unit: number): void;
@@ -31,21 +29,14 @@ export interface TC08Props {
     rightTape?: DECTape;
 }
 
-const useStyles = makeStyles(theme => createStyles({
-    fileInput: {
-        display: 'none',
-    }
-}));
-
 export const TC08: React.FunctionComponent<TC08Props> = observer(props => {
-    const classes = useStyles();
     const b0 = React.useRef<HTMLInputElement>(null);
     const b1 = React.useRef<HTMLInputElement>(null);
 
     return (
         <section>
-            <input ref={b0} className={classes.fileInput} type='file' onChange={evt => onLoadFile(evt, props, 0)}/>
-            <input ref={b1} className={classes.fileInput} type='file' onChange={evt => onLoadFile(evt, props, 1)}/>
+            <input ref={b0} type='file' onChange={evt => onLoadFile(evt, props, 0)} hidden />
+            <input ref={b1} type='file' onChange={evt => onLoadFile(evt, props, 1)} hidden />
 
             <ButtonGroup variant='outlined' color='primary'>
                 <Button onClick={() => b0?.current?.click()}>Load DECtape 0</Button>

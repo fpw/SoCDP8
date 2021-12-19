@@ -21,19 +21,7 @@ import { observer } from "mobx-react-lite";
 import { FrontPanel } from "./FrontPanel";
 import { SoCDP8 } from '../../models/SoCDP8';
 import { ProgramSnippets, ProgramSnippet } from '../../models/ProgramSnippets';
-
-import Box from '@material-ui/core/Box';
-import Card from "@material-ui/core/Card";
-import CardHeader from "@material-ui/core/CardHeader";
-import CardMedia from "@material-ui/core/CardMedia";
-import CardActions from "@material-ui/core/CardActions";
-import Button from "@material-ui/core/Button";
-import ButtonGroup from '@material-ui/core/ButtonGroup';
-import Dialog from '@material-ui/core/Dialog';
-import ListItemText from '@material-ui/core/ListItemText';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
+import { Box, Card, CardHeader, CardMedia, CardActions, ButtonGroup, Button, Dialog, DialogTitle, List, ListItem, ListItemText } from '@mui/material';
 
 export const FrontPanelBox: React.FunctionComponent<{pdp8: SoCDP8}> = observer(props => {
     const [busy, setBusy] = React.useState<boolean>(false);
@@ -65,7 +53,7 @@ export const FrontPanelBox: React.FunctionComponent<{pdp8: SoCDP8}> = observer(p
                             Load Snippet
                         </Button>
 
-                        <Button onClick={() => props.pdp8.core.clear()}>
+                        <Button onClick={() => props.pdp8.clearCore()}>
                             Clear Core
                         </Button>
                     </ButtonGroup>
@@ -74,7 +62,7 @@ export const FrontPanelBox: React.FunctionComponent<{pdp8: SoCDP8}> = observer(p
                             onClose={() => setShowSnippets(false)}
                             onSelect={(snippet) => {
                                 for (const s of snippet.snippets) {
-                                    props.pdp8.core.write(s.start, s.data);
+                                    props.pdp8.writeCore(s.start, s.data);
                                 }
                                 setShowSnippets(false);
                             }}

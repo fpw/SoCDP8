@@ -79,7 +79,6 @@ architecture Behavioral of registers is
     -- EAE extension
     signal mqr: std_logic_vector(11 downto 0);
     signal sc: std_logic_vector(4 downto 0);
-    signal adderLn: std_logic;
 
     -- MC8 extension
     signal mc8_if, mc8_ib, mc8_df: std_logic_vector(2 downto 0);
@@ -195,22 +194,8 @@ begin
     
 end process;
 
-dvi_carry: process(ac, sense, adderLn, link, sc, mqr)
-    variable sum: std_logic_vector(12 downto 0);
-    variable tmpA: std_logic;
-begin
-    if sc = "00000" or sc = "00001" or mqr(1) /= mqr(0) then
-        sum := std_logic_vector(unsigned('0' & not ac) + unsigned(sense));
-        tmpA := link;
-    else
-        sum := std_logic_vector(unsigned('0' & ac) + unsigned(sense));
-        tmpA := not link;
-    end if;
-    adderLn <= tmpA xor sum(12);
-    carry_o <= not adderLn;
-end process;
-
 regs: process
+    variable adderLn: std_logic := '0';
 begin
     wait until rising_edge(clk);
 
@@ -222,6 +207,7 @@ begin
             ac <= input_bus(0) & l_bus & input_bus(11 downto 2);
             link <= input_bus(1);
         elsif transfers.eae_shift = EAE_SHIFT_DVI then
+            adderLn := link xor transfers.ac_enable xor input_bus(12);
             if transfers.shift = LEFT_SHIFT then
                 link <= input_bus(11);
 
@@ -432,6 +418,7 @@ df_o <= mc8_df;
 if_o <= mc8_if;
 wc_ovf_o <= wc_ovf;
 kt8i_uf_o <= kt8i_uf;
+carry_o <= '1' when unsigned(mem_buf) <= unsigned(ac) else '0';
 
 with sense(11 downto 9) select inst_o <=
     INST_AND when "000",

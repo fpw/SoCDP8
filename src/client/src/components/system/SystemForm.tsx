@@ -16,19 +16,9 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { Mark, FormGroup, FormControl, FormLabel, Switch, TextField, FormControlLabel, Slider, RadioGroup, Radio, Button } from '@mui/material';
 import React from 'react';
 
-import FormGroup from '@material-ui/core/FormGroup';
-import FormControl from '@material-ui/core/FormControl';
-import Slider, { Mark } from '@material-ui/core/Slider';
-import FormLabel from '@material-ui/core/FormLabel';
-import TextField from '@material-ui/core/TextField';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Switch from '@material-ui/core/Switch';
-import RadioGroup from '@material-ui/core/RadioGroup';
-import Radio from '@material-ui/core/Radio';
-import Button from '@material-ui/core/Button';
-import { createStyles, makeStyles } from '@material-ui/core/styles';
 import { PeripheralConfiguration, DeviceID } from '../../types/PeripheralTypes';
 import { SystemConfiguration, getDefaultSysConf } from '../../types/SystemConfiguration';
 
@@ -38,16 +28,7 @@ export interface SystemFormProps {
     buttonEnabled: boolean;
 }
 
-const useStyles = makeStyles(theme => createStyles({
-    fieldset: {
-        paddingTop: 15,
-        marginBottom: 20,
-    }
-}));
-
 export function SystemForm(props: SystemFormProps) {
-    const classes = useStyles();
-
     const coreMemoryMarks: Mark[] = [0, 1, 2, 3, 4, 5, 6, 7].map(i => {return {
             value: i,
             label: `${(i + 1) * 4}`
@@ -67,18 +48,18 @@ export function SystemForm(props: SystemFormProps) {
     return (
         <form autoComplete='off' onSubmit={(ev) => props.onSubmit(toSystemConf(ev))}>
             <FormGroup>
-                <FormControl component='fieldset' className={classes.fieldset}>
+                <FormControl component='fieldset'>
                     <FormLabel component='legend'>System Name</FormLabel>
                     <TextField required name='name' label='Name' variant='outlined' />
                 </FormControl>
 
-                <FormControl component='fieldset' className={classes.fieldset}>
+                <FormControl component='fieldset'>
                     <FormLabel component='legend'>CPU Extensions</FormLabel>
                     <FormControlLabel control={<Switch name='eae' color='primary' defaultChecked={s.cpuExtensions.eae} />} label='KE8/I (EAE)' />
                     <FormControlLabel control={<Switch name='kt8i' color='primary' defaultChecked={s.cpuExtensions.kt8i} />} label='KT8/I (Time Sharing Option)' />
                 </FormControl>
 
-                <FormControl component='fieldset' className={classes.fieldset}>
+                <FormControl component='fieldset'>
                     <FormLabel component='legend'>Core Memory (kiW)</FormLabel>
                     <Slider
                         defaultValue={s.maxMemField}
@@ -91,7 +72,7 @@ export function SystemForm(props: SystemFormProps) {
                     />
                 </FormControl>
 
-                <FormControl component='fieldset' className={classes.fieldset}>
+                <FormControl component='fieldset'>
                     <FormLabel component='legend'>Basic I/O</FormLabel>
                     <FormControlLabel control={
                         <Switch name='serialLine' color='primary' defaultChecked={peripherals.includes(DeviceID.DEV_ID_PT08) } />
@@ -101,14 +82,14 @@ export function SystemForm(props: SystemFormProps) {
                     } label='PC04 Reader / Punch' />
                 </FormControl>
 
-                <FormControl component='fieldset' className={classes.fieldset}>
+                <FormControl component='fieldset'>
                     <FormLabel component='legend'>DECtape</FormLabel>
                     <FormControlLabel control={
                         <Switch name='tc08' color='primary' defaultChecked={peripherals.includes(DeviceID.DEV_ID_TC08)} />
                     } label='TC08 DECtape Controller' />
                 </FormControl>
 
-                <FormControl component='fieldset' className={classes.fieldset}>
+                <FormControl component='fieldset'>
                     <FormLabel component='legend'>Hard Disk</FormLabel>
                     <RadioGroup name='disk' defaultValue={DeviceID[getDiskType(s.peripherals)]} row>
                         <FormControlLabel value={DeviceID[DeviceID.DEV_ID_NULL]} control={<Radio />} label='None' />
@@ -118,7 +99,7 @@ export function SystemForm(props: SystemFormProps) {
                     </RadioGroup>
                 </FormControl>
 
-                <FormControl component='fieldset' className={classes.fieldset}>
+                <FormControl component='fieldset'>
                     <FormLabel component='legend'>Additional PT08 Serial Ports</FormLabel>
                     <Slider
                         defaultValue={countPT08(s.peripherals)}
@@ -131,7 +112,7 @@ export function SystemForm(props: SystemFormProps) {
                     />
                 </FormControl>
 
-                <FormControl component='fieldset' className={classes.fieldset}>
+                <FormControl component='fieldset'>
                     <FormLabel component='legend'>Real-Time Clock</FormLabel>
                     <FormControlLabel control={
                         <Switch name='kw8i' color='primary'defaultChecked={peripherals.includes(DeviceID.DEV_ID_KW8I)} />
@@ -157,7 +138,7 @@ function toSystemConf(ev: React.FormEvent<HTMLFormElement>): SystemConfiguration
     s.maxMemField = Number.parseInt((form.elements.namedItem('maxMemField') as HTMLInputElement).value);
 
     if ((form.elements.namedItem('serialLine') as HTMLInputElement).checked) {
-        s.peripherals.push({id: DeviceID.DEV_ID_PT08, baudRate: 110, eightBit: true});
+        s.peripherals.push({id: DeviceID.DEV_ID_PT08, baudRate: 110, eightBit: true, autoCaps: false});
     }
 
     if ((form.elements.namedItem('pc04') as HTMLInputElement).checked) {
@@ -174,16 +155,16 @@ function toSystemConf(ev: React.FormEvent<HTMLFormElement>): SystemConfiguration
 
     const pt08Count = Number.parseInt((form.elements.namedItem('pt08') as HTMLInputElement).value);
     if (pt08Count >= 4) {
-        s.peripherals.push({id: DeviceID.DEV_ID_TT4, baudRate: 9600, eightBit: false});
+        s.peripherals.push({id: DeviceID.DEV_ID_TT4, baudRate: 9600, eightBit: false, autoCaps: false});
     }
     if (pt08Count >= 3) {
-        s.peripherals.push({id: DeviceID.DEV_ID_TT3, baudRate: 9600, eightBit: false});
+        s.peripherals.push({id: DeviceID.DEV_ID_TT3, baudRate: 9600, eightBit: false, autoCaps: false});
     }
     if (pt08Count >= 2) {
-        s.peripherals.push({id: DeviceID.DEV_ID_TT2, baudRate: 9600, eightBit: false});
+        s.peripherals.push({id: DeviceID.DEV_ID_TT2, baudRate: 9600, eightBit: false, autoCaps: false});
     }
     if (pt08Count >= 1) {
-        s.peripherals.push({id: DeviceID.DEV_ID_TT1, baudRate: 9600, eightBit: false});
+        s.peripherals.push({id: DeviceID.DEV_ID_TT1, baudRate: 9600, eightBit: false, autoCaps: false});
     }
 
     const diskStr = (form.elements.namedItem('disk') as HTMLInputElement).value;

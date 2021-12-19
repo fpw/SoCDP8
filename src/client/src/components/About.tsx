@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import Typography from "@material-ui/core/Typography";
+import { Typography } from "@mui/material";
 
 export function About() {
   return (

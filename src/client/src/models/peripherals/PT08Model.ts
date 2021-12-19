@@ -36,17 +36,13 @@ export class PT08Model extends PeripheralModel {
         super(backend);
         this.conf = conf;
         this.punchTape_.name = 'Punch';
-        this.xterm = new Terminal();
+        this.xterm = new Terminal({
+            bellStyle: 'sound',
+        });
 
         this.xterm.onData(data => {
             for (let i = 0; i < data.length; i++) {
-                let chr = data.charCodeAt(i);
-
-                if (this.conf.eightBit) {
-                    chr |= 0x80;
-                }
-
-                this.backend.sendPeripheralAction(this.conf.id, "key-press", chr);
+                this.onRawKey(data[i]);
             }
         });
 
@@ -57,6 +53,7 @@ export class PT08Model extends PeripheralModel {
             punchTape_: observable,
             punchActive_: observable,
 
+            onRawKey: action,
             updateConfig: action,
             onPunch: action,
             setReaderTape: action,
@@ -75,6 +72,22 @@ export class PT08Model extends PeripheralModel {
 
 
         });
+    }
+
+    public onRawKey(key: string) {
+        let chr = key.charCodeAt(0);
+
+        if (this.conf.autoCaps) {
+            if (chr >= 0x61 && chr <= 0x7A) {
+                chr -= 0x20;
+            }
+        }
+
+        if (this.conf.eightBit) {
+            chr |= 0x80;
+        }
+
+        this.backend.sendPeripheralAction(this.conf.id, "key-press", chr);
     }
 
     public get connections(): number[] {

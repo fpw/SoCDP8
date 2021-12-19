@@ -23,44 +23,16 @@ import { useState } from "react";
 import { SystemForm } from './SystemForm';
 import { SystemConfiguration, getDefaultSysConf } from '../../types/SystemConfiguration';
 import { DeviceID } from '../../types/PeripheralTypes';
-
-import Typography from "@material-ui/core/Typography";
-import Box from '@material-ui/core/Box';
-import { makeStyles, createStyles, withStyles } from '@material-ui/core/styles';
-import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
-import Table from '@material-ui/core/Table';
-import TableHead from '@material-ui/core/TableHead';
-import TableRow from '@material-ui/core/TableRow';
-import TableBody from '@material-ui/core/TableBody';
-import Paper from '@material-ui/core/Paper';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import ButtonGroup from '@material-ui/core/ButtonGroup';
-import Button from '@material-ui/core/Button';
-import { Accordion, AccordionDetails, AccordionSummary } from '@material-ui/core';
+import { Typography, Accordion, AccordionSummary, AccordionDetails, Box, TableContainer, Paper, Table, TableHead, TableRow, TableBody, ButtonGroup, Button, TableCell } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 export interface SystemManagerProps {
     pdp8: SoCDP8
 }
 
-const useStyles = makeStyles(theme => createStyles({
-    table: {
-        width: '100%'
-    }
-}));
-
-const StyledTableCell = withStyles(theme => ({
-    head: {
-        backgroundColor: theme.palette.primary.main,
-        color: theme.palette.primary.contrastText,
-        fontWeight: 'bold',
-    },
-}))(TableCell);
-
 export const SystemManager: React.FunctionComponent<SystemManagerProps> = observer(props => {
     const [formBusy, setFormBusy] = useState<boolean>(false);
     const [open, setOpen] = useState<boolean>(false);
-    const classes = useStyles();
     const activeSys = props.pdp8.activeSystem;
 
     return (
@@ -89,14 +61,14 @@ export const SystemManager: React.FunctionComponent<SystemManagerProps> = observ
 
             <Box mt={2}>
                 <TableContainer component={Paper}>
-                    <Table className={classes.table}>
+                    <Table>
                         <TableHead>
                             <TableRow>
-                                <StyledTableCell>Name</StyledTableCell>
-                                <StyledTableCell>Core</StyledTableCell>
-                                <StyledTableCell>Extensions</StyledTableCell>
-                                <StyledTableCell>Peripherals</StyledTableCell>
-                                <StyledTableCell>Actions</StyledTableCell>
+                                <TableCell>Name</TableCell>
+                                <TableCell>Core</TableCell>
+                                <TableCell>Extensions</TableCell>
+                                <TableCell>Peripherals</TableCell>
+                                <TableCell>Actions</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -114,15 +86,15 @@ function SystemEntry(props: {pdp8: SoCDP8, system: SystemConfiguration, active: 
 
     return (
         <TableRow>
-            <StyledTableCell>
-                <Box fontWeight={props.active ? 'bold' : null}>
+            <TableCell>
+                <Box style={{fontWeight: props.active ? 'bold' : undefined}}>
                     {props.system.name}
                 </Box>
-            </StyledTableCell>
-            <StyledTableCell>
+            </TableCell>
+            <TableCell>
                 {(props.system.maxMemField + 1) * 4} kiW
-            </StyledTableCell>
-            <StyledTableCell>
+            </TableCell>
+            <TableCell>
                 <ul>
                     {(() => {
                         if (props.system.maxMemField > 0) {
@@ -140,15 +112,15 @@ function SystemEntry(props: {pdp8: SoCDP8, system: SystemConfiguration, active: 
                         }
                     })()}
                 </ul>
-            </StyledTableCell>
-            <StyledTableCell>
+            </TableCell>
+            <TableCell>
                 <ul>
                     { props.system.peripherals.map(conf =>
                         <li key={conf.id}>{getPeripheralName(conf.id)}</li>
                     )}
                 </ul>
-            </StyledTableCell>
-            <StyledTableCell>
+            </TableCell>
+            <TableCell>
                 <ButtonGroup variant='outlined' orientation='vertical'>
                     <Button disabled={busy} onClick={async () => {
                         setBusy(true);
@@ -165,7 +137,7 @@ function SystemEntry(props: {pdp8: SoCDP8, system: SystemConfiguration, active: 
                         Delete
                     </Button>
                 </ButtonGroup>
-            </StyledTableCell>
+            </TableCell>
         </TableRow>
     );
 }

@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { System } from './system/System';
 import { SoCDP8 } from '../models/SoCDP8';
 import { observer } from 'mobx-react-lite';
@@ -24,95 +24,90 @@ import { HashRouter as Router, Route, Link as RouterLink, Switch, Redirect, useP
 import { About } from './About';
 import { SystemManager } from './system/SystemManager';
 
-import { makeStyles, createStyles } from '@material-ui/core/styles';
-import InfoIcon from '@material-ui/icons/Info';
-import TuneIcon from '@material-ui/icons/Tune';
-import MemoryIcon from '@material-ui/icons/Memory';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
-import Container from '@material-ui/core/Container';
-import Drawer from '@material-ui/core/Drawer';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import Box from '@material-ui/core/Box';
 import { PeripheralBox } from './peripherals/PeripheralBox';
-
-const drawerWidth = 240;
-const useStyles = makeStyles(theme => createStyles({
-    root: {
-        display: 'flex',
-    },
-    appBar: {
-        zIndex: theme.zIndex.drawer + 1,
-    },
-    drawer: {
-        width: drawerWidth,
-        flexShrink: 0,
-    },
-    drawerPaper: {
-        width: drawerWidth,
-    },
-    drawerContainer: {
-        overFlow: 'auto',
-    },
-    content: {
-        flexGrow: 1,
-        padding: theme.spacing(3),
-    },
-    container: {
-        paddingTop: theme.spacing(4),
-        paddingBottom: theme.spacing(4),
-    },
-}));
+import { AppBar, Box, Container, CssBaseline, Divider, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
+import MemoryIcon from '@mui/icons-material/Memory';
+import TuneIcon from '@mui/icons-material/Tune';
+import InfoIcon from '@mui/icons-material/Info';
+import MenuIcon from '@mui/icons-material/Menu';
 
 export interface AppProps {
     pdp8: SoCDP8;
 }
 
+const drawerWidth = 240;
+
 export const App: React.FunctionComponent<AppProps> = observer(props => {
-    const classes = useStyles();
+    const [drawerOpen, setDrawerOpen] = React.useState(false);
+
+    const toggleDrawerOpen = () => {
+        setDrawerOpen(!drawerOpen);
+    };
 
     if (!props.pdp8.ready) {
         return <ConnectingInfo />;
     }
 
+    const drawer = (
+        <Box onClick={toggleDrawerOpen} onKeyDown={toggleDrawerOpen}>
+            <Toolbar />
+            <Divider />
+            <List>
+                <ListItem button component={RouterLink} to='/machines/active'>
+                    <ListItemIcon><MemoryIcon /></ListItemIcon>
+                    <ListItemText primary='Active Machine' />
+                </ListItem>
+                <ListItem button component={RouterLink} to='/machines'>
+                    <ListItemIcon><TuneIcon /></ListItemIcon>
+                    <ListItemText primary='Manage Machines' />
+                </ListItem>
+                <ListItem button component={RouterLink} to='/about'>
+                    <ListItemIcon><InfoIcon /></ListItemIcon>
+                    <ListItemText primary='About' />
+                </ListItem>
+            </List>
+        </Box>
+    );
+
     return (
-        <div className={classes.root}>
+        <Box sx={{display: 'flex'}}>
             <CssBaseline />
-            <AppBar position='fixed' className={classes.appBar}>
+            <AppBar position='fixed'>
                 <Toolbar>
+                    <IconButton
+                        color="inherit"
+                        edge="start"
+                        onClick={toggleDrawerOpen}
+                        sx={{ mr: 2 }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
                     <Typography component='h1' variant='h6' color='inherit' noWrap>
                         SoCDP-8
                     </Typography>
                 </Toolbar>
             </AppBar>
             <Router>
-                <Drawer variant='permanent' className={classes.drawer} classes={{paper: classes.drawerPaper}}>
+                <Box component="nav">
+                    <Drawer
+                        variant='temporary'
+                        open={drawerOpen}
+                        onClose={toggleDrawerOpen}
+                        ModalProps={{keepMounted: true}}
+                        sx={{
+                            display: {xs: 'block'},
+                            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+                        }}
+                    >
+                        {drawer}
+                    </Drawer>
+                </Box>
+                <Box
+                    component="main"
+                    sx={{ flexGrow: 1, p: 3 }}
+                >
                     <Toolbar />
-                    <div className={classes.drawerContainer}>
-                        <List>
-                            <ListItem button component={RouterLink} to='/machines/active'>
-                                <ListItemIcon><MemoryIcon /></ListItemIcon>
-                                <ListItemText primary='Active Machine' />
-                            </ListItem>
-                            <ListItem button component={RouterLink} to='/machines'>
-                                <ListItemIcon><TuneIcon /></ListItemIcon>
-                                <ListItemText primary='Manage Machines' />
-                            </ListItem>
-                            <ListItem button component={RouterLink} to='/about'>
-                                <ListItemIcon><InfoIcon /></ListItemIcon>
-                                <ListItemText primary='About' />
-                            </ListItem>
-                        </List>
-                    </div>
-                </Drawer>
-                <main className={classes.content}>
-                    <Toolbar />
-                    <Container className={classes.container}>
+                    <Container>
                         <Switch>
                             <Route exact path="/">
                                 <Redirect to="/machines/active" />
@@ -136,9 +131,9 @@ export const App: React.FunctionComponent<AppProps> = observer(props => {
                         </Switch>
                     </Container>
                     <Copyright />
-                </main>
+                </Box>
             </Router>
-        </div>
+        </Box>
     )
 });
 
@@ -150,10 +145,8 @@ function PeripheralById(props: {pdp8: SoCDP8}) {
 }
 
 function ConnectingInfo() {
-    const classes = useStyles();
-
     return (
-        <main className={classes.content}>
+        <main>
             <Container maxWidth='lg'>
                 <Typography component='h1' variant='h2'>
                     Connecting...

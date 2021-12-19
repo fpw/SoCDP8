@@ -18,8 +18,8 @@
 
 import ReactDOM from 'react-dom';
 import { App } from "./components/App";
-import { SocketBackend } from './models/backends/SocketBackend';
-import { WasmBackend } from './models/backends/WasmBackend';
+import { SocketBackend } from './models/backends/socket/SocketBackend';
+import { WasmBackend } from './models/backends/wasm/WasmBackend';
 import { SoCDP8 } from './models/SoCDP8';
 
 let url = "";

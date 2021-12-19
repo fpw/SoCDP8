@@ -34,11 +34,8 @@ import { RK8 } from '../peripherals/RK8';
 import { KW8IModel } from '../../models/peripherals/KW8IModel';
 import { KW8I } from '../peripherals/KW8I';
 
-import Box from '@material-ui/core/Box';
-import Card from "@material-ui/core/Card";
-import CardHeader from "@material-ui/core/CardHeader";
-import CardContent from "@material-ui/core/CardContent";
 import { Link as RouterLink } from 'react-router-dom';
+import { Box, Card, CardHeader, CardContent } from '@mui/material';
 
 export function PeripheralBox(props: {model: PeripheralModel}) {
     const model = props.model;
@@ -78,6 +75,7 @@ export function PeripheralBox(props: {model: PeripheralModel}) {
             onPunchActivationChange={active => model.setPunchActive(active)}
             onPunchClear={() => model.clearPunch()}
             onPunchLeader={() => model.addPunchLeader()}
+            onKeyboard={key => model.onRawKey(key)}
 
             terminal={model.terminal}
         />

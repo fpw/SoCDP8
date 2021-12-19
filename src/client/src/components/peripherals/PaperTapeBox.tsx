@@ -20,8 +20,7 @@ import { PaperTape } from "../../models/PaperTape";
 
 import React from "react";
 import { observer } from 'mobx-react-lite';
-import LinearProgress from "@material-ui/core/LinearProgress";
-import Box from "@material-ui/core/Box";
+import { Box, LinearProgress } from "@mui/material";
 
 export interface PaperTapeBoxProps {
     tape?: PaperTape;

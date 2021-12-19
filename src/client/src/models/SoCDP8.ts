@@ -21,7 +21,6 @@ import { PT08Model } from './peripherals/PT08Model';
 import { PeripheralModel } from './peripherals/PeripheralModel';
 import { PC04Model } from './peripherals/PC04Model';
 import { TC08Model } from './peripherals/TC08Model';
-import { CoreMemoryModel } from './CoreMemoryModel';
 import { RF08Model } from './peripherals/RF08Model';
 import { DF32Model } from './peripherals/DF32Model';
 import { RK8Model } from './peripherals/RK8Model';
@@ -33,8 +32,6 @@ import { BackendListener } from './backends/BackendListener';
 import { Backend } from './backends/Backend';
 
 export class SoCDP8 {
-    private coreMemory: CoreMemoryModel;
-
     private frontPanel?: ConsoleState;
     private peripheralModels: Map<DeviceID, PeripheralModel> = new Map();
     private activeSystem_: SystemConfiguration | undefined;
@@ -75,8 +72,6 @@ export class SoCDP8 {
         };
         backend.connect(listener);
 
-        this.coreMemory = new CoreMemoryModel(this.backend);
-
         makeObservable<SoCDP8, "frontPanel" | "peripheralModels" | "activeSystem_" | "systemList">(this, {
             frontPanel: observable,
             peripheralModels: observable,
@@ -94,10 +89,6 @@ export class SoCDP8 {
             ready: computed,
 
         });
-    }
-
-    public get core() {
-        return this.coreMemory;
     }
 
     public get activeSystem(): SystemConfiguration {
@@ -236,6 +227,14 @@ export class SoCDP8 {
 
     public async deleteSystem(id: string): Promise<void> {
         await this.backend.deleteSystem(id);
+    }
+
+    public async clearCore(): Promise<void> {
+        await this.backend.clearCore();
+    }
+
+    public async writeCore(addr: number, fragment: number[]): Promise<void> {
+        await this.backend.writeCore(addr, fragment);
     }
 
     private onStateEvent(data: any) {

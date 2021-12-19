@@ -22,13 +22,15 @@ import { Terminal } from 'xterm';
 import { PaperTapeBox } from './PaperTapeBox';
 import { downloadData } from '../../util';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { observer } from 'mobx-react-lite';
-import { createStyles, makeStyles } from "@material-ui/core/styles";
 
-import '../../../node_modules/xterm/css/xterm.css';
-import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Container, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, Switch, Typography } from '@material-ui/core';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import Keyboard from 'react-simple-keyboard';
+import 'react-simple-keyboard/build/css/index.css';
+
+import 'xterm/css/xterm.css';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import { Accordion, AccordionSummary, Typography, AccordionDetails, Container, Divider, Box, FormGroup, FormControl, FormLabel, Select, MenuItem, FormControlLabel, Button, Switch } from '@mui/material';
 
 export interface PT08Props {
     conf: PT08Configuration;
@@ -46,13 +48,8 @@ export interface PT08Props {
     onPunchActivationChange(state: boolean): void;
     onPunchClear(): void;
     onPunchLeader(): void;
+    onKeyboard(key: string): void;
 }
-
-const useStyles = makeStyles(theme => createStyles({
-    fileInput: {
-        display: 'none',
-    }
-}));
 
 export function PT08(props: PT08Props) {
     return (
@@ -61,6 +58,16 @@ export function PT08(props: PT08Props) {
 
             <TerminalBox {...props} />
 
+            <Accordion>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography variant='body1'>Virtual Keyboard</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                    <Container>
+                        <VirtualKeyboard {...props} />
+                    </Container>
+                </AccordionDetails>
+            </Accordion>
             <Accordion>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <Typography variant='body1'>Reader &amp; Punch</Typography>
@@ -74,6 +81,43 @@ export function PT08(props: PT08Props) {
                 </AccordionDetails>
             </Accordion>
         </section>
+    );
+}
+
+function VirtualKeyboard(props: PT08Props) {
+    const [layout, setLayout] = useState<string>("default");
+
+    const onKey = (key: string) => {
+        switch (key) {
+            case '{shift}':
+            case '{lock}':
+                setLayout(cur => (cur == "default" ? "shift": "default"))
+                break;
+            case '{enter}':
+                props.onKeyboard('\r');
+                break;
+            case '{space}':
+                props.onKeyboard(' ');
+                break;
+            case '{tab}':
+                props.onKeyboard('\t');
+                break;
+            case '{bksp}':
+                props.onKeyboard('\b');
+                break;
+            default:
+                props.onKeyboard(key);
+        }
+    };
+
+    return (
+        <Box mt={1}>
+            <Keyboard
+                baseClass={`keyboard${props.conf.id}`}
+                layoutName={layout}
+                onKeyPress={(button: string) => onKey(button)}
+            />
+        </Box>
     );
 }
 
@@ -108,6 +152,19 @@ const ConfigBox: React.FunctionComponent<PT08Props> = observer(props =>
                 labelPlacement="start"
                 label="Set 8th bit"
             />
+            <FormControlLabel
+                control={
+                    <Switch
+                        checked={props.conf.autoCaps}
+                        onChange={(evt) => {
+                            const caps = evt.target.checked;
+                            props.onConfigChange({...props.conf, autoCaps: caps});
+                        }}
+                    />
+                }
+                labelPlacement="start"
+                label="Auto Caps"
+            />
         </FormGroup>
     </Box>
 );
@@ -120,7 +177,6 @@ function TerminalBox(props: PT08Props) {
             return;
         }
         const term = props.terminal;
-        term.setOption('bellStyle', 'both');
         term.resize(80, 25);
         term.open(termRef.current);
     }, [props.terminal]);
@@ -141,7 +197,6 @@ function TerminalBox(props: PT08Props) {
 };
 
 const ReaderBox: React.FunctionComponent<PT08Props> = observer(props => {
-    const classes = useStyles();
     const tapeInput = React.useRef<HTMLInputElement>(null);
 
     return (
@@ -152,7 +207,7 @@ const ReaderBox: React.FunctionComponent<PT08Props> = observer(props => {
 
             <FormGroup row>
                 <FormControl>
-                    <input ref={tapeInput} className={classes.fileInput} type='file' onChange={evt => onLoadFile(evt, props)} />
+                    <input ref={tapeInput} type='file' onChange={evt => onLoadFile(evt, props)} hidden />
                     <Button variant='outlined' color='primary' onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
                 </FormControl>
                 <FormControlLabel

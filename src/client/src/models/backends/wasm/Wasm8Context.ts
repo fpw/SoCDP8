@@ -25,8 +25,6 @@ interface Wasm8Calls {
     getConsoleOut(ctx: number): number;
     getLampsOut(ctx: number): number;
     getConsoleIn(ctx: number): number;
-    clearCore(ctx: number): void;
-    writeCore(ctx: number, addr: number, word: number): void;
     peripheralAction(ctx: number, id: number, ev: number, p1: number, p2: number): void;
     destroy(ctx: number): void;
 
@@ -39,6 +37,10 @@ interface Wasm8Calls {
 }
 
 export class Wasm8Context {
+    private readonly EventConfigure = 1;
+    private readonly EventClearCore = 2;
+    private readonly EventWriteWord = 3;
+
     private calls?: Wasm8Calls;
     private ctx?: number;
     private consoleOut?: number;
@@ -59,8 +61,6 @@ export class Wasm8Context {
             getConsoleIn: inst.cwrap("pdp8_get_console_in", 'number', ['number']),
             getConsoleOut: inst.cwrap("pdp8_get_console_out", 'number', ['number']),
             getLampsOut: inst.cwrap("pdp8_get_lamps_out", 'number', ['number']),
-            clearCore: inst.cwrap("pdp8_clear_core", '', ['number']),
-            writeCore: inst.cwrap("pdp8_write_core", '', ['number', 'number', 'number']),
             peripheralAction: inst.cwrap("pdp8_peripheral_action", '', ['number', 'number', 'number', 'number']),
             destroy: inst.cwrap("pdp8_destroy", '', ['number']),
 
@@ -191,20 +191,27 @@ export class Wasm8Context {
         this.calls.writePointer(this.consoleIn + offset, val, 'i16');
     }
 
-    public clearCore() {
-        if (!this.ctx || !this.calls) {
-            throw Error('Not connected');
+    public configure(maxMemField: number, eae: boolean, kt8i: boolean, bsw: boolean) {
+        let confWord = maxMemField;
+        if (eae) {
+            confWord |= 0o10;
+        }
+        if (kt8i) {
+            confWord |= 0o20;
+        }
+        if (bsw) {
+            confWord |= 0o40;
         }
 
-        this.calls.clearCore(this.ctx);
+        this.sendPeripheralAction(0, this.EventConfigure, confWord, 0);
+    }
+
+    public clearCore() {
+        this.sendPeripheralAction(0, this.EventClearCore, 0, 0);
     }
 
     public writeCore(addr: number, value: number) {
-        if (!this.ctx || !this.calls) {
-            throw Error('Not connected');
-        }
-
-        this.calls.writeCore(this.ctx, addr, value);
+        this.sendPeripheralAction(0, this.EventWriteWord, addr, value);
     }
 
     public sendPeripheralAction(dev: number, action: number, p1: number, p2: number) {

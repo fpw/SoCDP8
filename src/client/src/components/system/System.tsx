@@ -22,8 +22,7 @@ import { PeripheralBox } from '../peripherals/PeripheralBox';
 
 import React from 'react';
 import { observer } from "mobx-react-lite";
-
-import Typography from '@material-ui/core/Typography';
+import { Typography } from '@mui/material';
 
 export interface SystemProps {
     pdp8: SoCDP8;

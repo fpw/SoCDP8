@@ -21,20 +21,9 @@ import { PaperTape } from '../../models/PaperTape';
 import { downloadData } from '../../util';
 import { PaperTapeBox } from './PaperTapeBox';
 
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 import { observer } from 'mobx-react-lite';
-import { createStyles, makeStyles } from "@material-ui/core/styles";
-import Box from "@material-ui/core/Box";
-import Button from "@material-ui/core/Button";
-import FormGroup from "@material-ui/core/FormGroup";
-import FormControl from "@material-ui/core/FormControl";
-import FormControlLabel from "@material-ui/core/FormControlLabel";
-import Switch from "@material-ui/core/Switch";
-import Divider from '@material-ui/core/Divider';
-import Select from '@material-ui/core/Select';
-import MenuItem from '@material-ui/core/MenuItem';
-import FormLabel from '@material-ui/core/FormLabel';
-import Typography from '@material-ui/core/Typography';
+import { Divider, Box, FormGroup, FormControl, FormLabel, Select, MenuItem, Typography, Button, FormControlLabel, Switch } from '@mui/material';
 
 export interface PC04Props {
     conf: PC04Configuration;
@@ -52,14 +41,7 @@ export interface PC04Props {
     onPunchLeader(): void;
 }
 
-const useStyles = makeStyles(theme => createStyles({
-    fileInput: {
-        display: 'none',
-    }
-}));
-
 export function PC04(props: PC04Props) {
-    const classes = useStyles();
     const tapeInput = React.useRef<HTMLInputElement>(null);
 
     return (
@@ -95,7 +77,6 @@ const ConfigBox: React.FunctionComponent<PC04Props> = observer(props =>
 );
 
 const ReaderBox: React.FunctionComponent<PC04Props> = observer(props => {
-    const classes = useStyles();
     const tapeInput = React.useRef<HTMLInputElement>(null);
 
     return (
@@ -106,11 +87,11 @@ const ReaderBox: React.FunctionComponent<PC04Props> = observer(props => {
 
             <FormGroup row>
                 <FormControl>
-                    <input ref={tapeInput} className={classes.fileInput} type='file' onChange={evt => onLoadFile(evt, props)} />
+                    <input ref={tapeInput} type='file' onChange={evt => onLoadFile(evt, props)} hidden/>
                     <Button variant='outlined' color='primary' onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
                 </FormControl>
                 <FormControlLabel
-                    control={<Switch onChange={evt => props.onReaderActivationChange(evt.target.checked)} checked={props.readerActive} />}
+                    control={<Switch onChange={(evt: ChangeEvent<HTMLInputElement>) => props.onReaderActivationChange(evt.target.checked)} checked={props.readerActive} />}
                     labelPlacement='start'
                     label='Reader On'
                 />

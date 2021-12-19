@@ -17,11 +17,11 @@
  */
 
 import { io, Socket } from 'socket.io-client';
-import { ConsoleState } from '../../types/ConsoleTypes';
-import { DeviceID, PeripheralConfiguration } from '../../types/PeripheralTypes';
-import { SystemConfiguration } from '../../types/SystemConfiguration';
-import { Backend } from './Backend';
-import { BackendListener } from './BackendListener';
+import { ConsoleState } from '../../../types/ConsoleTypes';
+import { DeviceID, PeripheralConfiguration } from '../../../types/PeripheralTypes';
+import { SystemConfiguration } from '../../../types/SystemConfiguration';
+import { Backend } from '../Backend';
+import { BackendListener } from '../BackendListener';
 
 export class SocketBackend implements Backend {
     private socket: Socket;

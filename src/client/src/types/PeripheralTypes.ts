@@ -50,6 +50,7 @@ export interface PT08Configuration {
     id: DeviceID.DEV_ID_PT08 | DeviceID.DEV_ID_TT1 | DeviceID.DEV_ID_TT2 | DeviceID.DEV_ID_TT3 | DeviceID.DEV_ID_TT4;
     baudRate: BaudRate;
     eightBit: boolean;
+    autoCaps: boolean;
 }
 
 export interface PC04Configuration {
