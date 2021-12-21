@@ -37,13 +37,9 @@ export class SoCDP8 {
     private activeSystem_: SystemConfiguration | undefined;
     private systemList: SystemConfiguration[] = [];
     private backend: Backend;
+    private simSpeed = 1.0;
 
     constructor(backend: Backend) {
-        let url = '';
-        if (window.location.toString().includes('localhost')) {
-            url = 'http://192.168.178.68:8000';
-        }
-
         this.backend = backend;
 
         const listener: BackendListener = {
@@ -69,16 +65,22 @@ export class SoCDP8 {
             onStateChange: (data: any) => {
                 this.onStateEvent(data);
             },
+
+            onPerformanceReport: (simSpeed: number) => {
+                this.setSimSpeed(simSpeed);
+            },
         };
         backend.connect(listener);
 
-        makeObservable<SoCDP8, "frontPanel" | "peripheralModels" | "activeSystem_" | "systemList">(this, {
+        makeObservable<SoCDP8, "simSpeed" | "setSimSpeed" | "frontPanel" | "peripheralModels" | "activeSystem_" | "systemList">(this, {
             frontPanel: observable,
             peripheralModels: observable,
             activeSystem_: observable,
             systemList: observable,
+            simSpeed: observable,
 
             onDisconnected: action,
+            setSimSpeed: action,
             onFrontPanelChange: action,
             onActiveSystemChanged: action,
             onSystemListChanged: action,
@@ -87,7 +89,7 @@ export class SoCDP8 {
             panel: computed,
             peripherals: computed,
             ready: computed,
-
+            speed: computed,
         });
     }
 
@@ -97,6 +99,10 @@ export class SoCDP8 {
         }
 
         return this.activeSystem_;
+    }
+
+    private setSimSpeed(speed: number) {
+        this.simSpeed = speed;
     }
 
     private async readActiveState(): Promise<void> {
@@ -187,6 +193,10 @@ export class SoCDP8 {
         }
 
         return this.frontPanel;
+    }
+
+    public get speed(): number {
+        return this.simSpeed;
     }
 
     public get peripherals(): PeripheralModel[] {

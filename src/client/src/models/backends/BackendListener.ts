@@ -23,5 +23,6 @@ export interface BackendListener {
     onDisconnect(): void;
     onConsoleState(state: ConsoleState): void;
     onPeripheralEvent(data: any): void;
+    onPerformanceReport(simSpeed: number): void;
     onStateChange(data: any): void;
 }

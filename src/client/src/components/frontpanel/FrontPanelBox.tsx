@@ -21,7 +21,7 @@ import { observer } from "mobx-react-lite";
 import { FrontPanel } from "./FrontPanel";
 import { SoCDP8 } from '../../models/SoCDP8';
 import { ProgramSnippets, ProgramSnippet } from '../../models/ProgramSnippets';
-import { Box, Card, CardHeader, CardMedia, CardActions, ButtonGroup, Button, Dialog, DialogTitle, List, ListItem, ListItemText } from '@mui/material';
+import { Box, Card, CardHeader, CardMedia, CardActions, ButtonGroup, Button, Dialog, DialogTitle, List, ListItem, ListItemText, Typography } from '@mui/material';
 
 export const FrontPanelBox: React.FunctionComponent<{pdp8: SoCDP8}> = observer(props => {
     const [busy, setBusy] = React.useState<boolean>(false);
@@ -57,6 +57,9 @@ export const FrontPanelBox: React.FunctionComponent<{pdp8: SoCDP8}> = observer(p
                             Clear Core
                         </Button>
                     </ButtonGroup>
+                    <Box>
+                        Performance { props.pdp8.speed }
+                    </Box>
                     <SnippetDialog
                             open={showSnippets}
                             onClose={() => setShowSnippets(false)}

@@ -47,6 +47,7 @@ export function getDefaultSysConf(): SystemConfiguration {
             {
                 id: DeviceID.DEV_ID_PT08,
                 baudRate: 110,
+                autoCaps: true,
             } as PT08Configuration,
             {
                 id: DeviceID.DEV_ID_PC04,

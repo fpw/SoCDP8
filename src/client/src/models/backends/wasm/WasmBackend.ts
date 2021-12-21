@@ -40,7 +40,7 @@ export class WasmBackend implements Backend {
                 {
                     id: DeviceID.DEV_ID_PT08,
                     eightBit: false,
-                    autoCaps: false,
+                    autoCaps: true,
                     baudRate: 1200,
                 },
                 {
@@ -55,25 +55,25 @@ export class WasmBackend implements Backend {
                     id: DeviceID.DEV_ID_TT1,
                     baudRate: 1200,
                     eightBit: false,
-                    autoCaps: false,
+                    autoCaps: true,
                 },
                 {
                     id: DeviceID.DEV_ID_TT2,
                     baudRate: 1200,
                     eightBit: false,
-                    autoCaps: false,
+                    autoCaps: true,
                 },
                 {
                     id: DeviceID.DEV_ID_TT3,
                     baudRate: 1200,
                     eightBit: false,
-                    autoCaps: false,
+                    autoCaps: true,
                 },
                 {
                     id: DeviceID.DEV_ID_TT4,
                     baudRate: 1200,
                     eightBit: false,
-                    autoCaps: false,
+                    autoCaps: true,
                 },
                 {
                     id: DeviceID.DEV_ID_RF08,
@@ -186,6 +186,12 @@ export class WasmBackend implements Backend {
         }
 
         switch (dev) {
+            case DeviceID.DEV_ID_NULL:
+                if (action == 4) {
+                    const simSpeed = p1 / 10;
+                    this.listener.onPerformanceReport(simSpeed);
+                }
+                break;
             case DeviceID.DEV_ID_PT08:
             case DeviceID.DEV_ID_TT1:
             case DeviceID.DEV_ID_TT2:
