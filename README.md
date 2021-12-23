@@ -60,6 +60,8 @@ Code for peripherals can access the onboard <br>
 When connected to the **Ethernet** / **WiFi**, the system, including <br>
 it's peripherals, can be controlled with a **Web Browser**.
 
+<br>
+
 ---
 
 ## Project Goals
@@ -98,6 +100,8 @@ and utilizes the `Pynq-Z2` for development only.
 |:-----:|:-|
 | **[DE0-Nano-SoC]** | ***Altera Cyclone V*** <br> - `125€` \| International Shipping <br> - **Incompatible** 40 pin connector, <br>  requires adapter. <br> - Many free **GPIO** pins <br> - Switches, buttons, LEDs |
 
+<br>
+
 ---
 
 ## Project Status
@@ -114,15 +118,21 @@ and utilizes the `Pynq-Z2` for development only.
 *These features pass the `MAINDEC` tests and* <br>
 *can be loaded using the `RIM` / `BIN` loaders.*
 
+<br>
+
 #### Runs On
 
 - `Focal69`
 - `OS/8`
 - `TSS/8`
 
+<br>
+
 #### Peripherals
 
 Implemented in software with only basic functionality.
+
+<br>
 
 #### Deviations
 
