@@ -81,20 +81,20 @@ and utilizes the `Pynq-Z2` for development only.
 
 <br>
 
-#### Tested Boards
+### Tested Boards
 
 | Board |  |
 |:-----:|:-|
-| **[ZynqBerry]** | ***Xilinx Zynq 7010*** <br> - `130€` \| Good Availability <br> - **Raspberry Pi** form factor <br> - No free **GPIO** pins <br> - Has the *smallest* **Zynq** |
-| **[Pynq-Z2]** | ***Xilinx Zynq 7020*** <br> `132€` \| Good Availability <br> - Raspberry Pi Connectors <br> - Spare **GPIO** pins, such as a <br>  **PMOD** pin, useful for sensors<br> - Switches, buttons, LEDs <br> - Requires a ribbon cable to <br>  fit in the `PiDP-8/I` box |
+| **[ZynqBerry]** | <br> ***Xilinx Zynq 7010*** <br><br> - `130€` \| Good Availability <br><br> - **Raspberry Pi** form factor <br><br> - No free **GPIO** pins <br><br> - Has the *smallest* **Zynq** <br><br> |
+| **[Pynq-Z2]** | <br> ***Xilinx Zynq 7020*** <br><br> `132€` \| Good Availability <br><br> - Raspberry Pi Connectors <br><br> - Spare **GPIO** pins, such as a <br><br>  **PMOD** pin, useful for sensors<br> - Switches, buttons, LEDs <br><br> - Requires a ribbon cable to <br>  fit in the `PiDP-8/I` box <br><br> |
 
 <br>
 
-#### Other Boards
+### Other Boards
 
 | Board |  |
 |:-----:|:-|
-| **[DE0-Nano-SoC]** | ***Altera Cyclone V*** <br> - `125€` \| International Shipping <br> - **Incompatible** 40 pin connector, <br>  requires adapter. <br> - Many free **GPIO** pins <br> - Switches, buttons, LEDs |
+| **[DE0-Nano-SoC]** | <br> ***Altera Cyclone V*** <br><br> - `125€` \| International Shipping <br><br> - **Incompatible** 40 pin connector, <br><br>  requires adapter. <br><br> - Many free **GPIO** pins <br><br> - Switches, buttons, LEDs <br><br> |
 
 <br>
 <br>
@@ -114,14 +114,14 @@ and utilizes the `Pynq-Z2` for development only.
 
 *These features pass the `MAINDEC` tests and* <br>
 *can be loaded using the `RIM` / `BIN` loaders.*
-
+<br>
 <br>
 
 ### Runs On
 
 - `Focal69`
-- `OS/8`
 - `TSS/8`
+- `OS/8`
 
 <br>
 
