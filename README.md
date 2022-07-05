@@ -1,17 +1,5 @@
-[DEC PDP-8/I]: https://en.wikipedia.org/wiki/PDP-8
-[PiDP-8/I Console]: https://obsolescence.wixsite.com/obsolescence/pidp-8
 
-[Preview]: /pictures/Preview.png
-[Maintenance Manual]: docs/PDP8I_maintenance_manual_vol1.pdf
-
-[ZynqBerry]: https://shop.trenz-electronic.de/en/TE0726-03M-ZynqBerry-Zynq-7010-in-Raspberry-Pi-form-factor
-[Pynq-Z2]: http://www.tul.com.tw/ProductsPYNQ-Z2.html
-
-[DE0-Nano-SoC]: https://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&CategoryNo=163&No=941&PartNo=1
-
-<!----------------------------------------------------------------------------->
-
-# SoCDP8
+# SoCDP8   [![Badge License]][License]
 
 This is an implementation of the **[DEC PDP-8/I]** on a <br>
 **Xilinx Zynq**, a **FPGA** controller with an **ARM CPU**.
@@ -143,3 +131,24 @@ The `1KΩ` resistors had to be replaced by `220Ω` ones <br>
 to support the `pullup` resistance of the **Zynq** drivers.
 
 Thankfully `220Ω` is compatible with the **Raspberry Pi**.
+
+<br>
+
+
+<!----------------------------------------------------------------------------->
+
+[PiDP-8/I Console]: https://obsolescence.wixsite.com/obsolescence/pidp-8
+[DE0-Nano-SoC]: https://www.terasic.com.tw/cgi-bin/page/archive.pl?Language=English&CategoryNo=163&No=941&PartNo=1
+[DEC PDP-8/I]: https://en.wikipedia.org/wiki/PDP-8
+[ZynqBerry]: https://shop.trenz-electronic.de/en/TE0726-03M-ZynqBerry-Zynq-7010-in-Raspberry-Pi-form-factor
+[Pynq-Z2]: http://www.tul.com.tw/ProductsPYNQ-Z2.html
+
+[Maintenance Manual]: docs/PDP8I_maintenance_manual_vol1.pdf
+[Preview]: /pictures/Preview.png
+[License]: LICENSE
+
+
+<!--------------------------------[ Badges ]----------------------------------->
+
+[Badge License]: https://img.shields.io/badge/Open_Hardware-1.2-292961?style=for-the-badge
+
