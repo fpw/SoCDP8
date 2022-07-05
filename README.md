@@ -4,12 +4,20 @@
 This is an implementation of the **[DEC PDP-8/I]** on a <br>
 **Xilinx Zynq**, a **FPGA** controller with an **ARM CPU**.
 
-It's built on the **[PiDP-8/I Console]**, by **Oscar Vermeulen**, <br>
-as a replacement for the Raspberry Pi approach.
+Built on the **[PiDP-8/I Console]** by **Oscar Vermeulen**, <br>
+it acts as a replacement for the Raspberry Pi approach.
+
+<br>
+<br>
+
+<div align = center>
 
 ![Preview]
 
----
+</div>
+
+<br>
+<br>
 
 ## Why SoC ?
 
@@ -49,8 +57,7 @@ When connected to the **Ethernet** / **WiFi**, the system, including <br>
 it's peripherals, can be controlled with a **Web Browser**.
 
 <br>
-
----
+<br>
 
 ## Project Goals
 
@@ -64,7 +71,8 @@ the `PiDP-8/I Console` in the same way the **Pi** does.
 a web socket connection between a web server <br>
 on the **ARM** and the `PDP-8` on the **FPGA**.
 
----
+<br>
+<br>
 
 ## Supported SoCs
 
@@ -89,26 +97,27 @@ and utilizes the `Pynq-Z2` for development only.
 | **[DE0-Nano-SoC]** | ***Altera Cyclone V*** <br> - `125€` \| International Shipping <br> - **Incompatible** 40 pin connector, <br>  requires adapter. <br> - Many free **GPIO** pins <br> - Switches, buttons, LEDs |
 
 <br>
-
----
+<br>
 
 ## Project Status
 
-#### Functional
+<br>
 
-- Base System
-- EAE
-- Timesharing
-- Data Breaks
-- I/O
-- Interrupts
+### Functional
+
+- **Base System**
+- **Timesharing**
+- **Data Breaks**
+- **Interrupts**
+- **EAE**
+- **I/O**
 
 *These features pass the `MAINDEC` tests and* <br>
 *can be loaded using the `RIM` / `BIN` loaders.*
 
 <br>
 
-#### Runs On
+### Runs On
 
 - `Focal69`
 - `OS/8`
@@ -116,13 +125,13 @@ and utilizes the `Pynq-Z2` for development only.
 
 <br>
 
-#### Peripherals
+### Peripherals
 
 Implemented in software with only basic functionality.
 
 <br>
 
-#### Deviations
+### Deviations
 
 To have the `PiDP-8/I` work with the **Zynq** boards, <br>
 a modification had to unfortunately be made.
@@ -143,8 +152,8 @@ Thankfully `220Ω` is compatible with the **Raspberry Pi**.
 [ZynqBerry]: https://shop.trenz-electronic.de/en/TE0726-03M-ZynqBerry-Zynq-7010-in-Raspberry-Pi-form-factor
 [Pynq-Z2]: http://www.tul.com.tw/ProductsPYNQ-Z2.html
 
-[Maintenance Manual]: docs/PDP8I_maintenance_manual_vol1.pdf
-[Preview]: /pictures/Preview.png
+[Maintenance Manual]: Documentation/PDP8I_maintenance_manual_vol1.pdf
+[Preview]: Resources/Preview.png
 [License]: LICENSE
 
 
