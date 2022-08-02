@@ -21,15 +21,15 @@ it acts as a replacement for the Raspberry Pi approach.
 
 ## Why SoC ?
 
-Drawback of the `Raspberry Pi` + `Linux` + `SIMH` approach:
+Drawback of the **Raspberry Pi + Linux + SIMH** approach:
 
 - **Inaccurate Simulation :** Doesn't allow for single stepping
-- **Long Boot Times :** `Linux` takes a few seconds to boot / start `SIMH`
-- **Meticulous Shutdown :** `Linux` needs a proper shutdown to not corrupt
+- **Long Boot Times :** **Linux** takes a few seconds to boot / start **SIMH**
+- **Meticulous Shutdown :** **Linux** needs a proper shutdown to not corrupt
 
 <br>
 
-The **SoCDP8** implements the `PDP-8/I` in **VHDL**, targeting **FPGAs**.
+The **SoCDP8** implements the **PDP-8/I** in **VHDL**, targeting **FPGAs**.
 
 <br>
 
@@ -65,11 +65,11 @@ it's peripherals, can be controlled with a **Web Browser**.
 
 - Providing a *simple replacement* for the **Raspberry Pi**, <br>
 ideally the project runs on a **SoC** board that snaps into <br>
-the `PiDP-8/I Console` in the same way the **Pi** does.
+the **PiDP-8/I Console** in the same way the **Pi** does.
 
 - Have it be operable through a browser using <br>
 a web socket connection between a web server <br>
-on the **ARM** and the `PDP-8` on the **FPGA**.
+on the **ARM** and the **PDP-8** on the **FPGA**.
 
 <br>
 <br>
@@ -77,7 +77,7 @@ on the **ARM** and the `PDP-8` on the **FPGA**.
 ## Supported SoCs
 
 The project currently only targets the **Zynq** board <br>
-and utilizes the `Pynq-Z2` for development only.
+and utilizes the **Pynq-Z2** for development only.
 
 <br>
 
@@ -86,7 +86,7 @@ and utilizes the `Pynq-Z2` for development only.
 | Board |  |
 |:-----:|:-|
 | **[ZynqBerry]** | <br> ***Xilinx Zynq 7010*** <br><br> - `130€` \| Good Availability <br><br> - **Raspberry Pi** form factor <br><br> - No free **GPIO** pins <br><br> - Has the *smallest* **Zynq** <br><br> |
-| **[Pynq-Z2]** | <br> ***Xilinx Zynq 7020*** <br><br> `132€` \| Good Availability <br><br> - Raspberry Pi Connectors <br><br> - Spare **GPIO** pins, such as a <br><br>  **PMOD** pin, useful for sensors<br> - Switches, buttons, LEDs <br><br> - Requires a ribbon cable to <br>  fit in the `PiDP-8/I` box <br><br> |
+| **[Pynq-Z2]** | <br> ***Xilinx Zynq 7020*** <br><br> `132€` \| Good Availability <br><br> - Raspberry Pi Connectors <br><br> - Spare **GPIO** pins, such as a <br><br>  **PMOD** pin, useful for sensors<br> - Switches, buttons, LEDs <br><br> - Requires a ribbon cable to <br>  fit in the **PiDP-8/I** box <br><br> |
 
 <br>
 
@@ -112,8 +112,8 @@ and utilizes the `Pynq-Z2` for development only.
 - **EAE**
 - **I/O**
 
-*These features pass the `MAINDEC` tests and* <br>
-*can be loaded using the `RIM` / `BIN` loaders.*
+*These features pass the **MAINDEC** tests and* <br>
+*can be loaded using the **RIM** / **BIN** loaders.*
 <br>
 <br>
 
@@ -133,11 +133,11 @@ Implemented in software with only basic functionality.
 
 ### Deviations
 
-To have the `PiDP-8/I` work with the **Zynq** boards, <br>
+To have the **PiDP-8/I** work with the **Zynq** boards, <br>
 a modification had to unfortunately be made.
 
 The `1KΩ` resistors had to be replaced by `220Ω` ones <br>
-to support the `pullup` resistance of the **Zynq** drivers.
+to support the **pullup** resistance of the **Zynq** drivers.
 
 Thankfully `220Ω` is compatible with the **Raspberry Pi**.
 
