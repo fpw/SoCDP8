@@ -1,5 +1,5 @@
 
-# SoCDP8   [![Badge License]][License]
+# SoCDP8   [![Badge Hardware]][License]   [![Badge Software]][License]
 
 This is an implementation of the 1968 **[DEC PDP-8/I]** on <br>
 a **Xilinx Zynq**, a **FPGA** controller with an **ARM CPU**.
@@ -159,5 +159,6 @@ Thankfully `220Ω` is compatible with the **Raspberry Pi**.
 
 <!--------------------------------[ Badges ]----------------------------------->
 
-[Badge License]: https://img.shields.io/badge/Open_Hardware-1.2-292961?style=for-the-badge
+[Badge Software]: https://img.shields.io/badge/License-AGPL3-015d93.svg?style=for-the-badge&labelColor=blue
+[Badge Hardware]: https://img.shields.io/badge/Open_Hardware-1.2-21214e?style=for-the-badge&labelColor=292961
 
