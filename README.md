@@ -1,8 +1,8 @@
 
 # SoCDP8   [![Badge License]][License]
 
-This is an implementation of the **[DEC PDP-8/I]** on a <br>
-**Xilinx Zynq**, a **FPGA** controller with an **ARM CPU**.
+This is an implementation of the 1968 **[DEC PDP-8/I]** on <br>
+a **Xilinx Zynq**, a **FPGA** controller with an **ARM CPU**.
 
 Built on the **[PiDP-8/I Console]** by **Oscar Vermeulen**, <br>
 it acts as a replacement for the Raspberry Pi approach.
