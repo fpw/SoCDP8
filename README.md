@@ -1,5 +1,5 @@
 
-# SoCDP8   [![Badge Hardware]][License]   [![Badge Software]][License]
+# SoCDP8   [![Badge Hardware]][Hardware]   [![Badge Software]][Software]
 
 This is an implementation of the 1968 **[DEC PDP-8/I]** on <br>
 a **Xilinx Zynq**, a **FPGA** controller with an **ARM CPU**.
@@ -152,9 +152,10 @@ Thankfully `220Ω` is compatible with the **Raspberry Pi**.
 [ZynqBerry]: https://shop.trenz-electronic.de/en/TE0726-03M-ZynqBerry-Zynq-7010-in-Raspberry-Pi-form-factor
 [Pynq-Z2]: http://www.tul.com.tw/ProductsPYNQ-Z2.html
 
-[Maintenance Manual]: Documentation/PDP8I_maintenance_manual_vol1.pdf
-[Preview]: Resources/Preview.png
-[License]: LICENSE
+[Maintenance Manual]: docs/PDP8I_maintenance_manual_vol1.pdf
+[Preview]: pictures/Preview.png
+[Hardware]: LICENSE-HARDWARE
+[Software]: LICENSE
 
 
 <!--------------------------------[ Badges ]----------------------------------->
