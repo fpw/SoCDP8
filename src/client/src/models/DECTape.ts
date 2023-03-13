@@ -20,7 +20,7 @@ import { makeObservable, observable } from "mobx";
 
 export class DECTape {
     public address: number = 0;
-    public name: string = '';
+    public name: string = "";
     public normalizedPosition: number = 0;
     public moving: boolean = false;
     public reverse: boolean = false;

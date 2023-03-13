@@ -1,5 +1,5 @@
-dist
-build
-node_modules
+build/
+node_modules/
 socdp8-client*.tgz
 .vscode
+*.tsbuildinfo

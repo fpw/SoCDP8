@@ -16,10 +16,10 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { observable, makeObservable } from 'mobx';
+import { observable, makeObservable } from "mobx";
 
 export class PaperTape {
-    public name: string = '';
+    public name: string = "";
 
     public buffer: number[] = [];
     public pos: number = 0;

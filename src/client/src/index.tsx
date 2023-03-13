@@ -16,20 +16,33 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import ReactDOM from 'react-dom';
 import { App } from "./components/App";
-import { SocketBackend } from './models/backends/socket/SocketBackend';
-import { WasmBackend } from './models/backends/wasm/WasmBackend';
-import { SoCDP8 } from './models/SoCDP8';
+import { SocketBackend } from "./models/backends/socket/SocketBackend";
+import { WasmBackend } from "./models/backends/wasm/WasmBackend";
+import { SoCDP8 } from "./models/SoCDP8";
+import { createRoot } from "react-dom/client";
+import { StrictMode } from "react";
 
 let url = "";
 if (window.location.toString().includes("localhost")) {
     url = "http://192.168.178.68:8000/"
 }
-// const backend = new SocketBackend(url);
-const backend = new WasmBackend();
+
+let backend;
+if (true) {
+    backend = new WasmBackend();
+} else {
+    backend = new SocketBackend(url);
+}
+
 const pdp8 = new SoCDP8(backend);
 
-ReactDOM.render((
-    <App pdp8={pdp8} />
-), document.getElementById("app"));
+const container = document.getElementById("app");
+const root = createRoot(container!);
+root.render(<>Loading...</>);
+
+root.render((
+    <StrictMode>
+        <App pdp8={pdp8} />
+    </StrictMode>
+));

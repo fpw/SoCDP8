@@ -27,8 +27,8 @@ export interface ProgramSnippet {
 
 export const ProgramSnippets: ProgramSnippet[] = [
     {
-        label: 'AC/MQ Blinker',
-        desc: 'Lamp blink program from dustyoldcomputers.com, start at 0000',
+        label: "AC/MQ Blinker",
+        desc: "Lamp blink program from dustyoldcomputers.com, start at 0000",
         snippets: [
             {
                 start: 0o0000,
@@ -50,8 +50,8 @@ export const ProgramSnippets: ProgramSnippet[] = [
         ]
     },
     {
-        label: 'RIM Loader (ASR)',
-        desc: 'RIM Loader for ASR-33, start at 7756',
+        label: "RIM Loader (ASR)",
+        desc: "RIM Loader for ASR-33, start at 7756",
         snippets: [
             {
                 start: 0o7756,
@@ -78,8 +78,8 @@ export const ProgramSnippets: ProgramSnippet[] = [
         ]
     },
     {
-        label: 'RIM Loader (HS)',
-        desc: 'RIM Loader for PC04, start at 7756',
+        label: "RIM Loader (HS)",
+        desc: "RIM Loader for PC04, start at 7756",
         snippets: [
             {
                 start: 0o7756,
@@ -106,8 +106,8 @@ export const ProgramSnippets: ProgramSnippet[] = [
         ]
     },
     {
-        label: 'OS/8 TC08 Loader',
-        desc: 'OS/8 for TC08, start at 7613',
+        label: "OS/8 TC08 Loader",
+        desc: "OS/8 for TC08, start at 7613",
         snippets: [
             {
                 start: 0o7613,
@@ -133,8 +133,8 @@ export const ProgramSnippets: ProgramSnippet[] = [
         ]
     },
     {
-        label: 'OS/8 RF08 Loader',
-        desc: 'OS/8 for RF08, start at 7750',
+        label: "OS/8 RF08 Loader",
+        desc: "OS/8 for RF08, start at 7750",
         snippets: [
             {
                 start: 0o7750,
@@ -149,8 +149,8 @@ export const ProgramSnippets: ProgramSnippet[] = [
         ]
     },
     {
-        label: 'Monitor TC08 Loader',
-        desc: 'TC08 Loader for Monitor, start at 0200',
+        label: "Monitor TC08 Loader",
+        desc: "TC08 Loader for Monitor, start at 0200",
         snippets: [
             {
                 start: 0o0200,

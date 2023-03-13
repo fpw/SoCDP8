@@ -17,8 +17,8 @@
  */
 
 import React from "react";
-import { observer } from 'mobx-react-lite';
-import { DECTape } from '../../models/DECTape';
+import { observer } from "mobx-react-lite";
+import { DECTape } from "../../models/DECTape";
 
 export interface TU56Props {
     left?: DECTape;
@@ -27,11 +27,10 @@ export interface TU56Props {
 
 export const TU56: React.FunctionComponent<TU56Props> = observer(props => {
     const [painter, setPainter] = React.useState<TU56Painter>(new TU56Painter());
-    const canvasRef = React.useRef<HTMLCanvasElement>(null);
 
-    React.useEffect(() => {
-        if (canvasRef.current) {
-            const canvas = canvasRef.current;
+    const canvasRef = React.useCallback((canvasRef: HTMLCanvasElement) => {
+        if (canvasRef) {
+            const canvas = canvasRef;
 
             if (canvas.parentElement) {
                 canvas.width = canvas.parentElement.scrollWidth;
@@ -39,10 +38,12 @@ export const TU56: React.FunctionComponent<TU56Props> = observer(props => {
             }
             painter.setCanvas(canvas);
         }
+    }, [painter]);
 
+    React.useEffect(() => {
         return () => {
-            painter?.stop();
-        };
+            painter.stop();
+        }
     }, [painter]);
 
     React.useEffect(() => {
@@ -89,7 +90,7 @@ class TU56Painter {
     }
 
     private draw(t: number) {
-        const ctx = this.canvas?.getContext('2d');
+        const ctx = this.canvas?.getContext("2d");
         if (!ctx || this.stopped) {
             return;
         }
@@ -97,7 +98,7 @@ class TU56Painter {
         const w = ctx.canvas.width;
         const h = ctx.canvas.height;
 
-        ctx.fillStyle = '#000';
+        ctx.fillStyle = "#000";
         ctx.fillRect(0, 0, w, h);
 
         const reelHeight = h * 0.7;
@@ -107,7 +108,7 @@ class TU56Painter {
         this.drawSystem(ctx, t, 0, h * 0.35, reelWidth, reelHeight, this.leftTape);
 
         this.drawHeader(ctx, w - 2 * reelWidth + 5, 5, 2 * reelWidth - 10, h * 0.3 - 5, this.rightTape);
-        this.drawSystem(ctx, t, w - 2 * reelWidth , h * 0.35, reelWidth, reelHeight, this.rightTape);
+        this.drawSystem(ctx, t, w - 2 * reelWidth, h * 0.35, reelWidth, reelHeight, this.rightTape);
 
         if (!this.stopped) {
             requestAnimationFrame((t) => this.draw(t));
@@ -120,14 +121,14 @@ class TU56Painter {
     }
 
     private drawHeader(ctx: CanvasRenderingContext2D, cx: number, cy: number, w: number, h: number, tape?: DECTape) {
-        ctx.strokeStyle = '#FFF';
+        ctx.strokeStyle = "#FFF";
         ctx.lineWidth = 2;
         ctx.strokeRect(cx, cy, w, h);
 
-        if (tape && tape.writing) {
-            ctx.fillStyle = 'orange';
+        if (tape?.writing) {
+            ctx.fillStyle = "orange";
         } else {
-            ctx.fillStyle = 'gray';
+            ctx.fillStyle = "gray";
         }
 
         const writeLeft = cx + 0.05 * w;
@@ -136,10 +137,10 @@ class TU56Painter {
         const writeH = 0.8 * h;
         ctx.fillRect(writeLeft, writeTop, writeW, writeH);
 
-        if (tape && tape.selected) {
-            ctx.fillStyle = 'orange';
+        if (tape?.selected) {
+            ctx.fillStyle = "orange";
         } else {
-            ctx.fillStyle = 'gray';
+            ctx.fillStyle = "gray";
         }
 
         const selLeft = cx + 0.85 * w;
@@ -179,10 +180,10 @@ class TU56Painter {
 
         this.drawHead(ctx, w, h);
 
-        ctx.fillStyle = '#808080';
+        ctx.fillStyle = "#808080";
         ctx.fillRect(guideLeftX, plateTopY, guideRightX - guideLeftX, guideBottomY - plateTopY);
 
-        ctx.strokeStyle = '#FFFFFF';
+        ctx.strokeStyle = "#FFFFFF";
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(guideLeftX, guideBottomY);
@@ -209,7 +210,7 @@ class TU56Painter {
                 }
             }
 
-            ctx.strokeStyle = '#F00';
+            ctx.strokeStyle = "#F00";
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(guideRightX, headTopY);
@@ -229,29 +230,29 @@ class TU56Painter {
             ctx.lineTo(guideRightX - gtx + ex, guideBottomY - gty + ey);
             ctx.stroke();
 
-            ctx.fillStyle = '#F00';
+            ctx.fillStyle = "#F00";
             ctx.beginPath();
             ctx.arc(reelX, reelY, tapeRadius, 0, 2 * Math.PI);
             ctx.fill();
 
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
             ctx.beginPath();
             ctx.arc(reelX, reelY, reelRadius, 0, 2 * Math.PI);
             ctx.fill();
         }
-        ctx.fillStyle = '#000000';
+        ctx.fillStyle = "#000000";
         ctx.beginPath();
         ctx.arc(reelX, reelY, hubRadius, 0, 2 * Math.PI);
         ctx.fill();
 
-        ctx.fillStyle = '#404040';
+        ctx.fillStyle = "#404040";
         ctx.beginPath();
         ctx.moveTo(guideRightX, guideBottomY);
         ctx.arc(guideRightX, guideBottomY, guideRightX - guideLeftX, Math.PI, 3 * Math.PI / 2);
         ctx.closePath();
         ctx.fill();
 
-        ctx.strokeStyle = '#FFFFFF';
+        ctx.strokeStyle = "#FFFFFF";
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(guideRightX, guideBottomY, guideRightX - guideLeftX, Math.PI, 3 * Math.PI / 2);
@@ -269,7 +270,7 @@ class TU56Painter {
         const headTopY1 = h * this.HEAD_TOP_Y1;
         const headBottomY = h * this.HEAD_BOTTOM_Y;
 
-        ctx.fillStyle = '#c0c0c0';
+        ctx.fillStyle = "#c0c0c0";
         ctx.beginPath();
         ctx.moveTo(headLeftX, headTopY1);
         ctx.lineTo(w, headTopY);
@@ -284,7 +285,7 @@ class TU56Painter {
         const reelX = this.REEL_CENTER_X * w;
         const reelY = this.REEL_CENTER_Y * h;
 
-        ctx.fillStyle = '#323250';
+        ctx.fillStyle = "#323250";
         const x = Math.cos(angle);
         const y = Math.sin(angle);
         const x1 = Math.cos(angle - 25 * Math.PI / 180);

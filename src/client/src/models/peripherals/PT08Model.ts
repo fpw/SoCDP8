@@ -16,12 +16,12 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PeripheralModel } from './PeripheralModel';
-import { PT08Configuration, DeviceID } from '../../types/PeripheralTypes';
-import { PaperTape } from '../PaperTape';
-import { Terminal } from 'xterm';
-import { observable, computed, action, makeObservable } from 'mobx';
-import { Backend } from '../backends/Backend';
+import { PeripheralModel } from "./PeripheralModel";
+import { PT08Configuration, DeviceID } from "../../types/PeripheralTypes";
+import { PaperTape } from "../PaperTape";
+import { Terminal } from "xterm";
+import { observable, computed, action, makeObservable } from "mobx";
+import { Backend } from "../backends/Backend";
 
 export class PT08Model extends PeripheralModel {
     private conf: PT08Configuration;
@@ -35,14 +35,12 @@ export class PT08Model extends PeripheralModel {
     constructor(backend: Backend, conf: PT08Configuration) {
         super(backend);
         this.conf = conf;
-        this.punchTape_.name = 'Punch';
-        this.xterm = new Terminal({
-            bellStyle: 'sound',
-        });
+        this.punchTape_.name = "Punch";
+        this.xterm = new Terminal();
 
         this.xterm.onData(data => {
-            for (let i = 0; i < data.length; i++) {
-                this.onRawKey(data[i]);
+            for (const c of data) {
+                this.onRawKey(c);
             }
         });
 
@@ -112,10 +110,10 @@ export class PT08Model extends PeripheralModel {
 
     public onPeripheralAction(action: string, data: any) {
         switch (action) {
-            case 'punch':
+            case "punch":
                 this.onPunch(data.data);
                 break;
-            case 'readerPos':
+            case "readerPos":
                 this.setReaderPos(data.data);
                 break;
         }

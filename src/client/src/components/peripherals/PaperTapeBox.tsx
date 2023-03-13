@@ -16,11 +16,10 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PaperTape } from "../../models/PaperTape";
-
-import React from "react";
-import { observer } from 'mobx-react-lite';
 import { Box, LinearProgress } from "@mui/material";
+import { observer } from "mobx-react-lite";
+import React from "react";
+import { PaperTape } from "../../models/PaperTape";
 
 export interface PaperTapeBoxProps {
     tape?: PaperTape;
@@ -89,7 +88,7 @@ class PaperTapePainter {
     private draw(buf: number[], pos: number) {
         this.drawPending = false;
 
-        const ctx = this.canvas.getContext('2d');
+        const ctx = this.canvas.getContext("2d");
         if (!ctx) {
             return;
         }
@@ -97,9 +96,9 @@ class PaperTapePainter {
         const w = ctx.canvas.width;
         const h = ctx.canvas.height;
 
-        ctx.fillStyle = '#f4ec72';
+        ctx.fillStyle = "#f4ec72";
         ctx.fillRect(0, 0, w, h);
-        ctx.fillStyle = 'rgba(255, 255, 255, 255)';
+        ctx.fillStyle = "rgba(255, 255, 255, 255)";
 
         if (pos >= 0) {
             this.drawForward(ctx, buf, pos);

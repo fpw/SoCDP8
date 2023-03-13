@@ -16,26 +16,26 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
 import { observer } from "mobx-react-lite";
-import { PT08Model } from '../../models/peripherals/PT08Model';
-import { PT08 } from "../peripherals/PT08";
-import { PC04Model } from '../../models/peripherals/PC04Model';
+import React from "react";
+import { DF32Model } from "../../models/peripherals/DF32Model";
+import { KW8IModel } from "../../models/peripherals/KW8IModel";
+import { PC04Model } from "../../models/peripherals/PC04Model";
+import { PeripheralModel } from "../../models/peripherals/PeripheralModel";
+import { PT08Model } from "../../models/peripherals/PT08Model";
+import { RF08Model } from "../../models/peripherals/RF08Model";
+import { RK8Model } from "../../models/peripherals/RK8Model";
+import { TC08Model } from "../../models/peripherals/TC08Model";
+import { DF32 } from "../peripherals/DF32";
+import { KW8I } from "../peripherals/KW8I";
 import { PC04 } from "../peripherals/PC04";
-import { TC08Model } from '../../models/peripherals/TC08Model';
-import { TC08 } from '../peripherals/TC08';
-import { PeripheralModel } from '../../models/peripherals/PeripheralModel';
-import { RF08 } from '../peripherals/RF08';
-import { RF08Model } from '../../models/peripherals/RF08Model';
-import { DF32Model } from '../../models/peripherals/DF32Model';
-import { DF32 } from '../peripherals/DF32';
-import { RK8Model } from '../../models/peripherals/RK8Model';
-import { RK8 } from '../peripherals/RK8';
-import { KW8IModel } from '../../models/peripherals/KW8IModel';
-import { KW8I } from '../peripherals/KW8I';
+import { PT08 } from "../peripherals/PT08";
+import { RF08 } from "../peripherals/RF08";
+import { RK8 } from "../peripherals/RK8";
+import { TC08 } from "../peripherals/TC08";
 
-import { Link as RouterLink } from 'react-router-dom';
-import { Box, Card, CardHeader, CardContent } from '@mui/material';
+import { Box, Card, CardContent, CardHeader } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 
 export function PeripheralBox(props: {model: PeripheralModel}) {
     const model = props.model;
@@ -59,7 +59,7 @@ export function PeripheralBox(props: {model: PeripheralModel}) {
     }
 }
 
- const PT08Box: React.FunctionComponent<{model: PT08Model}> = observer(({model}) =>
+const PT08Box: React.FunctionComponent<{model: PT08Model}> = observer(({model}) =>
     <CaptionBox name='Serial Line' model={model}>
         <PT08
             conf={model.config}
@@ -131,7 +131,7 @@ const KW8IBox: React.FunctionComponent<{model: KW8IModel}> = observer(({model}) 
 
 function CaptionBox(props: {model: PeripheralModel, name: string, children: React.ReactNode}) {
     const {model, name, children} = props;
-    const titleStr = `${name} @ Bus ${model.connections.map(x => x.toString(8)).join(', ')}`;
+    const titleStr = `${name} @ Bus ${model.connections.map(x => x.toString(8)).join(", ")}`;
     return (
         <Box mb={4}>
             <Card variant='outlined'>

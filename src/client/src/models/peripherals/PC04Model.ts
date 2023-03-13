@@ -16,11 +16,11 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PeripheralModel } from './PeripheralModel';
-import { observable, action, computed, makeObservable } from 'mobx';
-import { PC04Configuration } from '../../types/PeripheralTypes';
-import { PaperTape } from '../PaperTape';
-import { Backend } from '../backends/Backend';
+import { PeripheralModel } from "./PeripheralModel";
+import { observable, action, computed, makeObservable } from "mobx";
+import { PC04Configuration } from "../../types/PeripheralTypes";
+import { PaperTape } from "../PaperTape";
+import { Backend } from "../backends/Backend";
 
 export class PC04Model extends PeripheralModel {
     private conf: PC04Configuration;
@@ -32,7 +32,7 @@ export class PC04Model extends PeripheralModel {
     constructor(backend: Backend, conf: PC04Configuration) {
         super(backend);
         this.conf = conf;
-        this.punchTape_.name = 'Punch';
+        this.punchTape_.name = "Punch";
 
         makeObservable<PC04Model, "conf" | "readerTape_" | "readerActive_" | "punchTape_" | "punchActive_">(this, {
             conf: observable,
@@ -75,14 +75,14 @@ export class PC04Model extends PeripheralModel {
 
     public onPeripheralAction(action: string, data: any): void {
         switch (action) {
-            case 'punch':
+            case "punch":
                 this.onPunch(data.data);
                 break;
-            case 'readerPos':
+            case "readerPos":
                 this.setReaderPos(data.data);
                 break;
-            }
         }
+    }
 
     public onPunch(data: number) {
         if (this.punchActive_) {
@@ -92,7 +92,7 @@ export class PC04Model extends PeripheralModel {
 
     public async loadTape(file: File): Promise<void> {
         const tape = await PaperTape.fromFile(file);
-        this.backend.sendPeripheralAction(
+        await this.backend.sendPeripheralAction(
             this.conf.id,
             "reader-tape-set",
             Uint8Array.from(tape.buffer).buffer

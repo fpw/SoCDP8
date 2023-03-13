@@ -16,14 +16,13 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PC04Configuration, BaudRate, BAUD_RATES } from '../../types/PeripheralTypes';
-import { PaperTape } from '../../models/PaperTape';
-import { downloadData } from '../../util';
-import { PaperTapeBox } from './PaperTapeBox';
-
-import React, { ChangeEvent } from 'react';
-import { observer } from 'mobx-react-lite';
-import { Divider, Box, FormGroup, FormControl, FormLabel, Select, MenuItem, Typography, Button, FormControlLabel, Switch } from '@mui/material';
+import { Box, Button, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, Switch, Typography } from "@mui/material";
+import { observer } from "mobx-react-lite";
+import React, { ChangeEvent } from "react";
+import { PaperTape } from "../../models/PaperTape";
+import { BaudRate, BAUD_RATES, PC04Configuration } from "../../types/PeripheralTypes";
+import { downloadData } from "../../util";
+import { PaperTapeBox } from "./PaperTapeBox";
 
 export interface PC04Props {
     conf: PC04Configuration;
@@ -120,7 +119,7 @@ const PunchBox: React.FunctionComponent<PC04Props> = observer(props =>
                 <Button variant='outlined' color='primary' onClick={() => props.onPunchClear()}>New Tape</Button>
             </FormControl>
             <FormControl>
-                <Button variant='outlined' color='primary' onClick={() => downloadData(Uint8Array.from(props.punchTape.buffer), 'punch.bin')}>Download Tape</Button>
+                <Button variant='outlined' color='primary' onClick={() => downloadData(Uint8Array.from(props.punchTape.buffer), "punch.bin")}>Download Tape</Button>
             </FormControl>
             <FormControl>
                 <Button variant='outlined' color='primary' onClick={() => props.onPunchLeader()}>Leader</Button>

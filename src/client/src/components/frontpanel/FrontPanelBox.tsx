@@ -16,12 +16,12 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
+import { Box, Button, ButtonGroup, Card, CardActions, CardHeader, CardMedia, Dialog, DialogTitle, List, ListItem, ListItemText } from "@mui/material";
 import { observer } from "mobx-react-lite";
+import React from "react";
+import { ProgramSnippet, ProgramSnippets } from "../../models/ProgramSnippets";
+import { SoCDP8 } from "../../models/SoCDP8";
 import { FrontPanel } from "./FrontPanel";
-import { SoCDP8 } from '../../models/SoCDP8';
-import { ProgramSnippets, ProgramSnippet } from '../../models/ProgramSnippets';
-import { Box, Card, CardHeader, CardMedia, CardActions, ButtonGroup, Button, Dialog, DialogTitle, List, ListItem, ListItemText, Typography } from '@mui/material';
 
 export const FrontPanelBox: React.FunctionComponent<{pdp8: SoCDP8}> = observer(props => {
     const [busy, setBusy] = React.useState<boolean>(false);
@@ -33,18 +33,19 @@ export const FrontPanelBox: React.FunctionComponent<{pdp8: SoCDP8}> = observer(p
                 <CardHeader title='PDP-8/I' />
                 <CardMedia>
                     <FrontPanel lamps={props.pdp8.panel.lamps}
-                                switches={props.pdp8.panel.switches}
-                                onSwitch={props.pdp8.setPanelSwitch.bind(props.pdp8)}
+                        switches={props.pdp8.panel.switches}
+                        onSwitch={props.pdp8.setPanelSwitch.bind(props.pdp8)}
                     />
                 </CardMedia>
                 <CardActions>
                     <ButtonGroup color='primary' variant='outlined'>
-                        <Button onClick={async () => {
-                                    setBusy(true);
-                                    await props.pdp8.saveCurrentState();
-                                    setBusy(false);
-                                }}
-                                disabled={busy}
+                        <Button
+                            onClick={async() => {
+                                setBusy(true);
+                                await props.pdp8.saveCurrentState();
+                                setBusy(false);
+                            }}
+                            disabled={busy}
                         >
                             Save State
                         </Button>
@@ -61,14 +62,14 @@ export const FrontPanelBox: React.FunctionComponent<{pdp8: SoCDP8}> = observer(p
                         Performance { props.pdp8.speed }
                     </Box>
                     <SnippetDialog
-                            open={showSnippets}
-                            onClose={() => setShowSnippets(false)}
-                            onSelect={(snippet) => {
-                                for (const s of snippet.snippets) {
-                                    props.pdp8.writeCore(s.start, s.data);
-                                }
-                                setShowSnippets(false);
-                            }}
+                        open={showSnippets}
+                        onClose={() => setShowSnippets(false)}
+                        onSelect={(snippet) => {
+                            for (const s of snippet.snippets) {
+                                props.pdp8.writeCore(s.start, s.data);
+                            }
+                            setShowSnippets(false);
+                        }}
                     />
                 </CardActions>
             </Card>
@@ -90,7 +91,7 @@ function SnippetDialog(props: SnippetProps) {
                     <ListItem button key={snippet.label} onClick={() => props.onSelect(snippet)}>
                         <ListItemText primary={snippet.label} secondary={snippet.desc} />
                     </ListItem>
-            )};
+                )};
             </List>
         </Dialog>
     );

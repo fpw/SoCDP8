@@ -16,15 +16,14 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from 'react';
-import { observer } from 'mobx-react-lite';
-import { SoCDP8 } from '../../models/SoCDP8';
-import { useState } from "react";
-import { SystemForm } from './SystemForm';
-import { SystemConfiguration, getDefaultSysConf } from '../../types/SystemConfiguration';
-import { DeviceID } from '../../types/PeripheralTypes';
-import { Typography, Accordion, AccordionSummary, AccordionDetails, Box, TableContainer, Paper, Table, TableHead, TableRow, TableBody, ButtonGroup, Button, TableCell } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Accordion, AccordionDetails, AccordionSummary, Box, Button, ButtonGroup, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { observer } from "mobx-react-lite";
+import React, { useState } from "react";
+import { SoCDP8 } from "../../models/SoCDP8";
+import { DeviceID } from "../../types/PeripheralTypes";
+import { getDefaultSysConf, SystemConfiguration } from "../../types/SystemConfiguration";
+import { SystemForm } from "./SystemForm";
 
 export interface SystemManagerProps {
     pdp8: SoCDP8
@@ -47,7 +46,7 @@ export const SystemManager: React.FunctionComponent<SystemManagerProps> = observ
                     <Box width='75%' pl={4}>
                         <SystemForm
                             initialState={getDefaultSysConf()}
-                            onSubmit={async (s) => {
+                            onSubmit={async(s) => {
                                 setFormBusy(true);
                                 await onNewSystem(props.pdp8, s);
                                 setFormBusy(false);
@@ -87,7 +86,7 @@ function SystemEntry(props: {pdp8: SoCDP8, system: SystemConfiguration, active: 
     return (
         <TableRow>
             <TableCell>
-                <Box style={{fontWeight: props.active ? 'bold' : undefined}}>
+                <Box style={{fontWeight: props.active ? "bold" : undefined}}>
                     {props.system.name}
                 </Box>
             </TableCell>
@@ -122,14 +121,14 @@ function SystemEntry(props: {pdp8: SoCDP8, system: SystemConfiguration, active: 
             </TableCell>
             <TableCell>
                 <ButtonGroup variant='outlined' orientation='vertical'>
-                    <Button disabled={busy} onClick={async () => {
+                    <Button disabled={busy} onClick={async() => {
                         setBusy(true);
                         await activateSystem(props.pdp8, props.system);
                         setBusy(false);
                     }}>
                         Activate
                     </Button>
-                    <Button disabled={busy} onClick={async () => {
+                    <Button disabled={busy} onClick={async() => {
                         setBusy(true);
                         await deleteSystem(props.pdp8, props.system);
                         setBusy(false);
@@ -144,18 +143,18 @@ function SystemEntry(props: {pdp8: SoCDP8, system: SystemConfiguration, active: 
 
 function getPeripheralName(id: DeviceID): string {
     switch (id) {
-        case DeviceID.DEV_ID_NULL:  return '';
-        case DeviceID.DEV_ID_PT08:  return 'PT08';
-        case DeviceID.DEV_ID_PC04:  return 'PC04';
-        case DeviceID.DEV_ID_TC08:  return 'TC08';
-        case DeviceID.DEV_ID_RF08:  return 'RF08';
-        case DeviceID.DEV_ID_DF32:  return 'DF32';
-        case DeviceID.DEV_ID_TT1:   return 'TT1';
-        case DeviceID.DEV_ID_TT2:   return 'TT2';
-        case DeviceID.DEV_ID_TT3:   return 'TT3';
-        case DeviceID.DEV_ID_TT4:   return 'TT4';
-        case DeviceID.DEV_ID_KW8I:  return 'KW8I';
-        case DeviceID.DEV_ID_RK8:   return 'RK8';
+        case DeviceID.DEV_ID_NULL:  return "";
+        case DeviceID.DEV_ID_PT08:  return "PT08";
+        case DeviceID.DEV_ID_PC04:  return "PC04";
+        case DeviceID.DEV_ID_TC08:  return "TC08";
+        case DeviceID.DEV_ID_RF08:  return "RF08";
+        case DeviceID.DEV_ID_DF32:  return "DF32";
+        case DeviceID.DEV_ID_TT1:   return "TT1";
+        case DeviceID.DEV_ID_TT2:   return "TT2";
+        case DeviceID.DEV_ID_TT3:   return "TT3";
+        case DeviceID.DEV_ID_TT4:   return "TT4";
+        case DeviceID.DEV_ID_KW8I:  return "KW8I";
+        case DeviceID.DEV_ID_RK8:   return "RK8";
     }
 }
 
@@ -166,7 +165,7 @@ async function onNewSystem(pdp8: SoCDP8, state: SystemConfiguration) {
         if (e instanceof Error) {
             alert(`Creating state failed: ${e.message}`);
         } else {
-            alert('Creating state failed');
+            alert("Creating state failed");
         }
     }
 }
@@ -178,7 +177,7 @@ async function activateSystem(pdp8: SoCDP8, state: SystemConfiguration) {
         if (e instanceof Error) {
             alert(`Activating state failed: ${e.message}`);
         } else {
-            alert('Activating state failed');
+            alert("Activating state failed");
         }
     }
 }
@@ -194,7 +193,7 @@ async function deleteSystem(pdp8: SoCDP8, state: SystemConfiguration) {
         if (e instanceof Error) {
             alert(`Deleting system failed: ${e.message}`);
         } else {
-            alert('Deleting system failed');
+            alert("Deleting system failed");
         }
     }
 }

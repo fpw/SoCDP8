@@ -19,13 +19,13 @@ it acts as a replacement for the Raspberry Pi approach.
 <br>
 <br>
 
-## Why SoC ?
+## Why a SoC?
 
 Drawback of the **Raspberry Pi + Linux + SIMH** approach:
 
 - **Inaccurate Simulation :** Doesn't allow for single stepping
-- **Long Boot Times :** **Linux** takes a few seconds to boot / start **SIMH**
-- **Meticulous Shutdown :** **Linux** needs a proper shutdown to not corrupt
+- **Long Boot Times :** **Linux** takes a few seconds to boot and start **SIMH**
+- **Dangerous Shutdown :** In the default Raspberry Pi setup, Linux needs a proper shutdown to avoid corrupting the file system
 
 <br>
 
@@ -48,13 +48,13 @@ The system is modeled exactly as described in the <br>
 
 Peripherals are implemented on the **ARM CPU** on the **SoC**.
 
-This makes device implementation, like the teletype, fairly easy.
+This makes device implementation such as the teletype fairly easy.
 
 Code for peripherals can access the onboard <br>
 **SD Card** to retrieve *tapes*, *disk images*, ..
 
 When connected to the **Ethernet** / **WiFi**, the system, including <br>
-it's peripherals, can be controlled with a **Web Browser**.
+its peripherals, can be controlled with a **Web Browser**.
 
 <br>
 <br>
@@ -117,7 +117,7 @@ and utilizes the **Pynq-Z2** for development only.
 <br>
 <br>
 
-### Runs On
+### Can Run
 
 - `Focal69`
 - `TSS/8`
@@ -134,12 +134,12 @@ Implemented in software with only basic functionality.
 ### Deviations
 
 To have the **PiDP-8/I** work with the **Zynq** boards, <br>
-a modification had to unfortunately be made.
+unfortunately a little modification had to be made.
 
 The `1KΩ` resistors had to be replaced by `220Ω` ones <br>
 to support the **pullup** resistance of the **Zynq** drivers.
 
-Thankfully `220Ω` is compatible with the **Raspberry Pi**.
+Thankfully, `220Ω` is compatible with the **Raspberry Pi** as well so these resistors also support the original system.
 
 <br>
 
@@ -162,4 +162,3 @@ Thankfully `220Ω` is compatible with the **Raspberry Pi**.
 
 [Badge Software]: https://img.shields.io/badge/License-AGPL3-015d93.svg?style=for-the-badge&labelColor=blue
 [Badge Hardware]: https://img.shields.io/badge/Open_Hardware-1.2-21214e?style=for-the-badge&labelColor=292961
-

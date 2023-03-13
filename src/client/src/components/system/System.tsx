@@ -16,13 +16,12 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { SoCDP8 } from '../../models/SoCDP8';
-import { FrontPanelBox } from '../frontpanel/FrontPanelBox';
-import { PeripheralBox } from '../peripherals/PeripheralBox';
-
-import React from 'react';
+import { Typography } from "@mui/material";
 import { observer } from "mobx-react-lite";
-import { Typography } from '@mui/material';
+import React from "react";
+import { SoCDP8 } from "../../models/SoCDP8";
+import { FrontPanelBox } from "../frontpanel/FrontPanelBox";
+import { PeripheralBox } from "../peripherals/PeripheralBox";
 
 export interface SystemProps {
     pdp8: SoCDP8;
@@ -30,7 +29,7 @@ export interface SystemProps {
 
 export const System: React.FunctionComponent<SystemProps> = observer(props => {
     return (
-        <React.Fragment>
+        <>
             <Typography component='h1' variant='h4' gutterBottom>
                 System: {props.pdp8.activeSystem.name}
             </Typography>
@@ -38,6 +37,6 @@ export const System: React.FunctionComponent<SystemProps> = observer(props => {
             <FrontPanelBox pdp8={props.pdp8} />
 
             { props.pdp8.peripherals.map((dev, i) => <PeripheralBox key={i} model={dev} />) }
-        </React.Fragment>
+        </>
     );
 });

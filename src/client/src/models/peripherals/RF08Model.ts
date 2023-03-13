@@ -16,9 +16,9 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PeripheralModel } from './PeripheralModel';
-import { RF08Configuration } from '../../types/PeripheralTypes';
-import { Backend } from '../backends/Backend';
+import { PeripheralModel } from "./PeripheralModel";
+import { RF08Configuration } from "../../types/PeripheralTypes";
+import { Backend } from "../backends/Backend";
 
 export class RF08Model extends PeripheralModel {
     constructor(backend: Backend, private conf: RF08Configuration) {

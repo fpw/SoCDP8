@@ -16,9 +16,9 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PeripheralModel } from './PeripheralModel';
-import { DF32Configuration } from '../../types/PeripheralTypes';
-import { Backend } from '../backends/Backend';
+import { PeripheralModel } from "./PeripheralModel";
+import { DF32Configuration } from "../../types/PeripheralTypes";
+import { Backend } from "../backends/Backend";
 
 export class DF32Model extends PeripheralModel {
     constructor(backend: Backend, private conf: DF32Configuration) {
