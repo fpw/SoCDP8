@@ -17,8 +17,6 @@
  */
 
 import { Typography } from "@mui/material";
-import { observer } from "mobx-react-lite";
-import React from "react";
 import { SoCDP8 } from "../../models/SoCDP8";
 import { FrontPanelBox } from "../frontpanel/FrontPanelBox";
 import { PeripheralBox } from "../peripherals/PeripheralBox";
@@ -27,16 +25,21 @@ export interface SystemProps {
     pdp8: SoCDP8;
 }
 
-export const System: React.FunctionComponent<SystemProps> = observer(props => {
+export function System(props: SystemProps) {
+    const peripherals = props.pdp8.useStore(state => state.peripheralModels);
+    const sys = props.pdp8.useStore(state => state.activeSystem)!;
+
+    const models = [...peripherals.values()];
+
     return (
         <>
             <Typography component='h1' variant='h4' gutterBottom>
-                System: {props.pdp8.activeSystem.name}
+                System: {sys.name}
             </Typography>
 
             <FrontPanelBox pdp8={props.pdp8} />
 
-            { props.pdp8.peripherals.map((dev, i) => <PeripheralBox key={i} model={dev} />) }
+            { models.map((dev, i) => <PeripheralBox key={i} model={dev} />) }
         </>
     );
-});
+}

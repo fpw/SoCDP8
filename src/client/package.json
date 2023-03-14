@@ -15,14 +15,14 @@
     "@emotion/styled": "^11.10.6",
     "@mui/icons-material": "^5.11.11",
     "@mui/material": "^5.11.13",
-    "mobx": "^6.8.0",
-    "mobx-react": "^7.6.0",
+    "immer": "^9.0.19",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.9.0",
     "react-simple-keyboard": "^3.5.37",
     "socket.io-client": "^4.6.1",
-    "xterm": "^5.1.0"
+    "xterm": "^5.1.0",
+    "zustand": "^4.3.6"
   },
   "devDependencies": {
     "@types/react": "^18.0.28",

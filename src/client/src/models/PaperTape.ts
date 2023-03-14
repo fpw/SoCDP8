@@ -15,32 +15,57 @@
  *   You should have received a copy of the GNU Affero General Public License
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 
-import { observable, makeObservable } from "mobx";
+export interface PaperState {
+    name: string;
+    buffer: number[];
+    pos: number;
+}
+
+interface PaperStore {
+    state: PaperState;
+    setState: (newState: PaperState) => void;
+    setPos: (newPos: number) => void;
+    pushChar: (c: number) => void;
+    clear: () => void;
+}
 
 export class PaperTape {
-    public name: string = "";
+    private store = create<PaperStore>()(immer(devtools(set => ({
+        state: {
+            name: "",
+            buffer: [],
+            pos: 0,
+        },
+        setState: (newState: PaperState) => set(draft => {
+            draft.state = newState;
+        }),
+        setPos: (newPos: number) => set(draft => {
+            draft.state.pos = newPos;
+        }),
+        pushChar: (c: number) => set(draft => {
+            draft.state.buffer.push(c);
+        }),
+        clear: () => set(draft => {
+            draft.state.buffer = [];
+        }),
+    }))));
 
-    public buffer: number[] = [];
-    public pos: number = 0;
-
-    public constructor() {
-        makeObservable(this, {
-            buffer: observable,
-            pos: observable,
-        });
+    public get useTape() {
+        return this.store;
     }
 
     static async fromFile(file: File): Promise<PaperTape> {
         return new Promise<PaperTape>((resolve, reject) => {
             const tape = new PaperTape();
 
-            tape.name = file.name;
-            tape.pos = 0;
-
             const reader = new FileReader();
             reader.onload = () => {
-                tape.buffer = Array.from(new Uint8Array(reader.result as ArrayBuffer));
+                const buffer = Array.from(new Uint8Array(reader.result as ArrayBuffer));
+                tape.useTape.getState().setState({buffer, name: file.name, pos: 0});
                 resolve(tape);
             };
             reader.onerror = () => {

@@ -16,7 +16,6 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { observer } from "mobx-react-lite";
 import React from "react";
 import { DF32Model } from "../../models/peripherals/DF32Model";
 import { KW8IModel } from "../../models/peripherals/KW8IModel";
@@ -59,74 +58,105 @@ export function PeripheralBox(props: {model: PeripheralModel}) {
     }
 }
 
-const PT08Box: React.FunctionComponent<{model: PT08Model}> = observer(({model}) =>
-    <CaptionBox name='Serial Line' model={model}>
-        <PT08
-            conf={model.config}
-            onConfigChange={conf => model.updateConfig(conf)}
+function PT08Box(props: {model: PT08Model}) {
+    const {model} = props;
+    const readerActive = model.useState(state => state.readerActive);
+    const punchActive = model.useState(state => state.punchActive);
 
-            readerActive={model.readerActive}
-            readerTape={model.readerTape}
-            onReaderTapeLoad={tape => model.loadTape(tape)}
-            onReaderActivationChange={active => model.setReaderActive(active)}
+    return (
+        <CaptionBox name='Serial Line' model={model}>
+            <PT08
+                conf={model.config}
+                onConfigChange={conf => model.updateConfig(conf)}
 
-            punchActive={model.punchActive}
-            punchTape={model.punchTape}
-            onPunchActivationChange={active => model.setPunchActive(active)}
-            onPunchClear={() => model.clearPunch()}
-            onPunchLeader={() => model.addPunchLeader()}
-            onKeyboard={key => model.onRawKey(key)}
+                readerActive={readerActive}
+                readerTape={model.readerTape}
+                onReaderTapeLoad={tape => model.loadTape(tape)}
+                onReaderActivationChange={active => model.setReaderActive(active)}
 
-            terminal={model.terminal}
-        />
-    </CaptionBox>);
+                punchActive={punchActive}
+                punchTape={model.punchTape}
+                onPunchActivationChange={active => model.setPunchActive(active)}
+                onPunchClear={() => model.clearPunch()}
+                onPunchLeader={() => model.addPunchLeader()}
+                onKeyboard={key => model.onRawKey(key)}
 
-const PC04Box: React.FunctionComponent<{model: PC04Model}> = observer(({model}) =>
-    <CaptionBox name='PC04 High-Speed Paper-Tape Reader and Punch' model={model}>
-        <PC04
-            conf={model.config}
-            onConfigChange={(conf) => model.updateConfig(conf)}
+                terminal={model.terminal}
+            />
+        </CaptionBox>
+    );
+}
 
-            readerActive={model.readerActive}
-            readerTape={model.readerTape}
-            onReaderTapeLoad={tape => model.loadTape(tape)}
-            onReaderActivationChange={active => model.setReaderActive(active)}
+function PC04Box(props: {model: PC04Model}) {
+    const {model} = props;
+    const readerActive = model.useState(state => state.readerActive);
+    const punchActive = model.useState(state => state.punchActive);
 
-            punchActive={model.punchActive}
-            punchTape={model.punchTape}
-            onPunchActivationChange={active => model.setPunchActive(active)}
-            onPunchClear={() => model.clearPunch()}
-            onPunchLeader={() => model.addPunchLeader()}
-        />
-    </CaptionBox>);
+    return (
+        <CaptionBox name='PC04 High-Speed Paper-Tape Reader and Punch' model={model}>
+            <PC04
+                conf={model.config}
+                onConfigChange={(conf) => model.updateConfig(conf)}
 
-const TC08Box: React.FunctionComponent<{model: TC08Model}> = observer(({model}) =>
-    <CaptionBox name='TC08 DECtape Control' model={model}>
-        <TC08
-            tapes={model.getTapes()}
-            onTapeLoad={model.loadTape}
-        />
-    </CaptionBox>);
+                readerActive={readerActive}
+                readerTape={model.readerTape}
+                onReaderTapeLoad={tape => model.loadTape(tape)}
+                onReaderActivationChange={active => model.setReaderActive(active)}
 
-const RF08Box: React.FunctionComponent<{model: RF08Model}> = observer(({model}) =>
-    <CaptionBox name='RF08 Disk Control' model={model}>
-        <RF08 />
-    </CaptionBox>);
+                punchActive={punchActive}
+                punchTape={model.punchTape}
+                onPunchActivationChange={active => model.setPunchActive(active)}
+                onPunchClear={() => model.clearPunch()}
+                onPunchLeader={() => model.addPunchLeader()}
+            />
+        </CaptionBox>
+    );
+}
 
-const DF32Box: React.FunctionComponent<{model: DF32Model}> = observer(({model}) =>
-    <CaptionBox name='DF32 Disk Control' model={model}>
-        <DF32 />
-    </CaptionBox>);
+function TC08Box(props: {model: TC08Model}) {
+    const tapes = props.model.useState(state => state.tapes);
 
-const RK8Box: React.FunctionComponent<{model: RK8Model}> = observer(({model}) =>
-    <CaptionBox name='RK8 Disk Control' model={model}>
-        <RK8 />
-    </CaptionBox>);
+    return (
+        <CaptionBox name='TC08 DECtape Control' model={props.model}>
+            <TC08
+                tapes={tapes}
+                onTapeLoad={props.model.loadTape}
+            />
+        </CaptionBox>
+    );
+}
 
-const KW8IBox: React.FunctionComponent<{model: KW8IModel}> = observer(({model}) =>
-    <CaptionBox name='KW8I Real Time Clock' model={model}>
-        <KW8I />
-    </CaptionBox>);
+function RF08Box(props: {model: RF08Model}) {
+    return (
+        <CaptionBox name='RF08 Disk Control' model={props.model}>
+            <RF08 />
+        </CaptionBox>
+    );
+}
+
+function DF32Box(props: {model: DF32Model}) {
+    return (
+        <CaptionBox name='DF32 Disk Control' model={props.model}>
+            <DF32 />
+        </CaptionBox>
+    );
+}
+
+function RK8Box(props: {model: RK8Model}) {
+    return (
+        <CaptionBox name='RK8 Disk Control' model={props.model}>
+            <RK8 />
+        </CaptionBox>
+    );
+}
+
+function KW8IBox(props: {model: KW8IModel}) {
+    return (
+        <CaptionBox name='KW8I Real Time Clock' model={props.model}>
+            <KW8I />
+        </CaptionBox>
+    );
+}
 
 function CaptionBox(props: {model: PeripheralModel, name: string, children: React.ReactNode}) {
     const {model, name, children} = props;

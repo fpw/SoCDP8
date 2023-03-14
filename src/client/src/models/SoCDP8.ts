@@ -16,28 +16,66 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { observable, action, computed, makeObservable } from "mobx";
-import { PT08Model } from "./peripherals/PT08Model";
-import { PeripheralModel } from "./peripherals/PeripheralModel";
-import { PC04Model } from "./peripherals/PC04Model";
-import { TC08Model } from "./peripherals/TC08Model";
-import { RF08Model } from "./peripherals/RF08Model";
-import { DF32Model } from "./peripherals/DF32Model";
-import { RK8Model } from "./peripherals/RK8Model";
-import { KW8IModel } from "./peripherals/KW8IModel";
-import { SystemConfiguration } from "../types/SystemConfiguration";
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 import { ConsoleState } from "../types/ConsoleTypes";
 import { DeviceID } from "../types/PeripheralTypes";
-import { BackendListener } from "./backends/BackendListener";
+import { SystemConfiguration } from "../types/SystemConfiguration";
 import { Backend } from "./backends/Backend";
+import { BackendListener } from "./backends/BackendListener";
+import { DF32Model } from "./peripherals/DF32Model";
+import { KW8IModel } from "./peripherals/KW8IModel";
+import { PC04Model } from "./peripherals/PC04Model";
+import { PeripheralModel } from "./peripherals/PeripheralModel";
+import { PT08Model } from "./peripherals/PT08Model";
+import { RF08Model } from "./peripherals/RF08Model";
+import { RK8Model } from "./peripherals/RK8Model";
+import { TC08Model } from "./peripherals/TC08Model";
+
+interface SoCDP8Store {
+    frontPanel?: ConsoleState;
+    activeSystem?: SystemConfiguration;
+    peripheralModels: Map<DeviceID, PeripheralModel>;
+    simSpeed: number;
+    systemList: SystemConfiguration[];
+
+    clearPeripherals: () => void;
+    setFrontPanel: (state?: ConsoleState) => void;
+    setPeripheral: (id: DeviceID, model: PeripheralModel) => void;
+    setActiveSystem: (sys: SystemConfiguration) => void;
+    setSimSpeed: (speed: number) => void;
+    setSystemList: (list: SystemConfiguration[]) => void;
+}
 
 export class SoCDP8 {
-    private frontPanel?: ConsoleState;
-    private peripheralModels = new Map<DeviceID, PeripheralModel>();
-    private activeSystem_: SystemConfiguration | undefined;
-    private systemList: SystemConfiguration[] = [];
     private backend: Backend;
-    private simSpeed = 1.0;
+
+    private store = create<SoCDP8Store>()(immer(devtools(set => ({
+        peripheralModels: new Map(),
+        simSpeed: 1.0,
+        systemList: [],
+
+        clearPeripherals: () => set(draft => {
+            draft.frontPanel = undefined;
+            draft.peripheralModels.clear();
+        }),
+        setPeripheral: (id: DeviceID, model: PeripheralModel) => set(draft => {
+            draft.peripheralModels.set(id, model);
+        }),
+        setFrontPanel: (state?: ConsoleState) => set(draft => {
+            draft.frontPanel = state;
+        }),
+        setActiveSystem: (sys: SystemConfiguration) => set(draft => {
+            draft.activeSystem = sys;
+        }),
+        setSimSpeed: (speed: number) => set(draft => {
+            draft.simSpeed = speed;
+        }),
+        setSystemList: (list: SystemConfiguration[]) => set(draft => {
+            draft.systemList = list;
+        }),
+    }))));
 
     constructor(backend: Backend) {
         this.backend = backend;
@@ -67,42 +105,10 @@ export class SoCDP8 {
             },
 
             onPerformanceReport: (simSpeed: number) => {
-                this.setSimSpeed(simSpeed);
+                this.store.getState().setSimSpeed(simSpeed);
             },
         };
         backend.connect(listener);
-
-        makeObservable<SoCDP8, "simSpeed" | "setSimSpeed" | "frontPanel" | "peripheralModels" | "activeSystem_" | "systemList">(this, {
-            frontPanel: observable,
-            peripheralModels: observable,
-            activeSystem_: observable,
-            systemList: observable,
-            simSpeed: observable,
-
-            onDisconnected: action,
-            setSimSpeed: action,
-            onFrontPanelChange: action,
-            onActiveSystemChanged: action,
-            onSystemListChanged: action,
-
-            systems: computed,
-            panel: computed,
-            peripherals: computed,
-            ready: computed,
-            speed: computed,
-        });
-    }
-
-    public get activeSystem(): SystemConfiguration {
-        if (!this.activeSystem_) {
-            throw Error("No active system");
-        }
-
-        return this.activeSystem_;
-    }
-
-    private setSimSpeed(speed: number) {
-        this.simSpeed = speed;
     }
 
     private async readActiveState(): Promise<void> {
@@ -112,21 +118,25 @@ export class SoCDP8 {
 
     private async fetchStateList(): Promise<void> {
         const list = await this.backend.readSystems();
-        this.onSystemListChanged(list);
+        this.store.getState().setSystemList(list);
     }
 
     public onDisconnected(): void {
-        this.frontPanel = undefined;
-        this.peripheralModels.clear();
+        this.store.getState().setFrontPanel(undefined);
+        this.store.getState().clearPeripherals();
     }
 
     public onFrontPanelChange(newState: ConsoleState): void {
-        this.frontPanel = newState;
+        this.store.getState().setFrontPanel(newState);
+    }
+
+    public get useStore() {
+        return this.store;
     }
 
     public onActiveSystemChanged(sys: SystemConfiguration) {
-        this.activeSystem_ = sys;
-        this.peripheralModels.clear();
+        this.store.getState().setActiveSystem(sys);
+        this.store.getState().clearPeripherals();
 
         for (const conf of sys.peripherals) {
             let peripheral: PeripheralModel;
@@ -159,16 +169,12 @@ export class SoCDP8 {
                     break;
             }
 
-            this.peripheralModels.set(conf.id, peripheral);
+            this.store.getState().setPeripheral(conf.id, peripheral);
         }
     }
 
-    public onSystemListChanged(list: SystemConfiguration[]) {
-        this.systemList = list;
-    }
-
     private onPeripheralEvent(id: number, action: string, data: any) {
-        const peripheral = this.peripheralModels.get(id);
+        const peripheral = this.store.getState().peripheralModels.get(id);
         if (!peripheral) {
             return;
         }
@@ -181,46 +187,6 @@ export class SoCDP8 {
         if (!res) {
             throw Error("Couldn't save system state");
         }
-    }
-
-    public get systems(): SystemConfiguration[] {
-        return this.systemList;
-    }
-
-    public get panel(): ConsoleState {
-        if (!this.frontPanel) {
-            throw Error("Panel state not loaded");
-        }
-
-        return this.frontPanel;
-    }
-
-    public get speed(): number {
-        return this.simSpeed;
-    }
-
-    public get peripherals(): PeripheralModel[] {
-        const res: PeripheralModel[] = [];
-        this.peripheralModels.forEach(entry => {
-            res.push(entry);
-        })
-        return res;
-    }
-
-    public getPeripheralById(id: number): PeripheralModel {
-        const res = this.peripheralModels.get(id);
-        if (!res) {
-            throw Error("Unknown peripheral id");
-        }
-        return res;
-    }
-
-    public get ready(): boolean {
-        if (!this.frontPanel || !this.activeSystem_) {
-            return false;
-        }
-
-        return true;
     }
 
     public async setPanelSwitch(sw: string, state: boolean): Promise<void> {

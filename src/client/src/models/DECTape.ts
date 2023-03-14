@@ -16,26 +16,42 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { makeObservable, observable } from "mobx";
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
+
+export interface TapeState {
+    address: number;
+    loaded: boolean;
+    normalizedPosition: number;
+    moving: boolean;
+    reverse: boolean;
+    selected: boolean;
+    writing: boolean;
+}
+
+interface TapeStore {
+    state: TapeState;
+    setState: (newState: TapeState) => void;
+}
 
 export class DECTape {
-    public address: number = 0;
-    public loaded: boolean = false;
-    public normalizedPosition: number = 0;
-    public moving: boolean = false;
-    public reverse: boolean = false;
-    public selected: boolean = false;
-    public writing: boolean = false;
+    private store = create<TapeStore>()(immer(devtools(set => ({
+        state: {
+            address: 0,
+            loaded: false,
+            normalizedPosition: 0,
+            moving: false,
+            reverse: false,
+            selected: false,
+            writing: false,
+        },
+        setState: (newState: TapeState) => set(draft => {
+            draft.state = newState;
+        })
+    }))));
 
-    public constructor() {
-        makeObservable(this, {
-            address: observable,
-            loaded: observable,
-            normalizedPosition: observable,
-            moving: observable,
-            reverse: observable,
-            selected: observable,
-            writing: observable,
-        });
+    public get useTape() {
+        return this.store;
     }
 }

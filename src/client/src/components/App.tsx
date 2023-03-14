@@ -21,7 +21,6 @@ import MemoryIcon from "@mui/icons-material/Memory";
 import MenuIcon from "@mui/icons-material/Menu";
 import TuneIcon from "@mui/icons-material/Tune";
 import { AppBar, Box, Container, CssBaseline, Divider, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Typography } from "@mui/material";
-import { observer } from "mobx-react-lite";
 import React from "react";
 import { BrowserRouter as Router, Link as RouterLink, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { SoCDP8 } from "../models/SoCDP8";
@@ -36,14 +35,15 @@ export interface AppProps {
 
 const drawerWidth = 240;
 
-export const App: React.FunctionComponent<AppProps> = observer(props => {
+export function App(props: AppProps) {
     const [drawerOpen, setDrawerOpen] = React.useState(false);
+    const sys = props.pdp8.useStore(state => state.activeSystem);
 
     const toggleDrawerOpen = () => {
         setDrawerOpen(!drawerOpen);
     };
 
-    if (!props.pdp8.ready) {
+    if (!sys) {
         return <ConnectingInfo />;
     }
 
@@ -120,13 +120,15 @@ export const App: React.FunctionComponent<AppProps> = observer(props => {
             </Router>
         </Box>
     )
-});
+}
 
 function PeripheralById(props: {pdp8: SoCDP8}) {
     const idString = useParams<{id: string}>().id!;
     const id = Number.parseInt(idString);
+    const peripherals = props.pdp8.useStore(state => state.peripheralModels);
+    const peripheral = peripherals.get(id);
 
-    return <PeripheralBox model={props.pdp8.getPeripheralById(id)} />;
+    return <PeripheralBox model={peripheral!} />;
 }
 
 function ConnectingInfo() {

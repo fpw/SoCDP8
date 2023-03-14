@@ -17,23 +17,28 @@
  */
 
 import { Box, Button, ButtonGroup, Card, CardActions, CardHeader, CardMedia, Dialog, DialogTitle, List, ListItem, ListItemText } from "@mui/material";
-import { observer } from "mobx-react-lite";
 import React from "react";
 import { ProgramSnippet, ProgramSnippets } from "../../models/ProgramSnippets";
 import { SoCDP8 } from "../../models/SoCDP8";
 import { FrontPanel } from "./FrontPanel";
 
-export const FrontPanelBox: React.FunctionComponent<{pdp8: SoCDP8}> = observer(props => {
+export function FrontPanelBox(props: {pdp8: SoCDP8}) {
     const [busy, setBusy] = React.useState<boolean>(false);
     const [showSnippets, setShowSnippets] = React.useState<boolean>(false);
+    const panel = props.pdp8.useStore(state => state.frontPanel);
+    const simSpeed = props.pdp8.useStore(state => state.simSpeed);
+
+    if (!panel) {
+        return <>Loading...</>;
+    }
 
     return (
         <Box mb={4}>
             <Card variant='outlined'>
                 <CardHeader title='PDP-8/I' />
                 <CardMedia>
-                    <FrontPanel lamps={props.pdp8.panel.lamps}
-                        switches={props.pdp8.panel.switches}
+                    <FrontPanel lamps={panel.lamps}
+                        switches={panel.switches}
                         onSwitch={props.pdp8.setPanelSwitch.bind(props.pdp8)}
                     />
                 </CardMedia>
@@ -59,7 +64,7 @@ export const FrontPanelBox: React.FunctionComponent<{pdp8: SoCDP8}> = observer(p
                         </Button>
                     </ButtonGroup>
                     <Box>
-                        Performance { props.pdp8.speed }
+                        Performance { simSpeed.toFixed(1) }
                     </Box>
                     <SnippetDialog
                         open={showSnippets}
@@ -75,7 +80,7 @@ export const FrontPanelBox: React.FunctionComponent<{pdp8: SoCDP8}> = observer(p
             </Card>
         </Box>
     );
-});
+}
 
 interface SnippetProps {
     onSelect: ((s: ProgramSnippet) => void);

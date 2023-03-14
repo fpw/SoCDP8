@@ -17,7 +17,6 @@
  */
 
 import { Box, Button, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, Switch, Typography } from "@mui/material";
-import { observer } from "mobx-react-lite";
 import React, { ChangeEvent } from "react";
 import { PaperTape } from "../../models/PaperTape";
 import { BaudRate, BAUD_RATES, PC04Configuration } from "../../types/PeripheralTypes";
@@ -28,7 +27,7 @@ export interface PC04Props {
     conf: PC04Configuration;
     onConfigChange(conf: PC04Configuration): void;
 
-    readerTape?: PaperTape;
+    readerTape: PaperTape;
     readerActive: boolean;
     onReaderActivationChange(state: boolean): void;
     onReaderTapeLoad(tape: File): void;
@@ -54,28 +53,30 @@ export function PC04(props: PC04Props) {
     );
 }
 
-const ConfigBox: React.FunctionComponent<PC04Props> = observer(props =>
-    <Box>
-        <FormGroup row>
-            <FormControl>
-                <FormLabel component="legend">Baud Rate</FormLabel>
-                <Select
-                    value={props.conf.baudRate}
-                    onChange={(evt) => {
-                        const rate = Number.parseInt(evt.target.value as string) as BaudRate;
-                        props.onConfigChange({...props.conf, baudRate: rate});
-                    }}
-                >
-                    {BAUD_RATES.map((b) => (
-                        <MenuItem key={b} value={b}>{b}</MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
-        </FormGroup>
-    </Box>
-);
+function ConfigBox(props: PC04Props) {
+    return (
+        <Box>
+            <FormGroup row>
+                <FormControl>
+                    <FormLabel component="legend">Baud Rate</FormLabel>
+                    <Select
+                        value={props.conf.baudRate}
+                        onChange={(evt) => {
+                            const rate = Number.parseInt(evt.target.value as string) as BaudRate;
+                            props.onConfigChange({...props.conf, baudRate: rate});
+                        }}
+                    >
+                        {BAUD_RATES.map((b) => (
+                            <MenuItem key={b} value={b}>{b}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+            </FormGroup>
+        </Box>
+    );
+}
 
-const ReaderBox: React.FunctionComponent<PC04Props> = observer(props => {
+function ReaderBox(props: PC04Props) {
     const tapeInput = React.useRef<HTMLInputElement>(null);
 
     return (
@@ -97,7 +98,7 @@ const ReaderBox: React.FunctionComponent<PC04Props> = observer(props => {
             </FormGroup>
         </Box>
     );
-});
+}
 
 function onLoadFile(evt: React.ChangeEvent, props: PC04Props): void {
     const target = evt.target as HTMLInputElement;
@@ -108,27 +109,31 @@ function onLoadFile(evt: React.ChangeEvent, props: PC04Props): void {
     props.onReaderTapeLoad(target.files[0]);
 }
 
-const PunchBox: React.FunctionComponent<PC04Props> = observer(props =>
-    <Box mt={2}>
-        <Typography component='h6' variant='h6'>Punch</Typography>
+function PunchBox(props: PC04Props) {
+    const punchTape = props.punchTape.useTape(state => state.state);
 
-        <PaperTapeBox tape={props.punchTape} reverse={true} />
+    return (
+        <Box mt={2}>
+            <Typography component='h6' variant='h6'>Punch</Typography>
 
-        <FormGroup row>
-            <FormControl>
-                <Button variant='outlined' color='primary' onClick={() => props.onPunchClear()}>New Tape</Button>
-            </FormControl>
-            <FormControl>
-                <Button variant='outlined' color='primary' onClick={() => downloadData(Uint8Array.from(props.punchTape.buffer), "punch.bin")}>Download Tape</Button>
-            </FormControl>
-            <FormControl>
-                <Button variant='outlined' color='primary' onClick={() => props.onPunchLeader()}>Leader</Button>
-            </FormControl>
-            <FormControlLabel
-                control={<Switch onChange={evt => props.onPunchActivationChange(evt.target.checked)} checked={props.punchActive} />}
-                labelPlacement='start'
-                label='Punch On'
-            />
-        </FormGroup>
-    </Box>
-);
+            <PaperTapeBox tape={props.punchTape} reverse={true} />
+
+            <FormGroup row>
+                <FormControl>
+                    <Button variant='outlined' color='primary' onClick={() => props.onPunchClear()}>New Tape</Button>
+                </FormControl>
+                <FormControl>
+                    <Button variant='outlined' color='primary' onClick={() => downloadData(Uint8Array.from(punchTape.buffer), "punch.bin")}>Download Tape</Button>
+                </FormControl>
+                <FormControl>
+                    <Button variant='outlined' color='primary' onClick={() => props.onPunchLeader()}>Leader</Button>
+                </FormControl>
+                <FormControlLabel
+                    control={<Switch onChange={evt => props.onPunchActivationChange(evt.target.checked)} checked={props.punchActive} />}
+                    labelPlacement='start'
+                    label='Punch On'
+                />
+            </FormGroup>
+        </Box>
+    );
+}

@@ -18,7 +18,6 @@
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, ButtonGroup, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
-import { observer } from "mobx-react-lite";
 import React, { useState } from "react";
 import { SoCDP8 } from "../../models/SoCDP8";
 import { DeviceID } from "../../types/PeripheralTypes";
@@ -29,10 +28,11 @@ export interface SystemManagerProps {
     pdp8: SoCDP8
 }
 
-export const SystemManager: React.FunctionComponent<SystemManagerProps> = observer(props => {
+export function SystemManager(props: SystemManagerProps) {
     const [formBusy, setFormBusy] = useState<boolean>(false);
     const [open, setOpen] = useState<boolean>(false);
-    const activeSys = props.pdp8.activeSystem;
+    const activeSys = props.pdp8.useStore(state => state.activeSystem)!;
+    const systems = props.pdp8.useStore(state => state.systemList);
 
     return (
         <section>
@@ -71,14 +71,14 @@ export const SystemManager: React.FunctionComponent<SystemManagerProps> = observ
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            { props.pdp8.systems.map(s => <SystemEntry key= {s.id} pdp8={props.pdp8} system={s} active={s.id == activeSys.id} />)}
+                            { systems.map(s => <SystemEntry key= {s.id} pdp8={props.pdp8} system={s} active={s.id == activeSys.id} />)}
                         </TableBody>
                     </Table>
                 </TableContainer>
             </Box>
         </section>
     );
-});
+}
 
 function SystemEntry(props: {pdp8: SoCDP8, system: SystemConfiguration, active: boolean}) {
     const [busy, setBusy] = React.useState<boolean>(false);

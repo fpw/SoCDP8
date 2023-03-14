@@ -16,21 +16,40 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PeripheralModel } from "./PeripheralModel";
 import { TC08Configuration } from "../../types/PeripheralTypes";
-import { DECTape } from "../DECTape";
-import { action, makeObservable, observable } from "mobx";
 import { Backend } from "../backends/Backend";
+import { DECTape, TapeState } from "../DECTape";
+import { PeripheralModel } from "./PeripheralModel";
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
+
+interface TC08Store {
+    tapes: DECTape[];
+    clear: () => void;
+    setTapeState: (i: number, state: TapeState) => void;
+}
 
 export class TC08Model extends PeripheralModel {
-    private tapes: DECTape[] = [];
+    private store = create<TC08Store>()(immer(devtools(set => ({
+        tapes: [
+            new DECTape(), new DECTape(), new DECTape(), new DECTape(),
+            new DECTape(), new DECTape(), new DECTape(), new DECTape(),
+        ],
+        clear: () => set(draft => {
+            draft.tapes = [
+                new DECTape(), new DECTape(), new DECTape(), new DECTape(),
+                new DECTape(), new DECTape(), new DECTape(), new DECTape(),
+            ];
+        }),
+        setTapeState: (i: number, state: TapeState) => set(draft => {
+            draft.tapes[i].useTape.getState().setState(state);
+        }),
+    }))));
+
 
     constructor(backend: Backend, private conf: TC08Configuration) {
         super(backend);
-        makeObservable<TC08Model, "tapes">(this, {
-            tapes: observable,
-            onPeripheralAction: action,
-        })
     }
 
     public get connections(): number[] {
@@ -46,9 +65,9 @@ export class TC08Model extends PeripheralModel {
             return;
         }
 
-        this.tapes = [];
+        this.store.getState().clear();
         for (const state of (data.data as any[])) {
-            const tape: DECTape = {
+            const tape: TapeState = {
                 loaded: state.loaded,
                 address: state.address,
                 selected: state.selected,
@@ -57,12 +76,12 @@ export class TC08Model extends PeripheralModel {
                 writing: state.writing,
                 normalizedPosition: state.normalizedPosition,
             };
-            this.tapes[tape.address] = tape;
+            this.store.getState().setTapeState(tape.address, tape);
         }
     }
 
-    public getTapes(): DECTape[] {
-        return this.tapes;
+    public get useState() {
+        return this.store;
     }
 
     public readonly loadTape = async(tape: File, unit: number): Promise<void> => {

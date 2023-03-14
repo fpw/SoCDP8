@@ -17,19 +17,18 @@
  */
 
 import { Box, LinearProgress } from "@mui/material";
-import { observer } from "mobx-react-lite";
 import React from "react";
 import { PaperTape } from "../../models/PaperTape";
 
 export interface PaperTapeBoxProps {
-    tape?: PaperTape;
+    tape: PaperTape;
     reverse: boolean;
 }
 
-export const PaperTapeBox: React.FunctionComponent<PaperTapeBoxProps> = observer(props => {
+export function PaperTapeBox(props: PaperTapeBoxProps) {
     const [painter, setPainter] = React.useState<PaperTapePainter | null>(null);
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
-    const tape = props.tape;
+    const tape = props.tape.useTape(state => state.state);
 
     let tapeInfo: JSX.Element;
     if (!tape) {
@@ -68,7 +67,7 @@ export const PaperTapeBox: React.FunctionComponent<PaperTapeBoxProps> = observer
     }, [painter, tape, tape?.buffer.length, tape?.pos, props.reverse]);
 
     return tapeInfo;
-});
+}
 
 class PaperTapePainter {
     private drawPending: boolean = false;

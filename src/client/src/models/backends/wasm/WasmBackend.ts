@@ -18,7 +18,7 @@
 
 import { DeviceID, PeripheralConfiguration } from "../../../types/PeripheralTypes";
 import { SystemConfiguration } from "../../../types/SystemConfiguration";
-import { DECTape } from "../../DECTape";
+import { DECTape, TapeState } from "../../DECTape";
 import { Backend } from "../Backend";
 import { BackendListener } from "../BackendListener";
 import { Wasm8Context } from "./Wasm8Context";
@@ -180,7 +180,7 @@ export class WasmBackend implements Backend {
         }
     }
 
-    private tapeStatus: DECTape[] = [];
+    private tapeStatus: TapeState[] = [];
     private async onPeripheralAction(dev: DeviceID, action: number, p1: number, p2: number) {
         if (!this.listener) {
             return;

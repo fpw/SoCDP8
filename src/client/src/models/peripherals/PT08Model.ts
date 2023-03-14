@@ -20,22 +20,39 @@ import { PeripheralModel } from "./PeripheralModel";
 import { PT08Configuration, DeviceID } from "../../types/PeripheralTypes";
 import { PaperTape } from "../PaperTape";
 import { Terminal } from "xterm";
-import { observable, computed, action, makeObservable } from "mobx";
 import { Backend } from "../backends/Backend";
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
+
+interface PT08Store {
+    readerActive: boolean;
+    punchActive: boolean;
+    setReader: (active: boolean) => void;
+    setPunch: (active: boolean) => void;
+}
 
 export class PT08Model extends PeripheralModel {
     private conf: PT08Configuration;
-    private readerTape_?: PaperTape;
-    private readerActive_: boolean = false;
+    private readerTape_: PaperTape = new PaperTape();
     private punchTape_: PaperTape = new PaperTape();
-    private punchActive_: boolean = false;
+    private store = create<PT08Store>()(immer(devtools(set => ({
+        readerActive: false,
+        punchActive: false,
+
+        setReader: (active: boolean) => set(draft => {
+            draft.readerActive = active;
+        }),
+        setPunch: (active: boolean) => set(draft => {
+            draft.punchActive = active;
+        }),
+    }))));
 
     private xterm: Terminal;
 
     constructor(backend: Backend, conf: PT08Configuration) {
         super(backend);
         this.conf = conf;
-        this.punchTape_.name = "Punch";
         this.xterm = new Terminal();
 
         this.xterm.onData(data => {
@@ -43,33 +60,10 @@ export class PT08Model extends PeripheralModel {
                 this.onRawKey(c);
             }
         });
+    }
 
-        makeObservable<PT08Model, "conf" | "readerTape_" | "readerActive_" | "punchTape_" | "punchActive_">(this, {
-            conf: observable,
-            readerTape_: observable,
-            readerActive_: observable,
-            punchTape_: observable,
-            punchActive_: observable,
-
-            onRawKey: action,
-            updateConfig: action,
-            onPunch: action,
-            setReaderTape: action,
-            setReaderPos: action,
-            addPunchLeader: action,
-            setPunchActive: action,
-            clearPunch: action,
-            setReaderActive: action,
-
-            config: computed,
-            readerActive: computed,
-            readerTape: computed,
-            readerPos: computed,
-            punchTape: computed,
-            punchActive: computed,
-
-
-        });
+    public get useState() {
+        return this.store;
     }
 
     public onRawKey(key: string) {
@@ -121,8 +115,8 @@ export class PT08Model extends PeripheralModel {
 
     public onPunch(data: number) {
         this.xterm.write(String.fromCodePoint(data & 0x7F));
-        if (this.punchActive_) {
-            this.punchTape.buffer.push(data);
+        if (this.store.getState().punchActive) {
+            this.punchTape.useTape.getState().pushChar(data);
         }
     }
 
@@ -132,60 +126,47 @@ export class PT08Model extends PeripheralModel {
 
     public async loadTape(file: File): Promise<void> {
         const tape = await PaperTape.fromFile(file);
+        const buffer = tape.useTape.getState().state.buffer;
         this.backend.sendPeripheralAction(
             this.conf.id,
             "reader-tape-set",
-            Uint8Array.from(tape.buffer).buffer
+            Uint8Array.from(buffer).buffer
         );
         this.setReaderTape(tape);
     }
 
-    public get readerActive(): boolean {
-        return this.readerActive_;
-    }
-
     public setReaderTape(tape: PaperTape) {
-        this.readerTape_ = tape;
+        this.readerTape.useTape.getState().setState(tape.useTape.getState().state);
     }
 
     public setReaderPos(pos: number) {
-        if (this.readerTape_) {
-            this.readerTape_.pos = pos;
-        }
+        this.readerTape_.useTape.getState().setPos(pos);
     }
 
-    public get readerTape(): PaperTape | undefined {
+    public get readerTape(): PaperTape {
         return this.readerTape_;
-    }
-
-    public get readerPos(): number {
-        return this.readerPos;
     }
 
     public get punchTape(): PaperTape {
         return this.punchTape_;
     }
 
-    public get punchActive(): boolean {
-        return this.punchActive_;
-    }
-
     public addPunchLeader(): void {
         for (let i = 0; i < 10; i++) {
-            this.punchTape.buffer.push(0);
+            this.punchTape.useTape.getState().pushChar(0);
         }
     }
 
     public clearPunch(): void {
-        this.punchTape.buffer = []
+        this.punchTape.useTape.getState().clear();
     }
 
     public setPunchActive(active: boolean) {
-        this.punchActive_ = active;
+        this.store.getState().setPunch(active);
     }
 
     public setReaderActive(active: boolean) {
-        this.readerActive_ = active;
+        this.store.getState().setReader(active);
         this.backend.sendPeripheralAction(this.conf.id, "reader-set-active", active);
     };
 }

@@ -17,16 +17,17 @@
  */
 
 import React from "react";
-import { observer } from "mobx-react-lite";
-import { DECTape } from "../../models/DECTape";
+import { DECTape, TapeState } from "../../models/DECTape";
 
 export interface TU56Props {
-    left?: DECTape;
-    right?: DECTape;
+    left: DECTape;
+    right: DECTape;
 }
 
-export const TU56: React.FunctionComponent<TU56Props> = observer(props => {
+export function TU56(props: TU56Props) {
     const [painter, _] = React.useState<TU56Painter>(new TU56Painter());
+    const leftState = props.left.useTape(state => state.state);
+    const rightState = props.right.useTape(state => state.state);
 
     const canvasRef = React.useCallback((canvasRef: HTMLCanvasElement) => {
         if (canvasRef) {
@@ -48,11 +49,11 @@ export const TU56: React.FunctionComponent<TU56Props> = observer(props => {
     }, [painter]);
 
     React.useEffect(() => {
-        painter.update(props.left, props.right);
-    }, [painter, props.left, props.right]);
+        painter.update(leftState, rightState);
+    }, [painter, leftState, rightState]);
 
     return <canvas ref={canvasRef} />;
-});
+}
 
 /*
  * Ported from https://github.com/wvdmark/pdp8/blob/master/NetBeansSource/PDP8-16/Devices/DTReel.java
@@ -72,8 +73,8 @@ class TU56Painter {
     private readonly MIL            = 0.0015;
 
     private canvas?: HTMLCanvasElement;
-    private leftTape?: DECTape;
-    private rightTape?: DECTape;
+    private leftTape?: TapeState;
+    private rightTape?: TapeState;
     private stopped: boolean = false;
 
     public setCanvas(canvas: HTMLCanvasElement) {
@@ -81,7 +82,7 @@ class TU56Painter {
         requestAnimationFrame((t) => this.draw(t));
     }
 
-    public update(left?: DECTape, right?: DECTape) {
+    public update(left?: TapeState, right?: TapeState) {
         this.leftTape = left;
         this.rightTape = right;
     }
@@ -120,12 +121,12 @@ class TU56Painter {
         }
     }
 
-    private drawSystem(ctx: CanvasRenderingContext2D, t: number, cx: number, cy: number, w: number, h: number, tape?: DECTape) {
+    private drawSystem(ctx: CanvasRenderingContext2D, t: number, cx: number, cy: number, w: number, h: number, tape?: TapeState) {
         this.drawReel(ctx, t, cx, cy, w, h, false, tape);
         this.drawReel(ctx, t, cx + 2 * w - 1, cy, w, h, true, tape);
     }
 
-    private drawHeader(ctx: CanvasRenderingContext2D, cx: number, cy: number, w: number, h: number, tape?: DECTape) {
+    private drawHeader(ctx: CanvasRenderingContext2D, cx: number, cy: number, w: number, h: number, tape?: TapeState) {
         ctx.strokeStyle = "#FFF";
         ctx.lineWidth = 2;
         ctx.strokeRect(cx, cy, w, h);
@@ -155,7 +156,7 @@ class TU56Painter {
         ctx.fillRect(selLeft, selTop, selW, selH);
     }
 
-    private drawReel(ctx: CanvasRenderingContext2D, t: number, cx: number, cy: number, w: number, h: number, right: boolean, tape?: DECTape) {
+    private drawReel(ctx: CanvasRenderingContext2D, t: number, cx: number, cy: number, w: number, h: number, right: boolean, tape?: TapeState) {
         ctx.resetTransform();
         ctx.translate(cx, cy);
         if (right) {

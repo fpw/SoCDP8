@@ -22,6 +22,7 @@ import { WasmBackend } from "./models/backends/wasm/WasmBackend";
 import { SoCDP8 } from "./models/SoCDP8";
 import { createRoot } from "react-dom/client";
 import { StrictMode } from "react";
+import { enableMapSet } from "immer";
 
 let url = "";
 if (window.location.toString().includes("localhost")) {
@@ -34,6 +35,8 @@ if (true) {
 } else {
     backend = new SocketBackend(url);
 }
+
+enableMapSet();
 
 const pdp8 = new SoCDP8(backend);
 

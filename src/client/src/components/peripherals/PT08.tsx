@@ -18,7 +18,6 @@
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Container, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, Switch, Typography } from "@mui/material";
-import { observer } from "mobx-react-lite";
 import React, { useCallback, useState } from "react";
 import Keyboard from "react-simple-keyboard";
 import "react-simple-keyboard/build/css/index.css";
@@ -35,7 +34,7 @@ export interface PT08Props {
 
     terminal: Terminal;
 
-    readerTape?: PaperTape;
+    readerTape: PaperTape;
     readerActive: boolean;
     onReaderActivationChange(state: boolean): void;
     onReaderTapeLoad(tape: File): void;
@@ -118,8 +117,8 @@ function VirtualKeyboard(props: PT08Props) {
     );
 }
 
-const ConfigBox: React.FunctionComponent<PT08Props> = observer(props =>
-    <Box>
+function ConfigBox(props: PT08Props) {
+    return (<Box>
         <FormGroup row>
             <FormControl>
                 <FormLabel component="legend">Baud Rate</FormLabel>
@@ -163,8 +162,8 @@ const ConfigBox: React.FunctionComponent<PT08Props> = observer(props =>
                 label="Auto Caps"
             />
         </FormGroup>
-    </Box>
-);
+    </Box>);
+}
 
 function TerminalBox(props: PT08Props) {
     const termRef = useCallback((node: HTMLDivElement) => {
@@ -191,7 +190,7 @@ function TerminalBox(props: PT08Props) {
     );
 };
 
-const ReaderBox: React.FunctionComponent<PT08Props> = observer(props => {
+function ReaderBox(props: PT08Props) {
     const tapeInput = React.useRef<HTMLInputElement>(null);
 
     return (
@@ -213,7 +212,7 @@ const ReaderBox: React.FunctionComponent<PT08Props> = observer(props => {
             </FormGroup>
         </Box>
     );
-});
+}
 
 function onLoadFile(evt: React.ChangeEvent, props: PT08Props): void {
     const target = evt.target as HTMLInputElement;
@@ -224,27 +223,31 @@ function onLoadFile(evt: React.ChangeEvent, props: PT08Props): void {
     props.onReaderTapeLoad(target.files[0]);
 }
 
-const PunchBox: React.FunctionComponent<PT08Props> = observer(props =>
-    <Box mt={2}>
-        <Typography component='h6' variant='h6'>Punch</Typography>
+function PunchBox(props: PT08Props) {
+    const punchTape = props.punchTape.useTape(state => state.state);
 
-        <PaperTapeBox tape={props.punchTape} reverse={true} />
+    return (
+        <Box mt={2}>
+            <Typography component='h6' variant='h6'>Punch</Typography>
 
-        <FormGroup row>
-            <FormControl>
-                <Button variant='outlined' color='primary' onClick={() => props.onPunchClear()}>New Tape</Button>
-            </FormControl>
-            <FormControl>
-                <Button variant='outlined' color='primary' onClick={() => downloadData(Uint8Array.from(props.punchTape.buffer), "punch.bin")}>Download Tape</Button>
-            </FormControl>
-            <FormControl>
-                <Button variant='outlined' color='primary' onClick={() => props.onPunchLeader()}>Leader</Button>
-            </FormControl>
-            <FormControlLabel
-                control={<Switch onChange={evt => props.onPunchActivationChange(evt.target.checked)} checked={props.punchActive} />}
-                labelPlacement='start'
-                label='Punch On'
-            />
-        </FormGroup>
-    </Box>
-);
+            <PaperTapeBox tape={props.punchTape} reverse={true} />
+
+            <FormGroup row>
+                <FormControl>
+                    <Button variant='outlined' color='primary' onClick={() => props.onPunchClear()}>New Tape</Button>
+                </FormControl>
+                <FormControl>
+                    <Button variant='outlined' color='primary' onClick={() => downloadData(Uint8Array.from(punchTape.buffer), "punch.bin")}>Download Tape</Button>
+                </FormControl>
+                <FormControl>
+                    <Button variant='outlined' color='primary' onClick={() => props.onPunchLeader()}>Leader</Button>
+                </FormControl>
+                <FormControlLabel
+                    control={<Switch onChange={evt => props.onPunchActivationChange(evt.target.checked)} checked={props.punchActive} />}
+                    labelPlacement='start'
+                    label='Punch On'
+                />
+            </FormGroup>
+        </Box>
+    );
+}

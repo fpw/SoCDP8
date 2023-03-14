@@ -19,7 +19,6 @@
 import { TU56 } from "./TU56";
 import { DECTape } from "../../models/DECTape";
 import React from "react";
-import { observer } from "mobx-react-lite";
 import { ButtonGroup, Button } from "@mui/material";
 import { Box } from "@mui/system";
 
@@ -28,7 +27,7 @@ export interface TC08Props {
     tapes: DECTape[];
 }
 
-export const TC08: React.FunctionComponent<TC08Props> = observer(props => {
+export function TC08(props: TC08Props) {
     const tapes = props.tapes;
 
     return (
@@ -42,22 +41,13 @@ export const TC08: React.FunctionComponent<TC08Props> = observer(props => {
                 )}
             </ButtonGroup>
 
-            <TU56 left={getTape(tapes, 0)} right={getTape(tapes, 1)} />
-            <TU56 left={getTape(tapes, 2)} right={getTape(tapes, 3)} />
-            <TU56 left={getTape(tapes, 4)} right={getTape(tapes, 5)} />
-            <TU56 left={getTape(tapes, 6)} right={getTape(tapes, 7)} />
+            <TU56 left={tapes[0]} right={tapes[1]} />
+            <TU56 left={tapes[2]} right={tapes[3]} />
+            <TU56 left={tapes[4]} right={tapes[5]} />
+            <TU56 left={tapes[6]} right={tapes[7]} />
         </Box>
     );
-});
-
-function getTape(tapes: DECTape[], i: number) {
-    if (i < tapes.length) {
-        return tapes[i];
-    } else {
-        return undefined;
-    }
 }
-
 
 function onLoadFile(evt: React.ChangeEvent,  props: TC08Props, unit: number): void {
     const target = evt.target as HTMLInputElement;
