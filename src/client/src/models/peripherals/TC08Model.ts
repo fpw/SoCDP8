@@ -49,6 +49,7 @@ export class TC08Model extends PeripheralModel {
         this.tapes = [];
         for (const state of (data.data as any[])) {
             const tape: DECTape = {
+                loaded: state.loaded,
                 address: state.address,
                 selected: state.selected,
                 moving: state.moving,

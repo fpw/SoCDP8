@@ -39,7 +39,7 @@ export const TC08: React.FunctionComponent<TC08Props> = observer(props => {
                         Load {i}
                         <input type='file' onChange={evt => onLoadFile(evt, props, i)} hidden />
                     </Button>
-            )}
+                )}
             </ButtonGroup>
 
             <TU56 left={getTape(tapes, 0)} right={getTape(tapes, 1)} />

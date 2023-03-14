@@ -26,7 +26,7 @@ export interface TU56Props {
 }
 
 export const TU56: React.FunctionComponent<TU56Props> = observer(props => {
-    const [painter, setPainter] = React.useState<TU56Painter>(new TU56Painter());
+    const [painter, _] = React.useState<TU56Painter>(new TU56Painter());
 
     const canvasRef = React.useCallback((canvasRef: HTMLCanvasElement) => {
         if (canvasRef) {
@@ -41,6 +41,7 @@ export const TU56: React.FunctionComponent<TU56Props> = observer(props => {
     }, [painter]);
 
     React.useEffect(() => {
+        painter.start();
         return () => {
             painter.stop();
         }
@@ -83,6 +84,10 @@ class TU56Painter {
     public update(left?: DECTape, right?: DECTape) {
         this.leftTape = left;
         this.rightTape = right;
+    }
+
+    public start() {
+        this.stopped = false;
     }
 
     public stop() {
@@ -193,7 +198,7 @@ class TU56Painter {
 
         let startAng = 0;
 
-        if (tape && tape.loaded) {
+        if (tape?.loaded) {
             const reelLine = (right ? tape.normalizedPosition : (1 - tape.normalizedPosition)) * 0x100000;
             const windings = (Math.sqrt(1 + (this.MIL * reelLine / (150 * Math.PI * hubRadius * 4.5 / w))) - 1) / (2 * this.MIL);
             const tapeRadius = (windings * this.MIL + 1) * hubRadius;
