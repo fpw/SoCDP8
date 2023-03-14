@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PeripheralConfiguration, PC04Configuration, PT08Configuration, TC08Configuration, RF08Configuration, DeviceID } from './PeripheralTypes';
+import { PeripheralConfiguration, PC04Configuration, PT08Configuration, TC08Configuration, RF08Configuration, DeviceID } from "./PeripheralTypes";
 
 export interface SystemConfiguration {
     id: string,
@@ -35,9 +35,9 @@ export interface SystemConfiguration {
 
 export function getDefaultSysConf(): SystemConfiguration {
     return {
-        id: 'default',
-        name: 'default',
-        description: '',
+        id: "default",
+        name: "default",
+        description: "",
         maxMemField: 7,
         cpuExtensions: {
             eae: true,

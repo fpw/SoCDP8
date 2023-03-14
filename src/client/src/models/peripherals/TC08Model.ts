@@ -16,11 +16,11 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PeripheralModel } from './PeripheralModel';
-import { TC08Configuration } from '../../types/PeripheralTypes';
-import { DECTape } from '../DECTape';
-import { action, makeObservable, observable } from 'mobx';
-import { Backend } from '../backends/Backend';
+import { PeripheralModel } from "./PeripheralModel";
+import { TC08Configuration } from "../../types/PeripheralTypes";
+import { DECTape } from "../DECTape";
+import { action, makeObservable, observable } from "mobx";
+import { Backend } from "../backends/Backend";
 
 export class TC08Model extends PeripheralModel {
     private tapes: DECTape[] = [];
@@ -42,14 +42,13 @@ export class TC08Model extends PeripheralModel {
     }
 
     public onPeripheralAction(action: string, data: any): void {
-        if (action != 'status') {
+        if (action != "status") {
             return;
         }
 
         this.tapes = [];
         for (const state of (data.data as any[])) {
             const tape: DECTape = {
-                loaded: state.loaded,
                 address: state.address,
                 selected: state.selected,
                 moving: state.moving,
@@ -65,8 +64,8 @@ export class TC08Model extends PeripheralModel {
         return this.tapes;
     }
 
-    public readonly loadTape = async (tape: File, unit: number): Promise<void> => {
-        let data = await this.loadFile(tape);
+    public readonly loadTape = async(tape: File, unit: number): Promise<void> => {
+        const data = await this.loadFile(tape);
         this.backend.sendPeripheralAction(this.conf.id, "load-tape", {
             unit: unit,
             tapeData: data

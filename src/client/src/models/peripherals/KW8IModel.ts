@@ -16,9 +16,9 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PeripheralModel } from './PeripheralModel';
-import { KW8IConfiguration } from '../../types/PeripheralTypes';
-import { Backend } from '../backends/Backend';
+import { PeripheralModel } from "./PeripheralModel";
+import { KW8IConfiguration } from "../../types/PeripheralTypes";
+import { Backend } from "../backends/Backend";
 
 export class KW8IModel extends PeripheralModel {
     constructor(backend: Backend, private conf: KW8IConfiguration) {

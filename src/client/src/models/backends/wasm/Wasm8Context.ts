@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ConsoleState } from '../../../types/ConsoleTypes';
+import { ConsoleState } from "../../../types/ConsoleTypes";
 
 declare const createWASM8: any;
 
@@ -50,19 +50,19 @@ export class Wasm8Context {
     public async create(actionListener: (dev: number, action: number, p1: number, p2: number) => void) {
         const inst = await createWASM8({
             locateFile: (path: string) => {
-                return `${process.env.PUBLIC_URL}/${path}`;
+                return `/${path}`;
             },
         });
 
-        const onActionPtr = inst.addFunction(actionListener, 'viiii');
+        const onActionPtr = inst.addFunction(actionListener, "viiii");
 
         this.calls = {
-            create: inst.cwrap("pdp8_create", 'number', ['number']),
-            getConsoleIn: inst.cwrap("pdp8_get_console_in", 'number', ['number']),
-            getConsoleOut: inst.cwrap("pdp8_get_console_out", 'number', ['number']),
-            getLampsOut: inst.cwrap("pdp8_get_lamps_out", 'number', ['number']),
-            peripheralAction: inst.cwrap("pdp8_peripheral_action", '', ['number', 'number', 'number', 'number']),
-            destroy: inst.cwrap("pdp8_destroy", '', ['number']),
+            create: inst.cwrap("pdp8_create", "number", ["number"]),
+            getConsoleIn: inst.cwrap("pdp8_get_console_in", "number", ["number"]),
+            getConsoleOut: inst.cwrap("pdp8_get_console_out", "number", ["number"]),
+            getLampsOut: inst.cwrap("pdp8_get_lamps_out", "number", ["number"]),
+            peripheralAction: inst.cwrap("pdp8_peripheral_action", "", ["number", "number", "number", "number"]),
+            destroy: inst.cwrap("pdp8_destroy", "", ["number"]),
 
             readPointer: inst.getValue,
             writePointer: inst.setValue,
@@ -80,7 +80,7 @@ export class Wasm8Context {
 
     public setSwitch(sw: string, state: boolean) {
         if (!this.calls || !this.ctx) {
-            throw Error(`Not created`);
+            throw Error("Not created");
         }
 
         switch (sw) {
@@ -112,7 +112,7 @@ export class Wasm8Context {
             case "sing_inst": this.writeSwitch(20, 0, state); break;
         }
 
-        if (["start", "load", "dep", "exam", "cont", "stop"].includes(sw) && state == true) {
+        if (["start", "load", "dep", "exam", "cont", "stop"].includes(sw) && state) {
             setTimeout(() => {
                 this.setSwitch(sw, false);
             }, 100);
@@ -121,7 +121,7 @@ export class Wasm8Context {
 
     public getConsoleState(): ConsoleState {
         if (!this.calls || !this.ctx || !this.consoleOut || !this.consoleIn) {
-            throw Error(`Not created`);
+            throw Error("Not created");
         }
 
         return {
@@ -144,27 +144,27 @@ export class Wasm8Context {
                 run: this.wordToLamp(88),
             },
             switches: {
-                dataField: this.calls.readPointer(this.consoleIn + 0, 'i16'),
-                instField: this.calls.readPointer(this.consoleIn + 2, 'i16'),
-                swr: this.calls.readPointer(this.consoleIn + 4, 'i16'),
-                start: this.calls.readPointer(this.consoleIn + 6, 'i16'),
-                load: this.calls.readPointer(this.consoleIn + 8, 'i16'),
-                dep: this.calls.readPointer(this.consoleIn + 10, 'i16'),
-                exam: this.calls.readPointer(this.consoleIn + 12, 'i16'),
-                cont: this.calls.readPointer(this.consoleIn + 14, 'i16'),
-                stop: this.calls.readPointer(this.consoleIn + 16, 'i16'),
-                singStep: this.calls.readPointer(this.consoleIn + 18, 'i16'),
-                singInst: this.calls.readPointer(this.consoleIn + 20, 'i16'),
+                dataField: this.calls.readPointer(this.consoleIn + 0, "i16"),
+                instField: this.calls.readPointer(this.consoleIn + 2, "i16"),
+                swr: this.calls.readPointer(this.consoleIn + 4, "i16"),
+                start: this.calls.readPointer(this.consoleIn + 6, "i16"),
+                load: this.calls.readPointer(this.consoleIn + 8, "i16"),
+                dep: this.calls.readPointer(this.consoleIn + 10, "i16"),
+                exam: this.calls.readPointer(this.consoleIn + 12, "i16"),
+                cont: this.calls.readPointer(this.consoleIn + 14, "i16"),
+                stop: this.calls.readPointer(this.consoleIn + 16, "i16"),
+                singStep: this.calls.readPointer(this.consoleIn + 18, "i16"),
+                singInst: this.calls.readPointer(this.consoleIn + 20, "i16"),
             },
         };
     }
 
     private wordToLamp(offset: number): number {
         if (!this.lampsOut || !this.calls) {
-            throw Error('Not connected');
+            throw Error("Not connected");
         }
 
-        return this.calls.readPointer(this.lampsOut + offset, 'i8');
+        return this.calls.readPointer(this.lampsOut + offset, "i8");
     }
 
     private wordToLamps(offset: number, size: number): number[] {
@@ -179,16 +179,16 @@ export class Wasm8Context {
 
     private writeSwitch(offset: number, index: number, state: boolean) {
         if (!this.consoleIn || !this.calls) {
-            throw Error('Not connected');
+            throw Error("Not connected");
         }
 
-        let val = this.calls.readPointer(this.consoleIn + offset, 'i16');
+        let val = this.calls.readPointer(this.consoleIn + offset, "i16");
         if (state) {
             val |= (1 << index);
         } else {
             val &= ~(1 << index);
         }
-        this.calls.writePointer(this.consoleIn + offset, val, 'i16');
+        this.calls.writePointer(this.consoleIn + offset, val, "i16");
     }
 
     public configure(maxMemField: number, eae: boolean, kt8i: boolean, bsw: boolean) {
@@ -216,7 +216,7 @@ export class Wasm8Context {
 
     public sendPeripheralAction(dev: number, action: number, p1: number, p2: number) {
         if (!this.ctx || !this.calls) {
-            throw Error('Not connected');
+            throw Error("Not connected");
         }
 
         this.calls.peripheralAction(this.ctx, dev, action, p1, p2);
@@ -224,12 +224,12 @@ export class Wasm8Context {
 
     public sendPeripheralActionBuffer(dev: number, action: number, buf: ArrayBufferLike) {
         if (!this.ctx || !this.calls) {
-            throw Error('Not connected');
+            throw Error("Not connected");
         }
 
         const bufAddr = this.calls.malloc(buf.byteLength);
         if (!bufAddr) {
-            throw Error('Out of virtual memory');
+            throw Error("Out of virtual memory");
         }
         this.calls.writeArray(new Uint8Array(buf), bufAddr);
         this.calls.peripheralAction(this.ctx, dev, action, bufAddr, buf.byteLength);
@@ -237,7 +237,7 @@ export class Wasm8Context {
 
     public destroy() {
         if (!this.calls || !this.ctx) {
-            throw Error(`Not created`);
+            throw Error("Not created");
         }
 
         this.calls.destroy(this.ctx);

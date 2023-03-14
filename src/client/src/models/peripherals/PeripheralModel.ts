@@ -16,10 +16,10 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Backend } from '../backends/Backend';
-import { PeripheralConfiguration } from './../../types/PeripheralTypes';
+import { Backend } from "../backends/Backend";
+import { PeripheralConfiguration } from "./../../types/PeripheralTypes";
 
- export abstract class PeripheralModel {
+export abstract class PeripheralModel {
     constructor(protected backend: Backend) {
     }
 
@@ -33,7 +33,7 @@ import { PeripheralConfiguration } from './../../types/PeripheralTypes';
         return new Promise<ArrayBuffer>((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = () => {
-                let data = reader.result as ArrayBuffer;
+                const data = reader.result as ArrayBuffer;
                 resolve(data);
             };
             reader.onerror = () => {

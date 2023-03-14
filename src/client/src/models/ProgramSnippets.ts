@@ -27,8 +27,8 @@ export interface ProgramSnippet {
 
 export const ProgramSnippets: ProgramSnippet[] = [
     {
-        label: 'AC/MQ Blinker',
-        desc: 'Lamp blink program from dustyoldcomputers.com, start at 0000',
+        label: "AC/MQ Blinker",
+        desc: "Lamp blink program from dustyoldcomputers.com, start at 0000",
         snippets: [
             {
                 start: 0o0000,
@@ -165,36 +165,36 @@ export const ProgramSnippets: ProgramSnippet[] = [
         ]
     },
     {
-        label: 'RIM Loader (ASR)',
-        desc: 'RIM Loader for ASR-33, start at 7756',
+        label: "RIM Loader (ASR)",
+        desc: "RIM Loader for ASR-33, start at 7756",
         snippets: [
-            {
-                start: 0o7756,
-                data: [
-                    0o6032, // KCC         / clear keyboard flag and ac
-                    0o6031, // KSF         / skip if keyboard flag
-                    0o5357, // JMP 7757    / jmp -1
-                    0o6036, // KRB         / clear ac, or AC with data (8 bit), clear flag
-                    0o7106, // CLL RTL     / clear link, rotate left 2
-                    0o7006, // RTL         / rotate left 2
-                    0o7510, // SPA         / skip if ac > 0
-                    0o5357, // JMP 7757    / jmp back
-                    0o7006, // RTL         / rotate left 2
-                    0o6031, // KSF         / skip if keyboard flag
-                    0o5367, // JMP 7767    / jmp -1
-                    0o6034, // KRS         / or AC with keyboard (8 bit)
-                    0o7420, // SNL         / skip if link
-                    0o3776, // DCA I 7776  / store ac in [7776], clear ac
-                    0o3376, // DCA 7776    / store ac in 7776, clear ac
-                    0o5356, // JMP 7756
-                    0o0000, // address
-                ],
+        {
+            start: 0o7756,
+            data: [
+                0o6032, // KCC         / clear keyboard flag and ac
+                0o6031, // KSF         / skip if keyboard flag
+                0o5357, // JMP 7757    / jmp -1
+                0o6036, // KRB         / clear ac, or AC with data (8 bit), clear flag
+                0o7106, // CLL RTL     / clear link, rotate left 2
+                0o7006, // RTL         / rotate left 2
+                0o7510, // SPA         / skip if ac > 0
+                0o5357, // JMP 7757    / jmp back
+                0o7006, // RTL         / rotate left 2
+                0o6031, // KSF         / skip if keyboard flag
+                0o5367, // JMP 7767    / jmp -1
+                0o6034, // KRS         / or AC with keyboard (8 bit)
+                0o7420, // SNL         / skip if link
+                0o3776, // DCA I 7776  / store ac in [7776], clear ac
+                0o3376, // DCA 7776    / store ac in 7776, clear ac
+                0o5356, // JMP 7756
+                0o0000, // address
+            ],
             }
         ]
     },
     {
-        label: 'RIM Loader (HS)',
-        desc: 'RIM Loader for PC04, start at 7756',
+        label: "RIM Loader (HS)",
+        desc: "RIM Loader for PC04, start at 7756",
         snippets: [
             {
                 start: 0o7756,
@@ -221,8 +221,8 @@ export const ProgramSnippets: ProgramSnippet[] = [
         ]
     },
     {
-        label: 'OS/8 TC08 Loader',
-        desc: 'OS/8 for TC08, start at 7613',
+        label: "OS/8 TC08 Loader",
+        desc: "OS/8 for TC08, start at 7613",
         snippets: [
             {
                 start: 0o7613,
@@ -248,8 +248,8 @@ export const ProgramSnippets: ProgramSnippet[] = [
         ]
     },
     {
-        label: 'OS/8 RF08 Loader',
-        desc: 'OS/8 for RF08, start at 7750',
+        label: "OS/8 RF08 Loader",
+        desc: "OS/8 for RF08, start at 7750",
         snippets: [
             {
                 start: 0o7750,
@@ -264,8 +264,8 @@ export const ProgramSnippets: ProgramSnippet[] = [
         ]
     },
     {
-        label: 'Monitor TC08 Loader',
-        desc: 'TC08 Loader for Monitor, start at 0200',
+        label: "Monitor TC08 Loader",
+        desc: "TC08 Loader for Monitor, start at 0200",
         snippets: [
             {
                 start: 0o0200,

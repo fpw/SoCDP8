@@ -16,24 +16,24 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { observable, action, computed, makeObservable } from 'mobx';
-import { PT08Model } from './peripherals/PT08Model';
-import { PeripheralModel } from './peripherals/PeripheralModel';
-import { PC04Model } from './peripherals/PC04Model';
-import { TC08Model } from './peripherals/TC08Model';
-import { RF08Model } from './peripherals/RF08Model';
-import { DF32Model } from './peripherals/DF32Model';
-import { RK8Model } from './peripherals/RK8Model';
-import { KW8IModel } from './peripherals/KW8IModel';
-import { SystemConfiguration } from '../types/SystemConfiguration';
-import { ConsoleState } from '../types/ConsoleTypes';
-import { DeviceID } from '../types/PeripheralTypes';
-import { BackendListener } from './backends/BackendListener';
-import { Backend } from './backends/Backend';
+import { observable, action, computed, makeObservable } from "mobx";
+import { PT08Model } from "./peripherals/PT08Model";
+import { PeripheralModel } from "./peripherals/PeripheralModel";
+import { PC04Model } from "./peripherals/PC04Model";
+import { TC08Model } from "./peripherals/TC08Model";
+import { RF08Model } from "./peripherals/RF08Model";
+import { DF32Model } from "./peripherals/DF32Model";
+import { RK8Model } from "./peripherals/RK8Model";
+import { KW8IModel } from "./peripherals/KW8IModel";
+import { SystemConfiguration } from "../types/SystemConfiguration";
+import { ConsoleState } from "../types/ConsoleTypes";
+import { DeviceID } from "../types/PeripheralTypes";
+import { BackendListener } from "./backends/BackendListener";
+import { Backend } from "./backends/Backend";
 
 export class SoCDP8 {
     private frontPanel?: ConsoleState;
-    private peripheralModels: Map<DeviceID, PeripheralModel> = new Map();
+    private peripheralModels = new Map<DeviceID, PeripheralModel>();
     private activeSystem_: SystemConfiguration | undefined;
     private systemList: SystemConfiguration[] = [];
     private backend: Backend;
@@ -95,7 +95,7 @@ export class SoCDP8 {
 
     public get activeSystem(): SystemConfiguration {
         if (!this.activeSystem_) {
-            throw Error('No active system');
+            throw Error("No active system");
         }
 
         return this.activeSystem_;
@@ -200,7 +200,7 @@ export class SoCDP8 {
     }
 
     public get peripherals(): PeripheralModel[] {
-        let res: PeripheralModel[] = [];
+        const res: PeripheralModel[] = [];
         this.peripheralModels.forEach(entry => {
             res.push(entry);
         })
@@ -210,7 +210,7 @@ export class SoCDP8 {
     public getPeripheralById(id: number): PeripheralModel {
         const res = this.peripheralModels.get(id);
         if (!res) {
-            throw Error('Unknown peripheral id');
+            throw Error("Unknown peripheral id");
         }
         return res;
     }
@@ -249,10 +249,10 @@ export class SoCDP8 {
 
     private onStateEvent(data: any) {
         switch (data.action) {
-            case 'active-state-changed':
+            case "active-state-changed":
                 this.readActiveState();
                 break;
-            case 'state-list-changed':
+            case "state-list-changed":
                 this.fetchStateList();
                 break;
         }

@@ -16,13 +16,12 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { TU56 } from './TU56';
-import { DECTape } from '../../models/DECTape';
-
-import React from 'react';
-import { observer } from 'mobx-react-lite';
-import { ButtonGroup, Button } from '@mui/material';
-import { Box } from '@mui/system';
+import { TU56 } from "./TU56";
+import { DECTape } from "../../models/DECTape";
+import React from "react";
+import { observer } from "mobx-react-lite";
+import { ButtonGroup, Button } from "@mui/material";
+import { Box } from "@mui/system";
 
 export interface TC08Props {
     onTapeLoad(tape: File, unit: number): void;

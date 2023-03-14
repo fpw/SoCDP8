@@ -16,12 +16,12 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { io, Socket } from 'socket.io-client';
-import { ConsoleState } from '../../../types/ConsoleTypes';
-import { DeviceID, PeripheralConfiguration } from '../../../types/PeripheralTypes';
-import { SystemConfiguration } from '../../../types/SystemConfiguration';
-import { Backend } from '../Backend';
-import { BackendListener } from '../BackendListener';
+import { io, Socket } from "socket.io-client";
+import { ConsoleState } from "../../../types/ConsoleTypes";
+import { DeviceID, PeripheralConfiguration } from "../../../types/PeripheralTypes";
+import { SystemConfiguration } from "../../../types/SystemConfiguration";
+import { Backend } from "../Backend";
+import { BackendListener } from "../BackendListener";
 
 export class SocketBackend implements Backend {
     private socket: Socket;
@@ -35,23 +35,23 @@ export class SocketBackend implements Backend {
     }
 
     public async connect(listener: BackendListener) {
-        this.socket.on('connect', () => {
+        this.socket.on("connect", () => {
             listener.onConnect();
         });
 
-        this.socket.on('disconnect', () => {
+        this.socket.on("disconnect", () => {
             listener.onDisconnect();
         });
 
-        this.socket.on('console-state', (state: ConsoleState) => {
+        this.socket.on("console-state", (state: ConsoleState) => {
             listener.onConsoleState(state);
         });
 
-        this.socket.on('peripheral-event', (data: any) => {
+        this.socket.on("peripheral-event", (data: any) => {
             listener.onPeripheralEvent(data);
         });
 
-        this.socket.on('state', (data: any) => {
+        this.socket.on("state", (data: any) => {
             listener.onStateChange(data);
         });
 
@@ -60,7 +60,7 @@ export class SocketBackend implements Backend {
 
     public async readActiveSystem(): Promise<SystemConfiguration> {
         return new Promise<SystemConfiguration>((accept, reject) => {
-            this.socket.emit('active-system', (sys: SystemConfiguration) => {
+            this.socket.emit("active-system", (sys: SystemConfiguration) => {
                 accept(sys);
             });
         });
@@ -68,7 +68,7 @@ export class SocketBackend implements Backend {
 
     public async saveActiveSystem(): Promise<boolean> {
         return new Promise<boolean>((accept, reject) => {
-            this.socket.emit('save-active-system', (res: boolean) => {
+            this.socket.emit("save-active-system", (res: boolean) => {
                 accept(res);
             })
         });
@@ -76,7 +76,7 @@ export class SocketBackend implements Backend {
 
     public async readSystems(): Promise<SystemConfiguration[]> {
         return new Promise<SystemConfiguration[]>((accept, reject) => {
-            this.socket.emit('system-list', (list: SystemConfiguration[]) => {
+            this.socket.emit("system-list", (list: SystemConfiguration[]) => {
                 accept(list);
             })
         });
@@ -84,7 +84,7 @@ export class SocketBackend implements Backend {
 
     public async createSystem(system: SystemConfiguration) {
         return new Promise<void>((accept, reject) => {
-            this.socket.emit('create-system', system, (res: boolean) => {
+            this.socket.emit("create-system", system, (res: boolean) => {
                 if (res) {
                     accept();
                 } else {
@@ -96,7 +96,7 @@ export class SocketBackend implements Backend {
 
     public async setActiveSystem(id: string) {
         return new Promise<void>((accept, reject) => {
-            this.socket.emit('set-active-system', id, (res: boolean) => {
+            this.socket.emit("set-active-system", id, (res: boolean) => {
                 if (res) {
                     accept();
                 } else {
@@ -108,7 +108,7 @@ export class SocketBackend implements Backend {
 
     public async deleteSystem(id: string) {
         return new Promise<void>((accept, reject) => {
-            this.socket.emit('delete-system', id, (res: boolean) => {
+            this.socket.emit("delete-system", id, (res: boolean) => {
                 if (res) {
                     accept();
                 } else {
@@ -119,23 +119,23 @@ export class SocketBackend implements Backend {
     }
 
     public async setPanelSwitch(sw: string, state: boolean): Promise<void> {
-        this.socket.emit('console-switch', {'switch': sw, 'state': state});
+        this.socket.emit("console-switch", {"switch": sw, "state": state});
     }
 
     public async clearCore() {
-        this.socket.emit('core', {action: 'clear'});
+        this.socket.emit("core", {action: "clear"});
     }
 
     public async writeCore(addr: number, fragment: number[]) {
-        this.socket.emit('core', {
-            action: 'write',
+        this.socket.emit("core", {
+            action: "write",
             addr: addr,
             fragment: fragment
         });
     }
 
     public async sendPeripheralAction(id: DeviceID, action: string, data: any): Promise<void> {
-        this.socket.emit('peripheral-action', {
+        this.socket.emit("peripheral-action", {
             id: id,
             action: action,
             data: data
@@ -143,7 +143,7 @@ export class SocketBackend implements Backend {
     }
 
     public async changePeripheralConfig(id: DeviceID, config: PeripheralConfiguration): Promise<void> {
-        this.socket.emit('peripheral-change-conf', {
+        this.socket.emit("peripheral-change-conf", {
             id: id,
             config: config,
         });
@@ -151,7 +151,7 @@ export class SocketBackend implements Backend {
 
     public async readPeripheralBlock(id: DeviceID, block: number): Promise<Uint16Array> {
         return new Promise<Uint16Array>(accept => {
-            this.socket.emit('read-disk-block', id, block, (res: Uint16Array) => {
+            this.socket.emit("read-disk-block", id, block, (res: Uint16Array) => {
                 accept(res);
             });
         });

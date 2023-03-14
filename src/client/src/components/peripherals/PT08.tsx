@@ -16,21 +16,18 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PT08Configuration, BaudRate, BAUD_RATES } from '../../types/PeripheralTypes';
-import { PaperTape } from '../../models/PaperTape';
-import { Terminal } from 'xterm';
-import { PaperTapeBox } from './PaperTapeBox';
-import { downloadData } from '../../util';
-
-import React, { useState } from 'react';
-import { observer } from 'mobx-react-lite';
-
-import Keyboard from 'react-simple-keyboard';
-import 'react-simple-keyboard/build/css/index.css';
-
-import 'xterm/css/xterm.css';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { Accordion, AccordionSummary, Typography, AccordionDetails, Container, Divider, Box, FormGroup, FormControl, FormLabel, Select, MenuItem, FormControlLabel, Button, Switch } from '@mui/material';
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Container, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, Switch, Typography } from "@mui/material";
+import { observer } from "mobx-react-lite";
+import React, { useCallback, useState } from "react";
+import Keyboard from "react-simple-keyboard";
+import "react-simple-keyboard/build/css/index.css";
+import { Terminal } from "xterm";
+import "xterm/css/xterm.css";
+import { PaperTape } from "../../models/PaperTape";
+import { BaudRate, BAUD_RATES, PT08Configuration } from "../../types/PeripheralTypes";
+import { downloadData } from "../../util";
+import { PaperTapeBox } from "./PaperTapeBox";
 
 export interface PT08Props {
     conf: PT08Configuration;
@@ -89,21 +86,21 @@ function VirtualKeyboard(props: PT08Props) {
 
     const onKey = (key: string) => {
         switch (key) {
-            case '{shift}':
-            case '{lock}':
-                setLayout(cur => (cur == "default" ? "shift": "default"))
+            case "{shift}":
+            case "{lock}":
+                setLayout(cur => (cur == "default" ? "shift" : "default"))
                 break;
-            case '{enter}':
-                props.onKeyboard('\r');
+            case "{enter}":
+                props.onKeyboard("\r");
                 break;
-            case '{space}':
-                props.onKeyboard(' ');
+            case "{space}":
+                props.onKeyboard(" ");
                 break;
-            case '{tab}':
-                props.onKeyboard('\t');
+            case "{tab}":
+                props.onKeyboard("\t");
                 break;
-            case '{bksp}':
-                props.onKeyboard('\b');
+            case "{bksp}":
+                props.onKeyboard("\b");
                 break;
             default:
                 props.onKeyboard(key);
@@ -170,19 +167,17 @@ const ConfigBox: React.FunctionComponent<PT08Props> = observer(props =>
 );
 
 function TerminalBox(props: PT08Props) {
-    const termRef = React.useRef<HTMLDivElement>(null);
-
-    React.useEffect(() => {
-        if (!termRef.current) {
+    const termRef = useCallback((node: HTMLDivElement) => {
+        if (!node) {
             return;
         }
         const term = props.terminal;
         term.resize(80, 25);
-        term.open(termRef.current);
+        term.open(node);
     }, [props.terminal]);
 
     return (
-        <React.Fragment>
+        <>
             <Box mt={1}>
                 <div ref={termRef}></div>
             </Box>
@@ -192,7 +187,7 @@ function TerminalBox(props: PT08Props) {
                     Clear Output
                 </Button>
             </Box>
-        </React.Fragment>
+        </>
     );
 };
 
@@ -240,7 +235,7 @@ const PunchBox: React.FunctionComponent<PT08Props> = observer(props =>
                 <Button variant='outlined' color='primary' onClick={() => props.onPunchClear()}>New Tape</Button>
             </FormControl>
             <FormControl>
-                <Button variant='outlined' color='primary' onClick={() => downloadData(Uint8Array.from(props.punchTape.buffer), 'punch.bin')}>Download Tape</Button>
+                <Button variant='outlined' color='primary' onClick={() => downloadData(Uint8Array.from(props.punchTape.buffer), "punch.bin")}>Download Tape</Button>
             </FormControl>
             <FormControl>
                 <Button variant='outlined' color='primary' onClick={() => props.onPunchLeader()}>Leader</Button>

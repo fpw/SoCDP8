@@ -16,12 +16,12 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { DeviceID, PeripheralConfiguration } from '../../../types/PeripheralTypes';
-import { SystemConfiguration } from '../../../types/SystemConfiguration';
+import { DeviceID, PeripheralConfiguration } from "../../../types/PeripheralTypes";
+import { SystemConfiguration } from "../../../types/SystemConfiguration";
 import { DECTape } from '../../DECTape';
-import { Backend } from '../Backend';
-import { BackendListener } from '../BackendListener';
-import { Wasm8Context } from './Wasm8Context';
+import { Backend } from "../Backend";
+import { BackendListener } from "../BackendListener";
+import { Wasm8Context } from "./Wasm8Context";
 
 export class WasmBackend implements Backend {
     private listener?: BackendListener;
@@ -92,7 +92,7 @@ export class WasmBackend implements Backend {
 
         await this.pdp8.create((dev, action, p1, p2) => this.onPeripheralAction(dev, action, p1, p2));
 
-        this.setActiveSystem("default");
+        await this.setActiveSystem("default");
 
         this.listener.onConnect();
 
@@ -124,7 +124,7 @@ export class WasmBackend implements Backend {
                 this.pdp8.configure(sys.maxMemField, sys.cpuExtensions.eae, sys.cpuExtensions.kt8i, false);
 
                 for (const peripheral of this.systems[0].peripherals) {
-                    this.changePeripheralConfig(peripheral.id, peripheral);
+                    await this.changePeripheralConfig(peripheral.id, peripheral);
                 }
                 break;
             }
@@ -243,7 +243,16 @@ export class WasmBackend implements Backend {
                         this.listener.onPeripheralEvent({
                             id: DeviceID.DEV_ID_TC08,
                             action: "status",
-                            data: this.tapeStatus,
+                            data: this.tapeStatus
+                                .filter(x => x & 1)
+                                .map((x, i) => { return {
+                                    address: i,
+                                    selected: this.tapeStatus[i] & 2,
+                                    moving: this.tapeStatus[i] & 4,
+                                    reverse: this.tapeStatus[i] & 8,
+                                    writing: this.tapeStatus[i] & 16,
+                                    normalizedPosition: ((this.tapeStatus[i] & 0xFFFF0000) >> 16) / 1000,
+                            };}),
                         });
                     }
                 }
@@ -263,7 +272,7 @@ export class WasmBackend implements Backend {
             case DeviceID.DEV_ID_PC04:
                 this.pdp8.sendPeripheralAction(id, 6, config.baudRate, 0);
                 break;
-            }
+        }
     }
 
     public async readPeripheralBlock(id: DeviceID, block: number): Promise<Uint16Array> {

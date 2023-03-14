@@ -5,43 +5,102 @@
   "author": "Folke Will <folko@solhost.org>",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "react-scripts build",
-    "start": "react-scripts start"
+    "lint": "tsc && eslint .",
+    "start": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@emotion/react": "^11.7.1",
-    "@emotion/styled": "^11.6.0",
-    "@mui/icons-material": "^5.2.4",
-    "@mui/material": "^5.2.4",
-    "mobx": "^6.3.9",
-    "mobx-react": "^7.2.1",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "react-router-dom": "^5.3.0",
-    "react-simple-keyboard": "^3.4.15",
-    "socket.io-client": "^4.4.0",
-    "xterm": "^4.15.0"
+    "@emotion/react": "^11.10.6",
+    "@emotion/styled": "^11.10.6",
+    "@mui/icons-material": "^5.11.11",
+    "@mui/material": "^5.11.12",
+    "mobx": "^6.8.0",
+    "mobx-react": "^7.6.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.9.0",
+    "react-simple-keyboard": "^3.5.36",
+    "socket.io-client": "^4.6.1",
+    "xterm": "^5.1.0"
   },
   "devDependencies": {
-    "@types/react": "^17.0.2",
-    "@types/react-dom": "^17.0.11",
-    "@types/react-router-dom": "^5.3.0",
-    "http-proxy-middleware": "^2.0.1",
-    "react-scripts": "^4.0.3",
-    "typescript": "^4.5.4"
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@typescript-eslint/eslint-plugin": "^5.55.0",
+    "@typescript-eslint/parser": "^5.55.0",
+    "@vitejs/plugin-basic-ssl": "^1.0.1",
+    "@vitejs/plugin-react": "^3.1.0",
+    "eslint": "^8.36.0",
+    "eslint-config-react-app": "^7.0.1",
+    "rollup-plugin-visualizer": "^5.9.0",
+    "tsx": "^3.12.5",
+    "typescript": "^4.9.5",
+    "vite": "^4.1.4",
+    "vite-plugin-cross-origin-isolation": "^0.1.6",
+    "vite-tsconfig-paths": "^4.0.5"
   },
   "eslintConfig": {
-    "ignorePatterns": [
-      "pdp8.js"
+    "plugins": [
+      "@typescript-eslint"
     ],
     "extends": [
+      "plugin:@typescript-eslint/strict",
+      "plugin:@typescript-eslint/recommended-requiring-type-checking",
       "react-app"
     ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "project": [
+        "./tsconfig.json"
+      ]
+    },
     "rules": {
+      "@typescript-eslint/brace-style": [
+        "error",
+        "1tbs",
+        {
+          "allowSingleLine": true
+        }
+      ],
+      "@typescript-eslint/comma-spacing": "error",
+      "@typescript-eslint/require-await": "off",
+      "@typescript-eslint/keyword-spacing": "error",
+      "@typescript-eslint/func-call-spacing": "error",
+      "@typescript-eslint/space-before-blocks": "error",
+      "@typescript-eslint/space-before-function-paren": [
+        "error",
+        "never"
+      ],
+      "@typescript-eslint/restrict-template-expressions": "off",
+      "@typescript-eslint/space-infix-ops": "error",
+      "@typescript-eslint/type-annotation-spacing": "error",
+      "@typescript-eslint/indent": [
+        "error",
+        4,
+        {
+          "SwitchCase": 1,
+          "ignoredNodes": [
+            "PropertyDefinition[decorators]",
+            "TSUnionType"
+          ]
+        }
+      ],
+      "@typescript-eslint/quotes": [
+        "error",
+        "double",
+        {
+          "avoidEscape": true
+        }
+      ],
       "eqeqeq": "off",
+      "@typescript-eslint/no-unnecessary-condition": "off",
       "@typescript-eslint/no-unused-vars": "off"
-    }
+    },
+    "ignorePatterns": [
+      "build/",
+      "node_modules/"
+    ]
   },
   "browserslist": {
     "production": [

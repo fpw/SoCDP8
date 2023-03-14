@@ -16,20 +16,19 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React, { useState } from 'react';
-import { System } from './system/System';
-import { SoCDP8 } from '../models/SoCDP8';
-import { observer } from 'mobx-react-lite';
-import { HashRouter as Router, Route, Link as RouterLink, Switch, Redirect, useParams } from 'react-router-dom';
-import { About } from './About';
-import { SystemManager } from './system/SystemManager';
-
-import { PeripheralBox } from './peripherals/PeripheralBox';
-import { AppBar, Box, Container, CssBaseline, Divider, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Typography } from '@mui/material';
-import MemoryIcon from '@mui/icons-material/Memory';
-import TuneIcon from '@mui/icons-material/Tune';
-import InfoIcon from '@mui/icons-material/Info';
-import MenuIcon from '@mui/icons-material/Menu';
+import InfoIcon from "@mui/icons-material/Info";
+import MemoryIcon from "@mui/icons-material/Memory";
+import MenuIcon from "@mui/icons-material/Menu";
+import TuneIcon from "@mui/icons-material/Tune";
+import { AppBar, Box, Container, CssBaseline, Divider, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Typography } from "@mui/material";
+import { observer } from "mobx-react-lite";
+import React from "react";
+import { BrowserRouter as Router, Link as RouterLink, Navigate, Route, Routes, useParams } from "react-router-dom";
+import { SoCDP8 } from "../models/SoCDP8";
+import { About } from "./About";
+import { PeripheralBox } from "./peripherals/PeripheralBox";
+import { System } from "./system/System";
+import { SystemManager } from "./system/SystemManager";
 
 export interface AppProps {
     pdp8: SoCDP8;
@@ -70,7 +69,7 @@ export const App: React.FunctionComponent<AppProps> = observer(props => {
     );
 
     return (
-        <Box sx={{display: 'flex'}}>
+        <Box sx={{display: "flex"}}>
             <CssBaseline />
             <AppBar position='fixed'>
                 <Toolbar>
@@ -95,8 +94,8 @@ export const App: React.FunctionComponent<AppProps> = observer(props => {
                         onClose={toggleDrawerOpen}
                         ModalProps={{keepMounted: true}}
                         sx={{
-                            display: {xs: 'block'},
-                            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+                            display: {xs: "block"},
+                            "& .MuiDrawer-paper": { boxSizing: "border-box", width: drawerWidth },
                         }}
                     >
                         {drawer}
@@ -108,27 +107,13 @@ export const App: React.FunctionComponent<AppProps> = observer(props => {
                 >
                     <Toolbar />
                     <Container>
-                        <Switch>
-                            <Route exact path="/">
-                                <Redirect to="/machines/active" />
-                            </Route>
-
-                            <Route path="/machines/active">
-                                <System pdp8={props.pdp8} />
-                            </Route>
-
-                            <Route path="/machines">
-                                <SystemManager pdp8={props.pdp8}/>
-                            </Route>
-
-                            <Route path="/peripherals/:id">
-                                <PeripheralById pdp8={props.pdp8} />
-                            </Route>
-
-                            <Route path="/about">
-                                <About />
-                            </Route>
-                        </Switch>
+                        <Routes>
+                            <Route path="/" element={<Navigate to="/machines/active" />} />
+                            <Route path="/machines/active" element={<System pdp8={props.pdp8} />} />
+                            <Route path="/machines" element={<SystemManager pdp8={props.pdp8} />} />
+                            <Route path="/peripherals/:id" element={<PeripheralById pdp8={props.pdp8} />} />
+                            <Route path="/about" element={<About />} />
+                        </Routes>
                     </Container>
                     <Copyright />
                 </Box>
@@ -138,7 +123,7 @@ export const App: React.FunctionComponent<AppProps> = observer(props => {
 });
 
 function PeripheralById(props: {pdp8: SoCDP8}) {
-    const idString = useParams<{id: string}>().id;
+    const idString = useParams<{id: string}>().id!;
     const id = Number.parseInt(idString);
 
     return <PeripheralBox model={props.pdp8.getPeripheralById(id)} />;
