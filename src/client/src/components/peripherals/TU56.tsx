@@ -192,7 +192,7 @@ class TU56Painter {
 
         let startAng = 0;
 
-        if (tape) {
+        if (tape && tape.loaded) {
             const reelLine = (right ? tape.normalizedPosition : (1 - tape.normalizedPosition)) * 0x100000;
             const windings = (Math.sqrt(1 + (this.MIL * reelLine / (150 * Math.PI * hubRadius * 4.5 / w))) - 1) / (2 * this.MIL);
             const tapeRadius = (windings * this.MIL + 1) * hubRadius;

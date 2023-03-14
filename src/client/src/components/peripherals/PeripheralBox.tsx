@@ -55,7 +55,7 @@ export function PeripheralBox(props: {model: PeripheralModel}) {
     } else if (model instanceof KW8IModel) {
         return <KW8IBox model={model} />
     } else {
-        return <div />;
+        return <></>;
     }
 }
 
@@ -103,8 +103,7 @@ const PC04Box: React.FunctionComponent<{model: PC04Model}> = observer(({model}) 
 const TC08Box: React.FunctionComponent<{model: TC08Model}> = observer(({model}) =>
     <CaptionBox name='TC08 DECtape Control' model={model}>
         <TC08
-            leftTape={model.getTape(0)}
-            rightTape={model.getTape(1)}
+            tapes={model.getTapes()}
             onTapeLoad={model.loadTape}
         />
     </CaptionBox>);

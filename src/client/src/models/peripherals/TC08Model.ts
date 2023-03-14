@@ -47,10 +47,9 @@ export class TC08Model extends PeripheralModel {
         }
 
         this.tapes = [];
-
         for (const state of (data.data as any[])) {
             const tape: DECTape = {
-                name: '',
+                loaded: state.loaded,
                 address: state.address,
                 selected: state.selected,
                 moving: state.moving,
@@ -58,17 +57,12 @@ export class TC08Model extends PeripheralModel {
                 writing: state.writing,
                 normalizedPosition: state.normalizedPosition,
             };
-
             this.tapes[tape.address] = tape;
         }
     }
 
-    public getTape(idx: number): DECTape | undefined {
-        if (idx < this.tapes.length) {
-            return this.tapes[idx];
-        } else {
-            return undefined;
-        }
+    public getTapes(): DECTape[] {
+        return this.tapes;
     }
 
     public readonly loadTape = async (tape: File, unit: number): Promise<void> => {

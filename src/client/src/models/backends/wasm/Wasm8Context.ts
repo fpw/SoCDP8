@@ -233,7 +233,6 @@ export class Wasm8Context {
         }
         this.calls.writeArray(new Uint8Array(buf), bufAddr);
         this.calls.peripheralAction(this.ctx, dev, action, bufAddr, buf.byteLength);
-        this.calls.free(bufAddr);
     }
 
     public destroy() {

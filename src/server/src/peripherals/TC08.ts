@@ -139,6 +139,7 @@ export class TC08 extends Peripheral {
             if (state.transportUnit == t.unit) {
                 return {
                     address: t.unit,
+                    loaded: true,
                     selected: true,
                     moving: state.run,
                     reverse: state.direction == TapeDirection.REVERSE,
@@ -148,6 +149,7 @@ export class TC08 extends Peripheral {
             } else {
                 return {
                     address: t.unit,
+                    loaded: true,
                     selected: false,
                     moving: false,
                     reverse: false,
@@ -239,17 +241,22 @@ export class TC08 extends Peripheral {
     private async doMove(io: IOContext, tape: TapeState, dir: TapeDirection) {
         let stop = false;
         do {
+            const [curBlock, curBlockPos] = this.calcBlockAddr(tape.curLine);
             if (dir == TapeDirection.FORWARD) {
                 if (tape.curLine > this.FORWARD_ZONE_POS) {
                     stop = true;
+                } else if (curBlockPos != 0) {
+                    await this.moveAndWaitLines(tape, dir, 1);
+                } else {
+                    await this.moveAndWaitLines(tape, dir, this.BLOCK_LINES / 2);
                 }
             } else {
                 if (tape.curLine < this.REVERSE_ZONE_POS) {
                     stop = true;
+                } else {
+                    await this.moveAndWaitLines(tape, dir, this.BLOCK_LINES / 2);
                 }
             }
-
-            await this.moveAndWaitLines(tape, dir, this.BLOCK_LINES);
 
             if (this.didRegAChange(io)) {
                 return;
@@ -257,7 +264,7 @@ export class TC08 extends Peripheral {
         } while (!stop);
 
         console.log(`TC08: Move done, now ${tape.curLine}`);
-        this.setEndOfTapeError(io);
+        this.setEndOfTapeError(io, false);
     }
 
     private async doSearch(io: IOContext, tape: TapeState, dir: TapeDirection, contMode: boolean) {
@@ -266,7 +273,7 @@ export class TC08 extends Peripheral {
 
             if (dir == TapeDirection.FORWARD) {
                 if (tape.curLine >= this.FORWARD_ZONE_POS) {
-                    this.setEndOfTapeError(io);
+                    this.setEndOfTapeError(io, true);
                     continue;
                 }
 
@@ -287,7 +294,7 @@ export class TC08 extends Peripheral {
                 }
             } else {
                 if (tape.curLine < this.REVERSE_ZONE_POS) {
-                    this.setEndOfTapeError(io);
+                    this.setEndOfTapeError(io, true);
                     continue;
                 }
 
@@ -346,7 +353,7 @@ export class TC08 extends Peripheral {
             }
 
             if (tape.curLine >= this.FORWARD_ZONE_POS) {
-                this.setEndOfTapeError(io);
+                this.setEndOfTapeError(io, true);
                 continue;
             }
 
@@ -413,7 +420,7 @@ export class TC08 extends Peripheral {
             }
 
             if (tape.curLine >= this.FORWARD_ZONE_POS) {
-                this.setEndOfTapeError(io);
+                this.setEndOfTapeError(io, true);
                 continue;
             }
 
@@ -517,9 +524,11 @@ export class TC08 extends Peripheral {
         io.writeRegister(DeviceRegister.REG_B, regB | (1 << 11) | (1 << 8));
     }
 
-    private setEndOfTapeError(io: IOContext) {
+    private setEndOfTapeError(io: IOContext, clearMotion: boolean) {
         console.log(`TC08: End of tape`);
-        this.clearMotionFlag(io);
+        if (clearMotion) {
+            this.clearMotionFlag(io);
+        }
 
         const regB = io.readRegister(DeviceRegister.REG_B);
         io.writeRegister(DeviceRegister.REG_B, regB | (1 << 11) | (1 << 9));

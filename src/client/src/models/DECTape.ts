@@ -20,7 +20,7 @@ import { makeObservable, observable } from "mobx";
 
 export class DECTape {
     public address: number = 0;
-    public name: string = '';
+    public loaded: boolean = false;
     public normalizedPosition: number = 0;
     public moving: boolean = false;
     public reverse: boolean = false;
@@ -30,7 +30,7 @@ export class DECTape {
     public constructor() {
         makeObservable(this, {
             address: observable,
-            name: observable,
+            loaded: observable,
             normalizedPosition: observable,
             moving: observable,
             reverse: observable,

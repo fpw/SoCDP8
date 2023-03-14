@@ -18,6 +18,7 @@
 
 import { DeviceID, PeripheralConfiguration } from '../../../types/PeripheralTypes';
 import { SystemConfiguration } from '../../../types/SystemConfiguration';
+import { DECTape } from '../../DECTape';
 import { Backend } from '../Backend';
 import { BackendListener } from '../BackendListener';
 import { Wasm8Context } from './Wasm8Context';
@@ -179,7 +180,7 @@ export class WasmBackend implements Backend {
         }
     }
 
-    private tapeStatus: number[] = [];
+    private tapeStatus: DECTape[] = [];
     private async onPeripheralAction(dev: DeviceID, action: number, p1: number, p2: number) {
         if (!this.listener) {
             return;
@@ -228,21 +229,21 @@ export class WasmBackend implements Backend {
                 break;
             case DeviceID.DEV_ID_TC08:
                 if (action == 10) {
-                    this.tapeStatus[p1] = p2;
+                    const status = p2;
+                    this.tapeStatus[p1] = {
+                        address: p1,
+                        loaded: (status & 1) != 0,
+                        selected: (status & 2) != 0,
+                        moving: (status & 4) != 0,
+                        reverse: (status & 8) != 0,
+                        writing: (status & 16) != 0,
+                        normalizedPosition: ((status & 0xFFFF0000) >> 16) / 1000,
+                    };
                     if (p1 == 7) {
                         this.listener.onPeripheralEvent({
                             id: DeviceID.DEV_ID_TC08,
                             action: "status",
-                            data: this.tapeStatus
-                                .filter(x => x & 1)
-                                .map((x, i) => { return {
-                                    address: i,
-                                    selected: this.tapeStatus[i] & 2,
-                                    moving: this.tapeStatus[i] & 4,
-                                    reverse: this.tapeStatus[i] & 8,
-                                    writing: this.tapeStatus[i] & 16,
-                                    normalizedPosition: ((this.tapeStatus[i] & 0xFFFF0000) >> 16) / 1000,
-                            };}),
+                            data: this.tapeStatus,
                         });
                     }
                 }

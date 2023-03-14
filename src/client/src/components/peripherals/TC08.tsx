@@ -22,31 +22,42 @@ import { DECTape } from '../../models/DECTape';
 import React from 'react';
 import { observer } from 'mobx-react-lite';
 import { ButtonGroup, Button } from '@mui/material';
+import { Box } from '@mui/system';
 
 export interface TC08Props {
     onTapeLoad(tape: File, unit: number): void;
-    leftTape?: DECTape;
-    rightTape?: DECTape;
+    tapes: DECTape[];
 }
 
 export const TC08: React.FunctionComponent<TC08Props> = observer(props => {
-    const b0 = React.useRef<HTMLInputElement>(null);
-    const b1 = React.useRef<HTMLInputElement>(null);
+    const tapes = props.tapes;
 
     return (
-        <section>
-            <input ref={b0} type='file' onChange={evt => onLoadFile(evt, props, 0)} hidden />
-            <input ref={b1} type='file' onChange={evt => onLoadFile(evt, props, 1)} hidden />
-
+        <Box>
             <ButtonGroup variant='outlined' color='primary'>
-                <Button onClick={() => b0?.current?.click()}>Load DECtape 0</Button>
-                <Button onClick={() => b1?.current?.click()}>Load DECtape 1</Button>
+                {Array.from({length: 8}).map((_x, i) =>
+                    <Button key={i} component="label">
+                        Load {i}
+                        <input type='file' onChange={evt => onLoadFile(evt, props, i)} hidden />
+                    </Button>
+            )}
             </ButtonGroup>
 
-            <TU56 left={props.leftTape} right={props.rightTape} />
-        </section>
+            <TU56 left={getTape(tapes, 0)} right={getTape(tapes, 1)} />
+            <TU56 left={getTape(tapes, 2)} right={getTape(tapes, 3)} />
+            <TU56 left={getTape(tapes, 4)} right={getTape(tapes, 5)} />
+            <TU56 left={getTape(tapes, 6)} right={getTape(tapes, 7)} />
+        </Box>
     );
 });
+
+function getTape(tapes: DECTape[], i: number) {
+    if (i < tapes.length) {
+        return tapes[i];
+    } else {
+        return undefined;
+    }
+}
 
 
 function onLoadFile(evt: React.ChangeEvent,  props: TC08Props, unit: number): void {
