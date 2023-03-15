@@ -22,7 +22,6 @@ import { PaperTape } from "../PaperTape";
 import { Terminal } from "xterm";
 import { Backend } from "../backends/Backend";
 import { create } from "zustand";
-import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { PeripheralInAction } from "../backends/PeripheralAction";
 
@@ -37,7 +36,7 @@ export class PT08Model extends PeripheralModel {
     private conf: PT08Configuration;
     private readerTape_: PaperTape = new PaperTape();
     private punchTape_: PaperTape = new PaperTape();
-    private store = create<PT08Store>()(immer(devtools(set => ({
+    private store = create<PT08Store>()(immer(set => ({
         readerActive: false,
         punchActive: false,
 
@@ -47,7 +46,7 @@ export class PT08Model extends PeripheralModel {
         setPunch: (active: boolean) => set(draft => {
             draft.punchActive = active;
         }),
-    }))));
+    })));
 
     private xterm: Terminal;
 

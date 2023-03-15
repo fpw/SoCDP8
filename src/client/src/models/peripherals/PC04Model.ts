@@ -21,7 +21,6 @@ import { Backend } from "../backends/Backend";
 import { PaperTape } from "../PaperTape";
 import { PeripheralModel } from "./PeripheralModel";
 import { create } from "zustand";
-import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { PeripheralInAction } from "../backends/PeripheralAction";
 
@@ -36,7 +35,7 @@ export class PC04Model extends PeripheralModel {
     private conf: PC04Configuration;
     private readerTape_: PaperTape = new PaperTape();
     private punchTape_: PaperTape = new PaperTape();
-    private store = create<PC04Store>()(immer(devtools(set => ({
+    private store = create<PC04Store>()(immer(set => ({
         readerActive: false,
         punchActive: false,
 
@@ -46,7 +45,7 @@ export class PC04Model extends PeripheralModel {
         setPunch: (active: boolean) => set(draft => {
             draft.punchActive = active;
         }),
-    }))));
+    })));
 
     constructor(backend: Backend, conf: PC04Configuration) {
         super(backend);

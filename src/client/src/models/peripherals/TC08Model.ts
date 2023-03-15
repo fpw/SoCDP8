@@ -21,22 +21,21 @@ import { Backend } from "../backends/Backend";
 import { DECTape, TapeState } from "../DECTape";
 import { PeripheralModel } from "./PeripheralModel";
 import { create } from "zustand";
-import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { PeripheralInAction } from "../backends/PeripheralAction";
 
 interface TC08Store {
     tapes: DECTape[];
+    numTUs: number;
     clear: () => void;
     setTapeState: (i: number, state: TapeState) => void;
+    setNumTUs: (num: number) => void;
 }
 
 export class TC08Model extends PeripheralModel {
-    private store = create<TC08Store>()(immer(devtools(set => ({
-        tapes: [
-            new DECTape(), new DECTape(), new DECTape(), new DECTape(),
-            new DECTape(), new DECTape(), new DECTape(), new DECTape(),
-        ],
+    private store = create<TC08Store>()(immer(set => ({
+        tapes: [],
+        numTUs: 0,
         clear: () => set(draft => {
             draft.tapes = [
                 new DECTape(), new DECTape(), new DECTape(), new DECTape(),
@@ -46,11 +45,15 @@ export class TC08Model extends PeripheralModel {
         setTapeState: (i: number, state: TapeState) => set(draft => {
             draft.tapes[i].useTape.getState().setState(state);
         }),
-    }))));
-
+        setNumTUs: (num: number) => set(draft => {
+            draft.numTUs = num;
+        }),
+    })));
 
     constructor(backend: Backend, private conf: TC08Configuration) {
         super(backend);
+        this.store.getState().clear();
+        this.store.getState().setNumTUs(conf.numTapes);
     }
 
     public get connections(): number[] {

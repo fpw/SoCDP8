@@ -17,7 +17,6 @@
  */
 
 import { create } from "zustand";
-import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 export interface TapeState {
@@ -36,7 +35,7 @@ interface TapeStore {
 }
 
 export class DECTape {
-    private store = create<TapeStore>()(immer(devtools(set => ({
+    private store = create<TapeStore>()(immer(set => ({
         state: {
             address: 0,
             loaded: false,
@@ -49,7 +48,7 @@ export class DECTape {
         setState: (newState: TapeState) => set(draft => {
             draft.state = newState;
         })
-    }))));
+    })));
 
     public get useTape() {
         return this.store;

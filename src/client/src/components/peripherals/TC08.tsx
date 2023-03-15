@@ -25,15 +25,17 @@ import { ChangeEvent } from "react";
 export interface TC08Props {
     onTapeLoad(tape: File, unit: number): void;
     tapes: DECTape[];
+    numTUs: number;
 }
 
 export function TC08(props: TC08Props) {
     const tapes = props.tapes;
+    const n = props.numTUs;
 
     return (
         <Box>
             <ButtonGroup variant='outlined' color='primary'>
-                {Array.from({length: 8}).map((_x, i) =>
+                {Array.from({length: props.numTUs}).map((_x, i) =>
                     <Button key={i} component="label">
                         Load {i}
                         <input type='file' onChange={evt => onLoadFile(evt, props, i)} hidden />
@@ -41,10 +43,10 @@ export function TC08(props: TC08Props) {
                 )}
             </ButtonGroup>
 
-            <TU56 left={tapes[0]} right={tapes[1]} />
-            <TU56 left={tapes[2]} right={tapes[3]} />
-            <TU56 left={tapes[4]} right={tapes[5]} />
-            <TU56 left={tapes[6]} right={tapes[7]} />
+            {n > 0 && <TU56 left={tapes[0]} right={tapes[1]} /> }
+            {n > 2 && <TU56 left={tapes[2]} right={tapes[3]} /> }
+            {n > 4 && <TU56 left={tapes[4]} right={tapes[5]} /> }
+            {n > 6 && <TU56 left={tapes[6]} right={tapes[7]} /> }
         </Box>
     );
 }

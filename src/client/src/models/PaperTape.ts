@@ -16,7 +16,6 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 import { create } from "zustand";
-import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 export interface PaperState {
@@ -34,7 +33,7 @@ interface PaperStore {
 }
 
 export class PaperTape {
-    private store = create<PaperStore>()(immer(devtools(set => ({
+    private store = create<PaperStore>()(immer(set => ({
         state: {
             name: "",
             buffer: [],
@@ -52,7 +51,7 @@ export class PaperTape {
         clear: () => set(draft => {
             draft.state.buffer = [];
         }),
-    }))));
+    })));
 
     public get useTape() {
         return this.store;

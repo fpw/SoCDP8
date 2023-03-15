@@ -17,7 +17,6 @@
  */
 
 import { create } from "zustand";
-import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { ConsoleState } from "../types/ConsoleTypes";
 import { DeviceID } from "../types/PeripheralTypes";
@@ -52,7 +51,7 @@ interface SoCDP8Store {
 export class SoCDP8 {
     private backend: Backend;
 
-    private store = create<SoCDP8Store>()(immer(devtools(set => ({
+    private store = create<SoCDP8Store>()(immer(set => ({
         peripheralModels: new Map(),
         simSpeed: 1.0,
         systemList: [],
@@ -76,7 +75,7 @@ export class SoCDP8 {
         setSystemList: (list: SystemConfiguration[]) => set(draft => {
             draft.systemList = list;
         }),
-    }))));
+    })));
 
     constructor(backend: Backend) {
         this.backend = backend;
