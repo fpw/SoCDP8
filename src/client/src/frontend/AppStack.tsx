@@ -16,14 +16,18 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { ThemeProvider } from "@emotion/react";
 import { StrictMode } from "react";
 import { RouterProvider } from "react-router-dom";
 import { appRouter } from "./AppRouter";
+import { socdp8Theme } from "./layout/Theme";
 
 export function AppStack() {
     return (
         <StrictMode>
-            <RouterProvider router={appRouter} />
+            <ThemeProvider theme={socdp8Theme}>
+                <RouterProvider router={appRouter} />
+            </ThemeProvider>
         </StrictMode>
     );
 }

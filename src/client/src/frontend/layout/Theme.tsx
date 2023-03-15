@@ -23,8 +23,8 @@ export const drawerWidth = 240;
 export const socdp8Theme = createTheme({
     palette: {
         primary: {
-            main: "#ed6b21",
-            contrastText: "#F5F5F5"
+            main: "#935720",
+            contrastText: "#f2eedf"
         }
     },
 });

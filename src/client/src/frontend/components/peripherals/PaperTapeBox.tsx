@@ -67,8 +67,9 @@ function Tape(props: PaperTapeBoxProps) {
     }, [painter]);
 
     useEffect(() => {
-        painter.update([], 0);
-    }, [painter]);
+        const state = props.tape.useTape.getState();
+        painter.update(state.tapeState.buffer, state.tapeState.pos);
+    }, [painter, props.tape]);
 
     useEffect(() => props.tape.useTape.subscribe(state => {
         if (!props.reverse) {
@@ -111,9 +112,9 @@ class PaperTapePainter {
         const w = ctx.canvas.width;
         const h = ctx.canvas.height;
 
-        ctx.fillStyle = "#f4ec72";
+        ctx.fillStyle = "#cccbc7";
         ctx.fillRect(0, 0, w, h);
-        ctx.fillStyle = "rgba(255, 255, 255, 255)";
+        ctx.fillStyle = "#ffffff";
 
         if (pos >= 0) {
             this.drawForward(ctx, buf, pos);
