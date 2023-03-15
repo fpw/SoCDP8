@@ -30,8 +30,8 @@ export class KW8IModel extends PeripheralModel {
         return [0o13];
     }
 
-    public get config(): KW8IConfiguration {
-        return this.conf;
+    public get id() {
+        return this.conf.id;
     }
 
     public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {

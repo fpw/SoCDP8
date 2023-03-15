@@ -25,8 +25,8 @@ export interface PaperState {
 }
 
 interface PaperStore {
-    state: PaperState;
-    setState: (newState: PaperState) => void;
+    tapeState: PaperState;
+    setPaperState: (newState: PaperState) => void;
     setPos: (newPos: number) => void;
     pushChar: (c: number) => void;
     clear: () => void;
@@ -34,22 +34,24 @@ interface PaperStore {
 
 export class PaperTape {
     private store = create<PaperStore>()(immer(set => ({
-        state: {
+        tapeState: {
             name: "",
             buffer: [],
             pos: 0,
         },
-        setState: (newState: PaperState) => set(draft => {
-            draft.state = newState;
+        setPaperState: (newState: PaperState) => set(draft => {
+            draft.tapeState = newState;
         }),
         setPos: (newPos: number) => set(draft => {
-            draft.state.pos = newPos;
+            draft.tapeState.pos = newPos;
         }),
         pushChar: (c: number) => set(draft => {
-            draft.state.buffer.push(c);
+            draft.tapeState.buffer.push(c);
         }),
         clear: () => set(draft => {
-            draft.state.buffer = [];
+            draft.tapeState.buffer = [];
+            draft.tapeState.pos = 0;
+            draft.tapeState.name = "";
         }),
     })));
 
@@ -64,7 +66,7 @@ export class PaperTape {
             const reader = new FileReader();
             reader.onload = () => {
                 const buffer = Array.from(new Uint8Array(reader.result as ArrayBuffer));
-                tape.useTape.getState().setState({buffer, name: file.name, pos: 0});
+                tape.useTape.getState().setPaperState({buffer, name: file.name, pos: 0});
                 resolve(tape);
             };
             reader.onerror = () => {

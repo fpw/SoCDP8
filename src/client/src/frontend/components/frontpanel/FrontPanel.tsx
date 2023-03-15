@@ -16,30 +16,28 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { SoCDP8 } from "../../../models/SoCDP8";
 import { LampBrightness, SwitchState } from "../../../types/ConsoleTypes";
 
+type OnSwitch = (sw: string, state: boolean) => void;
+
 export interface FrontPanelProps {
-    lamps: LampBrightness;
-    switches: SwitchState;
-    onSwitch(sw: string, state: boolean): void;
+    pdp8: SoCDP8,
 }
 
 export function FrontPanel(props: FrontPanelProps) {
     const [svgRoot, setSVGRoot] = useState<SVGSVGElement | null>(null);
     const [lamps, setLamps] = useState<Record<string, SVGSVGElement>>({});
     const [switches, setSwitches] = useState<Record<string, SVGSVGElement>>({});
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const ref = useRef<HTMLObjectElement>(null);
 
-    function loadSVG(): void {
-        const cons = ref.current;
-        if (!cons) {
+    const svgRef = useCallback((elem: HTMLObjectElement) => {
+        if (!elem) {
             return;
         }
 
-        const objElem = cons;
-        cons.addEventListener("load", () => {
+        const objElem = elem;
+        elem.addEventListener("load", () => {
             const doc = objElem.contentDocument;
             if (!doc) {
                 return null;
@@ -52,26 +50,20 @@ export function FrontPanel(props: FrontPanelProps) {
             setLamps(foundLamps);
             setSwitches(foundSwitches);
 
-            connectSwitches(foundSwitches, props);
+            connectSwitches(foundSwitches, (sw, state) => void props.pdp8.setPanelSwitch(sw, state));
         });
+    }, [props.pdp8]);
 
-        setIsLoading(true);
-    }
-
-    useEffect(() => {
-        if (!svgRoot) {
-            if (!isLoading) {
-                loadSVG();
-            }
+    useEffect(() => props.pdp8.useStore.subscribe(state => {
+        if (!state.frontPanel || !svgRoot) {
             return;
         }
-
-        updateLamps(props.lamps, lamps);
-        updateSwitches(props.switches, switches, svgRoot);
-    });
+        updateLamps(state.frontPanel.lamps, lamps);
+        updateSwitches(state.frontPanel.switches, switches, svgRoot);
+    }), [lamps, switches, svgRoot, props.pdp8]);
 
     return (
-        <object ref={ref} type="image/svg+xml" data='/img/front_panel.svg'>
+        <object ref={svgRef} type="image/svg+xml" data='/img/front_panel.svg'>
         </object>
     );
 };
@@ -92,44 +84,44 @@ function findElements(svg: SVGSVGElement): [Record<string, SVGSVGElement>, Recor
     return [lamps, switches];
 }
 
-function connectSwitches(switches: Record<string, SVGSVGElement>, props: FrontPanelProps): void {
-    connectSwitch("pdp8_sw_df0", switches, props);
-    connectSwitch("pdp8_sw_df1", switches, props);
-    connectSwitch("pdp8_sw_df2", switches, props);
+function connectSwitches(switches: Record<string, SVGSVGElement>, onSwitch: OnSwitch): void {
+    connectSwitch("pdp8_sw_df0", switches, onSwitch);
+    connectSwitch("pdp8_sw_df1", switches, onSwitch);
+    connectSwitch("pdp8_sw_df2", switches, onSwitch);
 
-    connectSwitch("pdp8_sw_if0", switches, props);
-    connectSwitch("pdp8_sw_if1", switches, props);
-    connectSwitch("pdp8_sw_if2", switches, props);
+    connectSwitch("pdp8_sw_if0", switches, onSwitch);
+    connectSwitch("pdp8_sw_if1", switches, onSwitch);
+    connectSwitch("pdp8_sw_if2", switches, onSwitch);
 
     for (let i = 0; i < 12; i++) {
-        connectSwitch(`pdp8_sw_swr${i}`, switches, props);
+        connectSwitch(`pdp8_sw_swr${i}`, switches, onSwitch);
     }
 
-    connectMomentarySwitch("pdp8_sw_start", switches, props);
-    connectMomentarySwitch("pdp8_sw_load", switches, props);
-    connectMomentarySwitch("pdp8_sw_dep", switches, props);
-    connectMomentarySwitch("pdp8_sw_exam", switches, props);
-    connectMomentarySwitch("pdp8_sw_cont", switches, props);
-    connectMomentarySwitch("pdp8_sw_stop", switches, props);
-    connectSwitch("pdp8_sw_sing_step", switches, props);
-    connectSwitch("pdp8_sw_sing_inst", switches, props);
+    connectMomentarySwitch("pdp8_sw_start", switches, onSwitch);
+    connectMomentarySwitch("pdp8_sw_load", switches, onSwitch);
+    connectMomentarySwitch("pdp8_sw_dep", switches, onSwitch);
+    connectMomentarySwitch("pdp8_sw_exam", switches, onSwitch);
+    connectMomentarySwitch("pdp8_sw_cont", switches, onSwitch);
+    connectMomentarySwitch("pdp8_sw_stop", switches, onSwitch);
+    connectSwitch("pdp8_sw_sing_step", switches, onSwitch);
+    connectSwitch("pdp8_sw_sing_inst", switches, onSwitch);
 }
 
-function connectSwitch(id: string, switches: Record<string, SVGSVGElement>, props: FrontPanelProps): void {
+function connectSwitch(id: string, switches: Record<string, SVGSVGElement>, onSwitch: OnSwitch): void {
     const elem = switches[id];
     if (elem) {
         elem.onclick = () => {
             const curState = isSwitchSet(elem);
-            props.onSwitch(id.replace("pdp8_sw_", ""), !curState);
+            onSwitch(id.replace("pdp8_sw_", ""), !curState);
         }
     }
 }
 
-function connectMomentarySwitch(id: string, switches: Record<string, SVGSVGElement>, props: FrontPanelProps): void {
+function connectMomentarySwitch(id: string, switches: Record<string, SVGSVGElement>, onSwitch: OnSwitch): void {
     const elem = switches[id];
     if (elem) {
         elem.onmousedown = () => {
-            props.onSwitch(id.replace("pdp8_sw_", ""), true);
+            onSwitch(id.replace("pdp8_sw_", ""), true);
         }
     }
 }

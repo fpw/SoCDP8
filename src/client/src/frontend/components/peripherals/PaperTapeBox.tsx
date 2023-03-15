@@ -16,9 +16,10 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box, LinearProgress } from "@mui/material";
-import { useState, useRef, useEffect } from "react";
+import { Box } from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
 import { PaperTape } from "../../../models/PaperTape";
+import { ProgressBar } from "../ProgressBar";
 
 export interface PaperTapeBoxProps {
     tape: PaperTape;
@@ -26,55 +27,66 @@ export interface PaperTapeBoxProps {
 }
 
 export function PaperTapeBox(props: PaperTapeBoxProps) {
-    const [painter, setPainter] = useState<PaperTapePainter | null>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const tape = props.tape.useTape(state => state.state);
+    const tapeName = props.tape.useTape(state => state.tapeState.name);
 
-    let tapeInfo: JSX.Element;
-    if (!tape) {
-        tapeInfo = <p>No tape loaded</p>;
-    } else {
-        let progress = 100;
-        if (tape.buffer.length > 0) {
-            progress = Math.round(tape.pos / tape.buffer.length * 100);
-        }
-        tapeInfo =
-            <Box mb={1}>
-                Tape { tape.name }
-                { !props.reverse ? <LinearProgress variant='determinate' value={progress} /> : null }
-                <canvas ref={canvasRef} />
-            </Box>;
+    return (
+        <Box mb={1}>
+            Tape { tapeName }
+            { !props.reverse && <TapeBar tape={props.tape} reverse={props.reverse} /> }
+            <Tape tape={props.tape} reverse={props.reverse} />
+        </Box>
+    );
+}
+
+function TapeBar(props: PaperTapeBoxProps) {
+    const tapeLen = props.tape.useTape(state => state.tapeState.buffer.length);
+    const tapePos = props.tape.useTape(state => state.tapeState.pos);
+
+    let progress = 100;
+    if (tapeLen > 0) {
+        progress = Math.round(tapePos / tapeLen * 100);
     }
 
+    return <ProgressBar variant='determinate' value={progress} />;
+}
+
+function Tape(props: PaperTapeBoxProps) {
+    const [painter] = useState<PaperTapePainter>(new PaperTapePainter());
+
+    const canvasRef = useCallback((canvas: HTMLCanvasElement) => {
+        if (!canvas) {
+            return;
+        }
+
+        painter.setCanvas(canvas);
+
+        if (canvas.parentElement) {
+            canvas.width = canvas.parentElement.scrollWidth;
+            canvas.height = 100;
+        }
+    }, [painter]);
+
     useEffect(() => {
-        if (!painter && canvasRef.current) {
-            const canvas = canvasRef.current;
-            setPainter(new PaperTapePainter(canvas));
+        painter.update([], 0);
+    }, [painter]);
 
-            if (canvas.parentElement) {
-                canvas.width = canvas.parentElement.scrollWidth;
-                canvas.height = 100;
-            }
+    useEffect(() => props.tape.useTape.subscribe(state => {
+        if (!props.reverse) {
+            painter.update(state.tapeState.buffer, state.tapeState.pos);
+        } else {
+            painter.update(state.tapeState.buffer, -1);
         }
+    }), [painter, props.reverse, props.tape]);
 
-        if (tape) {
-            if (!props.reverse) {
-                painter?.update(tape.buffer, tape.pos);
-            } else {
-                painter?.update(tape.buffer, -1);
-            }
-        }
-    }, [painter, tape, tape?.buffer.length, tape?.pos, props.reverse]);
-
-    return tapeInfo;
+    return <canvas ref={canvasRef} />;
 }
 
 class PaperTapePainter {
     private drawPending: boolean = false;
+    private canvas?: HTMLCanvasElement;
 
-
-    constructor(private canvas: HTMLCanvasElement) {
-
+    public setCanvas(canvas: HTMLCanvasElement) {
+        this.canvas = canvas;
     }
 
     public update(buf: number[], pos: number) {
@@ -86,6 +98,10 @@ class PaperTapePainter {
 
     private draw(buf: number[], pos: number) {
         this.drawPending = false;
+
+        if (!this.canvas) {
+            return;
+        }
 
         const ctx = this.canvas.getContext("2d");
         if (!ctx) {

@@ -26,7 +26,7 @@ export abstract class PeripheralModel {
 
     public abstract get connections(): number[];
 
-    public abstract get config(): PeripheralConfiguration;
+    public abstract get id(): number;
 
     public abstract onPeripheralAction(id: DeviceID, action: PeripheralInAction): void;
 

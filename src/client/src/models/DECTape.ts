@@ -31,7 +31,7 @@ export interface TapeState {
 
 interface TapeStore {
     state: TapeState;
-    setState: (newState: TapeState) => void;
+    setTapeState: (newState: TapeState) => void;
 }
 
 export class DECTape {
@@ -45,7 +45,7 @@ export class DECTape {
             selected: false,
             writing: false,
         },
-        setState: (newState: TapeState) => set(draft => {
+        setTapeState: (newState: TapeState) => set(draft => {
             draft.state = newState;
         })
     })));

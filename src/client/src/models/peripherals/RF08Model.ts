@@ -30,8 +30,8 @@ export class RF08Model extends PeripheralModel {
         return [0o60, 0o61, 0o62, 0o64];
     }
 
-    public get config(): RF08Configuration {
-        return this.conf;
+    public get id() {
+        return this.conf.id;
     }
 
     public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {

@@ -224,7 +224,10 @@ function onLoadFile(evt: ChangeEvent, props: PT08Props): void {
 }
 
 function PunchBox(props: PT08Props) {
-    const punchTape = props.punchTape.useTape(state => state.state);
+    async function download() {
+        const buffer = props.punchTape.useTape.getState().tapeState.buffer;
+        await downloadData(Uint8Array.from(buffer), "punch-pt08.bin")
+    }
 
     return (
         <Box mt={2}>
@@ -237,7 +240,7 @@ function PunchBox(props: PT08Props) {
                     <Button variant='outlined' color='primary' onClick={() => props.onPunchClear()}>New Tape</Button>
                 </FormControl>
                 <FormControl>
-                    <Button variant='outlined' color='primary' onClick={() => void downloadData(Uint8Array.from(punchTape.buffer), "punch.bin")}>Download Tape</Button>
+                    <Button variant='outlined' color='primary' onClick={() => void download()}>Download Tape</Button>
                 </FormControl>
                 <FormControl>
                     <Button variant='outlined' color='primary' onClick={() => props.onPunchLeader()}>Leader</Button>

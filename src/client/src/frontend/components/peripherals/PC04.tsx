@@ -40,12 +40,9 @@ export interface PC04Props {
 }
 
 export function PC04(props: PC04Props) {
-    const tapeInput = useRef<HTMLInputElement>(null);
-
     return (
         <section>
             <ConfigBox {...props} />
-
             <ReaderBox {...props} />
             <Divider />
             <PunchBox {...props} />
@@ -110,7 +107,10 @@ function onLoadFile(evt: ChangeEvent, props: PC04Props): void {
 }
 
 function PunchBox(props: PC04Props) {
-    const punchTape = props.punchTape.useTape(state => state.state);
+    async function download() {
+        const buffer = props.punchTape.useTape.getState().tapeState.buffer;
+        await downloadData(Uint8Array.from(buffer), "punch-pc04.bin")
+    }
 
     return (
         <Box mt={2}>
@@ -123,7 +123,7 @@ function PunchBox(props: PC04Props) {
                     <Button variant='outlined' color='primary' onClick={() => props.onPunchClear()}>New Tape</Button>
                 </FormControl>
                 <FormControl>
-                    <Button variant='outlined' color='primary' onClick={() => void downloadData(Uint8Array.from(punchTape.buffer), "punch.bin")}>Download Tape</Button>
+                    <Button variant='outlined' color='primary' onClick={() => void download()}>Download Tape</Button>
                 </FormControl>
                 <FormControl>
                     <Button variant='outlined' color='primary' onClick={() => props.onPunchLeader()}>Leader</Button>

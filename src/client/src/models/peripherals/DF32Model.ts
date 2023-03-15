@@ -26,8 +26,8 @@ export class DF32Model extends PeripheralModel {
         super(backend);
     }
 
-    public get config(): DF32Configuration {
-        return this.conf;
+    public get id() {
+        return this.conf.id;
     }
 
     public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {

@@ -61,11 +61,12 @@ function PT08Box(props: {model: PT08Model}) {
     const {model} = props;
     const readerActive = model.useState(state => state.readerActive);
     const punchActive = model.useState(state => state.punchActive);
+    const config = model.useState(state => state.conf!);
 
     return (
         <CaptionBox name='Serial Line' model={model}>
             <PT08
-                conf={model.config}
+                conf={config}
                 onConfigChange={conf => void model.updateConfig(conf)}
 
                 readerActive={readerActive}
@@ -90,11 +91,12 @@ function PC04Box(props: {model: PC04Model}) {
     const {model} = props;
     const readerActive = model.useState(state => state.readerActive);
     const punchActive = model.useState(state => state.punchActive);
+    const config = model.useState(state => state.conf!);
 
     return (
         <CaptionBox name='PC04 High-Speed Paper-Tape Reader and Punch' model={model}>
             <PC04
-                conf={model.config}
+                conf={config}
                 onConfigChange={(conf) => void model.updateConfig(conf)}
 
                 readerActive={readerActive}
@@ -165,7 +167,7 @@ function CaptionBox(props: {model: PeripheralModel, name: string, children: Reac
     return (
         <Box mb={4}>
             <Card variant='outlined'>
-                <CardHeader component={RouterLink} to={`/peripherals/${model.config.id}`} title={titleStr} />
+                <CardHeader component={RouterLink} to={`/peripherals/${model.id}`} title={titleStr} />
                 <CardContent>
                     { children }
                 </CardContent>

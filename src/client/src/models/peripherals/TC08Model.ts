@@ -43,7 +43,7 @@ export class TC08Model extends PeripheralModel {
             ];
         }),
         setTapeState: (i: number, state: TapeState) => set(draft => {
-            draft.tapes[i].useTape.getState().setState(state);
+            draft.tapes[i].useTape.getState().setTapeState(state);
         }),
         setNumTUs: (num: number) => set(draft => {
             draft.numTUs = num;
@@ -60,8 +60,8 @@ export class TC08Model extends PeripheralModel {
         return [0o76, 0o77];
     }
 
-    public get config(): TC08Configuration {
-        return this.conf;
+    public get id() {
+        return this.conf.id;
     }
 
     public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
@@ -69,7 +69,6 @@ export class TC08Model extends PeripheralModel {
             return;
         }
 
-        this.store.getState().clear();
         for (const state of action.states) {
             this.store.getState().setTapeState(state.address, state);
         }

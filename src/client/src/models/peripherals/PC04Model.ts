@@ -25,19 +25,24 @@ import { immer } from "zustand/middleware/immer";
 import { PeripheralInAction } from "../../types/PeripheralAction";
 
 interface PC04Store {
+    conf?: PC04Configuration;
     readerActive: boolean;
     punchActive: boolean;
+    setConf: (conf: PC04Configuration) => void;
     setReader: (active: boolean) => void;
     setPunch: (active: boolean) => void;
 }
 
 export class PC04Model extends PeripheralModel {
-    private conf: PC04Configuration;
     private readerTape_: PaperTape = new PaperTape();
     private punchTape_: PaperTape = new PaperTape();
     private store = create<PC04Store>()(immer(set => ({
         readerActive: false,
         punchActive: false,
+
+        setConf: (newConf: PC04Configuration) => set(draft => {
+            draft.conf = newConf;
+        }),
 
         setReader: (active: boolean) => set(draft => {
             draft.readerActive = active;
@@ -49,20 +54,24 @@ export class PC04Model extends PeripheralModel {
 
     constructor(backend: Backend, conf: PC04Configuration) {
         super(backend);
-        this.conf = conf;
+        this.store.getState().setConf(conf);
     }
 
     public get connections(): number[] {
         return [0o01, 0o02];
     }
 
-    public get config(): PC04Configuration {
-        return this.conf;
+    public get id() {
+        return this.config.id;
+    }
+
+    private get config(): PC04Configuration {
+        return this.store.getState().conf!;
     }
 
     public async updateConfig(newConf: PC04Configuration) {
-        this.conf = newConf;
-        await this.backend.changePeripheralConfig(this.conf.id, this.conf);
+        this.store.getState().setConf(newConf);
+        await this.backend.changePeripheralConfig(this.config.id, this.config);
     }
 
     public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
@@ -84,9 +93,9 @@ export class PC04Model extends PeripheralModel {
 
     public async loadTape(file: File): Promise<void> {
         const tape = await PaperTape.fromFile(file);
-        const buffer = tape.useTape.getState().state.buffer;
+        const buffer = tape.useTape.getState().tapeState.buffer;
         await this.backend.sendPeripheralAction(
-            this.conf.id, {
+            this.config.id, {
                 type: "reader-tape-set",
                 tapeData: Uint8Array.from(buffer)
             }
@@ -99,7 +108,7 @@ export class PC04Model extends PeripheralModel {
     }
 
     public setReaderTape(tape: PaperTape) {
-        this.readerTape.useTape.getState().setState(tape.useTape.getState().state);
+        this.readerTape.useTape.getState().setPaperState(tape.useTape.getState().tapeState);
     }
 
     public setReaderPos(pos: number) {
@@ -130,6 +139,6 @@ export class PC04Model extends PeripheralModel {
 
     public async setReaderActive(active: boolean) {
         this.store.getState().setReader(active);
-        await this.backend.sendPeripheralAction(this.conf.id, {type: "reader-set-active", active});
+        await this.backend.sendPeripheralAction(this.config.id, {type: "reader-set-active", active});
     };
 }

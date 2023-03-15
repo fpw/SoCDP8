@@ -26,19 +26,24 @@ import { immer } from "zustand/middleware/immer";
 import { PeripheralInAction } from "../../types/PeripheralAction";
 
 interface PT08Store {
+    conf?: PT08Configuration;
     readerActive: boolean;
     punchActive: boolean;
+    setConf: (conf: PT08Configuration) => void;
     setReader: (active: boolean) => void;
     setPunch: (active: boolean) => void;
 }
 
 export class PT08Model extends PeripheralModel {
-    private conf: PT08Configuration;
     private readerTape_: PaperTape = new PaperTape();
     private punchTape_: PaperTape = new PaperTape();
     private store = create<PT08Store>()(immer(set => ({
         readerActive: false,
         punchActive: false,
+
+        setConf: (newConf: PT08Configuration) => set(draft => {
+            draft.conf = newConf;
+        }),
 
         setReader: (active: boolean) => set(draft => {
             draft.readerActive = active;
@@ -52,9 +57,10 @@ export class PT08Model extends PeripheralModel {
 
     constructor(backend: Backend, conf: PT08Configuration) {
         super(backend);
-        this.conf = conf;
-        this.xterm = new Terminal();
 
+        this.store.getState().setConf(conf);
+
+        this.xterm = new Terminal();
         this.xterm.onData(data => {
             for (const c of data) {
                 void this.onRawKey(c);
@@ -69,21 +75,21 @@ export class PT08Model extends PeripheralModel {
     public async onRawKey(key: string) {
         let chr = key.charCodeAt(0);
 
-        if (this.conf.autoCaps) {
+        if (this.config.autoCaps) {
             if (chr >= 0x61 && chr <= 0x7A) {
                 chr -= 0x20;
             }
         }
 
-        if (this.conf.eightBit) {
+        if (this.config.eightBit) {
             chr |= 0x80;
         }
 
-        await this.backend.sendPeripheralAction(this.conf.id, {type: "key-press", key: chr});
+        await this.backend.sendPeripheralAction(this.config.id, {type: "key-press", key: chr});
     }
 
     public get connections(): number[] {
-        switch (this.conf.id) {
+        switch (this.config.id) {
             case DeviceID.DEV_ID_PT08: return [0o03, 0o04];
             case DeviceID.DEV_ID_TT1:  return [0o40, 0o41];
             case DeviceID.DEV_ID_TT2:  return [0o42, 0o43];
@@ -93,13 +99,17 @@ export class PT08Model extends PeripheralModel {
         }
     }
 
-    public get config(): PT08Configuration {
-        return this.conf;
+    public get id() {
+        return this.config.id;
+    }
+
+    private get config(): PT08Configuration {
+        return this.store.getState().conf!;
     }
 
     public async updateConfig(newConf: PT08Configuration) {
-        this.conf = newConf;
-        await this.backend.changePeripheralConfig(this.conf.id, this.conf);
+        this.store.getState().setConf(newConf);
+        await this.backend.changePeripheralConfig(this.config.id, this.config);
     }
 
     public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
@@ -126,9 +136,9 @@ export class PT08Model extends PeripheralModel {
 
     public async loadTape(file: File): Promise<void> {
         const tape = await PaperTape.fromFile(file);
-        const buffer = tape.useTape.getState().state.buffer;
+        const buffer = tape.useTape.getState().tapeState.buffer;
         await this.backend.sendPeripheralAction(
-            this.conf.id, {
+            this.config.id, {
                 type: "reader-tape-set",
                 tapeData: Uint8Array.from(buffer)
             }
@@ -137,7 +147,7 @@ export class PT08Model extends PeripheralModel {
     }
 
     public setReaderTape(tape: PaperTape) {
-        this.readerTape.useTape.getState().setState(tape.useTape.getState().state);
+        this.readerTape.useTape.getState().setPaperState(tape.useTape.getState().tapeState);
     }
 
     public setReaderPos(pos: number) {
@@ -168,6 +178,6 @@ export class PT08Model extends PeripheralModel {
 
     public async setReaderActive(active: boolean) {
         this.store.getState().setReader(active);
-        await this.backend.sendPeripheralAction(this.conf.id, {type: "reader-set-active", active});
+        await this.backend.sendPeripheralAction(this.config.id, {type: "reader-set-active", active});
     };
 }

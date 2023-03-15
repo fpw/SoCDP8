@@ -16,11 +16,14 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { StrictMode } from "react";
 import { RouterProvider } from "react-router-dom";
 import { appRouter } from "./AppRouter";
 
 export function AppStack() {
     return (
-        <RouterProvider router={appRouter} />
+        <StrictMode>
+            <RouterProvider router={appRouter} />
+        </StrictMode>
     );
 }

@@ -17,7 +17,6 @@
  */
 
 import { enableMapSet } from "immer";
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { AppStack } from "./frontend/AppStack";
 
@@ -26,8 +25,4 @@ enableMapSet();
 const container = document.getElementById("app");
 const root = createRoot(container!);
 
-root.render((
-    <StrictMode>
-        <AppStack />
-    </StrictMode>
-));
+root.render(<AppStack />);

@@ -25,20 +25,19 @@ export interface TU56Props {
 }
 
 export function TU56(props: TU56Props) {
-    const [painter, _] = useState<TU56Painter>(new TU56Painter());
-    const leftState = props.left.useTape(state => state.state);
-    const rightState = props.right.useTape(state => state.state);
+    const [painter] = useState<TU56Painter>(new TU56Painter());
 
     const canvasRef = useCallback((canvasRef: HTMLCanvasElement) => {
-        if (canvasRef) {
-            const canvas = canvasRef;
-
-            if (canvas.parentElement) {
-                canvas.width = canvas.parentElement.scrollWidth;
-                canvas.height = canvas.width * 0.5;
-            }
-            painter.setCanvas(canvas);
+        if (!canvasRef) {
+            return;
         }
+        const canvas = canvasRef;
+
+        if (canvas.parentElement) {
+            canvas.width = canvas.parentElement.scrollWidth;
+            canvas.height = canvas.width * 0.5;
+        }
+        painter.setCanvas(canvas);
     }, [painter]);
 
     useEffect(() => {
@@ -48,9 +47,13 @@ export function TU56(props: TU56Props) {
         }
     }, [painter]);
 
-    useEffect(() => {
-        painter.update(leftState, rightState);
-    }, [painter, leftState, rightState]);
+    useEffect(() => props.left.useTape.subscribe(state => {
+        painter.updateLeft(state.state);
+    }), [painter, props.left]);
+
+    useEffect(() => props.right.useTape.subscribe(state => {
+        painter.updateRight(state.state);
+    }), [painter, props.right]);
 
     return <canvas ref={canvasRef} />;
 }
@@ -82,8 +85,11 @@ class TU56Painter {
         requestAnimationFrame((t) => this.draw(t));
     }
 
-    public update(left?: TapeState, right?: TapeState) {
+    public updateLeft(left?: TapeState) {
         this.leftTape = left;
+    }
+
+    public updateRight(right?: TapeState) {
         this.rightTape = right;
     }
 

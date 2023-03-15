@@ -25,12 +25,7 @@ import { FrontPanel } from "./FrontPanel";
 export function FrontPanelBox(props: {pdp8: SoCDP8}) {
     const [busy, setBusy] = useState<boolean>(false);
     const [showSnippets, setShowSnippets] = useState<boolean>(false);
-    const panel = props.pdp8.useStore(state => state.frontPanel);
     const simSpeed = props.pdp8.useStore(state => state.simSpeed);
-
-    if (!panel) {
-        return <>Loading...</>;
-    }
 
     async function saveState() {
         setBusy(true);
@@ -50,10 +45,7 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
             <Card variant='outlined'>
                 <CardHeader title='PDP-8/I' />
                 <CardMedia>
-                    <FrontPanel lamps={panel.lamps}
-                        switches={panel.switches}
-                        onSwitch={(sw, state) => void props.pdp8.setPanelSwitch(sw, state)}
-                    />
+                    <FrontPanel pdp8={props.pdp8} />
                 </CardMedia>
                 <CardActions>
                     <ButtonGroup color='primary' variant='outlined'>
