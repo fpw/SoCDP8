@@ -19,7 +19,7 @@
 import { DeviceID, PeripheralConfiguration } from "../../types/PeripheralTypes";
 import { SystemConfiguration } from "../../types/SystemConfiguration";
 import { BackendListener } from "./BackendListener";
-import { PeripheralOutAction } from "./PeripheralAction";
+import { PeripheralOutAction } from "../../types/PeripheralAction";
 
 export interface Backend {
     connect(listener: BackendListener): Promise<void>;

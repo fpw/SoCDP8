@@ -23,9 +23,9 @@ import Keyboard from "react-simple-keyboard";
 import "react-simple-keyboard/build/css/index.css";
 import { Terminal } from "xterm";
 import "xterm/css/xterm.css";
-import { PaperTape } from "../../models/PaperTape";
-import { BaudRate, BAUD_RATES, PT08Configuration } from "../../types/PeripheralTypes";
-import { downloadData } from "../../util";
+import { PaperTape } from "../../../models/PaperTape";
+import { BaudRate, BAUD_RATES, PT08Configuration } from "../../../types/PeripheralTypes";
+import { downloadData } from "../../../util";
 import { PaperTapeBox } from "./PaperTapeBox";
 
 export interface PT08Props {

@@ -21,7 +21,7 @@ import { SystemConfiguration } from "../../../types/SystemConfiguration";
 import { TapeState } from "../../DECTape";
 import { Backend } from "../Backend";
 import { BackendListener } from "../BackendListener";
-import { PeripheralOutAction } from "../PeripheralAction";
+import { PeripheralOutAction } from "../../../types/PeripheralAction";
 import { Wasm8Context } from "./Wasm8Context";
 
 export class WasmBackend implements Backend {

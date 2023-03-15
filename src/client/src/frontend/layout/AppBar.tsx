@@ -16,18 +16,22 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { enableMapSet } from "immer";
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { AppStack } from "./frontend/AppStack";
+import { styled } from "@mui/material";
+import MuiAppBar from "@mui/material/AppBar";
+import { drawerWidth } from "./Theme";
 
-enableMapSet();
-
-const container = document.getElementById("app");
-const root = createRoot(container!);
-
-root.render((
-    <StrictMode>
-        <AppStack />
-    </StrictMode>
-));
+export const AppBar = styled(MuiAppBar, {shouldForwardProp: (prop) => prop !== "open"})<{open?: boolean}>(({ theme, open }) => ({
+    zIndex: theme.zIndex.drawer + 1,
+    transition: theme.transitions.create(["width", "margin"], {
+        easing: theme.transitions.easing.sharp,
+        duration: theme.transitions.duration.leavingScreen,
+    }),
+    ...(open && {
+        marginLeft: drawerWidth,
+        width: `calc(100% - ${drawerWidth}px)`,
+        transition: theme.transitions.create(["width", "margin"], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.enteringScreen,
+        }),
+    }),
+}));

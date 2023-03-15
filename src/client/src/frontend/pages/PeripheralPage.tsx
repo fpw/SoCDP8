@@ -16,30 +16,15 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Typography } from "@mui/material";
+import { useParams } from "react-router-dom";
 import { SoCDP8 } from "../../models/SoCDP8";
-import { FrontPanelBox } from "../frontpanel/FrontPanelBox";
-import { PeripheralBox } from "../peripherals/PeripheralBox";
+import { PeripheralBox } from "../components/peripherals/PeripheralBox";
 
-export interface SystemProps {
-    pdp8: SoCDP8;
-}
-
-export function System(props: SystemProps) {
+export function PeripheralPage(props: { pdp8: SoCDP8; }) {
+    const idString = useParams<{ id: string; }>().id!;
+    const id = Number.parseInt(idString);
     const peripherals = props.pdp8.useStore(state => state.peripheralModels);
-    const sys = props.pdp8.useStore(state => state.activeSystem)!;
+    const peripheral = peripherals.get(id);
 
-    const models = [...peripherals.values()];
-
-    return (
-        <>
-            <Typography component='h1' variant='h4' gutterBottom>
-                System: {sys.name}
-            </Typography>
-
-            <FrontPanelBox pdp8={props.pdp8} />
-
-            { models.map((dev, i) => <PeripheralBox key={i} model={dev} />) }
-        </>
-    );
+    return <PeripheralBox model={peripheral!} />;
 }

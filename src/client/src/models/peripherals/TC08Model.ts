@@ -22,7 +22,7 @@ import { DECTape, TapeState } from "../DECTape";
 import { PeripheralModel } from "./PeripheralModel";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { PeripheralInAction } from "../backends/PeripheralAction";
+import { PeripheralInAction } from "../../types/PeripheralAction";
 
 interface TC08Store {
     tapes: DECTape[];

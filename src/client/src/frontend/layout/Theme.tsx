@@ -16,18 +16,15 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { enableMapSet } from "immer";
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { AppStack } from "./frontend/AppStack";
+import { createTheme } from "@mui/material";
 
-enableMapSet();
+export const drawerWidth = 240;
 
-const container = document.getElementById("app");
-const root = createRoot(container!);
-
-root.render((
-    <StrictMode>
-        <AppStack />
-    </StrictMode>
-));
+export const socdp8Theme = createTheme({
+    palette: {
+        primary: {
+            main: "#ed6b21",
+            contrastText: "#F5F5F5"
+        }
+    },
+});

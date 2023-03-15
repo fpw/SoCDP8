@@ -17,7 +17,7 @@
  */
 
 import { Backend } from "../backends/Backend";
-import { PeripheralInAction } from "../backends/PeripheralAction";
+import { PeripheralInAction } from "../../types/PeripheralAction";
 import { DeviceID, PeripheralConfiguration } from "./../../types/PeripheralTypes";
 
 export abstract class PeripheralModel {

@@ -23,7 +23,7 @@ import { DeviceID } from "../types/PeripheralTypes";
 import { SystemConfiguration } from "../types/SystemConfiguration";
 import { Backend } from "./backends/Backend";
 import { BackendListener } from "./backends/BackendListener";
-import { PeripheralInAction } from "./backends/PeripheralAction";
+import { PeripheralInAction } from "../types/PeripheralAction";
 import { DF32Model } from "./peripherals/DF32Model";
 import { KW8IModel } from "./peripherals/KW8IModel";
 import { PC04Model } from "./peripherals/PC04Model";

@@ -18,8 +18,8 @@
 
 import { Button, FormControl, FormControlLabel, FormGroup, FormLabel, Radio, RadioGroup, Slider, Switch, TextField } from "@mui/material";
 import { FormEvent } from "react";
-import { DeviceID, PeripheralConfiguration } from "../../types/PeripheralTypes";
-import { getDefaultSysConf, SystemConfiguration } from "../../types/SystemConfiguration";
+import { DeviceID, PeripheralConfiguration } from "../../../types/PeripheralTypes";
+import { getDefaultSysConf, SystemConfiguration } from "../../../types/SystemConfiguration";
 
 export interface SystemFormProps {
     initialState: SystemConfiguration;

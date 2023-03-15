@@ -22,7 +22,7 @@ import { DeviceID, PeripheralConfiguration } from "../../../types/PeripheralType
 import { SystemConfiguration } from "../../../types/SystemConfiguration";
 import { Backend } from "../Backend";
 import { BackendListener } from "../BackendListener";
-import { PeripheralInAction, PeripheralOutAction } from "../PeripheralAction";
+import { PeripheralInAction, PeripheralOutAction } from "../../../types/PeripheralAction";
 
 export class SocketBackend implements Backend {
     private socket: Socket;

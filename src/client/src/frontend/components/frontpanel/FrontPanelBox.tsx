@@ -16,10 +16,10 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box, Button, ButtonGroup, Card, CardActions, CardHeader, CardMedia, Dialog, DialogTitle, List, ListItem, ListItemText } from "@mui/material";
+import { Box, Button, ButtonGroup, Card, CardActions, CardHeader, CardMedia, Dialog, DialogTitle, List, ListItem, ListItemButton, ListItemText } from "@mui/material";
 import { useState } from "react";
-import { ProgramSnippet, ProgramSnippets } from "../../models/ProgramSnippets";
-import { SoCDP8 } from "../../models/SoCDP8";
+import { ProgramSnippet, ProgramSnippets } from "../../../models/ProgramSnippets";
+import { SoCDP8 } from "../../../models/SoCDP8";
 import { FrontPanel } from "./FrontPanel";
 
 export function FrontPanelBox(props: {pdp8: SoCDP8}) {
@@ -94,9 +94,9 @@ function SnippetDialog(props: SnippetProps) {
             <DialogTitle>Select Snippet</DialogTitle>
             <List>
                 { ProgramSnippets.map(snippet =>
-                    <ListItem button key={snippet.label} onClick={() => props.onSelect(snippet)}>
+                    <ListItemButton key={snippet.label} onClick={() => props.onSelect(snippet)}>
                         <ListItemText primary={snippet.label} secondary={snippet.desc} />
-                    </ListItem>
+                    </ListItemButton>
                 )};
             </List>
         </Dialog>

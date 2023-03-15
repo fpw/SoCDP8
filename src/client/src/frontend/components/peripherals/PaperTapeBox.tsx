@@ -18,7 +18,7 @@
 
 import { Box, LinearProgress } from "@mui/material";
 import { useState, useRef, useEffect } from "react";
-import { PaperTape } from "../../models/PaperTape";
+import { PaperTape } from "../../../models/PaperTape";
 
 export interface PaperTapeBoxProps {
     tape: PaperTape;

@@ -17,7 +17,7 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
-import { DECTape, TapeState } from "../../models/DECTape";
+import { DECTape, TapeState } from "../../../models/DECTape";
 
 export interface TU56Props {
     left: DECTape;

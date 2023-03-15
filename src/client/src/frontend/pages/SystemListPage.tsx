@@ -22,13 +22,13 @@ import { useState } from "react";
 import { SoCDP8 } from "../../models/SoCDP8";
 import { DeviceID } from "../../types/PeripheralTypes";
 import { getDefaultSysConf, SystemConfiguration } from "../../types/SystemConfiguration";
-import { SystemForm } from "./SystemForm";
+import { SystemForm } from "../components/system/SystemForm";
 
 export interface SystemManagerProps {
     pdp8: SoCDP8
 }
 
-export function SystemManager(props: SystemManagerProps) {
+export function SystemListPage(props: SystemManagerProps) {
     const [formBusy, setFormBusy] = useState<boolean>(false);
     const [open, setOpen] = useState<boolean>(false);
     const activeSys = props.pdp8.useStore(state => state.activeSystem)!;

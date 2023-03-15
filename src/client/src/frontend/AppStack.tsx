@@ -16,18 +16,11 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { enableMapSet } from "immer";
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { AppStack } from "./frontend/AppStack";
+import { RouterProvider } from "react-router-dom";
+import { appRouter } from "./AppRouter";
 
-enableMapSet();
-
-const container = document.getElementById("app");
-const root = createRoot(container!);
-
-root.render((
-    <StrictMode>
-        <AppStack />
-    </StrictMode>
-));
+export function AppStack() {
+    return (
+        <RouterProvider router={appRouter} />
+    );
+}

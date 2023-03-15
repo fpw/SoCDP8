@@ -18,7 +18,7 @@
 
 import { ConsoleState } from "../../types/ConsoleTypes";
 import { DeviceID } from "../../types/PeripheralTypes";
-import { PeripheralInAction } from "./PeripheralAction";
+import { PeripheralInAction } from "../../types/PeripheralAction";
 
 export interface BackendListener {
     onConnect(): void;

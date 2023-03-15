@@ -23,7 +23,7 @@ import { Terminal } from "xterm";
 import { Backend } from "../backends/Backend";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { PeripheralInAction } from "../backends/PeripheralAction";
+import { PeripheralInAction } from "../../types/PeripheralAction";
 
 interface PT08Store {
     readerActive: boolean;

@@ -1,4 +1,3 @@
-/// <reference types="emscripten" />
 /*
  *   SoCDP8 - A PDP-8/I implementation on a SoC
  *   Copyright (C) 2021 Folke Will <folko@solhost.org>
@@ -16,6 +15,7 @@
  *   You should have received a copy of the GNU Affero General Public License
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+/// <reference types="emscripten" />
 
 import { ConsoleState } from "../../../types/ConsoleTypes";
 

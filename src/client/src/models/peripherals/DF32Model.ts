@@ -19,7 +19,7 @@
 import { PeripheralModel } from "./PeripheralModel";
 import { DeviceID, DF32Configuration } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
-import { PeripheralInAction } from "../backends/PeripheralAction";
+import { PeripheralInAction } from "../../types/PeripheralAction";
 
 export class DF32Model extends PeripheralModel {
     constructor(backend: Backend, private conf: DF32Configuration) {

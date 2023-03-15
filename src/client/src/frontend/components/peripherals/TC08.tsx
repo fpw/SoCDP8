@@ -17,7 +17,7 @@
  */
 
 import { TU56 } from "./TU56";
-import { DECTape } from "../../models/DECTape";
+import { DECTape } from "../../../models/DECTape";
 import { ButtonGroup, Button } from "@mui/material";
 import { Box } from "@mui/system";
 import { ChangeEvent } from "react";

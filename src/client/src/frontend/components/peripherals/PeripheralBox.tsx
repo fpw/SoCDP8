@@ -19,21 +19,21 @@
 import { Box, Card, CardContent, CardHeader } from "@mui/material";
 import { ReactNode } from "react";
 import { Link as RouterLink } from "react-router-dom";
-import { DF32Model } from "../../models/peripherals/DF32Model";
-import { KW8IModel } from "../../models/peripherals/KW8IModel";
-import { PC04Model } from "../../models/peripherals/PC04Model";
-import { PeripheralModel } from "../../models/peripherals/PeripheralModel";
-import { PT08Model } from "../../models/peripherals/PT08Model";
-import { RF08Model } from "../../models/peripherals/RF08Model";
-import { RK8Model } from "../../models/peripherals/RK8Model";
-import { TC08Model } from "../../models/peripherals/TC08Model";
-import { DF32 } from "../peripherals/DF32";
-import { KW8I } from "../peripherals/KW8I";
-import { PC04 } from "../peripherals/PC04";
-import { PT08 } from "../peripherals/PT08";
-import { RF08 } from "../peripherals/RF08";
-import { RK8 } from "../peripherals/RK8";
-import { TC08 } from "../peripherals/TC08";
+import { DF32Model } from "../../../models/peripherals/DF32Model";
+import { KW8IModel } from "../../../models/peripherals/KW8IModel";
+import { PC04Model } from "../../../models/peripherals/PC04Model";
+import { PeripheralModel } from "../../../models/peripherals/PeripheralModel";
+import { PT08Model } from "../../../models/peripherals/PT08Model";
+import { RF08Model } from "../../../models/peripherals/RF08Model";
+import { RK8Model } from "../../../models/peripherals/RK8Model";
+import { TC08Model } from "../../../models/peripherals/TC08Model";
+import { DF32 } from "./DF32";
+import { KW8I } from "./KW8I";
+import { PC04 } from "./PC04";
+import { PT08 } from "./PT08";
+import { RF08 } from "./RF08";
+import { RK8 } from "./RK8";
+import { TC08 } from "./TC08";
 
 export function PeripheralBox(props: {model: PeripheralModel}) {
     const model = props.model;

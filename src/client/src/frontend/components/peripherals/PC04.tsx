@@ -18,9 +18,9 @@
 
 import { Box, Button, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, Switch, Typography } from "@mui/material";
 import { ChangeEvent, useRef } from "react";
-import { PaperTape } from "../../models/PaperTape";
-import { BaudRate, BAUD_RATES, PC04Configuration } from "../../types/PeripheralTypes";
-import { downloadData } from "../../util";
+import { PaperTape } from "../../../models/PaperTape";
+import { BaudRate, BAUD_RATES, PC04Configuration } from "../../../types/PeripheralTypes";
+import { downloadData } from "../../../util";
 import { PaperTapeBox } from "./PaperTapeBox";
 
 export interface PC04Props {

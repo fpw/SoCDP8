@@ -18,7 +18,7 @@
 
 import { Typography } from "@mui/material";
 
-export function About() {
+export function AboutPage() {
     return (
         <>
             <Typography component='h1' variant='h4'>About SoCDP-8</Typography>

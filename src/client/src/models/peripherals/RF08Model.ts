@@ -19,7 +19,7 @@
 import { PeripheralModel } from "./PeripheralModel";
 import { DeviceID, RF08Configuration } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
-import { PeripheralInAction } from "../backends/PeripheralAction";
+import { PeripheralInAction } from "../../types/PeripheralAction";
 
 export class RF08Model extends PeripheralModel {
     constructor(backend: Backend, private conf: RF08Configuration) {
