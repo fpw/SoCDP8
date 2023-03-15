@@ -17,8 +17,9 @@
  */
 
 import { PeripheralModel } from "./PeripheralModel";
-import { RF08Configuration } from "../../types/PeripheralTypes";
+import { DeviceID, RF08Configuration } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
+import { PeripheralInAction } from "../backends/PeripheralAction";
 
 export class RF08Model extends PeripheralModel {
     constructor(backend: Backend, private conf: RF08Configuration) {
@@ -33,7 +34,7 @@ export class RF08Model extends PeripheralModel {
         return this.conf;
     }
 
-    public onPeripheralAction(action: string, data: any): void {
+    public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
     }
 
     public async readBlock(block: number): Promise<Uint16Array> {

@@ -24,6 +24,7 @@ import { Backend } from "../backends/Backend";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
+import { PeripheralInAction } from "../backends/PeripheralAction";
 
 interface PT08Store {
     readerActive: boolean;
@@ -57,7 +58,7 @@ export class PT08Model extends PeripheralModel {
 
         this.xterm.onData(data => {
             for (const c of data) {
-                this.onRawKey(c);
+                void this.onRawKey(c);
             }
         });
     }
@@ -66,7 +67,7 @@ export class PT08Model extends PeripheralModel {
         return this.store;
     }
 
-    public onRawKey(key: string) {
+    public async onRawKey(key: string) {
         let chr = key.charCodeAt(0);
 
         if (this.conf.autoCaps) {
@@ -79,7 +80,7 @@ export class PT08Model extends PeripheralModel {
             chr |= 0x80;
         }
 
-        this.backend.sendPeripheralAction(this.conf.id, "key-press", chr);
+        await this.backend.sendPeripheralAction(this.conf.id, {type: "key-press", key: chr});
     }
 
     public get connections(): number[] {
@@ -97,18 +98,18 @@ export class PT08Model extends PeripheralModel {
         return this.conf;
     }
 
-    public updateConfig(newConf: PT08Configuration) {
+    public async updateConfig(newConf: PT08Configuration) {
         this.conf = newConf;
-        this.backend.changePeripheralConfig(this.conf.id, this.conf);
+        await this.backend.changePeripheralConfig(this.conf.id, this.conf);
     }
 
-    public onPeripheralAction(action: string, data: any) {
-        switch (action) {
+    public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
+        switch (action.type) {
             case "punch":
-                this.onPunch(data.data);
+                this.onPunch(action.char);
                 break;
             case "readerPos":
-                this.setReaderPos(data.data);
+                this.setReaderPos(action.pos);
                 break;
         }
     }
@@ -127,10 +128,11 @@ export class PT08Model extends PeripheralModel {
     public async loadTape(file: File): Promise<void> {
         const tape = await PaperTape.fromFile(file);
         const buffer = tape.useTape.getState().state.buffer;
-        this.backend.sendPeripheralAction(
-            this.conf.id,
-            "reader-tape-set",
-            Uint8Array.from(buffer).buffer
+        await this.backend.sendPeripheralAction(
+            this.conf.id, {
+                type: "reader-tape-set",
+                tapeData: Uint8Array.from(buffer)
+            }
         );
         this.setReaderTape(tape);
     }
@@ -161,12 +163,12 @@ export class PT08Model extends PeripheralModel {
         this.punchTape.useTape.getState().clear();
     }
 
-    public setPunchActive(active: boolean) {
+    public async setPunchActive(active: boolean) {
         this.store.getState().setPunch(active);
     }
 
-    public setReaderActive(active: boolean) {
+    public async setReaderActive(active: boolean) {
         this.store.getState().setReader(active);
-        this.backend.sendPeripheralAction(this.conf.id, "reader-set-active", active);
+        await this.backend.sendPeripheralAction(this.conf.id, {type: "reader-set-active", active});
     };
 }

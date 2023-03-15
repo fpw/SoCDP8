@@ -23,7 +23,7 @@ export default defineConfig({
             output: {
                 manualChunks: {
                     "mui": ["@mui/material"],
-                    "xterm": ["xterm"],
+                    "perphs": ["xterm", "react-simple-keyboard"],
                 },
             },
         },

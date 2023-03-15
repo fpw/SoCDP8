@@ -17,7 +17,7 @@
  */
 
 import { Box, LinearProgress } from "@mui/material";
-import React from "react";
+import { useState, useRef, useEffect } from "react";
 import { PaperTape } from "../../models/PaperTape";
 
 export interface PaperTapeBoxProps {
@@ -26,8 +26,8 @@ export interface PaperTapeBoxProps {
 }
 
 export function PaperTapeBox(props: PaperTapeBoxProps) {
-    const [painter, setPainter] = React.useState<PaperTapePainter | null>(null);
-    const canvasRef = React.useRef<HTMLCanvasElement>(null);
+    const [painter, setPainter] = useState<PaperTapePainter | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     const tape = props.tape.useTape(state => state.state);
 
     let tapeInfo: JSX.Element;
@@ -46,7 +46,7 @@ export function PaperTapeBox(props: PaperTapeBoxProps) {
             </Box>;
     }
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!painter && canvasRef.current) {
             const canvas = canvasRef.current;
             setPainter(new PaperTapePainter(canvas));

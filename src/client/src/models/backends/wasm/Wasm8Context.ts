@@ -1,3 +1,4 @@
+/// <reference types="emscripten" />
 /*
  *   SoCDP8 - A PDP-8/I implementation on a SoC
  *   Copyright (C) 2021 Folke Will <folko@solhost.org>
@@ -18,7 +19,15 @@
 
 import { ConsoleState } from "../../../types/ConsoleTypes";
 
-declare const createWASM8: any;
+declare function createWASM8(options: {locateFile: (path: string) => string}): Promise<{
+    addFunction: typeof addFunction;
+    cwrap: typeof cwrap;
+    getValue: typeof getValue;
+    setValue: typeof setValue;
+    writeArrayToMemory: typeof writeArrayToMemory;
+    _malloc: (n: number) => number;
+    _free: (a: number) => void;
+}>;
 
 interface Wasm8Calls {
     create(actionFunc: number): number;
@@ -33,7 +42,7 @@ interface Wasm8Calls {
 
     malloc(len: number): number;
     free(buf: number): void;
-    writeArray(array: ArrayBufferLike, dst: number): void;
+    writeArray(array: number[], dst: number): void;
 }
 
 export class Wasm8Context {
@@ -61,8 +70,8 @@ export class Wasm8Context {
             getConsoleIn: inst.cwrap("pdp8_get_console_in", "number", ["number"]),
             getConsoleOut: inst.cwrap("pdp8_get_console_out", "number", ["number"]),
             getLampsOut: inst.cwrap("pdp8_get_lamps_out", "number", ["number"]),
-            peripheralAction: inst.cwrap("pdp8_peripheral_action", "", ["number", "number", "number", "number"]),
-            destroy: inst.cwrap("pdp8_destroy", "", ["number"]),
+            peripheralAction: inst.cwrap("pdp8_peripheral_action", null, ["number", "number", "number", "number"]),
+            destroy: inst.cwrap("pdp8_destroy", null, ["number"]),
 
             readPointer: inst.getValue,
             writePointer: inst.setValue,
@@ -222,7 +231,7 @@ export class Wasm8Context {
         this.calls.peripheralAction(this.ctx, dev, action, p1, p2);
     }
 
-    public sendPeripheralActionBuffer(dev: number, action: number, buf: ArrayBufferLike) {
+    public sendPeripheralActionBuffer(dev: number, action: number, buf: Uint8Array) {
         if (!this.ctx || !this.calls) {
             throw Error("Not connected");
         }
@@ -231,7 +240,7 @@ export class Wasm8Context {
         if (!bufAddr) {
             throw Error("Out of virtual memory");
         }
-        this.calls.writeArray(new Uint8Array(buf), bufAddr);
+        this.calls.writeArray([...buf], bufAddr);
         this.calls.peripheralAction(this.ctx, dev, action, bufAddr, buf.byteLength);
     }
 

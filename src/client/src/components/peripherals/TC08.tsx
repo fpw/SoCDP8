@@ -18,9 +18,9 @@
 
 import { TU56 } from "./TU56";
 import { DECTape } from "../../models/DECTape";
-import React from "react";
 import { ButtonGroup, Button } from "@mui/material";
 import { Box } from "@mui/system";
+import { ChangeEvent } from "react";
 
 export interface TC08Props {
     onTapeLoad(tape: File, unit: number): void;
@@ -49,7 +49,7 @@ export function TC08(props: TC08Props) {
     );
 }
 
-function onLoadFile(evt: React.ChangeEvent,  props: TC08Props, unit: number): void {
+function onLoadFile(evt: ChangeEvent,  props: TC08Props, unit: number): void {
     const target = evt.target as HTMLInputElement;
     if (!target.files || target.files.length < 1) {
         return;

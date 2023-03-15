@@ -17,19 +17,32 @@
  */
 
 import { Box, Button, ButtonGroup, Card, CardActions, CardHeader, CardMedia, Dialog, DialogTitle, List, ListItem, ListItemText } from "@mui/material";
-import React from "react";
+import { useState } from "react";
 import { ProgramSnippet, ProgramSnippets } from "../../models/ProgramSnippets";
 import { SoCDP8 } from "../../models/SoCDP8";
 import { FrontPanel } from "./FrontPanel";
 
 export function FrontPanelBox(props: {pdp8: SoCDP8}) {
-    const [busy, setBusy] = React.useState<boolean>(false);
-    const [showSnippets, setShowSnippets] = React.useState<boolean>(false);
+    const [busy, setBusy] = useState<boolean>(false);
+    const [showSnippets, setShowSnippets] = useState<boolean>(false);
     const panel = props.pdp8.useStore(state => state.frontPanel);
     const simSpeed = props.pdp8.useStore(state => state.simSpeed);
 
     if (!panel) {
         return <>Loading...</>;
+    }
+
+    async function saveState() {
+        setBusy(true);
+        await props.pdp8.saveCurrentState();
+        setBusy(false);
+    }
+
+    async function loadSnippet(snippet: ProgramSnippet) {
+        for (const s of snippet.snippets) {
+            await props.pdp8.writeCore(s.start, s.data);
+        }
+        setShowSnippets(false);
     }
 
     return (
@@ -39,19 +52,12 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
                 <CardMedia>
                     <FrontPanel lamps={panel.lamps}
                         switches={panel.switches}
-                        onSwitch={props.pdp8.setPanelSwitch.bind(props.pdp8)}
+                        onSwitch={(sw, state) => void props.pdp8.setPanelSwitch(sw, state)}
                     />
                 </CardMedia>
                 <CardActions>
                     <ButtonGroup color='primary' variant='outlined'>
-                        <Button
-                            onClick={async() => {
-                                setBusy(true);
-                                await props.pdp8.saveCurrentState();
-                                setBusy(false);
-                            }}
-                            disabled={busy}
-                        >
+                        <Button onClick={() => void saveState()} disabled={busy}>
                             Save State
                         </Button>
 
@@ -59,7 +65,7 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
                             Load Snippet
                         </Button>
 
-                        <Button onClick={() => props.pdp8.clearCore()}>
+                        <Button onClick={() => void props.pdp8.clearCore()}>
                             Clear Core
                         </Button>
                     </ButtonGroup>
@@ -69,12 +75,7 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
                     <SnippetDialog
                         open={showSnippets}
                         onClose={() => setShowSnippets(false)}
-                        onSelect={(snippet) => {
-                            for (const s of snippet.snippets) {
-                                props.pdp8.writeCore(s.start, s.data);
-                            }
-                            setShowSnippets(false);
-                        }}
+                        onSelect={(snippet) => void loadSnippet(snippet)}
                     />
                 </CardActions>
             </Card>

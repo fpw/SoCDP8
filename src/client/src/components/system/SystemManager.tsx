@@ -18,7 +18,7 @@
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, ButtonGroup, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
-import React, { useState } from "react";
+import { useState } from "react";
 import { SoCDP8 } from "../../models/SoCDP8";
 import { DeviceID } from "../../types/PeripheralTypes";
 import { getDefaultSysConf, SystemConfiguration } from "../../types/SystemConfiguration";
@@ -34,6 +34,13 @@ export function SystemManager(props: SystemManagerProps) {
     const activeSys = props.pdp8.useStore(state => state.activeSystem)!;
     const systems = props.pdp8.useStore(state => state.systemList);
 
+    async function addSystem(s: SystemConfiguration) {
+        setFormBusy(true);
+        await onNewSystem(props.pdp8, s);
+        setFormBusy(false);
+        setOpen(false);
+    }
+
     return (
         <section>
             <Typography component='h1' variant='h4' gutterBottom>Manage Systems</Typography>
@@ -46,12 +53,7 @@ export function SystemManager(props: SystemManagerProps) {
                     <Box width='75%' pl={4}>
                         <SystemForm
                             initialState={getDefaultSysConf()}
-                            onSubmit={async(s) => {
-                                setFormBusy(true);
-                                await onNewSystem(props.pdp8, s);
-                                setFormBusy(false);
-                                setOpen(false);
-                            }}
+                            onSubmit={s => void addSystem(s)}
                             buttonEnabled={!formBusy}
                         />
                     </Box>
@@ -81,7 +83,19 @@ export function SystemManager(props: SystemManagerProps) {
 }
 
 function SystemEntry(props: {pdp8: SoCDP8, system: SystemConfiguration, active: boolean}) {
-    const [busy, setBusy] = React.useState<boolean>(false);
+    const [busy, setBusy] = useState<boolean>(false);
+
+    async function activate() {
+        setBusy(true);
+        await activateSystem(props.pdp8, props.system);
+        setBusy(false);
+    }
+
+    async function del() {
+        setBusy(true);
+        await deleteSystem(props.pdp8, props.system);
+        setBusy(false);
+    }
 
     return (
         <TableRow>
@@ -121,18 +135,10 @@ function SystemEntry(props: {pdp8: SoCDP8, system: SystemConfiguration, active: 
             </TableCell>
             <TableCell>
                 <ButtonGroup variant='outlined' orientation='vertical'>
-                    <Button disabled={busy} onClick={async() => {
-                        setBusy(true);
-                        await activateSystem(props.pdp8, props.system);
-                        setBusy(false);
-                    }}>
+                    <Button disabled={busy} onClick={() => void activate()}>
                         Activate
                     </Button>
-                    <Button disabled={busy} onClick={async() => {
-                        setBusy(true);
-                        await deleteSystem(props.pdp8, props.system);
-                        setBusy(false);
-                    }}>
+                    <Button disabled={busy} onClick={() => void del()}>
                         Delete
                     </Button>
                 </ButtonGroup>

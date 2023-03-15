@@ -17,5 +17,5 @@
  */
 
 export function KW8I() {
-    return <section></section>;
+    return <></>;
 }

@@ -22,6 +22,7 @@ import { DeviceID, PeripheralConfiguration } from "../../../types/PeripheralType
 import { SystemConfiguration } from "../../../types/SystemConfiguration";
 import { Backend } from "../Backend";
 import { BackendListener } from "../BackendListener";
+import { PeripheralInAction, PeripheralOutAction } from "../PeripheralAction";
 
 export class SocketBackend implements Backend {
     private socket: Socket;
@@ -47,11 +48,11 @@ export class SocketBackend implements Backend {
             listener.onConsoleState(state);
         });
 
-        this.socket.on("peripheral-event", (data: any) => {
-            listener.onPeripheralEvent(data);
+        this.socket.on("peripheral-event", (id: DeviceID, action: PeripheralInAction) => {
+            listener.onPeripheralEvent(id, action);
         });
 
-        this.socket.on("state", (data: any) => {
+        this.socket.on("state", (data: PeripheralInAction) => {
             listener.onStateChange(data);
         });
 
@@ -134,11 +135,10 @@ export class SocketBackend implements Backend {
         });
     }
 
-    public async sendPeripheralAction(id: DeviceID, action: string, data: any): Promise<void> {
+    public async sendPeripheralAction(id: DeviceID, action: PeripheralOutAction): Promise<void> {
         this.socket.emit("peripheral-action", {
             id: id,
             action: action,
-            data: data
         });
     }
 

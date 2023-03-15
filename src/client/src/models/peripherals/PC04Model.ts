@@ -16,13 +16,14 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PC04Configuration } from "../../types/PeripheralTypes";
+import { DeviceID, PC04Configuration } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
 import { PaperTape } from "../PaperTape";
 import { PeripheralModel } from "./PeripheralModel";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
+import { PeripheralInAction } from "../backends/PeripheralAction";
 
 interface PC04Store {
     readerActive: boolean;
@@ -60,18 +61,18 @@ export class PC04Model extends PeripheralModel {
         return this.conf;
     }
 
-    public updateConfig(newConf: PC04Configuration) {
+    public async updateConfig(newConf: PC04Configuration) {
         this.conf = newConf;
-        this.backend.changePeripheralConfig(this.conf.id, this.conf);
+        await this.backend.changePeripheralConfig(this.conf.id, this.conf);
     }
 
-    public onPeripheralAction(action: string, data: any): void {
-        switch (action) {
+    public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
+        switch (action.type) {
             case "punch":
-                this.onPunch(data.data);
+                this.onPunch(action.char);
                 break;
             case "readerPos":
-                this.setReaderPos(data.data);
+                this.setReaderPos(action.pos);
                 break;
         }
     }
@@ -86,9 +87,10 @@ export class PC04Model extends PeripheralModel {
         const tape = await PaperTape.fromFile(file);
         const buffer = tape.useTape.getState().state.buffer;
         await this.backend.sendPeripheralAction(
-            this.conf.id,
-            "reader-tape-set",
-            Uint8Array.from(buffer).buffer
+            this.conf.id, {
+                type: "reader-tape-set",
+                tapeData: Uint8Array.from(buffer)
+            }
         );
         this.setReaderTape(tape);
     }
@@ -123,12 +125,12 @@ export class PC04Model extends PeripheralModel {
         this.punchTape.useTape.getState().clear();
     }
 
-    public setPunchActive(active: boolean) {
+    public async setPunchActive(active: boolean) {
         this.store.getState().setPunch(active);
     }
 
-    public setReaderActive(active: boolean) {
+    public async setReaderActive(active: boolean) {
         this.store.getState().setReader(active);
-        this.backend.sendPeripheralAction(this.conf.id, "reader-set-active", active);
+        await this.backend.sendPeripheralAction(this.conf.id, {type: "reader-set-active", active});
     };
 }

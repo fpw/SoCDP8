@@ -17,5 +17,5 @@
  */
 
 export function DF32() {
-    return <section></section>;
+    return <></>;
 }

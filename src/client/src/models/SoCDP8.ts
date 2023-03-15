@@ -24,6 +24,7 @@ import { DeviceID } from "../types/PeripheralTypes";
 import { SystemConfiguration } from "../types/SystemConfiguration";
 import { Backend } from "./backends/Backend";
 import { BackendListener } from "./backends/BackendListener";
+import { PeripheralInAction } from "./backends/PeripheralAction";
 import { DF32Model } from "./peripherals/DF32Model";
 import { KW8IModel } from "./peripherals/KW8IModel";
 import { PC04Model } from "./peripherals/PC04Model";
@@ -82,8 +83,8 @@ export class SoCDP8 {
 
         const listener: BackendListener = {
             onConnect: () => {
-                this.readActiveState();
-                this.fetchStateList();
+                void this.readActiveState();
+                void this.fetchStateList();
             },
 
             onDisconnect: () => {
@@ -94,21 +95,20 @@ export class SoCDP8 {
                 this.onFrontPanelChange(state);
             },
 
-            onPeripheralEvent: (data: any) => {
-                const id = data.id as number;
-                const action = data.action as string;
-                this.onPeripheralEvent(id, action, data);
+            onPeripheralEvent: (id: DeviceID, action: PeripheralInAction) => {
+                this.onPeripheralEvent(id, action);
             },
 
-            onStateChange: (data: any) => {
-                this.onStateEvent(data);
+            onStateChange: (action: PeripheralInAction) => {
+                void this.onStateEvent(action);
             },
 
             onPerformanceReport: (simSpeed: number) => {
                 this.store.getState().setSimSpeed(simSpeed);
             },
         };
-        backend.connect(listener);
+
+        void backend.connect(listener);
     }
 
     private async readActiveState(): Promise<void> {
@@ -173,13 +173,13 @@ export class SoCDP8 {
         }
     }
 
-    private onPeripheralEvent(id: number, action: string, data: any) {
+    private onPeripheralEvent(id: DeviceID, action: PeripheralInAction) {
         const peripheral = this.store.getState().peripheralModels.get(id);
         if (!peripheral) {
             return;
         }
 
-        peripheral.onPeripheralAction(action, data);
+        peripheral.onPeripheralAction(id, action);
     }
 
     public async saveCurrentState() {
@@ -213,13 +213,13 @@ export class SoCDP8 {
         await this.backend.writeCore(addr, fragment);
     }
 
-    private onStateEvent(data: any) {
-        switch (data.action) {
+    private async onStateEvent(action: PeripheralInAction) {
+        switch (action.type) {
             case "active-state-changed":
-                this.readActiveState();
+                await this.readActiveState();
                 break;
             case "state-list-changed":
-                this.fetchStateList();
+                await this.fetchStateList();
                 break;
         }
     }

@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from "react";
+import { useEffect, useRef, useState } from "react";
 import { LampBrightness, SwitchState } from "../../types/ConsoleTypes";
 
 export interface FrontPanelProps {
@@ -26,11 +26,11 @@ export interface FrontPanelProps {
 }
 
 export function FrontPanel(props: FrontPanelProps) {
-    const [svgRoot, setSVGRoot] = React.useState<SVGSVGElement | null>(null);
-    const [lamps, setLamps] = React.useState<Record<string, SVGSVGElement>>({});
-    const [switches, setSwitches] = React.useState<Record<string, SVGSVGElement>>({});
-    const [isLoading, setIsLoading] = React.useState<boolean>(false);
-    const ref = React.useRef<HTMLObjectElement>(null);
+    const [svgRoot, setSVGRoot] = useState<SVGSVGElement | null>(null);
+    const [lamps, setLamps] = useState<Record<string, SVGSVGElement>>({});
+    const [switches, setSwitches] = useState<Record<string, SVGSVGElement>>({});
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const ref = useRef<HTMLObjectElement>(null);
 
     function loadSVG(): void {
         const cons = ref.current;
@@ -58,7 +58,7 @@ export function FrontPanel(props: FrontPanelProps) {
         setIsLoading(true);
     }
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (!svgRoot) {
             if (!isLoading) {
                 loadSVG();

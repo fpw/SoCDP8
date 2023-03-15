@@ -17,7 +17,7 @@
  */
 
 import { Box, Button, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, Switch, Typography } from "@mui/material";
-import React, { ChangeEvent } from "react";
+import { ChangeEvent, useRef } from "react";
 import { PaperTape } from "../../models/PaperTape";
 import { BaudRate, BAUD_RATES, PC04Configuration } from "../../types/PeripheralTypes";
 import { downloadData } from "../../util";
@@ -40,7 +40,7 @@ export interface PC04Props {
 }
 
 export function PC04(props: PC04Props) {
-    const tapeInput = React.useRef<HTMLInputElement>(null);
+    const tapeInput = useRef<HTMLInputElement>(null);
 
     return (
         <section>
@@ -77,7 +77,7 @@ function ConfigBox(props: PC04Props) {
 }
 
 function ReaderBox(props: PC04Props) {
-    const tapeInput = React.useRef<HTMLInputElement>(null);
+    const tapeInput = useRef<HTMLInputElement>(null);
 
     return (
         <Box mt={2}>
@@ -100,7 +100,7 @@ function ReaderBox(props: PC04Props) {
     );
 }
 
-function onLoadFile(evt: React.ChangeEvent, props: PC04Props): void {
+function onLoadFile(evt: ChangeEvent, props: PC04Props): void {
     const target = evt.target as HTMLInputElement;
     if (!target.files || target.files.length < 1) {
         return;
@@ -123,7 +123,7 @@ function PunchBox(props: PC04Props) {
                     <Button variant='outlined' color='primary' onClick={() => props.onPunchClear()}>New Tape</Button>
                 </FormControl>
                 <FormControl>
-                    <Button variant='outlined' color='primary' onClick={() => downloadData(Uint8Array.from(punchTape.buffer), "punch.bin")}>Download Tape</Button>
+                    <Button variant='outlined' color='primary' onClick={() => void downloadData(Uint8Array.from(punchTape.buffer), "punch.bin")}>Download Tape</Button>
                 </FormControl>
                 <FormControl>
                     <Button variant='outlined' color='primary' onClick={() => props.onPunchLeader()}>Leader</Button>

@@ -17,7 +17,7 @@
  */
 
 import { Button, FormControl, FormControlLabel, FormGroup, FormLabel, Radio, RadioGroup, Slider, Switch, TextField } from "@mui/material";
-import React from "react";
+import { FormEvent } from "react";
 import { DeviceID, PeripheralConfiguration } from "../../types/PeripheralTypes";
 import { getDefaultSysConf, SystemConfiguration } from "../../types/SystemConfiguration";
 
@@ -123,7 +123,7 @@ export function SystemForm(props: SystemFormProps) {
     );
 }
 
-function toSystemConf(ev: React.FormEvent<HTMLFormElement>): SystemConfiguration {
+function toSystemConf(ev: FormEvent<HTMLFormElement>): SystemConfiguration {
     const form = ev.currentTarget;
     const s: SystemConfiguration = getDefaultSysConf();
     s.peripherals = [];

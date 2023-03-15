@@ -17,8 +17,9 @@
  */
 
 import { PeripheralModel } from "./PeripheralModel";
-import { KW8IConfiguration } from "../../types/PeripheralTypes";
+import { DeviceID, KW8IConfiguration } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
+import { PeripheralInAction } from "../backends/PeripheralAction";
 
 export class KW8IModel extends PeripheralModel {
     constructor(backend: Backend, private conf: KW8IConfiguration) {
@@ -33,6 +34,6 @@ export class KW8IModel extends PeripheralModel {
         return this.conf;
     }
 
-    public onPeripheralAction(action: string, data: any) {
+    public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
     }
 }

@@ -17,7 +17,8 @@
  */
 
 import { Backend } from "../backends/Backend";
-import { PeripheralConfiguration } from "./../../types/PeripheralTypes";
+import { PeripheralInAction } from "../backends/PeripheralAction";
+import { DeviceID, PeripheralConfiguration } from "./../../types/PeripheralTypes";
 
 export abstract class PeripheralModel {
     constructor(protected backend: Backend) {
@@ -27,7 +28,7 @@ export abstract class PeripheralModel {
 
     public abstract get config(): PeripheralConfiguration;
 
-    public abstract onPeripheralAction(action: string, data: any): void;
+    public abstract onPeripheralAction(id: DeviceID, action: PeripheralInAction): void;
 
     protected async loadFile(file: File): Promise<ArrayBuffer> {
         return new Promise<ArrayBuffer>((resolve, reject) => {

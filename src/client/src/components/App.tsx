@@ -21,7 +21,7 @@ import MemoryIcon from "@mui/icons-material/Memory";
 import MenuIcon from "@mui/icons-material/Menu";
 import TuneIcon from "@mui/icons-material/Tune";
 import { AppBar, Box, Container, CssBaseline, Divider, Drawer, IconButton, List, ListItem, ListItemIcon, ListItemText, Toolbar, Typography } from "@mui/material";
-import React from "react";
+import { useState } from "react";
 import { BrowserRouter as Router, Link as RouterLink, Navigate, Route, Routes, useParams } from "react-router-dom";
 import { SoCDP8 } from "../models/SoCDP8";
 import { About } from "./About";
@@ -36,7 +36,7 @@ export interface AppProps {
 const drawerWidth = 240;
 
 export function App(props: AppProps) {
-    const [drawerOpen, setDrawerOpen] = React.useState(false);
+    const [drawerOpen, setDrawerOpen] = useState(false);
     const sys = props.pdp8.useStore(state => state.activeSystem);
 
     const toggleDrawerOpen = () => {

@@ -17,8 +17,9 @@
  */
 
 import { PeripheralModel } from "./PeripheralModel";
-import { DF32Configuration } from "../../types/PeripheralTypes";
+import { DeviceID, DF32Configuration } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
+import { PeripheralInAction } from "../backends/PeripheralAction";
 
 export class DF32Model extends PeripheralModel {
     constructor(backend: Backend, private conf: DF32Configuration) {
@@ -29,7 +30,7 @@ export class DF32Model extends PeripheralModel {
         return this.conf;
     }
 
-    public onPeripheralAction(action: string, data: any): void {
+    public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
     }
 
     public get connections(): number[] {

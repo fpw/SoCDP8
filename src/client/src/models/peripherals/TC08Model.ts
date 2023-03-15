@@ -16,13 +16,14 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { TC08Configuration } from "../../types/PeripheralTypes";
+import { DeviceID, TC08Configuration } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
 import { DECTape, TapeState } from "../DECTape";
 import { PeripheralModel } from "./PeripheralModel";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
+import { PeripheralInAction } from "../backends/PeripheralAction";
 
 interface TC08Store {
     tapes: DECTape[];
@@ -60,23 +61,14 @@ export class TC08Model extends PeripheralModel {
         return this.conf;
     }
 
-    public onPeripheralAction(action: string, data: any): void {
-        if (action != "status") {
+    public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
+        if (action.type != "tapeStates") {
             return;
         }
 
         this.store.getState().clear();
-        for (const state of (data.data as any[])) {
-            const tape: TapeState = {
-                loaded: state.loaded,
-                address: state.address,
-                selected: state.selected,
-                moving: state.moving,
-                reverse: state.reverse,
-                writing: state.writing,
-                normalizedPosition: state.normalizedPosition,
-            };
-            this.store.getState().setTapeState(tape.address, tape);
+        for (const state of action.states) {
+            this.store.getState().setTapeState(state.address, state);
         }
     }
 
@@ -84,11 +76,12 @@ export class TC08Model extends PeripheralModel {
         return this.store;
     }
 
-    public readonly loadTape = async(tape: File, unit: number): Promise<void> => {
+    public async loadTape(tape: File, unit: number) {
         const data = await this.loadFile(tape);
-        this.backend.sendPeripheralAction(this.conf.id, "load-tape", {
+        await this.backend.sendPeripheralAction(this.conf.id, {
+            type: "load-tape",
             unit: unit,
-            tapeData: data
+            data: new Uint8Array(data),
         });
     }
 }

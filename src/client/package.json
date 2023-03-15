@@ -15,6 +15,7 @@
     "@emotion/styled": "^11.10.6",
     "@mui/icons-material": "^5.11.11",
     "@mui/material": "^5.11.13",
+    "@types/emscripten": "^1.39.6",
     "immer": "^9.0.19",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -25,6 +26,7 @@
     "zustand": "^4.3.6"
   },
   "devDependencies": {
+    "@types/node": "^18.15.3",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
     "@typescript-eslint/eslint-plugin": "^5.55.0",
@@ -98,6 +100,7 @@
       "@typescript-eslint/no-unused-vars": "off"
     },
     "ignorePatterns": [
+      "public/",
       "build/",
       "node_modules/"
     ]

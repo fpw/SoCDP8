@@ -17,5 +17,5 @@
  */
 
 export function RK8() {
-    return <section></section>;
+    return <></>;
 }

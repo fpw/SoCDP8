@@ -19,6 +19,7 @@
 import { DeviceID, PeripheralConfiguration } from "../../types/PeripheralTypes";
 import { SystemConfiguration } from "../../types/SystemConfiguration";
 import { BackendListener } from "./BackendListener";
+import { PeripheralOutAction } from "./PeripheralAction";
 
 export interface Backend {
     connect(listener: BackendListener): Promise<void>;
@@ -35,7 +36,7 @@ export interface Backend {
     clearCore(): Promise<void>;
     writeCore(addr: number, fragment: number[]): Promise<void>;
 
-    sendPeripheralAction(id: DeviceID, action: string, data: any): Promise<void>;
+    sendPeripheralAction(id: DeviceID, action: PeripheralOutAction): Promise<void>;
     changePeripheralConfig(id: DeviceID, config: PeripheralConfiguration): Promise<void>;
     readPeripheralBlock(id: DeviceID, block: number): Promise<Uint16Array>;
 }

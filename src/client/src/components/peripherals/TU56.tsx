@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from "react";
+import { useState, useCallback, useEffect } from "react";
 import { DECTape, TapeState } from "../../models/DECTape";
 
 export interface TU56Props {
@@ -25,11 +25,11 @@ export interface TU56Props {
 }
 
 export function TU56(props: TU56Props) {
-    const [painter, _] = React.useState<TU56Painter>(new TU56Painter());
+    const [painter, _] = useState<TU56Painter>(new TU56Painter());
     const leftState = props.left.useTape(state => state.state);
     const rightState = props.right.useTape(state => state.state);
 
-    const canvasRef = React.useCallback((canvasRef: HTMLCanvasElement) => {
+    const canvasRef = useCallback((canvasRef: HTMLCanvasElement) => {
         if (canvasRef) {
             const canvas = canvasRef;
 
@@ -41,14 +41,14 @@ export function TU56(props: TU56Props) {
         }
     }, [painter]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         painter.start();
         return () => {
             painter.stop();
         }
     }, [painter]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         painter.update(leftState, rightState);
     }, [painter, leftState, rightState]);
 

@@ -18,9 +18,10 @@
 
 import { DeviceID, PeripheralConfiguration } from "../../../types/PeripheralTypes";
 import { SystemConfiguration } from "../../../types/SystemConfiguration";
-import { DECTape, TapeState } from "../../DECTape";
+import { TapeState } from "../../DECTape";
 import { Backend } from "../Backend";
 import { BackendListener } from "../BackendListener";
+import { PeripheralOutAction } from "../PeripheralAction";
 import { Wasm8Context } from "./Wasm8Context";
 
 export class WasmBackend implements Backend {
@@ -90,7 +91,7 @@ export class WasmBackend implements Backend {
     public async connect(listener: BackendListener) {
         this.listener = listener;
 
-        await this.pdp8.create((dev, action, p1, p2) => this.onPeripheralAction(dev, action, p1, p2));
+        await this.pdp8.create((dev, action, p1, p2) => void this.onPeripheralAction(dev, action, p1, p2));
 
         await this.setActiveSystem("default");
 
@@ -148,7 +149,7 @@ export class WasmBackend implements Backend {
         }
     }
 
-    public async sendPeripheralAction(id: DeviceID, action: string, data: any): Promise<void> {
+    public async sendPeripheralAction(id: DeviceID, action: PeripheralOutAction): Promise<void> {
         if (
             id == DeviceID.DEV_ID_PT08 ||
             id == DeviceID.DEV_ID_TT1 ||
@@ -156,26 +157,22 @@ export class WasmBackend implements Backend {
             id == DeviceID.DEV_ID_TT3 ||
             id == DeviceID.DEV_ID_TT4
         ) {
-            if (action == "key-press") {
-                this.pdp8.sendPeripheralAction(id, 3, data, 0);
-            } else if (action == "reader-tape-set") {
-                const buf = data as ArrayBufferLike;
-                this.pdp8.sendPeripheralActionBuffer(id, 4, buf);
-            } else if (action == "reader-set-active") {
-                this.pdp8.sendPeripheralAction(id, 5, data, 0);
+            if (action.type == "key-press") {
+                this.pdp8.sendPeripheralAction(id, 3, action.key, 0);
+            } else if (action.type == "reader-tape-set") {
+                this.pdp8.sendPeripheralActionBuffer(id, 4, action.tapeData);
+            } else if (action.type == "reader-set-active") {
+                this.pdp8.sendPeripheralAction(id, 5, action.active ? 1 : 0, 0);
             }
         } else if (id == DeviceID.DEV_ID_PC04) {
-            if (action == "reader-tape-set") {
-                const buf = data as ArrayBufferLike;
-                this.pdp8.sendPeripheralActionBuffer(DeviceID.DEV_ID_PC04, 4, buf);
-            } else if (action == "reader-set-active") {
-                this.pdp8.sendPeripheralAction(DeviceID.DEV_ID_PC04, 5, data, 0);
+            if (action.type == "reader-tape-set") {
+                this.pdp8.sendPeripheralActionBuffer(DeviceID.DEV_ID_PC04, 4, action.tapeData);
+            } else if (action.type == "reader-set-active") {
+                this.pdp8.sendPeripheralAction(DeviceID.DEV_ID_PC04, 5, action.active ? 1 : 0, 0);
             }
         } else if (id == DeviceID.DEV_ID_TC08) {
-            if (action == "load-tape") {
-                const unit = data.unit as number;
-                const tapeData = data.tapeData as ArrayBuffer;
-                this.pdp8.sendPeripheralActionBuffer(DeviceID.DEV_ID_TC08, 1 + unit, tapeData);
+            if (action.type == "load-tape") {
+                this.pdp8.sendPeripheralActionBuffer(DeviceID.DEV_ID_TC08, 1 + action.unit, action.data);
             }
         }
     }
@@ -199,31 +196,27 @@ export class WasmBackend implements Backend {
             case DeviceID.DEV_ID_TT3:
             case DeviceID.DEV_ID_TT4:
                 if (action == 1) {
-                    this.listener.onPeripheralEvent({
-                        id: dev,
-                        action: "readerPos",
-                        data: p1,
+                    this.listener.onPeripheralEvent(dev, {
+                        type: "readerPos",
+                        pos: p1,
                     });
                 } else if (action == 2) {
-                    this.listener.onPeripheralEvent({
-                        id: dev,
-                        action: "punch",
-                        data: p1,
+                    this.listener.onPeripheralEvent(dev, {
+                        type: "punch",
+                        char: p1,
                     });
                 }
                 break;
             case DeviceID.DEV_ID_PC04:
                 if (action == 1) {
-                    this.listener.onPeripheralEvent({
-                        id: DeviceID.DEV_ID_PC04,
-                        action: "readerPos",
-                        data: p1,
+                    this.listener.onPeripheralEvent(DeviceID.DEV_ID_PC04, {
+                        type: "readerPos",
+                        pos: p1,
                     });
                 } else if (action == 2) {
-                    this.listener.onPeripheralEvent({
-                        id: DeviceID.DEV_ID_PC04,
-                        action: "punch",
-                        data: p1,
+                    this.listener.onPeripheralEvent(DeviceID.DEV_ID_PC04, {
+                        type: "punch",
+                        char: p1,
                     });
                 }
                 break;
@@ -240,10 +233,9 @@ export class WasmBackend implements Backend {
                         normalizedPosition: ((status & 0xFFFF0000) >> 16) / 1000,
                     };
                     if (p1 == 7) {
-                        this.listener.onPeripheralEvent({
-                            id: DeviceID.DEV_ID_TC08,
-                            action: "status",
-                            data: this.tapeStatus,
+                        this.listener.onPeripheralEvent(DeviceID.DEV_ID_TC08, {
+                            type: "tapeStates",
+                            states: this.tapeStatus,
                         });
                     }
                 }

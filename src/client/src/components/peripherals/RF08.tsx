@@ -17,5 +17,5 @@
  */
 
 export function RF08() {
-    return <section></section>;
+    return <></>;
 }

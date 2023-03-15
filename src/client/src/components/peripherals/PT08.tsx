@@ -18,7 +18,7 @@
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Container, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, Switch, Typography } from "@mui/material";
-import React, { useCallback, useState } from "react";
+import { ChangeEvent, useCallback, useRef, useState } from "react";
 import Keyboard from "react-simple-keyboard";
 import "react-simple-keyboard/build/css/index.css";
 import { Terminal } from "xterm";
@@ -191,7 +191,7 @@ function TerminalBox(props: PT08Props) {
 };
 
 function ReaderBox(props: PT08Props) {
-    const tapeInput = React.useRef<HTMLInputElement>(null);
+    const tapeInput = useRef<HTMLInputElement>(null);
 
     return (
         <Box mt={2}>
@@ -214,7 +214,7 @@ function ReaderBox(props: PT08Props) {
     );
 }
 
-function onLoadFile(evt: React.ChangeEvent, props: PT08Props): void {
+function onLoadFile(evt: ChangeEvent, props: PT08Props): void {
     const target = evt.target as HTMLInputElement;
     if (!target.files || target.files.length < 1) {
         return;
@@ -237,7 +237,7 @@ function PunchBox(props: PT08Props) {
                     <Button variant='outlined' color='primary' onClick={() => props.onPunchClear()}>New Tape</Button>
                 </FormControl>
                 <FormControl>
-                    <Button variant='outlined' color='primary' onClick={() => downloadData(Uint8Array.from(punchTape.buffer), "punch.bin")}>Download Tape</Button>
+                    <Button variant='outlined' color='primary' onClick={() => void downloadData(Uint8Array.from(punchTape.buffer), "punch.bin")}>Download Tape</Button>
                 </FormControl>
                 <FormControl>
                     <Button variant='outlined' color='primary' onClick={() => props.onPunchLeader()}>Leader</Button>

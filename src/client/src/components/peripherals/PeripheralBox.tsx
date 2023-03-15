@@ -16,7 +16,9 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import React from "react";
+import { Box, Card, CardContent, CardHeader } from "@mui/material";
+import { ReactNode } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import { DF32Model } from "../../models/peripherals/DF32Model";
 import { KW8IModel } from "../../models/peripherals/KW8IModel";
 import { PC04Model } from "../../models/peripherals/PC04Model";
@@ -32,9 +34,6 @@ import { PT08 } from "../peripherals/PT08";
 import { RF08 } from "../peripherals/RF08";
 import { RK8 } from "../peripherals/RK8";
 import { TC08 } from "../peripherals/TC08";
-
-import { Box, Card, CardContent, CardHeader } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
 
 export function PeripheralBox(props: {model: PeripheralModel}) {
     const model = props.model;
@@ -67,19 +66,19 @@ function PT08Box(props: {model: PT08Model}) {
         <CaptionBox name='Serial Line' model={model}>
             <PT08
                 conf={model.config}
-                onConfigChange={conf => model.updateConfig(conf)}
+                onConfigChange={conf => void model.updateConfig(conf)}
 
                 readerActive={readerActive}
                 readerTape={model.readerTape}
-                onReaderTapeLoad={tape => model.loadTape(tape)}
-                onReaderActivationChange={active => model.setReaderActive(active)}
+                onReaderTapeLoad={tape => void model.loadTape(tape)}
+                onReaderActivationChange={active => void model.setReaderActive(active)}
 
                 punchActive={punchActive}
                 punchTape={model.punchTape}
-                onPunchActivationChange={active => model.setPunchActive(active)}
+                onPunchActivationChange={active => void model.setPunchActive(active)}
                 onPunchClear={() => model.clearPunch()}
                 onPunchLeader={() => model.addPunchLeader()}
-                onKeyboard={key => model.onRawKey(key)}
+                onKeyboard={key => void model.onRawKey(key)}
 
                 terminal={model.terminal}
             />
@@ -96,16 +95,16 @@ function PC04Box(props: {model: PC04Model}) {
         <CaptionBox name='PC04 High-Speed Paper-Tape Reader and Punch' model={model}>
             <PC04
                 conf={model.config}
-                onConfigChange={(conf) => model.updateConfig(conf)}
+                onConfigChange={(conf) => void model.updateConfig(conf)}
 
                 readerActive={readerActive}
                 readerTape={model.readerTape}
-                onReaderTapeLoad={tape => model.loadTape(tape)}
-                onReaderActivationChange={active => model.setReaderActive(active)}
+                onReaderTapeLoad={tape => void model.loadTape(tape)}
+                onReaderActivationChange={active => void model.setReaderActive(active)}
 
                 punchActive={punchActive}
                 punchTape={model.punchTape}
-                onPunchActivationChange={active => model.setPunchActive(active)}
+                onPunchActivationChange={active => void model.setPunchActive(active)}
                 onPunchClear={() => model.clearPunch()}
                 onPunchLeader={() => model.addPunchLeader()}
             />
@@ -120,7 +119,7 @@ function TC08Box(props: {model: TC08Model}) {
         <CaptionBox name='TC08 DECtape Control' model={props.model}>
             <TC08
                 tapes={tapes}
-                onTapeLoad={props.model.loadTape}
+                onTapeLoad={(tape, unit) => void props.model.loadTape(tape, unit)}
             />
         </CaptionBox>
     );
@@ -158,7 +157,7 @@ function KW8IBox(props: {model: KW8IModel}) {
     );
 }
 
-function CaptionBox(props: {model: PeripheralModel, name: string, children: React.ReactNode}) {
+function CaptionBox(props: {model: PeripheralModel, name: string, children: ReactNode}) {
     const {model, name, children} = props;
     const titleStr = `${name} @ Bus ${model.connections.map(x => x.toString(8)).join(", ")}`;
     return (

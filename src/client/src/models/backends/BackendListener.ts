@@ -17,12 +17,14 @@
  */
 
 import { ConsoleState } from "../../types/ConsoleTypes";
+import { DeviceID } from "../../types/PeripheralTypes";
+import { PeripheralInAction } from "./PeripheralAction";
 
 export interface BackendListener {
     onConnect(): void;
     onDisconnect(): void;
     onConsoleState(state: ConsoleState): void;
-    onPeripheralEvent(data: any): void;
+    onPeripheralEvent(id: DeviceID, action: PeripheralInAction): void;
     onPerformanceReport(simSpeed: number): void;
-    onStateChange(data: any): void;
+    onStateChange(action: PeripheralInAction): void;
 }
