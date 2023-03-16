@@ -25,17 +25,17 @@ import TuneIcon from "@mui/icons-material/Tune";
 export function NavMenu() {
     return (
         <List component="nav">
-            <ListItemButton component={RouterLink} to='/machines/active'>
-                <ListItemIcon title='Active Machine'><MemoryIcon /></ListItemIcon>
-                <ListItemText primary='Active Machine' />
+            <ListItemButton component={RouterLink} to="/machines/active">
+                <ListItemIcon title="Active Machine"><MemoryIcon /></ListItemIcon>
+                <ListItemText primary="Active Machine" />
             </ListItemButton>
-            <ListItemButton component={RouterLink} to='/machines'>
-                <ListItemIcon title='Manage Machines'><TuneIcon /></ListItemIcon>
-                <ListItemText primary='Manage Machines' />
+            <ListItemButton component={RouterLink} to="/machines">
+                <ListItemIcon title="Manage Machines"><TuneIcon /></ListItemIcon>
+                <ListItemText primary="Manage Machines" />
             </ListItemButton>
-            <ListItemButton component={RouterLink} to='/about'>
-                <ListItemIcon title='About'><InfoIcon /></ListItemIcon>
-                <ListItemText primary='About' />
+            <ListItemButton component={RouterLink} to="/about">
+                <ListItemIcon title="About"><InfoIcon /></ListItemIcon>
+                <ListItemText primary="About" />
             </ListItemButton>
         </List>
     );

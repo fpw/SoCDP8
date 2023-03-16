@@ -42,13 +42,13 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
 
     return (
         <Box mb={4}>
-            <Card variant='outlined'>
-                <CardHeader title='PDP-8/I' />
+            <Card variant="outlined">
+                <CardHeader title="PDP-8/I" />
                 <CardMedia>
                     <FrontPanel pdp8={props.pdp8} />
                 </CardMedia>
                 <CardActions>
-                    <ButtonGroup color='primary' variant='outlined'>
+                    <ButtonGroup color="primary" variant="outlined">
                         <Button onClick={() => void saveState()} disabled={busy}>
                             Save State
                         </Button>

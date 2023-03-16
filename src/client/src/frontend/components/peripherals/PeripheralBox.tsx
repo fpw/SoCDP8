@@ -64,7 +64,7 @@ function PT08Box(props: {model: PT08Model}) {
     const config = model.useState(state => state.conf!);
 
     return (
-        <CaptionBox name='Serial Line' model={model}>
+        <CaptionBox name="Serial Line" model={model}>
             <PT08
                 conf={config}
                 onConfigChange={conf => void model.updateConfig(conf)}
@@ -94,7 +94,7 @@ function PC04Box(props: {model: PC04Model}) {
     const config = model.useState(state => state.conf!);
 
     return (
-        <CaptionBox name='PC04 High-Speed Paper-Tape Reader and Punch' model={model}>
+        <CaptionBox name="PC04 High-Speed Paper-Tape Reader and Punch" model={model}>
             <PC04
                 conf={config}
                 onConfigChange={(conf) => void model.updateConfig(conf)}
@@ -119,7 +119,7 @@ function TC08Box(props: {model: TC08Model}) {
     const numTUs = props.model.useState(state => state.numTUs);
 
     return (
-        <CaptionBox name='TC08 DECtape Control' model={props.model}>
+        <CaptionBox name="TC08 DECtape Control" model={props.model}>
             <TC08
                 tapes={tapes}
                 numTUs={numTUs}
@@ -131,7 +131,7 @@ function TC08Box(props: {model: TC08Model}) {
 
 function RF08Box(props: {model: RF08Model}) {
     return (
-        <CaptionBox name='RF08 Disk Control' model={props.model}>
+        <CaptionBox name="RF08 Disk Control" model={props.model}>
             <RF08 />
         </CaptionBox>
     );
@@ -139,7 +139,7 @@ function RF08Box(props: {model: RF08Model}) {
 
 function DF32Box(props: {model: DF32Model}) {
     return (
-        <CaptionBox name='DF32 Disk Control' model={props.model}>
+        <CaptionBox name="DF32 Disk Control" model={props.model}>
             <DF32 />
         </CaptionBox>
     );
@@ -147,7 +147,7 @@ function DF32Box(props: {model: DF32Model}) {
 
 function RK8Box(props: {model: RK8Model}) {
     return (
-        <CaptionBox name='RK8 Disk Control' model={props.model}>
+        <CaptionBox name="RK8 Disk Control" model={props.model}>
             <RK8 />
         </CaptionBox>
     );
@@ -155,7 +155,7 @@ function RK8Box(props: {model: RK8Model}) {
 
 function KW8IBox(props: {model: KW8IModel}) {
     return (
-        <CaptionBox name='KW8I Real Time Clock' model={props.model}>
+        <CaptionBox name="KW8I Real Time Clock" model={props.model}>
             <KW8I />
         </CaptionBox>
     );
@@ -166,7 +166,7 @@ function CaptionBox(props: {model: PeripheralModel, name: string, children: Reac
     const titleStr = `${name} @ Bus ${model.connections.map(x => x.toString(8)).join(", ")}`;
     return (
         <Box mb={4}>
-            <Card variant='outlined'>
+            <Card variant="outlined">
                 <CardHeader component={RouterLink} to={`/peripherals/${model.id}`} title={titleStr} />
                 <CardContent>
                     { children }

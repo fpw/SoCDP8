@@ -63,7 +63,7 @@ export function FrontPanel(props: FrontPanelProps) {
     }), [lamps, switches, svgRoot, props.pdp8]);
 
     return (
-        <object ref={svgRef} type="image/svg+xml" data='/img/front_panel.svg'>
+        <object ref={svgRef} type="image/svg+xml" data="/img/front_panel.svg">
         </object>
     );
 };

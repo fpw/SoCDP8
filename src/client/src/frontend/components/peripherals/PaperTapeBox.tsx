@@ -47,7 +47,7 @@ function TapeBar(props: PaperTapeBoxProps) {
         progress = Math.round(tapePos / tapeLen * 100);
     }
 
-    return <ProgressBar variant='determinate' value={progress} />;
+    return <ProgressBar variant="determinate" value={progress} />;
 }
 
 function Tape(props: PaperTapeBoxProps) {

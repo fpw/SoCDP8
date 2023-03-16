@@ -78,19 +78,19 @@ function ReaderBox(props: PC04Props) {
 
     return (
         <Box mt={2}>
-            <Typography component='h6' variant='h6'>Reader</Typography>
+            <Typography component="h6" variant="h6">Reader</Typography>
 
             <PaperTapeBox tape={props.readerTape} reverse={false} />
 
             <FormGroup row>
                 <FormControl>
-                    <input ref={tapeInput} type='file' onChange={evt => onLoadFile(evt, props)} hidden/>
-                    <Button variant='outlined' color='primary' onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
+                    <input ref={tapeInput} type="file" onChange={evt => onLoadFile(evt, props)} hidden/>
+                    <Button variant="outlined" color="primary" onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
                 </FormControl>
                 <FormControlLabel
                     control={<Switch onChange={(evt: ChangeEvent<HTMLInputElement>) => props.onReaderActivationChange(evt.target.checked)} checked={props.readerActive} />}
-                    labelPlacement='start'
-                    label='Reader On'
+                    labelPlacement="start"
+                    label="Reader On"
                 />
             </FormGroup>
         </Box>
@@ -114,24 +114,24 @@ function PunchBox(props: PC04Props) {
 
     return (
         <Box mt={2}>
-            <Typography component='h6' variant='h6'>Punch</Typography>
+            <Typography component="h6" variant="h6">Punch</Typography>
 
             <PaperTapeBox tape={props.punchTape} reverse={true} />
 
             <FormGroup row>
                 <FormControl>
-                    <Button variant='outlined' color='primary' onClick={() => props.onPunchClear()}>New Tape</Button>
+                    <Button variant="outlined" color="primary" onClick={() => props.onPunchClear()}>New Tape</Button>
                 </FormControl>
                 <FormControl>
-                    <Button variant='outlined' color='primary' onClick={() => void download()}>Download Tape</Button>
+                    <Button variant="outlined" color="primary" onClick={() => void download()}>Download Tape</Button>
                 </FormControl>
                 <FormControl>
-                    <Button variant='outlined' color='primary' onClick={() => props.onPunchLeader()}>Leader</Button>
+                    <Button variant="outlined" color="primary" onClick={() => props.onPunchLeader()}>Leader</Button>
                 </FormControl>
                 <FormControlLabel
                     control={<Switch onChange={evt => props.onPunchActivationChange(evt.target.checked)} checked={props.punchActive} />}
-                    labelPlacement='start'
-                    label='Punch On'
+                    labelPlacement="start"
+                    label="Punch On"
                 />
             </FormGroup>
         </Box>

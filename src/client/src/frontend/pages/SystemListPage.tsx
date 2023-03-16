@@ -43,14 +43,14 @@ export function SystemListPage(props: SystemManagerProps) {
 
     return (
         <section>
-            <Typography component='h1' variant='h4' gutterBottom>Manage Systems</Typography>
+            <Typography component="h1" variant="h4" gutterBottom>Manage Systems</Typography>
 
             <Accordion expanded={open} onChange={() => setOpen(!open)}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography variant='body1'>New System</Typography>
+                    <Typography variant="body1">New System</Typography>
                 </AccordionSummary>
                 <AccordionDetails>
-                    <Box width='75%' pl={4}>
+                    <Box width="75%" pl={4}>
                         <SystemForm
                             initialState={getDefaultSysConf()}
                             onSubmit={s => void addSystem(s)}
@@ -134,7 +134,7 @@ function SystemEntry(props: {pdp8: SoCDP8, system: SystemConfiguration, active: 
                 </ul>
             </TableCell>
             <TableCell>
-                <ButtonGroup variant='outlined' orientation='vertical'>
+                <ButtonGroup variant="outlined" orientation="vertical">
                     <Button disabled={busy} onClick={() => void activate()}>
                         Activate
                     </Button>

@@ -43,80 +43,80 @@ export function SystemForm(props: SystemFormProps) {
     const peripherals: DeviceID[] = s.peripherals.map(p => p.id);
 
     return (
-        <form autoComplete='off' onSubmit={(ev) => props.onSubmit(toSystemConf(ev))}>
+        <form autoComplete="off" onSubmit={(ev) => props.onSubmit(toSystemConf(ev))}>
             <FormGroup>
-                <FormControl component='fieldset'>
-                    <FormLabel component='legend'>System Name</FormLabel>
-                    <TextField required name='name' label='Name' variant='outlined' />
+                <FormControl component="fieldset">
+                    <FormLabel component="legend">System Name</FormLabel>
+                    <TextField required name="name" label="Name" variant="outlined" />
                 </FormControl>
 
-                <FormControl component='fieldset'>
-                    <FormLabel component='legend'>CPU Extensions</FormLabel>
-                    <FormControlLabel control={<Switch name='eae' color='primary' defaultChecked={s.cpuExtensions.eae} />} label='KE8/I (EAE)' />
-                    <FormControlLabel control={<Switch name='kt8i' color='primary' defaultChecked={s.cpuExtensions.kt8i} />} label='KT8/I (Time Sharing Option)' />
+                <FormControl component="fieldset">
+                    <FormLabel component="legend">CPU Extensions</FormLabel>
+                    <FormControlLabel control={<Switch name="eae" color="primary" defaultChecked={s.cpuExtensions.eae} />} label="KE8/I (EAE)" />
+                    <FormControlLabel control={<Switch name="kt8i" color="primary" defaultChecked={s.cpuExtensions.kt8i} />} label="KT8/I (Time Sharing Option)" />
                 </FormControl>
 
-                <FormControl component='fieldset'>
-                    <FormLabel component='legend'>Core Memory (kiW)</FormLabel>
+                <FormControl component="fieldset">
+                    <FormLabel component="legend">Core Memory (kiW)</FormLabel>
                     <Slider
                         defaultValue={s.maxMemField}
-                        valueLabelDisplay='off'
+                        valueLabelDisplay="off"
                         step={1}
                         min={0}
                         max={7}
                         marks={coreMemoryMarks}
-                        name='maxMemField'
+                        name="maxMemField"
                     />
                 </FormControl>
 
-                <FormControl component='fieldset'>
-                    <FormLabel component='legend'>Basic I/O</FormLabel>
+                <FormControl component="fieldset">
+                    <FormLabel component="legend">Basic I/O</FormLabel>
                     <FormControlLabel control={
-                        <Switch name='serialLine' color='primary' defaultChecked={peripherals.includes(DeviceID.DEV_ID_PT08) } />
-                    } label='Serial Current Loop' />
+                        <Switch name="serialLine" color="primary" defaultChecked={peripherals.includes(DeviceID.DEV_ID_PT08) } />
+                    } label="Serial Current Loop" />
                     <FormControlLabel control={
-                        <Switch name='pc04' color='primary' defaultChecked={peripherals.includes(DeviceID.DEV_ID_PC04)} />
-                    } label='PC04 Reader / Punch' />
+                        <Switch name="pc04" color="primary" defaultChecked={peripherals.includes(DeviceID.DEV_ID_PC04)} />
+                    } label="PC04 Reader / Punch" />
                 </FormControl>
 
-                <FormControl component='fieldset'>
-                    <FormLabel component='legend'>DECtape</FormLabel>
+                <FormControl component="fieldset">
+                    <FormLabel component="legend">DECtape</FormLabel>
                     <FormControlLabel control={
-                        <Switch name='tc08' color='primary' defaultChecked={peripherals.includes(DeviceID.DEV_ID_TC08)} />
-                    } label='TC08 DECtape Controller' />
+                        <Switch name="tc08" color="primary" defaultChecked={peripherals.includes(DeviceID.DEV_ID_TC08)} />
+                    } label="TC08 DECtape Controller" />
                 </FormControl>
 
-                <FormControl component='fieldset'>
-                    <FormLabel component='legend'>Hard Disk</FormLabel>
-                    <RadioGroup name='disk' defaultValue={DeviceID[getDiskType(s.peripherals)]} row>
-                        <FormControlLabel value={DeviceID[DeviceID.DEV_ID_NULL]} control={<Radio />} label='None' />
-                        <FormControlLabel value={DeviceID[DeviceID.DEV_ID_DF32]} control={<Radio />} label='DF32' />
-                        <FormControlLabel value={DeviceID[DeviceID.DEV_ID_RF08]} control={<Radio />} label='RF08' />
-                        <FormControlLabel value={DeviceID[DeviceID.DEV_ID_RK8]} control={<Radio />} label='RK8' />
+                <FormControl component="fieldset">
+                    <FormLabel component="legend">Hard Disk</FormLabel>
+                    <RadioGroup name="disk" defaultValue={DeviceID[getDiskType(s.peripherals)]} row>
+                        <FormControlLabel value={DeviceID[DeviceID.DEV_ID_NULL]} control={<Radio />} label="None" />
+                        <FormControlLabel value={DeviceID[DeviceID.DEV_ID_DF32]} control={<Radio />} label="DF32" />
+                        <FormControlLabel value={DeviceID[DeviceID.DEV_ID_RF08]} control={<Radio />} label="RF08" />
+                        <FormControlLabel value={DeviceID[DeviceID.DEV_ID_RK8]} control={<Radio />} label="RK8" />
                     </RadioGroup>
                 </FormControl>
 
-                <FormControl component='fieldset'>
-                    <FormLabel component='legend'>Additional PT08 Serial Ports</FormLabel>
+                <FormControl component="fieldset">
+                    <FormLabel component="legend">Additional PT08 Serial Ports</FormLabel>
                     <Slider
                         defaultValue={countPT08(s.peripherals)}
-                        valueLabelDisplay='off'
+                        valueLabelDisplay="off"
                         step={1}
                         min={0}
                         max={4}
                         marks={pt08Marks}
-                        name='pt08'
+                        name="pt08"
                     />
                 </FormControl>
 
-                <FormControl component='fieldset'>
-                    <FormLabel component='legend'>Real-Time Clock</FormLabel>
+                <FormControl component="fieldset">
+                    <FormLabel component="legend">Real-Time Clock</FormLabel>
                     <FormControlLabel control={
-                        <Switch name='kw8i' color='primary'defaultChecked={peripherals.includes(DeviceID.DEV_ID_KW8I)} />
-                    } label='KW8/I' />
+                        <Switch name="kw8i" color="primary"defaultChecked={peripherals.includes(DeviceID.DEV_ID_KW8I)} />
+                    } label="KW8/I" />
                 </FormControl>
             </FormGroup>
-            <Button type='submit' variant='contained' color='primary' disabled={!props.buttonEnabled}>
+            <Button type="submit" variant="contained" color="primary" disabled={!props.buttonEnabled}>
                 Create System
             </Button>
         </form>

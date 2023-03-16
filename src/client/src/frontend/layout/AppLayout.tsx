@@ -41,7 +41,7 @@ export function AppLayout(props: {pdp8: SoCDP8}) {
     return (<>
         <CssBaseline />
         <Box sx={{display: "flex"}}>
-            <AppBar position='absolute' open={drawerOpen}>
+            <AppBar position="absolute" open={drawerOpen}>
                 <Toolbar sx={{pr: "24px"}}>
                     <IconButton
                         sx={{marginRight: "36px", ...(drawerOpen && {display: "none"})}}
@@ -52,14 +52,14 @@ export function AppLayout(props: {pdp8: SoCDP8}) {
                     >
                         <MenuIcon />
                     </IconButton>
-                    <Typography component='h1' variant='h6' color='inherit' noWrap sx={{flexGrow: 1}}>
+                    <Typography component="h1" variant="h6" color="inherit" noWrap sx={{flexGrow: 1}}>
                         <Link color="inherit" underline="none" component={RouterLink} to="/">
                             SoCDP-8
                         </Link>
                     </Typography>
                 </Toolbar>
             </AppBar>
-            <Drawer variant='permanent' open={drawerOpen}>
+            <Drawer variant="permanent" open={drawerOpen}>
                 <Toolbar
                     sx={{
                         display: "flex",
@@ -85,7 +85,7 @@ export function AppLayout(props: {pdp8: SoCDP8}) {
                 }}
             >
                 <Toolbar />
-                <Container maxWidth='lg' sx={{mt: 4}}>
+                <Container maxWidth="lg" sx={{mt: 4}}>
                     <Outlet />
                 </Container>
                 <Copyright />
@@ -97,8 +97,8 @@ export function AppLayout(props: {pdp8: SoCDP8}) {
 function ConnectingInfo() {
     return (
         <main>
-            <Container maxWidth='lg'>
-                <Typography component='h1' variant='h2'>
+            <Container maxWidth="lg">
+                <Typography component="h1" variant="h2">
                     Connecting...
                 </Typography>
                 <p>
@@ -113,7 +113,7 @@ function ConnectingInfo() {
 function Copyright() {
     return (
         <Box pt={4}>
-            <Typography variant='body2' color='textSecondary' align='center'>
+            <Typography variant="body2" color="textSecondary" align="center">
                 Copyright © Folke Will, 2021
             </Typography>
         </Box>

@@ -33,7 +33,7 @@ export function SystemPage(props: SystemProps) {
 
     return (
         <>
-            <Typography component='h1' variant='h4' gutterBottom>
+            <Typography component="h1" variant="h4" gutterBottom>
                 System: {sys.name}
             </Typography>
 

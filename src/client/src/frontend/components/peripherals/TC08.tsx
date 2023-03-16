@@ -34,11 +34,11 @@ export function TC08(props: TC08Props) {
 
     return (
         <Box>
-            <ButtonGroup variant='outlined' color='primary'>
+            <ButtonGroup variant="outlined" color="primary">
                 {Array.from({length: props.numTUs}).map((_x, i) =>
                     <Button key={i} component="label">
                         Load {i}
-                        <input type='file' onChange={evt => onLoadFile(evt, props, i)} hidden />
+                        <input type="file" onChange={evt => onLoadFile(evt, props, i)} hidden />
                     </Button>
                 )}
             </ButtonGroup>
