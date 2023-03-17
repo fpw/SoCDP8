@@ -26,6 +26,7 @@ export interface SystemConfiguration {
     cpuExtensions: {
         eae: boolean;
         kt8i: boolean;
+        bsw: boolean;
     }
 
     maxMemField: number;
@@ -42,6 +43,7 @@ export function getDefaultSysConf(): SystemConfiguration {
         cpuExtensions: {
             eae: true,
             kt8i: false,
+            bsw: false,
         },
         peripherals: [
             {

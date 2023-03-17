@@ -192,6 +192,10 @@ export class SoCDP8 {
         await this.backend.setPanelSwitch(sw, state);
     }
 
+    public async setThrottleControl(control: boolean) {
+        await this.backend.setThrottleControl(control);
+    }
+
     public async createNewSystem(state: SystemConfiguration): Promise<void> {
         return await this.backend.createSystem(state);
     }

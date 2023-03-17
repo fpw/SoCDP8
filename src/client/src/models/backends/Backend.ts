@@ -32,6 +32,7 @@ export interface Backend {
     createSystem(state: SystemConfiguration): Promise<void>;
 
     setPanelSwitch(sw: string, state: boolean): Promise<void>;
+    setThrottleControl(control: boolean): Promise<void>;
 
     clearCore(): Promise<void>;
     writeCore(addr: number, fragment: number[]): Promise<void>;

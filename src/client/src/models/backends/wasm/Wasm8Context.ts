@@ -35,6 +35,7 @@ interface Wasm8Calls {
     getLampsOut(ctx: number): number;
     getConsoleIn(ctx: number): number;
     peripheralAction(ctx: number, id: number, ev: number, p1: number, p2: number): void;
+    setThrottle(ctx: number, throttle: number): void;
     destroy(ctx: number): void;
 
     readPointer(ptr: number, type: string): number;
@@ -71,6 +72,7 @@ export class Wasm8Context {
             getConsoleOut: inst.cwrap("pdp8_get_console_out", "number", ["number"]),
             getLampsOut: inst.cwrap("pdp8_get_lamps_out", "number", ["number"]),
             peripheralAction: inst.cwrap("pdp8_peripheral_action", null, ["number", "number", "number", "number"]),
+            setThrottle: inst.cwrap("pdp8_set_throttle", null, ["number", "number"]),
             destroy: inst.cwrap("pdp8_destroy", null, ["number"]),
 
             readPointer: inst.getValue,
@@ -85,6 +87,14 @@ export class Wasm8Context {
         this.consoleIn = this.calls.getConsoleIn(this.ctx);
         this.consoleOut = this.calls.getConsoleOut(this.ctx);
         this.lampsOut = this.calls.getLampsOut(this.ctx);
+    }
+
+    public setThrottle(throttle: number) {
+        if (!this.calls || !this.ctx) {
+            throw Error("Not created");
+        }
+
+        this.calls.setThrottle(this.ctx, throttle);
     }
 
     public setSwitch(sw: string, state: boolean) {

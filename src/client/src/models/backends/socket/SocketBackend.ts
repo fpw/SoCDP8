@@ -119,6 +119,9 @@ export class SocketBackend implements Backend {
         });
     }
 
+    public async setThrottleControl(control: boolean): Promise<void> {
+    }
+
     public async setPanelSwitch(sw: string, state: boolean): Promise<void> {
         this.socket.emit("console-switch", {"switch": sw, "state": state});
     }
