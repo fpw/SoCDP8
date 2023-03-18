@@ -113,7 +113,7 @@ function ConnectingInfo() {
 function Copyright() {
     return (
         <Typography variant="body2" color="textSecondary" align="center">
-            Copyright © Folke Will, 2023
+            Copyright © <Link component={RouterLink} to="https://github.com/fpw/socdp8" target="_blank">Folke Will</Link>, 2023
         </Typography>
     );
 }

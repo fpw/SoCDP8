@@ -19,7 +19,7 @@
 import { Box } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { PaperTape } from "../../../models/PaperTape";
-import { ProgressBar } from "../ProgressBar";
+import { ProgressBar } from "./ProgressBar";
 
 export interface PaperTapeBoxProps {
     tape: PaperTape;

@@ -41,7 +41,7 @@ export function getDefaultSysConf(): SystemConfiguration {
         description: "",
         maxMemField: 7,
         cpuExtensions: {
-            eae: true,
+            eae: false,
             kt8i: false,
             bsw: false,
         },

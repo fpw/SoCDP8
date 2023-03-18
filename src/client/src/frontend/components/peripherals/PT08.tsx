@@ -26,7 +26,7 @@ import "xterm/css/xterm.css";
 import { PaperTape } from "../../../models/PaperTape";
 import { BaudRate, BAUD_RATES, PT08Configuration } from "../../../types/PeripheralTypes";
 import { downloadData } from "../../../util";
-import { PaperTapeBox } from "./PaperTapeBox";
+import { PaperTapeBox } from "../common/PaperTapeBox";
 
 export interface PT08Props {
     conf: PT08Configuration;

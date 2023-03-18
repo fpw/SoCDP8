@@ -172,7 +172,8 @@ class TU56Painter {
         const selH = 0.8 * h;
         ctx.fillRect(selLeft, selTop, selW, selH);
 
-        ctx.font = `bold ${w / 35}px sans-serif`;
+        ctx.font = `bold ${w / 40}px sans-serif`;
+        ctx.textBaseline = "middle";
         ctx.fillStyle = "black";
         ctx.textAlign = "center";
         ctx.fillText("WRITE", writeLeft + writeW / 2, writeTop + writeH / 2, writeW);

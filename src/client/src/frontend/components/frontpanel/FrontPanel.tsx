@@ -176,25 +176,14 @@ function setLampRowBrightnesses(id: string, values: number[], lamps: Record<stri
     }
 }
 
-function setLampBrightness(id: string, brightness: number, lamps: Record<string, SVGSVGElement>): void {
+function setLampBrightness(id: string, rawBright: number, lamps: Record<string, SVGSVGElement>): void {
     const elem = lamps[id];
+    const brightness = rawBright / 15;
 
-    const fromR = 0x22;
-    const fromG = 0x22;
-    const fromB = 0x22;
+    const minLight = 7;
+    const lightness = minLight + brightness * (50 - minLight);
 
-    const toR = 0xDA;
-    const toG = 0xD1;
-    const toB = 0x03;
-
-    const f = brightness / 15;
-    const grad = f;
-
-    const r = fromR + grad * (toR - fromR);
-    const g = fromG + grad * (toG - fromG);
-    const b = fromB + grad * (toB - fromB);
-
-    elem.style.fill = `rgb(${r}, ${g}, ${b})`;
+    elem.style.fill = `hsl(35, 100%, ${lightness.toFixed(0)}%)`;
 }
 
 function setSwitchRow(id: string, width: number, value: number, switches: Record<string, SVGSVGElement>, svg: SVGSVGElement): void {

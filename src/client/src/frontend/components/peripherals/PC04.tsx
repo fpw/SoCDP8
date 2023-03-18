@@ -21,7 +21,7 @@ import { ChangeEvent, useRef } from "react";
 import { PaperTape } from "../../../models/PaperTape";
 import { BaudRate, BAUD_RATES, PC04Configuration } from "../../../types/PeripheralTypes";
 import { downloadData } from "../../../util";
-import { PaperTapeBox } from "./PaperTapeBox";
+import { PaperTapeBox } from "../common/PaperTapeBox";
 
 export interface PC04Props {
     conf: PC04Configuration;
