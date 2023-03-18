@@ -16,7 +16,8 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box, Card, CardContent, CardHeader } from "@mui/material";
+import FullscreenIcon from "@mui/icons-material/Fullscreen";
+import { Box, Card, CardContent, CardHeader, IconButton } from "@mui/material";
 import { ReactNode } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { DF32Model } from "../../../models/peripherals/DF32Model";
@@ -167,7 +168,11 @@ function CaptionBox(props: {model: PeripheralModel, name: string, children: Reac
     return (
         <Box mb={4}>
             <Card variant="outlined">
-                <CardHeader component={RouterLink} to={`/peripherals/${model.id}`} title={titleStr} />
+                <CardHeader title={titleStr} action={
+                    <IconButton component={RouterLink} to={`/peripherals/${model.id}`} title="Display only this">
+                        <FullscreenIcon />
+                    </IconButton>
+                }/>
                 <CardContent>
                     { children }
                 </CardContent>

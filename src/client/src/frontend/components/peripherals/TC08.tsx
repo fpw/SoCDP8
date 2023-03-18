@@ -43,10 +43,10 @@ export function TC08(props: TC08Props) {
                 )}
             </ButtonGroup>
 
-            {n > 0 && <TU56 left={tapes[0]} right={tapes[1]} /> }
-            {n > 2 && <TU56 left={tapes[2]} right={tapes[3]} /> }
-            {n > 4 && <TU56 left={tapes[4]} right={tapes[5]} /> }
-            {n > 6 && <TU56 left={tapes[6]} right={tapes[7]} /> }
+            {n > 0 && <TU56 left={tapes[0]} right={tapes[1]} address={0} /> }
+            {n > 2 && <TU56 left={tapes[2]} right={tapes[3]} address={2} /> }
+            {n > 4 && <TU56 left={tapes[4]} right={tapes[5]} address={4} /> }
+            {n > 6 && <TU56 left={tapes[6]} right={tapes[7]} address={6} /> }
         </Box>
     );
 }

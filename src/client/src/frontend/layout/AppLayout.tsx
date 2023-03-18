@@ -112,10 +112,8 @@ function ConnectingInfo() {
 
 function Copyright() {
     return (
-        <Box pt={4}>
-            <Typography variant="body2" color="textSecondary" align="center">
-                Copyright © Folke Will, 2021
-            </Typography>
-        </Box>
+        <Typography variant="body2" color="textSecondary" align="center">
+            Copyright © Folke Will, 2023
+        </Typography>
     );
 }

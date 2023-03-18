@@ -27,7 +27,7 @@ export interface FrontPanelProps {
 }
 
 export function FrontPanel(props: FrontPanelProps) {
-    const [svgRoot, setSVGRoot] = useState<SVGSVGElement | null>(null);
+    const [svgRoot, setSVGRoot] = useState<SVGSVGElement>();
     const [lamps, setLamps] = useState<Record<string, SVGSVGElement>>({});
     const [switches, setSwitches] = useState<Record<string, SVGSVGElement>>({});
 
@@ -62,10 +62,7 @@ export function FrontPanel(props: FrontPanelProps) {
         updateSwitches(state.frontPanel.switches, switches, svgRoot);
     }), [lamps, switches, svgRoot, props.pdp8]);
 
-    return (
-        <object ref={svgRef} type="image/svg+xml" data="/img/front_panel.svg">
-        </object>
-    );
+    return <object ref={svgRef} type="image/svg+xml" data="/img/front_panel.svg">PDP-8/I Panel</object>;
 };
 
 function findElements(svg: SVGSVGElement): [Record<string, SVGSVGElement>, Record<string, SVGSVGElement>] {
@@ -182,29 +179,22 @@ function setLampRowBrightnesses(id: string, values: number[], lamps: Record<stri
 function setLampBrightness(id: string, brightness: number, lamps: Record<string, SVGSVGElement>): void {
     const elem = lamps[id];
 
-    if (elem) {
-        let fill: string;
-        switch (brightness) {
-            case 0:  fill = "#222222"; break;
-            case 1:  fill = "#646001"; break;
-            case 2:  fill = "#6d6801"; break;
-            case 3:  fill = "#757001"; break;
-            case 4:  fill = "#7e7901"; break;
-            case 5:  fill = "#878101"; break;
-            case 6:  fill = "#8f8901"; break;
-            case 7:  fill = "#989202"; break;
-            case 8:  fill = "#a19a02"; break;
-            case 9:  fill = "#aaa302"; break;
-            case 10: fill = "#b2ab02"; break;
-            case 11: fill = "#bbb302"; break;
-            case 12: fill = "#c4bc02"; break;
-            case 13: fill = "#ccc402"; break;
-            case 14: fill = "#d5cc02"; break;
-            case 15: fill = "#dad103"; break;
-            default: fill = "red";
-        }
-        elem.style.fill = fill;
-    }
+    const fromR = 0x22;
+    const fromG = 0x22;
+    const fromB = 0x22;
+
+    const toR = 0xDA;
+    const toG = 0xD1;
+    const toB = 0x03;
+
+    const f = brightness / 15;
+    const grad = f;
+
+    const r = fromR + grad * (toR - fromR);
+    const g = fromG + grad * (toG - fromG);
+    const b = fromB + grad * (toB - fromB);
+
+    elem.style.fill = `rgb(${r}, ${g}, ${b})`;
 }
 
 function setSwitchRow(id: string, width: number, value: number, switches: Record<string, SVGSVGElement>, svg: SVGSVGElement): void {

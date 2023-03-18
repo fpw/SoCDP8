@@ -33,7 +33,7 @@ export class WasmBackend implements Backend {
     private systems: SystemConfiguration[] = [
         {
             id: "default",
-            name: "default",
+            name: "WASM-8",
             description: "default",
             maxMemField: 7,
             cpuExtensions: {
@@ -101,7 +101,7 @@ export class WasmBackend implements Backend {
 
         const updateConsole = () => {
             listener.onConsoleState(this.pdp8.getConsoleState());
-            requestAnimationFrame(updateConsole);
+            setTimeout(updateConsole, 15);
         }
         updateConsole();
     }

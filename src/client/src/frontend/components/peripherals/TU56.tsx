@@ -20,12 +20,13 @@ import { useState, useCallback, useEffect } from "react";
 import { DECTape, TapeState } from "../../../models/DECTape";
 
 export interface TU56Props {
+    address: number;
     left: DECTape;
     right: DECTape;
 }
 
 export function TU56(props: TU56Props) {
-    const [painter] = useState<TU56Painter>(new TU56Painter());
+    const [painter] = useState<TU56Painter>(new TU56Painter(props.address));
 
     const canvasRef = useCallback((canvasRef: HTMLCanvasElement) => {
         if (!canvasRef) {
@@ -37,6 +38,7 @@ export function TU56(props: TU56Props) {
             canvas.width = canvas.parentElement.scrollWidth;
             canvas.height = canvas.width * 0.5;
         }
+
         painter.setCanvas(canvas);
     }, [painter]);
 
@@ -75,14 +77,19 @@ class TU56Painter {
     private readonly HEAD_BOTTOM_Y  = 0.30;
     private readonly MIL            = 0.0015;
 
+    private address: number;
     private canvas?: HTMLCanvasElement;
     private leftTape?: TapeState;
     private rightTape?: TapeState;
     private stopped: boolean = false;
 
+    public constructor(addr: number) {
+        this.address = addr;
+    }
+
     public setCanvas(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
-        requestAnimationFrame((t) => this.draw(t));
+        this.draw(performance.now());
     }
 
     public updateLeft(left?: TapeState) {
@@ -116,14 +123,18 @@ class TU56Painter {
         const reelHeight = h * 0.7;
         const reelWidth = reelHeight * 5 / 8;
 
-        this.drawHeader(ctx, 5, 5, 2 * reelWidth - 10, h * 0.3 - 5, this.leftTape);
+        this.drawHeader(ctx, 5, 5, 2 * reelWidth - 10, h * 0.3 - 5, this.address, this.leftTape);
         this.drawSystem(ctx, t, 0, h * 0.35, reelWidth, reelHeight, this.leftTape);
 
-        this.drawHeader(ctx, w - 2 * reelWidth + 5, 5, 2 * reelWidth - 10, h * 0.3 - 5, this.rightTape);
+        this.drawHeader(ctx, w - 2 * reelWidth + 5, 5, 2 * reelWidth - 10, h * 0.3 - 5, this.address + 1, this.rightTape);
         this.drawSystem(ctx, t, w - 2 * reelWidth, h * 0.35, reelWidth, reelHeight, this.rightTape);
 
         if (!this.stopped) {
-            requestAnimationFrame((t) => this.draw(t));
+            if (this.leftTape?.moving || this.rightTape?.moving) {
+                requestAnimationFrame(t => this.draw(t));
+            } else {
+                setTimeout(() => this.draw(performance.now()), 50);
+            }
         }
     }
 
@@ -132,7 +143,7 @@ class TU56Painter {
         this.drawReel(ctx, t, cx + 2 * w - 1, cy, w, h, true, tape);
     }
 
-    private drawHeader(ctx: CanvasRenderingContext2D, cx: number, cy: number, w: number, h: number, tape?: TapeState) {
+    private drawHeader(ctx: CanvasRenderingContext2D, cx: number, cy: number, w: number, h: number, unitNo: number, tape?: TapeState) {
         ctx.strokeStyle = "#FFF";
         ctx.lineWidth = 2;
         ctx.strokeRect(cx, cy, w, h);
@@ -160,6 +171,16 @@ class TU56Painter {
         const selW = 0.1 * w;
         const selH = 0.8 * h;
         ctx.fillRect(selLeft, selTop, selW, selH);
+
+        ctx.font = `bold ${w / 35}px sans-serif`;
+        ctx.fillStyle = "black";
+        ctx.textAlign = "center";
+        ctx.fillText("WRITE", writeLeft + writeW / 2, writeTop + writeH / 2, writeW);
+        ctx.fillText("SELECT", selLeft + selW / 2, selTop + selH / 2, selW);
+
+        ctx.font = `bold ${w / 5}px sans-serif`;
+        ctx.fillStyle = "#ccc";
+        ctx.fillText(`${unitNo}`, cx + w / 2, cy + h / 2);
     }
 
     private drawReel(ctx: CanvasRenderingContext2D, t: number, cx: number, cy: number, w: number, h: number, right: boolean, tape?: TapeState) {

@@ -50,7 +50,6 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
     return (
         <Box mb={4}>
             <Card variant="outlined">
-                <CardHeader title="PDP-8/I" />
                 <CardMedia>
                     <FrontPanel pdp8={props.pdp8} />
                 </CardMedia>

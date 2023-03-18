@@ -183,7 +183,7 @@ export class Wasm8Context {
             throw Error("Not connected");
         }
 
-        return this.calls.readPointer(this.lampsOut + offset, "i8");
+        return this.calls.readPointer(this.lampsOut + offset, "i8") & 0xFF;
     }
 
     private wordToLamps(offset: number, size: number): number[] {
