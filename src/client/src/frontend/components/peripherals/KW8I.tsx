@@ -16,6 +16,26 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-export function KW8I() {
-    return <></>;
+import { FormControlLabel, FormGroup, Switch } from "@mui/material";
+import InputLabel from "@mui/material/InputLabel";
+import MenuItem from "@mui/material/MenuItem";
+import Select from "@mui/material/Select";
+import { KW8IModel } from "../../../models/peripherals/KW8IModel";
+
+export function KW8I(props: {model: KW8IModel}) {
+    const is50 = props.model.useState(state => state.conf.use50Hz);
+    const set50 = props.model.useState(state => state.set50Hz);
+    const isSync = props.model.useState(state => state.conf.useExternalClock);
+    const setSync = props.model.useState(state => state.setSync);
+
+    return (<>
+        <InputLabel id="hz">Frequency</InputLabel>
+        <Select size="small" labelId="hz" value={is50 ? 1 : 0} onChange={ev => ev.target.value == 1 ? set50(true) : set50(false)}>
+            <MenuItem value={0}>60 Hz</MenuItem>
+            <MenuItem value={1}>50 Hz</MenuItem>
+        </Select>
+        <FormGroup>
+            <FormControlLabel control={<Switch checked={isSync} onChange={(_, c) => setSync(c)} />} label="Sync to real clock" />
+        </FormGroup>
+    </>);
 }

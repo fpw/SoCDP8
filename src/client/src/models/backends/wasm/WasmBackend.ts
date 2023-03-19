@@ -83,6 +83,11 @@ export class WasmBackend implements Backend {
                 {
                     id: DeviceID.DEV_ID_RF08,
                 },
+                {
+                    id: DeviceID.DEV_ID_KW8I,
+                    useExternalClock: true,
+                    use50Hz: false,
+                },
             ],
         },
     ];
@@ -296,6 +301,9 @@ export class WasmBackend implements Backend {
                 break;
             case DeviceID.DEV_ID_PC04:
                 this.pdp8.sendPeripheralAction(id, 6, config.baudRate, 0);
+                break;
+            case DeviceID.DEV_ID_KW8I:
+                this.pdp8.sendPeripheralAction(id, 1, (+config.use50Hz << 1) | +config.useExternalClock, 0);
                 break;
         }
     }

@@ -20,18 +20,53 @@ import { PeripheralModel } from "./PeripheralModel";
 import { DeviceID, KW8IConfiguration } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
 import { PeripheralInAction } from "../../types/PeripheralAction";
+import { create } from "zustand";
+import { immer } from "zustand/middleware/immer";
+
+interface KW8IStore {
+    conf: KW8IConfiguration;
+
+    setConf: (conf: KW8IConfiguration) => void;
+    setSync: (sync: boolean) => void;
+    set50Hz: (use50: boolean) => void;
+}
 
 export class KW8IModel extends PeripheralModel {
-    constructor(backend: Backend, private conf: KW8IConfiguration) {
+    private store = create<KW8IStore>()(immer(set => ({
+        conf: { id: 0, use50Hz: false, useExternalClock: true },
+        setConf: (conf: KW8IConfiguration) => set(draft => {
+            draft.conf = conf;
+        }),
+        setSync: (sync: boolean) => set(draft => {
+            draft.conf.useExternalClock = sync;
+        }),
+        set50Hz: (use50: boolean) => set(draft => {
+            draft.conf.use50Hz = use50;
+        }),
+    })));
+
+    constructor(backend: Backend, conf: KW8IConfiguration) {
         super(backend);
+        this.store.getState().setConf(conf);
+        this.store.subscribe(state => {
+            void this.backend.changePeripheralConfig(state.conf.id, state.conf);
+        })
     }
 
     public get connections(): number[] {
         return [0o13];
     }
 
+    private get config(): KW8IConfiguration {
+        return this.store.getState().conf;
+    }
+
     public get id() {
-        return this.conf.id;
+        return this.config.id;
+    }
+
+    public get useState() {
+        return this.store;
     }
 
     public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {

@@ -77,6 +77,8 @@ export interface RK8Configuration {
 
 export interface KW8IConfiguration {
     id: DeviceID.DEV_ID_KW8I;
+    useExternalClock: boolean;
+    use50Hz: boolean;
 }
 
 export type PeripheralConfiguration =

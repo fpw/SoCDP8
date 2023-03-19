@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box, Button, ButtonGroup, Card, CardActions, CardHeader, CardMedia, Checkbox, Dialog, DialogTitle, FormControlLabel, List, ListItem, ListItemButton, ListItemText, Typography } from "@mui/material";
+import { Box, Button, ButtonGroup, Card, CardActions, CardContent, CardHeader, CardMedia, Checkbox, Dialog, DialogTitle, FormControlLabel, List, ListItem, ListItemButton, ListItemText, Typography } from "@mui/material";
 import { Stack } from "@mui/system";
 import { useState } from "react";
 import { ProgramSnippet, ProgramSnippets } from "../../../models/ProgramSnippets";
@@ -50,33 +50,35 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
     return (
         <Box mb={4}>
             <Card variant="outlined">
-                <CardMedia>
+                <CardContent>
                     <FrontPanel pdp8={props.pdp8} />
-                </CardMedia>
-                <Stack direction="row" justifyContent="space-between" component={CardActions}>
-                    <ButtonGroup color="primary" variant="outlined">
-                        <Button onClick={() => void saveState()} disabled={busy}>
-                            Save State
-                        </Button>
+                </CardContent>
+                <CardActions>
+                    <Stack direction="row" justifyContent="space-between" component={CardActions}>
+                        <ButtonGroup color="primary" variant="outlined">
+                            <Button onClick={() => void saveState()} disabled={busy}>
+                                Save State
+                            </Button>
 
-                        <Button onClick={() => setShowSnippets(true)}>
-                            Load Snippet
-                        </Button>
+                            <Button onClick={() => setShowSnippets(true)}>
+                                Load Snippet
+                            </Button>
 
-                        <Button onClick={() => void props.pdp8.clearCore()}>
-                            Clear Core
-                        </Button>
-                        <SnippetDialog
-                            open={showSnippets}
-                            onClose={() => setShowSnippets(false)}
-                            onSelect={(snippet) => void loadSnippet(snippet)}
-                        />
-                    </ButtonGroup>
-                    <Box sx={{alignSelf: "right"}}>
-                        Emulation Speed: { simSpeed.toFixed(2) }
-                        <FormControlLabel control={<Checkbox checked={throttle} onChange={() => void toggleThrottle()} />} label="Control" sx={{ml: 1}}/>
-                    </Box>
-                </Stack>
+                            <Button onClick={() => void props.pdp8.clearCore()}>
+                                Clear Core
+                            </Button>
+                            <SnippetDialog
+                                open={showSnippets}
+                                onClose={() => setShowSnippets(false)}
+                                onSelect={(snippet) => void loadSnippet(snippet)}
+                            />
+                        </ButtonGroup>
+                        <Box sx={{alignSelf: "right"}}>
+                            Emulation Speed: { simSpeed.toFixed(2) }
+                            <FormControlLabel control={<Checkbox checked={throttle} onChange={() => void toggleThrottle()} />} label="Control" sx={{ml: 1}}/>
+                        </Box>
+                    </Stack>
+                </CardActions>
             </Card>
         </Box>
     );

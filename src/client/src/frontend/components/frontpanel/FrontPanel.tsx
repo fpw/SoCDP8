@@ -44,6 +44,8 @@ export function FrontPanel(props: FrontPanelProps) {
             }
 
             const elem = (doc.documentElement as unknown) as SVGSVGElement;
+            elem.setAttribute("width", "100%");
+            elem.setAttribute("height", "100%");
             setSVGRoot(elem);
 
             const [foundLamps, foundSwitches] = findElements(elem);

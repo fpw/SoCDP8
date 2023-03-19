@@ -157,7 +157,7 @@ function RK8Box(props: {model: RK8Model}) {
 function KW8IBox(props: {model: KW8IModel}) {
     return (
         <CaptionBox name="KW8I Real Time Clock" model={props.model}>
-            <KW8I />
+            <KW8I model={props.model} />
         </CaptionBox>
     );
 }
@@ -166,13 +166,13 @@ function CaptionBox(props: {model: PeripheralModel, name: string, children: Reac
     const {model, name, children} = props;
     const titleStr = `${name} @ Bus ${model.connections.map(x => x.toString(8)).join(", ")}`;
     return (
-        <Box mb={4}>
+        <Box mb={3}>
             <Card variant="outlined">
                 <CardHeader title={titleStr} action={
                     <IconButton component={RouterLink} to={`/peripherals/${model.id}`} title="Display only this">
                         <FullscreenIcon />
                     </IconButton>
-                }/>
+                } />
                 <CardContent>
                     { children }
                 </CardContent>

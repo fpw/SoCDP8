@@ -143,7 +143,7 @@ function toSystemConf(ev: FormEvent<HTMLFormElement>): SystemConfiguration {
     }
 
     if ((form.elements.namedItem("kw8i") as HTMLInputElement).checked) {
-        s.peripherals.push({id: DeviceID.DEV_ID_KW8I});
+        s.peripherals.push({id: DeviceID.DEV_ID_KW8I, use50Hz: false, useExternalClock: true});
     }
 
     if ((form.elements.namedItem("tc08") as HTMLInputElement).checked) {
