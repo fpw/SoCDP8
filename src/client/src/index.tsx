@@ -18,8 +18,16 @@
 
 import { createRoot } from "react-dom/client";
 import { AppStack } from "./frontend/AppStack";
+import { getBackend } from "./models/getBackend";
 
-const container = document.getElementById("app");
-const root = createRoot(container!);
+async function run() {
+    const container = document.getElementById("app");
+    const root = createRoot(container!);
 
-root.render(<AppStack />);
+    root.render(<>Loading...</>);
+    await getBackend().connect();
+
+    root.render(<AppStack />);
+}
+
+void run();

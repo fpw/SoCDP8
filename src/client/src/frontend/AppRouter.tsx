@@ -17,35 +17,19 @@
  */
 
 import { createBrowserRouter, Navigate } from "react-router-dom";
-import { SocketBackend } from "../models/backends/socket/SocketBackend";
-import { WasmBackend } from "../models/backends/wasm/WasmBackend";
-import { SoCDP8 } from "../models/SoCDP8";
-import { SystemPage } from "./pages/SystemPage";
-import { SystemListPage } from "./pages/SystemListPage";
+import { getBackend } from "../models/getBackend";
 import { AppLayout } from "./layout/AppLayout";
 import { AboutPage } from "./pages/AboutPage";
 import { PeripheralPage } from "./pages/PeripheralPage";
-import { enableMapSet } from "immer";
+import { SystemListPage } from "./pages/SystemListPage";
+import { SystemPage } from "./pages/SystemPage";
 
-let url = "";
-if (window.location.toString().includes("localhost")) {
-    url = "http://192.168.178.68:8000/"
-}
-
-enableMapSet();
-
-let backend;
-if (true) {
-    backend = new WasmBackend();
-} else {
-    backend = new SocketBackend(url);
-}
-const pdp8 = new SoCDP8(backend);
-await pdp8.connect();
+const pdp8 = getBackend();
 
 export const appRouter = createBrowserRouter([
     {
         path: "/",
+        loader: getBackend,
         element: <AppLayout pdp8={pdp8} />,
         children: [
             { path: "", element: <Navigate to="/machines/active" />,  },
