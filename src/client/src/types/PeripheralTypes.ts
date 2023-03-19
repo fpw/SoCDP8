@@ -29,6 +29,8 @@ export enum DeviceID {
     DEV_ID_TT4      = 9,
     DEV_ID_KW8I     = 10,
     DEV_ID_RK8      = 11,
+
+    _COUNT
 }
 
 export type BaudRate = 110 | 150 | 300 | 1200 | 2400 | 4800 | 9600 | 19200;

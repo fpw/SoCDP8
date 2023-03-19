@@ -161,6 +161,7 @@ function getPeripheralName(id: DeviceID): string {
         case DeviceID.DEV_ID_TT4:   return "TT4";
         case DeviceID.DEV_ID_KW8I:  return "KW8I";
         case DeviceID.DEV_ID_RK8:   return "RK8";
+        default: return "Unknown";
     }
 }
 

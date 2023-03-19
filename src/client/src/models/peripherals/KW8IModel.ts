@@ -33,7 +33,7 @@ interface KW8IStore {
 
 export class KW8IModel extends PeripheralModel {
     private store = create<KW8IStore>()(immer(set => ({
-        conf: { id: 0, use50Hz: false, useExternalClock: true },
+        conf: { id: DeviceID.DEV_ID_KW8I, use50Hz: false, useExternalClock: true },
         setConf: (conf: KW8IConfiguration) => set(draft => {
             draft.conf = conf;
         }),

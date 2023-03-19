@@ -23,6 +23,18 @@ import { Backend } from "../Backend";
 import { BackendListener } from "../BackendListener";
 import { PeripheralOutAction } from "../../../types/PeripheralAction";
 import { Wasm8Context } from "./Wasm8Context";
+import { create } from "zustand";
+import { immer } from "zustand/middleware/immer";
+import { generateUUID } from "../../../util";
+
+interface BackendStore {
+    activeSystem?: SystemConfiguration;
+    systems: SystemConfiguration[];
+
+    setActiveSystem: (sys: SystemConfiguration) => void;
+    addSystem: (sys: SystemConfiguration) => void;
+    deleteSystem: (id: string) => void;
+}
 
 export class WasmBackend implements Backend {
     private listener?: BackendListener;
@@ -30,8 +42,28 @@ export class WasmBackend implements Backend {
     private controlThrottle = true;
     private throttle = 0;
 
-    private systems: SystemConfiguration[] = [
-        {
+    private store = create<BackendStore>()(immer(set => ({
+        systems: [],
+
+        setActiveSystem: (sys: SystemConfiguration) => set(draft => {
+            draft.activeSystem = sys;
+        }),
+        addSystem: (sys: SystemConfiguration) => set(draft => {
+            draft.systems.push(sys);
+        }),
+        deleteSystem: (id: string) => set(draft => {
+            const sys = draft.systems.findIndex(s => s.id == id);
+            if (sys < 0) {
+                return;
+            }
+
+            draft.systems.splice(sys, 1);
+        }),
+    })));
+
+    public constructor() {
+        this.pdp8 = new Wasm8Context();
+        this.store.getState().addSystem({
             id: "default",
             name: "WASM-8",
             description: "default",
@@ -89,11 +121,7 @@ export class WasmBackend implements Backend {
                     use50Hz: false,
                 },
             ],
-        },
-    ];
-
-    public constructor() {
-        this.pdp8 = new Wasm8Context();
+        });
     }
 
     public async connect(listener: BackendListener) {
@@ -112,34 +140,53 @@ export class WasmBackend implements Backend {
     }
 
     public async readActiveSystem(): Promise<SystemConfiguration> {
-        return this.systems[0];
+        const sys = this.store.getState().activeSystem;
+        if (!sys) {
+            throw Error("No active system");
+        }
+        return sys;
+    }
+
+    public async readSystems(): Promise<SystemConfiguration[]> {
+        return this.store.getState().systems;
+    }
+
+    public async createSystem(system: SystemConfiguration) {
+        system.id = generateUUID();
+        this.store.getState().addSystem(system);
+        this.listener?.onStateChange({type: "state-list-changed"});
+    }
+
+    public async deleteSystem(id: string) {
+        const activeSys = this.store.getState().activeSystem;
+        if (activeSys?.id == id) {
+            throw Error("Can't delete active system");
+        }
+
+        this.store.getState().deleteSystem(id);
+        this.listener?.onStateChange({type: "state-list-changed"});
     }
 
     public async saveActiveSystem(): Promise<boolean> {
         return true;
     }
 
-    public async readSystems(): Promise<SystemConfiguration[]> {
-        return this.systems;
-    }
-
-    public async createSystem(system: SystemConfiguration) {
-    }
-
     public async setActiveSystem(id: string) {
-        for (const sys of this.systems) {
-            if (sys.id == id) {
-                this.pdp8.configure(sys.maxMemField, sys.cpuExtensions.eae, sys.cpuExtensions.kt8i, sys.cpuExtensions.bsw);
-
-                for (const peripheral of this.systems[0].peripherals) {
-                    await this.changePeripheralConfig(peripheral.id, peripheral);
-                }
-                break;
-            }
+        const sys = this.store.getState().systems.find(s => s.id == id);
+        if (!sys) {
+            throw Error(`Unknown system ${id}`);
         }
-    }
 
-    public async deleteSystem(id: string) {
+        this.pdp8.clearPeripherals();
+        this.pdp8.clearCore();
+        this.pdp8.configureCPU(sys.maxMemField, sys.cpuExtensions.eae, sys.cpuExtensions.kt8i, sys.cpuExtensions.bsw);
+
+        for (const peripheral of sys.peripherals) {
+            this.pdp8.addPeripheral(peripheral.id);
+            await this.changePeripheralConfig(peripheral.id, peripheral);
+        }
+        this.store.getState().setActiveSystem(sys);
+        this.listener?.onStateChange({type: "active-state-changed"});
     }
 
     public async setThrottleControl(control: boolean) {

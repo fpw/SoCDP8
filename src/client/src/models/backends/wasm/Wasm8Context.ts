@@ -18,6 +18,7 @@
 /// <reference types="emscripten" />
 
 import { ConsoleState } from "../../../types/ConsoleTypes";
+import { DeviceID } from "../../../types/PeripheralTypes";
 
 declare function createWASM8(options: {locateFile: (path: string) => string}): Promise<{
     addFunction: typeof addFunction;
@@ -34,6 +35,7 @@ interface Wasm8Calls {
     getConsoleOut(ctx: number): number;
     getLampsOut(ctx: number): number;
     getConsoleIn(ctx: number): number;
+    setPeripheral(ctx: number, id: number, enable: number): void;
     peripheralAction(ctx: number, id: number, ev: number, p1: number, p2: number): void;
     setThrottle(ctx: number, throttle: number): void;
     destroy(ctx: number): void;
@@ -71,6 +73,7 @@ export class Wasm8Context {
             getConsoleIn: inst.cwrap("pdp8_get_console_in", "number", ["number"]),
             getConsoleOut: inst.cwrap("pdp8_get_console_out", "number", ["number"]),
             getLampsOut: inst.cwrap("pdp8_get_lamps_out", "number", ["number"]),
+            setPeripheral: inst.cwrap("pdp8_set_peripheral", null, ["number", "number", "number"]),
             peripheralAction: inst.cwrap("pdp8_peripheral_action", null, ["number", "number", "number", "number"]),
             setThrottle: inst.cwrap("pdp8_set_throttle", null, ["number", "number"]),
             destroy: inst.cwrap("pdp8_destroy", null, ["number"]),
@@ -210,7 +213,7 @@ export class Wasm8Context {
         this.calls.writePointer(this.consoleIn + offset, val, "i16");
     }
 
-    public configure(maxMemField: number, eae: boolean, kt8i: boolean, bsw: boolean) {
+    public configureCPU(maxMemField: number, eae: boolean, kt8i: boolean, bsw: boolean) {
         let confWord = maxMemField;
         if (eae) {
             confWord |= 0o10;
@@ -223,6 +226,23 @@ export class Wasm8Context {
         }
 
         this.sendPeripheralAction(0, this.EventConfigure, confWord, 0);
+    }
+
+    public clearPeripherals() {
+        if (!this.ctx || !this.calls) {
+            throw Error("Not connected");
+        }
+
+        for (let i = 1; i < DeviceID._COUNT; i++) {
+            this.calls.setPeripheral(this.ctx, i, 0);
+        }
+    }
+
+    public addPeripheral(id: DeviceID) {
+        if (!this.ctx || !this.calls) {
+            throw Error("Not connected");
+        }
+        this.calls.setPeripheral(this.ctx, id, 1);
     }
 
     public clearCore() {
