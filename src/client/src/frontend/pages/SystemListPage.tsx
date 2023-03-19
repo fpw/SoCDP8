@@ -149,7 +149,7 @@ function SystemEntry(props: {pdp8: SoCDP8, system: SystemConfiguration, active: 
 
 function getPeripheralName(id: DeviceID): string {
     switch (id) {
-        case DeviceID.DEV_ID_NULL:  return "";
+        case DeviceID.DEV_ID_CPU:   return "PDP-8";
         case DeviceID.DEV_ID_PT08:  return "PT08";
         case DeviceID.DEV_ID_PC04:  return "PC04";
         case DeviceID.DEV_ID_TC08:  return "TC08";

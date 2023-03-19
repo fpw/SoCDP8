@@ -19,8 +19,19 @@
 import { TapeState } from "../models/DECTape";
 
 export type PeripheralOutAction =
+    LoadCoreDumpAction | DownloadCoreDumpAction |
     KeyPressAction | TapeSetAction | ReaderStateAction |
+    DownloadTapeAction |
     LoadTapeAction;
+
+export interface LoadCoreDumpAction {
+    type: "load-core";
+    data: Uint8Array;
+}
+
+export interface DownloadCoreDumpAction {
+    type: "get-core";
+}
 
 export interface KeyPressAction {
     type: "key-press";
@@ -43,23 +54,34 @@ export interface LoadTapeAction {
     data: Uint8Array;
 }
 
+export interface DownloadTapeAction {
+    type: "get-tape";
+    unit: number;
+}
+
 export type PeripheralInAction =
+    CoreDumpAction |
     ActiveStateChangeAction | StateListChangeAction |
     ReaderPosAction | PunchAction |
     TapeStatusAction;
 
+export interface CoreDumpAction {
+    type: "core-dump";
+    dump: Uint8Array;
+}
+
 export interface ReaderPosAction {
-    type: "readerPos",
+    type: "readerPos";
     pos: number;
 }
 
 export interface PunchAction {
-    type: "punch",
+    type: "punch";
     char: number;
 }
 
 export interface TapeStatusAction {
-    type: "tapeStates",
+    type: "tapeStates";
     states: TapeState[];
 }
 

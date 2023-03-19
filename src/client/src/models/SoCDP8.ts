@@ -32,6 +32,7 @@ import { PT08Model } from "./peripherals/PT08Model";
 import { RF08Model } from "./peripherals/RF08Model";
 import { RK8Model } from "./peripherals/RK8Model";
 import { TC08Model } from "./peripherals/TC08Model";
+import { loadFile } from "../util";
 
 interface SoCDP8Store {
     frontPanel?: ConsoleState;
@@ -50,6 +51,7 @@ interface SoCDP8Store {
 
 export class SoCDP8 {
     private backend: Backend;
+    dumpAcceptor?: (dump: Uint8Array) => void;
 
     private store = create<SoCDP8Store>()(immer(set => ({
         peripheralModels: new Map(),
@@ -79,11 +81,11 @@ export class SoCDP8 {
 
     constructor(backend: Backend) {
         this.backend = backend;
+    }
 
+    public async connect() {
         const listener: BackendListener = {
             onConnect: () => {
-                void this.readActiveState();
-                void this.fetchStateList();
             },
 
             onDisconnect: () => {
@@ -107,7 +109,9 @@ export class SoCDP8 {
             },
         };
 
-        void backend.connect(listener);
+        await this.backend.connect(listener);
+        await this.readActiveState();
+        await this.fetchStateList();
     }
 
     private async readActiveState(): Promise<void> {
@@ -173,6 +177,16 @@ export class SoCDP8 {
     }
 
     private onPeripheralEvent(id: DeviceID, action: PeripheralInAction) {
+        if (id == DeviceID.DEV_ID_CPU) {
+            if (action.type == "core-dump") {
+                if (this.dumpAcceptor) {
+                    this.dumpAcceptor(action.dump);
+                    this.dumpAcceptor = undefined;
+                }
+            }
+            return;
+        }
+
         const peripheral = this.store.getState().peripheralModels.get(id);
         if (!peripheral) {
             return;
@@ -212,8 +226,23 @@ export class SoCDP8 {
         await this.backend.clearCore();
     }
 
+    public async getCoreDump(): Promise<Uint8Array> {
+        return new Promise<Uint8Array>(accept => {
+            this.dumpAcceptor = accept;
+            void this.backend.sendPeripheralAction(DeviceID.DEV_ID_CPU, {type: "get-core"});
+        });
+    }
+
     public async writeCore(addr: number, fragment: number[]): Promise<void> {
         await this.backend.writeCore(addr, fragment);
+    }
+
+    public async loadCoreDump(dump: File) {
+        const data = await loadFile(dump);
+        await this.backend.sendPeripheralAction(DeviceID.DEV_ID_CPU, {
+            type: "load-core",
+            data: new Uint8Array(data),
+        });
     }
 
     private async onStateEvent(action: PeripheralInAction) {

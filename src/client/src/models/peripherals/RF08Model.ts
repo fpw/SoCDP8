@@ -20,8 +20,11 @@ import { PeripheralModel } from "./PeripheralModel";
 import { DeviceID, RF08Configuration } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
 import { PeripheralInAction } from "../../types/PeripheralAction";
+import { loadFile } from "../../util";
 
 export class RF08Model extends PeripheralModel {
+    private dumpAcceptor?: (dump: Uint8Array) => void;
+
     constructor(backend: Backend, private conf: RF08Configuration) {
         super(backend);
     }
@@ -35,9 +38,29 @@ export class RF08Model extends PeripheralModel {
     }
 
     public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
+        if (action.type == "core-dump") {
+            if (this.dumpAcceptor) {
+                this.dumpAcceptor(action.dump);
+            }
+        }
     }
 
     public async readBlock(block: number): Promise<Uint16Array> {
         return await this.backend.readPeripheralBlock(this.conf.id, block);
+    }
+
+    public async getDump(): Promise<Uint8Array> {
+        return new Promise<Uint8Array>(accept => {
+            this.dumpAcceptor = accept;
+            void this.backend.sendPeripheralAction(DeviceID.DEV_ID_RF08, {type: "get-core"});
+        });
+    }
+
+    public async loadDump(dump: File) {
+        const data = await loadFile(dump);
+        await this.backend.sendPeripheralAction(this.conf.id, {
+            type: "load-core",
+            data: new Uint8Array(data),
+        });
     }
 }

@@ -60,9 +60,7 @@ export function TU56(props: TU56Props) {
     return <canvas ref={canvasRef} />;
 }
 
-/*
- * Ported from https://github.com/wvdmark/pdp8/blob/master/NetBeansSource/PDP8-16/Devices/DTReel.java
- */
+// Ported from https://github.com/wvdmark/pdp8/blob/master/NetBeansSource/PDP8-16/Devices/DTReel.java
 class TU56Painter {
     private readonly REEL_CENTER_X  = 0.5;
     private readonly REEL_CENTER_Y  = 0.65;

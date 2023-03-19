@@ -25,11 +25,14 @@ import { SystemListPage } from "./pages/SystemListPage";
 import { AppLayout } from "./layout/AppLayout";
 import { AboutPage } from "./pages/AboutPage";
 import { PeripheralPage } from "./pages/PeripheralPage";
+import { enableMapSet } from "immer";
 
 let url = "";
 if (window.location.toString().includes("localhost")) {
     url = "http://192.168.178.68:8000/"
 }
+
+enableMapSet();
 
 let backend;
 if (true) {
@@ -38,6 +41,7 @@ if (true) {
     backend = new SocketBackend(url);
 }
 const pdp8 = new SoCDP8(backend);
+await pdp8.connect();
 
 export const appRouter = createBrowserRouter([
     {

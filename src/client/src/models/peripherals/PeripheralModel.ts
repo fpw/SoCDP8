@@ -29,18 +29,4 @@ export abstract class PeripheralModel {
     public abstract get id(): number;
 
     public abstract onPeripheralAction(id: DeviceID, action: PeripheralInAction): void;
-
-    protected async loadFile(file: File): Promise<ArrayBuffer> {
-        return new Promise<ArrayBuffer>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                const data = reader.result as ArrayBuffer;
-                resolve(data);
-            };
-            reader.onerror = () => {
-                reject();
-            }
-            reader.readAsArrayBuffer(file);
-        });
-    }
 }

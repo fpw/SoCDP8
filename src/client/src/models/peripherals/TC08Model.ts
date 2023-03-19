@@ -23,6 +23,7 @@ import { PeripheralModel } from "./PeripheralModel";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { PeripheralInAction } from "../../types/PeripheralAction";
+import { loadFile } from "../../util";
 
 interface TC08Store {
     tapes: DECTape[];
@@ -33,6 +34,8 @@ interface TC08Store {
 }
 
 export class TC08Model extends PeripheralModel {
+    private dumpAcceptor?: (dump: Uint8Array) => void;
+
     private store = create<TC08Store>()(immer(set => ({
         tapes: [],
         numTUs: 0,
@@ -65,12 +68,14 @@ export class TC08Model extends PeripheralModel {
     }
 
     public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
-        if (action.type != "tapeStates") {
-            return;
-        }
-
-        for (const state of action.states) {
-            this.store.getState().setTapeState(state.address, state);
+        if (action.type == "tapeStates") {
+            for (const state of action.states) {
+                this.store.getState().setTapeState(state.address, state);
+            }
+        } else if (action.type == "core-dump") {
+            if (this.dumpAcceptor) {
+                this.dumpAcceptor(action.dump);
+            }
         }
     }
 
@@ -78,8 +83,15 @@ export class TC08Model extends PeripheralModel {
         return this.store;
     }
 
+    public async getDump(unit: number): Promise<Uint8Array> {
+        return new Promise<Uint8Array>(accept => {
+            this.dumpAcceptor = accept;
+            void this.backend.sendPeripheralAction(DeviceID.DEV_ID_TC08, {type: "get-tape", unit});
+        });
+    }
+
     public async loadTape(tape: File, unit: number) {
-        const data = await this.loadFile(tape);
+        const data = await loadFile(tape);
         await this.backend.sendPeripheralAction(this.conf.id, {
             type: "load-tape",
             unit: unit,

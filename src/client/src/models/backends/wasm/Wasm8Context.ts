@@ -274,6 +274,24 @@ export class Wasm8Context {
         this.calls.peripheralAction(this.ctx, dev, action, bufAddr, buf.byteLength);
     }
 
+    public fetchBuffer(addr: number, size: number) {
+        if (!this.ctx || !this.calls) {
+            throw Error("Not connected");
+        }
+
+        if (!addr) {
+            throw Error("Out of WASM memory");
+        }
+
+        const arr = new Uint8Array(size);
+        for (let i = 0; i < size; i++) {
+            arr[i] = this.calls.readPointer(addr + i, "i8");
+        }
+        this.calls.free(addr);
+
+        return arr;
+    }
+
     public destroy() {
         if (!this.calls || !this.ctx) {
             throw Error("Not created");

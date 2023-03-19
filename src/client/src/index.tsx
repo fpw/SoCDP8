@@ -16,11 +16,8 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { enableMapSet } from "immer";
 import { createRoot } from "react-dom/client";
 import { AppStack } from "./frontend/AppStack";
-
-enableMapSet();
 
 const container = document.getElementById("app");
 const root = createRoot(container!);

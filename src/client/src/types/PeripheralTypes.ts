@@ -17,7 +17,7 @@
  */
 
 export enum DeviceID {
-    DEV_ID_NULL     = 0,
+    DEV_ID_CPU      = 0,
     DEV_ID_PT08     = 1,
     DEV_ID_PC04     = 2,
     DEV_ID_TC08     = 3,

@@ -43,6 +43,20 @@ export async function downloadData(data: Uint8Array, name: string): Promise<void
     }
 }
 
+export async function loadFile(file: File): Promise<ArrayBuffer> {
+    return new Promise<ArrayBuffer>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const data = reader.result as ArrayBuffer;
+            resolve(data);
+        };
+        reader.onerror = () => {
+            reject();
+        }
+        reader.readAsArrayBuffer(file);
+    });
+}
+
 // https://stackoverflow.com/questions/105034/how-do-i-create-a-guid-uuid/8809472#8809472
 export function generateUUID() {
     // Timestsamp

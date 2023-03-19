@@ -116,15 +116,10 @@ function PC04Box(props: {model: PC04Model}) {
 }
 
 function TC08Box(props: {model: TC08Model}) {
-    const tapes = props.model.useState(state => state.tapes);
-    const numTUs = props.model.useState(state => state.numTUs);
-
     return (
         <CaptionBox name="TC08 DECtape Control" model={props.model}>
             <TC08
-                tapes={tapes}
-                numTUs={numTUs}
-                onTapeLoad={(tape, unit) => void props.model.loadTape(tape, unit)}
+                model={props.model}
             />
         </CaptionBox>
     );
@@ -133,7 +128,7 @@ function TC08Box(props: {model: TC08Model}) {
 function RF08Box(props: {model: RF08Model}) {
     return (
         <CaptionBox name="RF08 Disk Control" model={props.model}>
-            <RF08 />
+            <RF08 model={props.model} />
         </CaptionBox>
     );
 }

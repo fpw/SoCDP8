@@ -16,45 +16,51 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { TU56 } from "./TU56";
-import { DECTape } from "../../../models/DECTape";
-import { ButtonGroup, Button } from "@mui/material";
+import { Button, ButtonGroup } from "@mui/material";
 import { Box } from "@mui/system";
-import { ChangeEvent } from "react";
+import React from "react";
+import { TC08Model } from "../../../models/peripherals/TC08Model";
+import { downloadData } from "../../../util";
+import { TU56 } from "./TU56";
 
 export interface TC08Props {
-    onTapeLoad(tape: File, unit: number): void;
-    tapes: DECTape[];
-    numTUs: number;
+    model: TC08Model;
 }
 
 export function TC08(props: TC08Props) {
-    const tapes = props.tapes;
-    const n = props.numTUs;
+    const tapes = props.model.useState(state => state.tapes);
+    const numTUs = props.model.useState(state => state.numTUs);
+
+    async function upload(unit: number, target: HTMLInputElement) {
+        if (!target.files || target.files.length < 1) {
+            return;
+        }
+        await props.model.loadTape(target.files[0], unit);
+    }
+
+    async function download(unit: number) {
+        const dump = await props.model.getDump(unit);
+        await downloadData(dump, `tc08-${unit}.tu56`);
+    }
 
     return (
         <Box>
             <ButtonGroup variant="outlined" color="primary">
-                {Array.from({length: props.numTUs}).map((_x, i) =>
-                    <Button key={i} component="label">
-                        Load {i}
-                        <input type="file" onChange={evt => onLoadFile(evt, props, i)} hidden />
+                { Array.from({length: numTUs}).map((_x, i) => <React.Fragment key={i}>
+                    <Button component="label">
+                        Upload {i}
+                        <input type="file" onChange={evt => void upload(i, evt.target as HTMLInputElement)} hidden />
                     </Button>
-                )}
+                    <Button onClick={() => void download(i)}>
+                        Download {i}
+                    </Button>
+                </React.Fragment>)}
             </ButtonGroup>
 
-            {n > 0 && <TU56 left={tapes[0]} right={tapes[1]} address={0} /> }
-            {n > 2 && <TU56 left={tapes[2]} right={tapes[3]} address={2} /> }
-            {n > 4 && <TU56 left={tapes[4]} right={tapes[5]} address={4} /> }
-            {n > 6 && <TU56 left={tapes[6]} right={tapes[7]} address={6} /> }
+            {numTUs > 0 && <TU56 left={tapes[0]} right={tapes[1]} address={0} /> }
+            {numTUs > 2 && <TU56 left={tapes[2]} right={tapes[3]} address={2} /> }
+            {numTUs > 4 && <TU56 left={tapes[4]} right={tapes[5]} address={4} /> }
+            {numTUs > 6 && <TU56 left={tapes[6]} right={tapes[7]} address={6} /> }
         </Box>
     );
-}
-
-function onLoadFile(evt: ChangeEvent,  props: TC08Props, unit: number): void {
-    const target = evt.target as HTMLInputElement;
-    if (!target.files || target.files.length < 1) {
-        return;
-    }
-    props.onTapeLoad(target.files[0], unit);
 }

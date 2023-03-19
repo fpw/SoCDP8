@@ -16,11 +16,12 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box, Button, ButtonGroup, Card, CardActions, CardContent, CardHeader, CardMedia, Checkbox, Dialog, DialogTitle, FormControlLabel, List, ListItem, ListItemButton, ListItemText, Typography } from "@mui/material";
+import { Box, Button, ButtonGroup, Card, CardActions, CardContent, Checkbox, Dialog, DialogTitle, FormControlLabel, List, ListItemButton, ListItemText } from "@mui/material";
 import { Stack } from "@mui/system";
 import { useState } from "react";
 import { ProgramSnippet, ProgramSnippets } from "../../../models/ProgramSnippets";
 import { SoCDP8 } from "../../../models/SoCDP8";
+import { downloadData } from "../../../util";
 import { FrontPanel } from "./FrontPanel";
 
 export function FrontPanelBox(props: {pdp8: SoCDP8}) {
@@ -47,6 +48,18 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
         setThrottle(!throttle);
     }
 
+    async function loadCore(target: HTMLInputElement) {
+        if (!target.files || target.files.length < 1) {
+            return;
+        }
+        await props.pdp8.loadCoreDump(target.files[0]);
+    }
+
+    async function downloadCore() {
+        const dump = await props.pdp8.getCoreDump()
+        await downloadData(dump, "core.dat");
+    }
+
     return (
         <Box mb={4}>
             <Card variant="outlined">
@@ -59,11 +72,16 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
                             <Button onClick={() => void saveState()} disabled={busy}>
                                 Save State
                             </Button>
-
                             <Button onClick={() => setShowSnippets(true)}>
                                 Load Snippet
                             </Button>
-
+                            <Button component="label">
+                                Upload Dump
+                                <input type="file" onChange={evt => void loadCore(evt.target)} hidden />
+                            </Button>
+                            <Button onClick={() => void downloadCore()}>
+                                Download Dump
+                            </Button>
                             <Button onClick={() => void props.pdp8.clearCore()}>
                                 Clear Core
                             </Button>

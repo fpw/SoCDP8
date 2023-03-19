@@ -65,7 +65,7 @@ export class WasmBackend implements Backend {
         this.pdp8 = new Wasm8Context();
         this.store.getState().addSystem({
             id: "default",
-            name: "WASM-8",
+            name: "TSS/8",
             description: "default",
             maxMemField: 7,
             cpuExtensions: {
@@ -235,6 +235,20 @@ export class WasmBackend implements Backend {
         } else if (id == DeviceID.DEV_ID_TC08) {
             if (action.type == "load-tape") {
                 this.pdp8.sendPeripheralActionBuffer(DeviceID.DEV_ID_TC08, 1 + action.unit, action.data);
+            } else if (action.type == "get-tape") {
+                this.pdp8.sendPeripheralAction(DeviceID.DEV_ID_TC08, 11, action.unit, 0);
+            }
+        } else if (id == DeviceID.DEV_ID_CPU) {
+            if (action.type == "load-core") {
+                this.pdp8.sendPeripheralActionBuffer(DeviceID.DEV_ID_CPU, 5, action.data);
+            } else if (action.type == "get-core") {
+                this.pdp8.sendPeripheralAction(DeviceID.DEV_ID_CPU, 6, 0, 0);
+            }
+        } else if (id == DeviceID.DEV_ID_RF08) {
+            if (action.type == "load-core") {
+                this.pdp8.sendPeripheralActionBuffer(DeviceID.DEV_ID_RF08, 1, action.data);
+            } else if (action.type == "get-core") {
+                this.pdp8.sendPeripheralAction(DeviceID.DEV_ID_RF08, 2, 0, 0);
             }
         }
     }
@@ -246,13 +260,22 @@ export class WasmBackend implements Backend {
         }
 
         switch (dev) {
-            case DeviceID.DEV_ID_NULL:
+            case DeviceID.DEV_ID_CPU:
                 if (action == 4) {
                     const simSpeed = p1 / 100;
                     if (this.controlThrottle) {
                         this.doThrottleControl(simSpeed);
                     }
                     this.listener.onPerformanceReport(simSpeed);
+                } else if (action == 6) {
+                    const dump = this.pdp8.fetchBuffer(p1, p2);
+                    this.listener.onPeripheralEvent(DeviceID.DEV_ID_CPU, {type: "core-dump", dump});
+                }
+                break;
+            case DeviceID.DEV_ID_RF08:
+                if (action == 2) {
+                    const dump = this.pdp8.fetchBuffer(p1, p2);
+                    this.listener.onPeripheralEvent(DeviceID.DEV_ID_RF08, {type: "core-dump", dump});
                 }
                 break;
             case DeviceID.DEV_ID_PT08:
@@ -303,6 +326,9 @@ export class WasmBackend implements Backend {
                             states: this.tapeStatus,
                         });
                     }
+                } else if (action == 11) {
+                    const dump = this.pdp8.fetchBuffer(p1, p2);
+                    this.listener.onPeripheralEvent(DeviceID.DEV_ID_TC08, {type: "core-dump", dump});
                 }
                 break;
         }

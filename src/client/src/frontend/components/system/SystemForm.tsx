@@ -88,11 +88,11 @@ export function SystemForm(props: SystemFormProps) {
 
                 <FormControl component="fieldset">
                     <FormLabel component="legend">Hard Disk</FormLabel>
-                    <RadioGroup name="disk" defaultValue={DeviceID[getDiskType(s.peripherals)]} row>
-                        <FormControlLabel value={DeviceID[DeviceID.DEV_ID_NULL]} control={<Radio />} label="None" />
-                        <FormControlLabel value={DeviceID[DeviceID.DEV_ID_DF32]} control={<Radio />} label="DF32" />
-                        <FormControlLabel value={DeviceID[DeviceID.DEV_ID_RF08]} control={<Radio />} label="RF08" />
-                        <FormControlLabel value={DeviceID[DeviceID.DEV_ID_RK8]} control={<Radio />} label="RK8" />
+                    <RadioGroup name="disk" defaultValue={getDiskType(s.peripherals)} row>
+                        <FormControlLabel value={""} control={<Radio />} label="None" />
+                        <FormControlLabel value={DeviceID.DEV_ID_DF32} control={<Radio />} label="DF32" />
+                        <FormControlLabel value={DeviceID.DEV_ID_RF08} control={<Radio />} label="RF08" />
+                        <FormControlLabel value={DeviceID.DEV_ID_RK8} control={<Radio />} label="RK8" />
                     </RadioGroup>
                 </FormControl>
 
@@ -165,7 +165,7 @@ function toSystemConf(ev: FormEvent<HTMLFormElement>): SystemConfiguration {
     }
 
     const diskStr = (form.elements.namedItem("disk") as HTMLInputElement).value;
-    const diskId = DeviceID[diskStr as keyof typeof DeviceID];
+    const diskId = Number.parseInt(diskStr, 10) as DeviceID;
     switch (diskId) {
         case DeviceID.DEV_ID_DF32: {
             s.peripherals.push({id: DeviceID.DEV_ID_DF32});
@@ -197,7 +197,7 @@ function countPT08(list: PeripheralConfiguration[]): number {
     return count;
 }
 
-function getDiskType(list: PeripheralConfiguration[]): DeviceID {
+function getDiskType(list: PeripheralConfiguration[]): DeviceID | "" {
     for (const conf of list) {
         switch (conf.id) {
             case DeviceID.DEV_ID_DF32: return conf.id;
@@ -205,5 +205,5 @@ function getDiskType(list: PeripheralConfiguration[]): DeviceID {
             case DeviceID.DEV_ID_RK8:  return conf.id;
         }
     }
-    return DeviceID.DEV_ID_NULL;
+    return "";
 }
