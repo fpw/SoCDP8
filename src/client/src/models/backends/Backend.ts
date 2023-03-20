@@ -39,5 +39,4 @@ export interface Backend {
 
     sendPeripheralAction(id: DeviceID, action: PeripheralOutAction): Promise<void>;
     changePeripheralConfig(id: DeviceID, config: PeripheralConfiguration): Promise<void>;
-    readPeripheralBlock(id: DeviceID, block: number): Promise<Uint16Array>;
 }

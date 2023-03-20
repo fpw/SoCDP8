@@ -45,10 +45,6 @@ export class RF08Model extends PeripheralModel {
         }
     }
 
-    public async readBlock(block: number): Promise<Uint16Array> {
-        return await this.backend.readPeripheralBlock(this.conf.id, block);
-    }
-
     public async getDump(): Promise<Uint8Array> {
         return new Promise<Uint8Array>(accept => {
             this.dumpAcceptor = accept;

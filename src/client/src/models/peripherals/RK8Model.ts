@@ -20,8 +20,11 @@ import { PeripheralModel } from "./PeripheralModel";
 import { DeviceID, RK8Configuration } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
 import { PeripheralInAction } from "../../types/PeripheralAction";
+import { loadFile } from "../../util";
 
 export class RK8Model extends PeripheralModel {
+    private dumpAcceptor?: (dump: Uint8Array) => void;
+
     constructor(backend: Backend, private conf: RK8Configuration) {
         super(backend);
     }
@@ -35,5 +38,25 @@ export class RK8Model extends PeripheralModel {
     }
 
     public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
+        if (action.type == "core-dump") {
+            if (this.dumpAcceptor) {
+                this.dumpAcceptor(action.dump);
+            }
+        }
+    }
+
+    public async getDump(): Promise<Uint8Array> {
+        return new Promise<Uint8Array>(accept => {
+            this.dumpAcceptor = accept;
+            void this.backend.sendPeripheralAction(DeviceID.DEV_ID_RK8, {type: "get-core"});
+        });
+    }
+
+    public async loadDump(dump: File) {
+        const data = await loadFile(dump);
+        await this.backend.sendPeripheralAction(this.conf.id, {
+            type: "load-core",
+            data: new Uint8Array(data),
+        });
     }
 }

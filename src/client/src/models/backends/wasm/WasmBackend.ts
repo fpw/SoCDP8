@@ -212,44 +212,50 @@ export class WasmBackend implements Backend {
     }
 
     public async sendPeripheralAction(id: DeviceID, action: PeripheralOutAction): Promise<void> {
-        if (
-            id == DeviceID.DEV_ID_PT08 ||
-            id == DeviceID.DEV_ID_TT1 ||
-            id == DeviceID.DEV_ID_TT2 ||
-            id == DeviceID.DEV_ID_TT3 ||
-            id == DeviceID.DEV_ID_TT4
-        ) {
-            if (action.type == "key-press") {
-                this.pdp8.sendPeripheralAction(id, 3, action.key, 0);
-            } else if (action.type == "reader-tape-set") {
-                this.pdp8.sendPeripheralActionBuffer(id, 4, action.tapeData);
-            } else if (action.type == "reader-set-active") {
-                this.pdp8.sendPeripheralAction(id, 5, action.active ? 1 : 0, 0);
-            }
-        } else if (id == DeviceID.DEV_ID_PC04) {
-            if (action.type == "reader-tape-set") {
-                this.pdp8.sendPeripheralActionBuffer(DeviceID.DEV_ID_PC04, 4, action.tapeData);
-            } else if (action.type == "reader-set-active") {
-                this.pdp8.sendPeripheralAction(DeviceID.DEV_ID_PC04, 5, action.active ? 1 : 0, 0);
-            }
-        } else if (id == DeviceID.DEV_ID_TC08) {
-            if (action.type == "load-tape") {
-                this.pdp8.sendPeripheralActionBuffer(DeviceID.DEV_ID_TC08, 1 + action.unit, action.data);
-            } else if (action.type == "get-tape") {
-                this.pdp8.sendPeripheralAction(DeviceID.DEV_ID_TC08, 11, action.unit, 0);
-            }
-        } else if (id == DeviceID.DEV_ID_CPU) {
-            if (action.type == "load-core") {
-                this.pdp8.sendPeripheralActionBuffer(DeviceID.DEV_ID_CPU, 5, action.data);
-            } else if (action.type == "get-core") {
-                this.pdp8.sendPeripheralAction(DeviceID.DEV_ID_CPU, 6, 0, 0);
-            }
-        } else if (id == DeviceID.DEV_ID_RF08) {
-            if (action.type == "load-core") {
-                this.pdp8.sendPeripheralActionBuffer(DeviceID.DEV_ID_RF08, 1, action.data);
-            } else if (action.type == "get-core") {
-                this.pdp8.sendPeripheralAction(DeviceID.DEV_ID_RF08, 2, 0, 0);
-            }
+        switch (id) {
+            case DeviceID.DEV_ID_CPU:
+                if (action.type == "load-core") {
+                    this.pdp8.sendPeripheralActionBuffer(DeviceID.DEV_ID_CPU, 5, action.data);
+                } else if (action.type == "get-core") {
+                    this.pdp8.sendPeripheralAction(DeviceID.DEV_ID_CPU, 6, 0, 0);
+                }
+                break;
+            case DeviceID.DEV_ID_PT08:
+            case DeviceID.DEV_ID_TT1:
+            case DeviceID.DEV_ID_TT2:
+            case DeviceID.DEV_ID_TT3:
+            case DeviceID.DEV_ID_TT4:
+                if (action.type == "key-press") {
+                    this.pdp8.sendPeripheralAction(id, 3, action.key, 0);
+                } else if (action.type == "reader-tape-set") {
+                    this.pdp8.sendPeripheralActionBuffer(id, 4, action.tapeData);
+                } else if (action.type == "reader-set-active") {
+                    this.pdp8.sendPeripheralAction(id, 5, action.active ? 1 : 0, 0);
+                }
+                break;
+            case DeviceID.DEV_ID_PC04:
+                if (action.type == "reader-tape-set") {
+                    this.pdp8.sendPeripheralActionBuffer(id, 4, action.tapeData);
+                } else if (action.type == "reader-set-active") {
+                    this.pdp8.sendPeripheralAction(id, 5, action.active ? 1 : 0, 0);
+                }
+                break;
+            case DeviceID.DEV_ID_TC08:
+                if (action.type == "load-tape") {
+                    this.pdp8.sendPeripheralActionBuffer(id, 1 + action.unit, action.data);
+                } else if (action.type == "get-tape") {
+                    this.pdp8.sendPeripheralAction(id, 11, action.unit, 0);
+                }
+                break;
+            case DeviceID.DEV_ID_DF32:
+            case DeviceID.DEV_ID_RF08:
+            case DeviceID.DEV_ID_RK8:
+                if (action.type == "load-core") {
+                    this.pdp8.sendPeripheralActionBuffer(id, 1, action.data);
+                } else if (action.type == "get-core") {
+                    this.pdp8.sendPeripheralAction(id, 2, 0, 0);
+                }
+                break;
         }
     }
 
@@ -272,10 +278,12 @@ export class WasmBackend implements Backend {
                     this.listener.onPeripheralEvent(DeviceID.DEV_ID_CPU, {type: "core-dump", dump});
                 }
                 break;
+            case DeviceID.DEV_ID_DF32:
             case DeviceID.DEV_ID_RF08:
+            case DeviceID.DEV_ID_RK8:
                 if (action == 2) {
                     const dump = this.pdp8.fetchBuffer(p1, p2);
-                    this.listener.onPeripheralEvent(DeviceID.DEV_ID_RF08, {type: "core-dump", dump});
+                    this.listener.onPeripheralEvent(dev, {type: "core-dump", dump});
                 }
                 break;
             case DeviceID.DEV_ID_PT08:
@@ -379,9 +387,5 @@ export class WasmBackend implements Backend {
                 this.pdp8.sendPeripheralAction(id, 1, (+config.use50Hz << 1) | +config.useExternalClock, 0);
                 break;
         }
-    }
-
-    public async readPeripheralBlock(id: DeviceID, block: number): Promise<Uint16Array> {
-        return Uint16Array.from([]);
     }
 }

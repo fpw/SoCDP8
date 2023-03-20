@@ -136,7 +136,7 @@ function RF08Box(props: {model: RF08Model}) {
 function DF32Box(props: {model: DF32Model}) {
     return (
         <CaptionBox name="DF32 Disk Control" model={props.model}>
-            <DF32 />
+            <DF32 model={props.model} />
         </CaptionBox>
     );
 }
@@ -144,7 +144,7 @@ function DF32Box(props: {model: DF32Model}) {
 function RK8Box(props: {model: RK8Model}) {
     return (
         <CaptionBox name="RK8 Disk Control" model={props.model}>
-            <RK8 />
+            <RK8 model={props.model} />
         </CaptionBox>
     );
 }

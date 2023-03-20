@@ -20,8 +20,11 @@ import { PeripheralModel } from "./PeripheralModel";
 import { DeviceID, DF32Configuration } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
 import { PeripheralInAction } from "../../types/PeripheralAction";
+import { loadFile } from "../../util";
 
 export class DF32Model extends PeripheralModel {
+    private dumpAcceptor?: (dump: Uint8Array) => void;
+
     constructor(backend: Backend, private conf: DF32Configuration) {
         super(backend);
     }
@@ -30,10 +33,30 @@ export class DF32Model extends PeripheralModel {
         return this.conf.id;
     }
 
-    public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
+    public get connections(): number[] {
+        return [0o60, 0o61, 0o62, 0o63];
     }
 
-    public get connections(): number[] {
-        return [0o60, 0o61, 0o62];
+    public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
+        if (action.type == "core-dump") {
+            if (this.dumpAcceptor) {
+                this.dumpAcceptor(action.dump);
+            }
+        }
+    }
+
+    public async getDump(): Promise<Uint8Array> {
+        return new Promise<Uint8Array>(accept => {
+            this.dumpAcceptor = accept;
+            void this.backend.sendPeripheralAction(DeviceID.DEV_ID_DF32, {type: "get-core"});
+        });
+    }
+
+    public async loadDump(dump: File) {
+        const data = await loadFile(dump);
+        await this.backend.sendPeripheralAction(this.conf.id, {
+            type: "load-core",
+            data: new Uint8Array(data),
+        });
     }
 }

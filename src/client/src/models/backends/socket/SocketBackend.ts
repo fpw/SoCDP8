@@ -151,12 +151,4 @@ export class SocketBackend implements Backend {
             config: config,
         });
     }
-
-    public async readPeripheralBlock(id: DeviceID, block: number): Promise<Uint16Array> {
-        return new Promise<Uint16Array>(accept => {
-            this.socket.emit("read-disk-block", id, block, (res: Uint16Array) => {
-                accept(res);
-            });
-        });
-    }
 }
