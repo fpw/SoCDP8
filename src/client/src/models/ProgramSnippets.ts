@@ -264,6 +264,19 @@ export const ProgramSnippets: ProgramSnippet[] = [
         ]
     },
     {
+        label: "OS/8 RK8E Loader",
+        desc: "OS/8 for RK8E, start at 0030",
+        snippets: [
+            {
+                start: 0o0030,
+                data: [
+                    0o6743,
+                    0o5031,
+                ],
+            }
+        ]
+    },
+    {
         label: "Monitor TC08 Loader",
         desc: "TC08 Loader for Monitor, start at 0200",
         snippets: [

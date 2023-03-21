@@ -54,6 +54,7 @@ export function SystemForm(props: SystemFormProps) {
                     <FormLabel component="legend">CPU Extensions</FormLabel>
                     <FormControlLabel control={<Switch name="eae" color="primary" defaultChecked={s.cpuExtensions.eae} />} label="KE8/I (EAE)" />
                     <FormControlLabel control={<Switch name="kt8i" color="primary" defaultChecked={s.cpuExtensions.kt8i} />} label="KT8/I (Time Sharing Option)" />
+                    <FormControlLabel control={<Switch name="bsw" color="primary" defaultChecked={s.cpuExtensions.bsw} />} label="BSW instruction for 8/E programs" />
                 </FormControl>
 
                 <FormControl component="fieldset">
@@ -92,7 +93,8 @@ export function SystemForm(props: SystemFormProps) {
                         <FormControlLabel value={""} control={<Radio />} label="None" />
                         <FormControlLabel value={DeviceID.DEV_ID_DF32} control={<Radio />} label="DF32" />
                         <FormControlLabel value={DeviceID.DEV_ID_RF08} control={<Radio />} label="RF08" />
-                        <FormControlLabel value={DeviceID.DEV_ID_RK8} control={<Radio />} label="RK8" />
+                        <FormControlLabel value={DeviceID.DEV_ID_RK08} control={<Radio />} label="RK08" />
+                        <FormControlLabel value={DeviceID.DEV_ID_RK8E} control={<Radio />} label="RK8E" />
                     </RadioGroup>
                 </FormControl>
 
@@ -132,10 +134,11 @@ function toSystemConf(ev: FormEvent<HTMLFormElement>): SystemConfiguration {
 
     s.cpuExtensions.eae = (form.elements.namedItem("eae") as HTMLInputElement).checked;
     s.cpuExtensions.kt8i = (form.elements.namedItem("kt8i") as HTMLInputElement).checked;
+    s.cpuExtensions.bsw = (form.elements.namedItem("bsw") as HTMLInputElement).checked;
     s.maxMemField = Number.parseInt((form.elements.namedItem("maxMemField") as HTMLInputElement).value);
 
     if ((form.elements.namedItem("serialLine") as HTMLInputElement).checked) {
-        s.peripherals.push({id: DeviceID.DEV_ID_PT08, baudRate: 110, eightBit: true, autoCaps: false});
+        s.peripherals.push({id: DeviceID.DEV_ID_PT08, baudRate: 110, eightBit: false, autoCaps: true});
     }
 
     if ((form.elements.namedItem("pc04") as HTMLInputElement).checked) {
@@ -167,18 +170,18 @@ function toSystemConf(ev: FormEvent<HTMLFormElement>): SystemConfiguration {
     const diskStr = (form.elements.namedItem("disk") as HTMLInputElement).value;
     const diskId = Number.parseInt(diskStr, 10) as DeviceID;
     switch (diskId) {
-        case DeviceID.DEV_ID_DF32: {
+        case DeviceID.DEV_ID_DF32:
             s.peripherals.push({id: DeviceID.DEV_ID_DF32});
             break;
-        }
-        case DeviceID.DEV_ID_RF08: {
+        case DeviceID.DEV_ID_RF08:
             s.peripherals.push({id: DeviceID.DEV_ID_RF08});
             break;
-        }
-        case DeviceID.DEV_ID_RK8: {
-            s.peripherals.push({id: DeviceID.DEV_ID_RK8});
+        case DeviceID.DEV_ID_RK08:
+            s.peripherals.push({id: DeviceID.DEV_ID_RK08});
             break;
-        }
+        case DeviceID.DEV_ID_RK8E:
+            s.peripherals.push({id: DeviceID.DEV_ID_RK8E});
+            break;
     }
 
     ev.preventDefault();
@@ -202,7 +205,8 @@ function getDiskType(list: PeripheralConfiguration[]): DeviceID | "" {
         switch (conf.id) {
             case DeviceID.DEV_ID_DF32: return conf.id;
             case DeviceID.DEV_ID_RF08: return conf.id;
-            case DeviceID.DEV_ID_RK8:  return conf.id;
+            case DeviceID.DEV_ID_RK08: return conf.id;
+            case DeviceID.DEV_ID_RK8E: return conf.id;
         }
     }
     return "";

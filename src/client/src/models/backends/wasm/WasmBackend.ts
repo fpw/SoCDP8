@@ -214,9 +214,9 @@ export class WasmBackend implements Backend {
     public async sendPeripheralAction(id: DeviceID, action: PeripheralOutAction): Promise<void> {
         switch (id) {
             case DeviceID.DEV_ID_CPU:
-                if (action.type == "load-core") {
+                if (action.type == "upload-disk") {
                     this.pdp8.sendPeripheralActionBuffer(DeviceID.DEV_ID_CPU, 5, action.data);
-                } else if (action.type == "get-core") {
+                } else if (action.type == "download-disk") {
                     this.pdp8.sendPeripheralAction(DeviceID.DEV_ID_CPU, 6, 0, 0);
                 }
                 break;
@@ -241,19 +241,14 @@ export class WasmBackend implements Backend {
                 }
                 break;
             case DeviceID.DEV_ID_TC08:
-                if (action.type == "load-tape") {
-                    this.pdp8.sendPeripheralActionBuffer(id, 1 + action.unit, action.data);
-                } else if (action.type == "get-tape") {
-                    this.pdp8.sendPeripheralAction(id, 11, action.unit, 0);
-                }
-                break;
             case DeviceID.DEV_ID_DF32:
             case DeviceID.DEV_ID_RF08:
-            case DeviceID.DEV_ID_RK8:
-                if (action.type == "load-core") {
-                    this.pdp8.sendPeripheralActionBuffer(id, 1, action.data);
-                } else if (action.type == "get-core") {
-                    this.pdp8.sendPeripheralAction(id, 2, 0, 0);
+            case DeviceID.DEV_ID_RK08:
+            case DeviceID.DEV_ID_RK8E:
+                if (action.type == "upload-disk") {
+                    this.pdp8.sendPeripheralActionBuffer(id, 10 + action.unit, action.data);
+                } else if (action.type == "download-disk") {
+                    this.pdp8.sendPeripheralAction(id, 20 + action.unit, 0, 0);
                 }
                 break;
         }
@@ -275,15 +270,16 @@ export class WasmBackend implements Backend {
                     this.listener.onPerformanceReport(simSpeed);
                 } else if (action == 6) {
                     const dump = this.pdp8.fetchBuffer(p1, p2);
-                    this.listener.onPeripheralEvent(DeviceID.DEV_ID_CPU, {type: "core-dump", dump});
+                    this.listener.onPeripheralEvent(DeviceID.DEV_ID_CPU, {type: "dump-data", dump});
                 }
                 break;
             case DeviceID.DEV_ID_DF32:
             case DeviceID.DEV_ID_RF08:
-            case DeviceID.DEV_ID_RK8:
-                if (action == 2) {
+            case DeviceID.DEV_ID_RK08:
+            case DeviceID.DEV_ID_RK8E:
+                if (action >= 20 && action < 30) {
                     const dump = this.pdp8.fetchBuffer(p1, p2);
-                    this.listener.onPeripheralEvent(dev, {type: "core-dump", dump});
+                    this.listener.onPeripheralEvent(dev, {type: "dump-data", dump});
                 }
                 break;
             case DeviceID.DEV_ID_PT08:
@@ -317,7 +313,7 @@ export class WasmBackend implements Backend {
                 }
                 break;
             case DeviceID.DEV_ID_TC08:
-                if (action == 10) {
+                if (action == 1) {
                     const status = p2;
                     this.tapeStatus[p1] = {
                         address: p1,
@@ -329,14 +325,14 @@ export class WasmBackend implements Backend {
                         normalizedPosition: ((status & 0xFFFF0000) >> 16) / 1000,
                     };
                     if (p1 == 7) {
-                        this.listener.onPeripheralEvent(DeviceID.DEV_ID_TC08, {
+                        this.listener.onPeripheralEvent(dev, {
                             type: "tapeStates",
                             states: this.tapeStatus,
                         });
                     }
-                } else if (action == 11) {
+                } else if (action >= 20 && action < 30) {
                     const dump = this.pdp8.fetchBuffer(p1, p2);
-                    this.listener.onPeripheralEvent(DeviceID.DEV_ID_TC08, {type: "core-dump", dump});
+                    this.listener.onPeripheralEvent(dev, {type: "dump-data", dump});
                 }
                 break;
         }

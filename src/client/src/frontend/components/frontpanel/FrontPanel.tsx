@@ -22,11 +22,7 @@ import { LampBrightness, SwitchState } from "../../../types/ConsoleTypes";
 
 type OnSwitch = (sw: string, state: boolean) => void;
 
-export interface FrontPanelProps {
-    pdp8: SoCDP8,
-}
-
-export function FrontPanel(props: FrontPanelProps) {
+export function FrontPanel(props: {pdp8: SoCDP8}) {
     const [svgRoot, setSVGRoot] = useState<SVGSVGElement>();
     const [lamps, setLamps] = useState<Record<string, SVGSVGElement>>({});
     const [switches, setSwitches] = useState<Record<string, SVGSVGElement>>({});

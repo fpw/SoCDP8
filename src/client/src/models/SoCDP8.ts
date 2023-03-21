@@ -19,20 +19,21 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { ConsoleState } from "../types/ConsoleTypes";
+import { PeripheralInAction } from "../types/PeripheralAction";
 import { DeviceID } from "../types/PeripheralTypes";
 import { SystemConfiguration } from "../types/SystemConfiguration";
 import { Backend } from "./backends/Backend";
 import { BackendListener } from "./backends/BackendListener";
-import { PeripheralInAction } from "../types/PeripheralAction";
 import { DF32Model } from "./peripherals/DF32Model";
+import { DumpMixin } from "./peripherals/DumpMixin";
 import { KW8IModel } from "./peripherals/KW8IModel";
 import { PC04Model } from "./peripherals/PC04Model";
 import { PeripheralModel } from "./peripherals/PeripheralModel";
 import { PT08Model } from "./peripherals/PT08Model";
 import { RF08Model } from "./peripherals/RF08Model";
-import { RK8Model } from "./peripherals/RK8Model";
+import { RK08Model } from "./peripherals/RK08Model";
+import { RK8EModel } from "./peripherals/RK8EModel";
 import { TC08Model } from "./peripherals/TC08Model";
-import { loadFile } from "../util";
 
 interface SoCDP8Store {
     frontPanel?: ConsoleState;
@@ -51,7 +52,7 @@ interface SoCDP8Store {
 
 export class SoCDP8 {
     private backend: Backend;
-    dumpAcceptor?: (dump: Uint8Array) => void;
+    private coreDumpHandler: DumpMixin;
 
     private store = create<SoCDP8Store>()(immer(set => ({
         peripheralModels: new Map(),
@@ -81,6 +82,7 @@ export class SoCDP8 {
 
     constructor(backend: Backend) {
         this.backend = backend;
+        this.coreDumpHandler = new DumpMixin(backend, DeviceID.DEV_ID_CPU);
     }
 
     public async connect() {
@@ -164,8 +166,11 @@ export class SoCDP8 {
                 case DeviceID.DEV_ID_DF32:
                     peripheral = new DF32Model(this.backend, conf);
                     break;
-                case DeviceID.DEV_ID_RK8:
-                    peripheral = new RK8Model(this.backend, conf);
+                case DeviceID.DEV_ID_RK08:
+                    peripheral = new RK08Model(this.backend, conf);
+                    break;
+                case DeviceID.DEV_ID_RK8E:
+                    peripheral = new RK8EModel(this.backend, conf);
                     break;
                 case DeviceID.DEV_ID_KW8I:
                     peripheral = new KW8IModel(this.backend, conf);
@@ -178,12 +183,7 @@ export class SoCDP8 {
 
     private onPeripheralEvent(id: DeviceID, action: PeripheralInAction) {
         if (id == DeviceID.DEV_ID_CPU) {
-            if (action.type == "core-dump") {
-                if (this.dumpAcceptor) {
-                    this.dumpAcceptor(action.dump);
-                    this.dumpAcceptor = undefined;
-                }
-            }
+            this.coreDumpHandler.onPeripheralAction(id, action);
             return;
         }
 
@@ -227,22 +227,15 @@ export class SoCDP8 {
     }
 
     public async getCoreDump(): Promise<Uint8Array> {
-        return new Promise<Uint8Array>(accept => {
-            this.dumpAcceptor = accept;
-            void this.backend.sendPeripheralAction(DeviceID.DEV_ID_CPU, {type: "get-core"});
-        });
+        return await this.coreDumpHandler.downloadDump(0);
     }
 
     public async writeCore(addr: number, fragment: number[]): Promise<void> {
         await this.backend.writeCore(addr, fragment);
     }
 
-    public async loadCoreDump(dump: File) {
-        const data = await loadFile(dump);
-        await this.backend.sendPeripheralAction(DeviceID.DEV_ID_CPU, {
-            type: "load-core",
-            data: new Uint8Array(data),
-        });
+    public async loadCoreDump(dump: Uint8Array) {
+        await this.coreDumpHandler.uploadDump(0, dump);
     }
 
     private async onStateEvent(action: PeripheralInAction) {

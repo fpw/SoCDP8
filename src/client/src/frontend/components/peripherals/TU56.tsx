@@ -19,7 +19,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { DECTape, TapeState } from "../../../models/DECTape";
 
-export interface TU56Props {
+interface TU56Props {
     address: number;
     left: DECTape;
     right: DECTape;

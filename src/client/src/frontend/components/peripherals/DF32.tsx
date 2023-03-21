@@ -16,34 +16,14 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box, ButtonGroup, Button } from "@mui/material";
+import { Box } from "@mui/material";
 import { DF32Model } from "../../../models/peripherals/DF32Model";
-import { downloadData } from "../../../util";
+import { DumpButtons } from "./DumpButtons";
 
 export function DF32(props: {model: DF32Model}) {
-    async function upload(target: HTMLInputElement) {
-        if (!target.files || target.files.length < 1) {
-            return;
-        }
-        await props.model.loadDump(target.files[0]);
-    }
-
-    async function download() {
-        const dump = await props.model.getDump();
-        await downloadData(dump, "df32.dat");
-    }
-
     return (
         <Box>
-            <ButtonGroup variant="outlined" color="primary">
-                <Button onClick={() => void download()}>
-                    Download Dump
-                </Button>
-                <Button component="label">
-                    Upload Dump
-                    <input type="file" onChange={evt => void upload(evt.target)} hidden />
-                </Button>
-            </ButtonGroup>
+            <DumpButtons model={props.model} />
         </Box>
     );
 }

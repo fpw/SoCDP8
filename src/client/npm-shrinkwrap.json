@@ -12,19 +12,19 @@
         "@emotion/react": "^11.10.6",
         "@emotion/styled": "^11.10.6",
         "@mui/icons-material": "^5.11.11",
-        "@mui/material": "^5.11.13",
+        "@mui/material": "^5.11.14",
         "immer": "^9.0.19",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-router-dom": "^6.9.0",
-        "react-simple-keyboard": "^3.5.42",
+        "react-simple-keyboard": "^3.5.43",
         "socket.io-client": "^4.6.1",
         "xterm": "^5.1.0",
         "zustand": "^4.3.6"
       },
       "devDependencies": {
         "@types/emscripten": "^1.39.6",
-        "@types/node": "^18.15.3",
+        "@types/node": "^18.15.5",
         "@types/react": "^18.0.28",
         "@types/react-dom": "^18.0.11",
         "@typescript-eslint/eslint-plugin": "^5.56.0",
@@ -2621,9 +2621,9 @@
       }
     },
     "node_modules/@mui/base": {
-      "version": "5.0.0-alpha.121",
-      "resolved": "https://registry.npmjs.org/@mui/base/-/base-5.0.0-alpha.121.tgz",
-      "integrity": "sha512-8nJRY76UqlJV+q/Yzo0tgGfPWEOa+4N9rjO81fMmcJqP0I6m54hLDXsjvMg4tvelY5eKHXUK6Tb7en+GHfTqZA==",
+      "version": "5.0.0-alpha.122",
+      "resolved": "https://registry.npmjs.org/@mui/base/-/base-5.0.0-alpha.122.tgz",
+      "integrity": "sha512-IgZEFQyHa39J1+Q3tekVdhPuUm1fr3icddaNLmiAIeYTVXmR7KR5FhBAIL0P+4shlPq0liUPGlXryoTm0iCeFg==",
       "dependencies": {
         "@babel/runtime": "^7.21.0",
         "@emotion/is-prop-valid": "^1.2.0",
@@ -2653,9 +2653,9 @@
       }
     },
     "node_modules/@mui/core-downloads-tracker": {
-      "version": "5.11.13",
-      "resolved": "https://registry.npmjs.org/@mui/core-downloads-tracker/-/core-downloads-tracker-5.11.13.tgz",
-      "integrity": "sha512-lx+GXBR9h/ApZsEP728tl0pyZyuajto+VnBgsoAzw1d5+CbmOo8ZWieKwVUGxZlPT1wMYNUYS5NtKzCli0xYjw==",
+      "version": "5.11.14",
+      "resolved": "https://registry.npmjs.org/@mui/core-downloads-tracker/-/core-downloads-tracker-5.11.14.tgz",
+      "integrity": "sha512-rfc08z6+3Fif+Gopx2/qmk+MEQlwYeA+gOcSK048BHkTty/ol/boHuVeL2BNC/cf9OVRjJLYHtVb/DeW791LSQ==",
       "funding": {
         "type": "opencollective",
         "url": "https://opencollective.com/mui"
@@ -2687,14 +2687,14 @@
       }
     },
     "node_modules/@mui/material": {
-      "version": "5.11.13",
-      "resolved": "https://registry.npmjs.org/@mui/material/-/material-5.11.13.tgz",
-      "integrity": "sha512-2CnSj43F+159LbGmTLLQs5xbGYMiYlpTByQhP7c7cMX6opbScctBFE1PuyElpAmwW8Ag9ysfZH1d1MFAmJQkjg==",
+      "version": "5.11.14",
+      "resolved": "https://registry.npmjs.org/@mui/material/-/material-5.11.14.tgz",
+      "integrity": "sha512-uoiUyybmo+M+nYARBygmbXgX6s/hH0NKD56LCAv9XvmdGVoXhEGjOvxI5/Bng6FS3NNybnA8V+rgZW1Z/9OJtA==",
       "dependencies": {
         "@babel/runtime": "^7.21.0",
-        "@mui/base": "5.0.0-alpha.121",
-        "@mui/core-downloads-tracker": "^5.11.13",
-        "@mui/system": "^5.11.13",
+        "@mui/base": "5.0.0-alpha.122",
+        "@mui/core-downloads-tracker": "^5.11.14",
+        "@mui/system": "^5.11.14",
         "@mui/types": "^7.2.3",
         "@mui/utils": "^5.11.13",
         "@types/react-transition-group": "^4.4.5",
@@ -2788,9 +2788,9 @@
       }
     },
     "node_modules/@mui/system": {
-      "version": "5.11.13",
-      "resolved": "https://registry.npmjs.org/@mui/system/-/system-5.11.13.tgz",
-      "integrity": "sha512-OWP0Alp6C8ufnGm9+CZcl3d+OoRXL2PnrRT5ohaMLxvGL9OfNcL2t4JOjMmA0k1UAGd6E/Ygbu5lEPrZSDlvCg==",
+      "version": "5.11.14",
+      "resolved": "https://registry.npmjs.org/@mui/system/-/system-5.11.14.tgz",
+      "integrity": "sha512-/MBv5dUoijJNEKEGi5tppIszGN0o2uejmeISi5vl0CLcaQsI1cd+uBgK+JYUP1VWvI/MtkWRLVSWtF2FWhu5Nw==",
       "dependencies": {
         "@babel/runtime": "^7.21.0",
         "@mui/private-theming": "^5.11.13",
@@ -2952,9 +2952,9 @@
       "dev": true
     },
     "node_modules/@types/node": {
-      "version": "18.15.3",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-18.15.3.tgz",
-      "integrity": "sha512-p6ua9zBxz5otCmbpb5D3U4B5Nanw6Pk3PPyX05xnxbB/fRv71N7CPmORg7uAD5P70T0xmx1pzAx/FUfa5X+3cw==",
+      "version": "18.15.5",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-18.15.5.tgz",
+      "integrity": "sha512-Ark2WDjjZO7GmvsyFFf81MXuGTA/d6oP38anyxWOL6EREyBKAxKoFHwBhaZxCfLRLpO8JgVXwqOwSwa7jRcjew==",
       "dev": true
     },
     "node_modules/@types/parse-json": {
@@ -6419,9 +6419,9 @@
       }
     },
     "node_modules/react-simple-keyboard": {
-      "version": "3.5.42",
-      "resolved": "https://registry.npmjs.org/react-simple-keyboard/-/react-simple-keyboard-3.5.42.tgz",
-      "integrity": "sha512-yZo5tRIoI+utU0jmXFZAmuX1WMzUtddInGzsNOMZ8/JCs8e2wxfvhx4clAPmLwmunUFQwuoa8oHRmMrKYVPoCA==",
+      "version": "3.5.43",
+      "resolved": "https://registry.npmjs.org/react-simple-keyboard/-/react-simple-keyboard-3.5.43.tgz",
+      "integrity": "sha512-wKZSx4rJO8XswTOG3jDl8tBb2llY2DEU7bkQH1nwp4R8aImC0M7nmB+uyQPIErEoqyBVGwBMlt9ZAfFYM0xUcA==",
       "peerDependencies": {
         "react": "^16.0.0 || ^17.0.0 || ^18.0.0",
         "react-dom": "^16.0.0 || ^17.0.0 || ^18.0.0"
@@ -9248,9 +9248,9 @@
       }
     },
     "@mui/base": {
-      "version": "5.0.0-alpha.121",
-      "resolved": "https://registry.npmjs.org/@mui/base/-/base-5.0.0-alpha.121.tgz",
-      "integrity": "sha512-8nJRY76UqlJV+q/Yzo0tgGfPWEOa+4N9rjO81fMmcJqP0I6m54hLDXsjvMg4tvelY5eKHXUK6Tb7en+GHfTqZA==",
+      "version": "5.0.0-alpha.122",
+      "resolved": "https://registry.npmjs.org/@mui/base/-/base-5.0.0-alpha.122.tgz",
+      "integrity": "sha512-IgZEFQyHa39J1+Q3tekVdhPuUm1fr3icddaNLmiAIeYTVXmR7KR5FhBAIL0P+4shlPq0liUPGlXryoTm0iCeFg==",
       "requires": {
         "@babel/runtime": "^7.21.0",
         "@emotion/is-prop-valid": "^1.2.0",
@@ -9263,9 +9263,9 @@
       }
     },
     "@mui/core-downloads-tracker": {
-      "version": "5.11.13",
-      "resolved": "https://registry.npmjs.org/@mui/core-downloads-tracker/-/core-downloads-tracker-5.11.13.tgz",
-      "integrity": "sha512-lx+GXBR9h/ApZsEP728tl0pyZyuajto+VnBgsoAzw1d5+CbmOo8ZWieKwVUGxZlPT1wMYNUYS5NtKzCli0xYjw=="
+      "version": "5.11.14",
+      "resolved": "https://registry.npmjs.org/@mui/core-downloads-tracker/-/core-downloads-tracker-5.11.14.tgz",
+      "integrity": "sha512-rfc08z6+3Fif+Gopx2/qmk+MEQlwYeA+gOcSK048BHkTty/ol/boHuVeL2BNC/cf9OVRjJLYHtVb/DeW791LSQ=="
     },
     "@mui/icons-material": {
       "version": "5.11.11",
@@ -9276,14 +9276,14 @@
       }
     },
     "@mui/material": {
-      "version": "5.11.13",
-      "resolved": "https://registry.npmjs.org/@mui/material/-/material-5.11.13.tgz",
-      "integrity": "sha512-2CnSj43F+159LbGmTLLQs5xbGYMiYlpTByQhP7c7cMX6opbScctBFE1PuyElpAmwW8Ag9ysfZH1d1MFAmJQkjg==",
+      "version": "5.11.14",
+      "resolved": "https://registry.npmjs.org/@mui/material/-/material-5.11.14.tgz",
+      "integrity": "sha512-uoiUyybmo+M+nYARBygmbXgX6s/hH0NKD56LCAv9XvmdGVoXhEGjOvxI5/Bng6FS3NNybnA8V+rgZW1Z/9OJtA==",
       "requires": {
         "@babel/runtime": "^7.21.0",
-        "@mui/base": "5.0.0-alpha.121",
-        "@mui/core-downloads-tracker": "^5.11.13",
-        "@mui/system": "^5.11.13",
+        "@mui/base": "5.0.0-alpha.122",
+        "@mui/core-downloads-tracker": "^5.11.14",
+        "@mui/system": "^5.11.14",
         "@mui/types": "^7.2.3",
         "@mui/utils": "^5.11.13",
         "@types/react-transition-group": "^4.4.5",
@@ -9316,9 +9316,9 @@
       }
     },
     "@mui/system": {
-      "version": "5.11.13",
-      "resolved": "https://registry.npmjs.org/@mui/system/-/system-5.11.13.tgz",
-      "integrity": "sha512-OWP0Alp6C8ufnGm9+CZcl3d+OoRXL2PnrRT5ohaMLxvGL9OfNcL2t4JOjMmA0k1UAGd6E/Ygbu5lEPrZSDlvCg==",
+      "version": "5.11.14",
+      "resolved": "https://registry.npmjs.org/@mui/system/-/system-5.11.14.tgz",
+      "integrity": "sha512-/MBv5dUoijJNEKEGi5tppIszGN0o2uejmeISi5vl0CLcaQsI1cd+uBgK+JYUP1VWvI/MtkWRLVSWtF2FWhu5Nw==",
       "requires": {
         "@babel/runtime": "^7.21.0",
         "@mui/private-theming": "^5.11.13",
@@ -9423,9 +9423,9 @@
       "dev": true
     },
     "@types/node": {
-      "version": "18.15.3",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-18.15.3.tgz",
-      "integrity": "sha512-p6ua9zBxz5otCmbpb5D3U4B5Nanw6Pk3PPyX05xnxbB/fRv71N7CPmORg7uAD5P70T0xmx1pzAx/FUfa5X+3cw==",
+      "version": "18.15.5",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-18.15.5.tgz",
+      "integrity": "sha512-Ark2WDjjZO7GmvsyFFf81MXuGTA/d6oP38anyxWOL6EREyBKAxKoFHwBhaZxCfLRLpO8JgVXwqOwSwa7jRcjew==",
       "dev": true
     },
     "@types/parse-json": {
@@ -11911,9 +11911,9 @@
       }
     },
     "react-simple-keyboard": {
-      "version": "3.5.42",
-      "resolved": "https://registry.npmjs.org/react-simple-keyboard/-/react-simple-keyboard-3.5.42.tgz",
-      "integrity": "sha512-yZo5tRIoI+utU0jmXFZAmuX1WMzUtddInGzsNOMZ8/JCs8e2wxfvhx4clAPmLwmunUFQwuoa8oHRmMrKYVPoCA==",
+      "version": "3.5.43",
+      "resolved": "https://registry.npmjs.org/react-simple-keyboard/-/react-simple-keyboard-3.5.43.tgz",
+      "integrity": "sha512-wKZSx4rJO8XswTOG3jDl8tBb2llY2DEU7bkQH1nwp4R8aImC0M7nmB+uyQPIErEoqyBVGwBMlt9ZAfFYM0xUcA==",
       "requires": {}
     },
     "react-transition-group": {

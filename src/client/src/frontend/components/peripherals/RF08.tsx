@@ -16,38 +16,14 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box, Button, ButtonGroup } from "@mui/material";
+import { Box } from "@mui/material";
 import { RF08Model } from "../../../models/peripherals/RF08Model";
-import { downloadData } from "../../../util";
+import { DumpButtons } from "./DumpButtons";
 
-interface RF08Props {
-    model: RF08Model;
-}
-
-export function RF08(props: RF08Props) {
-    async function upload(target: HTMLInputElement) {
-        if (!target.files || target.files.length < 1) {
-            return;
-        }
-        await props.model.loadDump(target.files[0]);
-    }
-
-    async function download() {
-        const dump = await props.model.getDump();
-        await downloadData(dump, "rf08.dat");
-    }
-
+export function RF08(props: {model: RF08Model}) {
     return (
         <Box>
-            <ButtonGroup variant="outlined" color="primary">
-                <Button onClick={() => void download()}>
-                    Download Dump
-                </Button>
-                <Button component="label">
-                    Upload Dump
-                    <input type="file" onChange={evt => void upload(evt.target)} hidden />
-                </Button>
-            </ButtonGroup>
+            <DumpButtons model={props.model} />
         </Box>
     );
 }

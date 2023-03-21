@@ -43,12 +43,12 @@ export async function downloadData(data: Uint8Array, name: string): Promise<void
     }
 }
 
-export async function loadFile(file: File): Promise<ArrayBuffer> {
-    return new Promise<ArrayBuffer>((resolve, reject) => {
+export async function loadFile(file: File): Promise<Uint8Array> {
+    return new Promise<Uint8Array>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
             const data = reader.result as ArrayBuffer;
-            resolve(data);
+            resolve(new Uint8Array(data));
         };
         reader.onerror = () => {
             reject();

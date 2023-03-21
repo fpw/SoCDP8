@@ -21,7 +21,7 @@ import { Stack } from "@mui/system";
 import { useState } from "react";
 import { ProgramSnippet, ProgramSnippets } from "../../../models/ProgramSnippets";
 import { SoCDP8 } from "../../../models/SoCDP8";
-import { downloadData } from "../../../util";
+import { downloadData, loadFile } from "../../../util";
 import { FrontPanel } from "./FrontPanel";
 
 export function FrontPanelBox(props: {pdp8: SoCDP8}) {
@@ -48,11 +48,16 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
         setThrottle(!throttle);
     }
 
-    async function loadCore(target: HTMLInputElement) {
+    async function uploadCore(target: HTMLInputElement) {
         if (!target.files || target.files.length < 1) {
             return;
         }
-        await props.pdp8.loadCoreDump(target.files[0]);
+        if (target.files[0].size > 65536) {
+            alert(`File too big, max allowed size is ${65536} bytes.`);
+            return;
+        }
+        const data = await loadFile(target.files[0]);
+        await props.pdp8.loadCoreDump(data);
     }
 
     async function downloadCore() {
@@ -77,7 +82,7 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
                             </Button>
                             <Button component="label">
                                 Upload Dump
-                                <input type="file" onChange={evt => void loadCore(evt.target)} hidden />
+                                <input type="file" onChange={evt => void uploadCore(evt.target)} hidden />
                             </Button>
                             <Button onClick={() => void downloadCore()}>
                                 Download Dump

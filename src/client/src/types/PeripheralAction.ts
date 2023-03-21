@@ -19,19 +19,8 @@
 import { TapeState } from "../models/DECTape";
 
 export type PeripheralOutAction =
-    LoadCoreDumpAction | DownloadCoreDumpAction |
     KeyPressAction | TapeSetAction | ReaderStateAction |
-    DownloadTapeAction |
-    LoadTapeAction;
-
-export interface LoadCoreDumpAction {
-    type: "load-core";
-    data: Uint8Array;
-}
-
-export interface DownloadCoreDumpAction {
-    type: "get-core";
-}
+    DownloadDiskAction | UploadDiskAction;
 
 export interface KeyPressAction {
     type: "key-press";
@@ -48,25 +37,25 @@ export interface ReaderStateAction {
     active: boolean;
 }
 
-export interface LoadTapeAction {
-    type: "load-tape";
+export interface UploadDiskAction {
+    type: "upload-disk";
     unit: number;
     data: Uint8Array;
 }
 
-export interface DownloadTapeAction {
-    type: "get-tape";
+export interface DownloadDiskAction {
+    type: "download-disk";
     unit: number;
 }
 
 export type PeripheralInAction =
-    CoreDumpAction |
+DumpResultAction |
     ActiveStateChangeAction | StateListChangeAction |
     ReaderPosAction | PunchAction |
     TapeStatusAction;
 
-export interface CoreDumpAction {
-    type: "core-dump";
+export interface DumpResultAction {
+    type: "dump-data";
     dump: Uint8Array;
 }
 

@@ -21,33 +21,13 @@ import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Container, 
 import { ChangeEvent, useCallback, useRef, useState } from "react";
 import Keyboard from "react-simple-keyboard";
 import "react-simple-keyboard/build/css/index.css";
-import { Terminal } from "xterm";
 import "xterm/css/xterm.css";
-import { PaperTape } from "../../../models/PaperTape";
-import { BaudRate, BAUD_RATES, PT08Configuration } from "../../../types/PeripheralTypes";
+import { PT08Model } from "../../../models/peripherals/PT08Model";
+import { BaudRate, BAUD_RATES } from "../../../types/PeripheralTypes";
 import { downloadData } from "../../../util";
 import { PaperTapeBox } from "../common/PaperTapeBox";
 
-export interface PT08Props {
-    conf: PT08Configuration;
-    onConfigChange(conf: PT08Configuration): void;
-
-    terminal: Terminal;
-
-    readerTape: PaperTape;
-    readerActive: boolean;
-    onReaderActivationChange(state: boolean): void;
-    onReaderTapeLoad(tape: File): void;
-
-    punchTape: PaperTape;
-    punchActive: boolean;
-    onPunchActivationChange(state: boolean): void;
-    onPunchClear(): void;
-    onPunchLeader(): void;
-    onKeyboard(key: string): void;
-}
-
-export function PT08(props: PT08Props) {
+export function PT08(props: {model: PT08Model}) {
     return (
         <section>
             <ConfigBox {...props} />
@@ -80,8 +60,10 @@ export function PT08(props: PT08Props) {
     );
 }
 
-function VirtualKeyboard(props: PT08Props) {
+function VirtualKeyboard(props: {model: PT08Model}) {
     const [layout, setLayout] = useState<string>("default");
+    const { model } = props;
+    const conf = model.useState(state => state.conf!);
 
     const onKey = (key: string) => {
         switch (key) {
@@ -90,26 +72,26 @@ function VirtualKeyboard(props: PT08Props) {
                 setLayout(cur => (cur == "default" ? "shift" : "default"))
                 break;
             case "{enter}":
-                props.onKeyboard("\r");
+                void model.onRawKey("\r");
                 break;
             case "{space}":
-                props.onKeyboard(" ");
+                void model.onRawKey(" ");
                 break;
             case "{tab}":
-                props.onKeyboard("\t");
+                void model.onRawKey("\t");
                 break;
             case "{bksp}":
-                props.onKeyboard("\b");
+                void model.onRawKey("\b");
                 break;
             default:
-                props.onKeyboard(key);
+                void model.onRawKey(key);
         }
     };
 
     return (
         <Box mt={1}>
             <Keyboard
-                baseClass={`keyboard${props.conf.id}`}
+                baseClass={`keyboard${conf.id}`}
                 layoutName={layout}
                 onKeyPress={(button: string) => onKey(button)}
             />
@@ -117,16 +99,19 @@ function VirtualKeyboard(props: PT08Props) {
     );
 }
 
-function ConfigBox(props: PT08Props) {
+function ConfigBox(props: {model: PT08Model}) {
+    const { model } = props;
+    const conf = model.useState(state => state.conf!);
+
     return (<Box>
         <FormGroup row>
             <FormControl>
                 <FormLabel component="legend">Baud Rate</FormLabel>
                 <Select
-                    value={props.conf.baudRate}
+                    value={conf.baudRate}
                     onChange={(evt) => {
                         const rate = Number.parseInt(evt.target.value as string) as BaudRate;
-                        props.onConfigChange({...props.conf, baudRate: rate});
+                        void model.updateConfig({...conf, baudRate: rate});
                     }}
                 >
                     {BAUD_RATES.map((b) => (
@@ -138,10 +123,10 @@ function ConfigBox(props: PT08Props) {
             <FormControlLabel
                 control={
                     <Switch
-                        checked={props.conf.eightBit}
+                        checked={conf.eightBit}
                         onChange={(evt) => {
                             const bit8 = evt.target.checked;
-                            props.onConfigChange({...props.conf, eightBit: bit8});
+                            void model.updateConfig({...conf, eightBit: bit8});
                         }}
                     />
                 }
@@ -151,10 +136,10 @@ function ConfigBox(props: PT08Props) {
             <FormControlLabel
                 control={
                     <Switch
-                        checked={props.conf.autoCaps}
+                        checked={conf.autoCaps}
                         onChange={(evt) => {
                             const caps = evt.target.checked;
-                            props.onConfigChange({...props.conf, autoCaps: caps});
+                            void model.updateConfig({...conf, autoCaps: caps});
                         }}
                     />
                 }
@@ -165,15 +150,17 @@ function ConfigBox(props: PT08Props) {
     </Box>);
 }
 
-function TerminalBox(props: PT08Props) {
+function TerminalBox(props: {model: PT08Model}) {
+    const { model } = props;
+
     const termRef = useCallback((node: HTMLDivElement) => {
         if (!node) {
             return;
         }
-        const term = props.terminal;
+        const term = model.terminal;
         term.resize(80, 25);
         term.open(node);
-    }, [props.terminal]);
+    }, [model.terminal]);
 
     return (
         <>
@@ -182,7 +169,7 @@ function TerminalBox(props: PT08Props) {
             </Box>
 
             <Box mt={1} mb={3}>
-                <Button variant="contained" onClick={() => props.terminal.reset()}>
+                <Button variant="contained" onClick={() => model.terminal.reset()}>
                     Clear Output
                 </Button>
             </Box>
@@ -190,22 +177,25 @@ function TerminalBox(props: PT08Props) {
     );
 };
 
-function ReaderBox(props: PT08Props) {
+function ReaderBox(props: {model: PT08Model}) {
+    const { model } = props;
     const tapeInput = useRef<HTMLInputElement>(null);
+    const readerTape = model.readerTape;
+    const readerActive = model.useState(state => state.readerActive);
 
     return (
         <Box mt={2}>
             <Typography component="h6" variant="h6">Reader</Typography>
 
-            <PaperTapeBox tape={props.readerTape} reverse={false} />
+            <PaperTapeBox tape={readerTape} reverse={false} />
 
             <FormGroup row>
                 <FormControl>
-                    <input ref={tapeInput} type="file" onChange={evt => onLoadFile(evt, props)} hidden />
+                    <input ref={tapeInput} type="file" onChange={evt => void onLoadFile(evt, model)} hidden />
                     <Button variant="outlined" color="primary" onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
                 </FormControl>
                 <FormControlLabel
-                    control={<Switch onChange={evt => props.onReaderActivationChange(evt.target.checked)} checked={props.readerActive} />}
+                    control={<Switch onChange={evt => void model.setReaderActive(evt.target.checked)} checked={readerActive} />}
                     labelPlacement="start"
                     label="Reader On"
                 />
@@ -214,18 +204,21 @@ function ReaderBox(props: PT08Props) {
     );
 }
 
-function onLoadFile(evt: ChangeEvent, props: PT08Props): void {
+async function onLoadFile(evt: ChangeEvent, model: PT08Model) {
     const target = evt.target as HTMLInputElement;
     if (!target.files || target.files.length < 1) {
         return;
     }
 
-    props.onReaderTapeLoad(target.files[0]);
+    void model.loadTape(target.files[0]);
 }
 
-function PunchBox(props: PT08Props) {
+function PunchBox(props: {model: PT08Model}) {
+    const { model } = props;
+    const punchActive = model.useState(state => state.punchActive);
+
     async function download() {
-        const buffer = props.punchTape.useTape.getState().tapeState.buffer;
+        const buffer = model.punchTape.useTape.getState().tapeState.buffer;
         await downloadData(Uint8Array.from(buffer), "punch-pt08.bin")
     }
 
@@ -233,20 +226,20 @@ function PunchBox(props: PT08Props) {
         <Box mt={2}>
             <Typography component="h6" variant="h6">Punch</Typography>
 
-            <PaperTapeBox tape={props.punchTape} reverse={true} />
+            <PaperTapeBox tape={model.punchTape} reverse={true} />
 
             <FormGroup row>
                 <FormControl>
-                    <Button variant="outlined" color="primary" onClick={() => props.onPunchClear()}>New Tape</Button>
+                    <Button variant="outlined" color="primary" onClick={() => model.clearPunch()}>New Tape</Button>
                 </FormControl>
                 <FormControl>
                     <Button variant="outlined" color="primary" onClick={() => void download()}>Download Tape</Button>
                 </FormControl>
                 <FormControl>
-                    <Button variant="outlined" color="primary" onClick={() => props.onPunchLeader()}>Leader</Button>
+                    <Button variant="outlined" color="primary" onClick={() => model.addPunchLeader()}>Leader</Button>
                 </FormControl>
                 <FormControlLabel
-                    control={<Switch onChange={evt => props.onPunchActivationChange(evt.target.checked)} checked={props.punchActive} />}
+                    control={<Switch onChange={evt => void model.setPunchActive(evt.target.checked)} checked={punchActive} />}
                     labelPlacement="start"
                     label="Punch On"
                 />

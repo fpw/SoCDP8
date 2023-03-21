@@ -28,7 +28,8 @@ export enum DeviceID {
     DEV_ID_TT3      = 8,
     DEV_ID_TT4      = 9,
     DEV_ID_KW8I     = 10,
-    DEV_ID_RK8      = 11,
+    DEV_ID_RK08     = 11,
+    DEV_ID_RK8E     = 12,
 
     _COUNT
 }
@@ -73,8 +74,12 @@ export interface RF08Configuration {
     id: DeviceID.DEV_ID_RF08;
 }
 
-export interface RK8Configuration {
-    id: DeviceID.DEV_ID_RK8;
+export interface RK08Configuration {
+    id: DeviceID.DEV_ID_RK08;
+}
+
+export interface RK8EConfiguration {
+    id: DeviceID.DEV_ID_RK8E;
 }
 
 export interface KW8IConfiguration {
@@ -86,5 +91,5 @@ export interface KW8IConfiguration {
 export type PeripheralConfiguration =
     PT08Configuration | PC04Configuration |
     TC08Configuration |
-    DF32Configuration | RF08Configuration | RK8Configuration |
+    DF32Configuration | RF08Configuration | RK08Configuration | RK8EConfiguration |
     KW8IConfiguration;

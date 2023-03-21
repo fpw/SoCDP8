@@ -18,28 +18,12 @@
 
 import { Box, Button, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, Switch, Typography } from "@mui/material";
 import { ChangeEvent, useRef } from "react";
-import { PaperTape } from "../../../models/PaperTape";
-import { BaudRate, BAUD_RATES, PC04Configuration } from "../../../types/PeripheralTypes";
+import { PC04Model } from "../../../models/peripherals/PC04Model";
+import { BaudRate, BAUD_RATES } from "../../../types/PeripheralTypes";
 import { downloadData } from "../../../util";
 import { PaperTapeBox } from "../common/PaperTapeBox";
 
-export interface PC04Props {
-    conf: PC04Configuration;
-    onConfigChange(conf: PC04Configuration): void;
-
-    readerTape: PaperTape;
-    readerActive: boolean;
-    onReaderActivationChange(state: boolean): void;
-    onReaderTapeLoad(tape: File): void;
-
-    punchTape: PaperTape;
-    punchActive: boolean;
-    onPunchActivationChange(state: boolean): void;
-    onPunchClear(): void;
-    onPunchLeader(): void;
-}
-
-export function PC04(props: PC04Props) {
+export function PC04(props: {model: PC04Model}) {
     return (
         <section>
             <ConfigBox {...props} />
@@ -50,17 +34,20 @@ export function PC04(props: PC04Props) {
     );
 }
 
-function ConfigBox(props: PC04Props) {
+function ConfigBox(props: {model: PC04Model}) {
+    const { model } = props;
+    const conf = model.useState(state => state.conf!);
+
     return (
         <Box>
             <FormGroup row>
                 <FormControl>
                     <FormLabel component="legend">Baud Rate</FormLabel>
                     <Select
-                        value={props.conf.baudRate}
+                        value={conf.baudRate}
                         onChange={(evt) => {
                             const rate = Number.parseInt(evt.target.value as string) as BaudRate;
-                            props.onConfigChange({...props.conf, baudRate: rate});
+                            void model.updateConfig({...conf, baudRate: rate});
                         }}
                     >
                         {BAUD_RATES.map((b) => (
@@ -73,22 +60,24 @@ function ConfigBox(props: PC04Props) {
     );
 }
 
-function ReaderBox(props: PC04Props) {
+function ReaderBox(props: {model: PC04Model}) {
+    const { model } = props;
     const tapeInput = useRef<HTMLInputElement>(null);
+    const readerActive = model.useState(state => state.readerActive);
 
     return (
         <Box mt={2}>
             <Typography component="h6" variant="h6">Reader</Typography>
 
-            <PaperTapeBox tape={props.readerTape} reverse={false} />
+            <PaperTapeBox tape={model.readerTape} reverse={false} />
 
             <FormGroup row>
                 <FormControl>
-                    <input ref={tapeInput} type="file" onChange={evt => onLoadFile(evt, props)} hidden/>
+                    <input ref={tapeInput} type="file" onChange={evt => void onLoadFile(evt, model)} hidden/>
                     <Button variant="outlined" color="primary" onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
                 </FormControl>
                 <FormControlLabel
-                    control={<Switch onChange={(evt: ChangeEvent<HTMLInputElement>) => props.onReaderActivationChange(evt.target.checked)} checked={props.readerActive} />}
+                    control={<Switch onChange={(evt: ChangeEvent<HTMLInputElement>) => void model.setReaderActive(evt.target.checked)} checked={readerActive} />}
                     labelPlacement="start"
                     label="Reader On"
                 />
@@ -97,18 +86,21 @@ function ReaderBox(props: PC04Props) {
     );
 }
 
-function onLoadFile(evt: ChangeEvent, props: PC04Props): void {
+async function onLoadFile(evt: ChangeEvent, model: PC04Model) {
     const target = evt.target as HTMLInputElement;
     if (!target.files || target.files.length < 1) {
         return;
     }
 
-    props.onReaderTapeLoad(target.files[0]);
+    await model.loadTape(target.files[0]);
 }
 
-function PunchBox(props: PC04Props) {
+function PunchBox(props: {model: PC04Model}) {
+    const { model } = props;
+    const punchActive = model.useState(state => state.punchActive);
+
     async function download() {
-        const buffer = props.punchTape.useTape.getState().tapeState.buffer;
+        const buffer = model.punchTape.useTape.getState().tapeState.buffer;
         await downloadData(Uint8Array.from(buffer), "punch-pc04.bin")
     }
 
@@ -116,20 +108,20 @@ function PunchBox(props: PC04Props) {
         <Box mt={2}>
             <Typography component="h6" variant="h6">Punch</Typography>
 
-            <PaperTapeBox tape={props.punchTape} reverse={true} />
+            <PaperTapeBox tape={model.punchTape} reverse={true} />
 
             <FormGroup row>
                 <FormControl>
-                    <Button variant="outlined" color="primary" onClick={() => props.onPunchClear()}>New Tape</Button>
+                    <Button variant="outlined" color="primary" onClick={() => model.clearPunch()}>New Tape</Button>
                 </FormControl>
                 <FormControl>
                     <Button variant="outlined" color="primary" onClick={() => void download()}>Download Tape</Button>
                 </FormControl>
                 <FormControl>
-                    <Button variant="outlined" color="primary" onClick={() => props.onPunchLeader()}>Leader</Button>
+                    <Button variant="outlined" color="primary" onClick={() => model.addPunchLeader()}>Leader</Button>
                 </FormControl>
                 <FormControlLabel
-                    control={<Switch onChange={evt => props.onPunchActivationChange(evt.target.checked)} checked={props.punchActive} />}
+                    control={<Switch onChange={evt => void model.setPunchActive(evt.target.checked)} checked={punchActive} />}
                     labelPlacement="start"
                     label="Punch On"
                 />

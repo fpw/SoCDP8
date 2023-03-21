@@ -17,30 +17,30 @@
  */
 
 import { PeripheralInAction } from "../../types/PeripheralAction";
-import { DeviceID, DF32Configuration } from "../../types/PeripheralTypes";
+import { DeviceID, RK8EConfiguration } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
 import { DiskModel } from "./DiskModel";
 import { DumpMixin } from "./DumpMixin";
 import { PeripheralModel } from "./PeripheralModel";
 
-export class DF32Model extends PeripheralModel implements DiskModel {
+export class RK8EModel extends PeripheralModel implements DiskModel {
     private dumpHandler: DumpMixin;
 
-    constructor(backend: Backend, private conf: DF32Configuration) {
+    constructor(backend: Backend, private conf: RK8EConfiguration) {
         super(backend);
         this.dumpHandler = new DumpMixin(backend, conf.id);
+    }
+
+    public get connections(): number[] {
+        return [0o74];
     }
 
     public get id() {
         return this.conf.id;
     }
 
-    public get connections(): number[] {
-        return [0o60, 0o61, 0o62, 0o63];
-    }
-
     public getDumpExtension(): string {
-        return "df32";
+        return "rk05";
     }
 
     public getDiskCount(): number {
@@ -48,7 +48,7 @@ export class DF32Model extends PeripheralModel implements DiskModel {
     }
 
     public getDiskSize(): number {
-        return 65536;
+        return 3325952;
     }
 
     public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {

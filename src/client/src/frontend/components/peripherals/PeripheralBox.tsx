@@ -26,14 +26,16 @@ import { PC04Model } from "../../../models/peripherals/PC04Model";
 import { PeripheralModel } from "../../../models/peripherals/PeripheralModel";
 import { PT08Model } from "../../../models/peripherals/PT08Model";
 import { RF08Model } from "../../../models/peripherals/RF08Model";
-import { RK8Model } from "../../../models/peripherals/RK8Model";
+import { RK08Model } from "../../../models/peripherals/RK08Model";
+import { RK8EModel } from "../../../models/peripherals/RK8EModel";
 import { TC08Model } from "../../../models/peripherals/TC08Model";
 import { DF32 } from "./DF32";
 import { KW8I } from "./KW8I";
 import { PC04 } from "./PC04";
 import { PT08 } from "./PT08";
 import { RF08 } from "./RF08";
-import { RK8 } from "./RK8";
+import { RK08 } from "./RK08";
+import { RK8E } from "./RK8E";
 import { TC08 } from "./TC08";
 
 export function PeripheralBox(props: {model: PeripheralModel}) {
@@ -49,8 +51,10 @@ export function PeripheralBox(props: {model: PeripheralModel}) {
         return <RF08Box model={model} />
     } else if (model instanceof DF32Model) {
         return <DF32Box model={model} />
-    } else if (model instanceof RK8Model) {
-        return <RK8Box model={model} />
+    } else if (model instanceof RK08Model) {
+        return <RK08Box model={model} />
+    } else if (model instanceof RK8EModel) {
+        return <RK8EBox model={model} />
     } else if (model instanceof KW8IModel) {
         return <KW8IBox model={model} />
     } else {
@@ -59,58 +63,17 @@ export function PeripheralBox(props: {model: PeripheralModel}) {
 }
 
 function PT08Box(props: {model: PT08Model}) {
-    const {model} = props;
-    const readerActive = model.useState(state => state.readerActive);
-    const punchActive = model.useState(state => state.punchActive);
-    const config = model.useState(state => state.conf!);
-
     return (
-        <CaptionBox name="Serial Line" model={model}>
-            <PT08
-                conf={config}
-                onConfigChange={conf => void model.updateConfig(conf)}
-
-                readerActive={readerActive}
-                readerTape={model.readerTape}
-                onReaderTapeLoad={tape => void model.loadTape(tape)}
-                onReaderActivationChange={active => void model.setReaderActive(active)}
-
-                punchActive={punchActive}
-                punchTape={model.punchTape}
-                onPunchActivationChange={active => void model.setPunchActive(active)}
-                onPunchClear={() => model.clearPunch()}
-                onPunchLeader={() => model.addPunchLeader()}
-                onKeyboard={key => void model.onRawKey(key)}
-
-                terminal={model.terminal}
-            />
+        <CaptionBox name="Serial Line" model={props.model}>
+            <PT08 model={props.model} />
         </CaptionBox>
     );
 }
 
 function PC04Box(props: {model: PC04Model}) {
-    const {model} = props;
-    const readerActive = model.useState(state => state.readerActive);
-    const punchActive = model.useState(state => state.punchActive);
-    const config = model.useState(state => state.conf!);
-
     return (
-        <CaptionBox name="PC04 High-Speed Paper-Tape Reader and Punch" model={model}>
-            <PC04
-                conf={config}
-                onConfigChange={(conf) => void model.updateConfig(conf)}
-
-                readerActive={readerActive}
-                readerTape={model.readerTape}
-                onReaderTapeLoad={tape => void model.loadTape(tape)}
-                onReaderActivationChange={active => void model.setReaderActive(active)}
-
-                punchActive={punchActive}
-                punchTape={model.punchTape}
-                onPunchActivationChange={active => void model.setPunchActive(active)}
-                onPunchClear={() => model.clearPunch()}
-                onPunchLeader={() => model.addPunchLeader()}
-            />
+        <CaptionBox name="PC04 High-Speed Paper-Tape Reader and Punch" model={props.model}>
+            <PC04 model={props.model} />
         </CaptionBox>
     );
 }
@@ -141,10 +104,18 @@ function DF32Box(props: {model: DF32Model}) {
     );
 }
 
-function RK8Box(props: {model: RK8Model}) {
+function RK08Box(props: {model: RK08Model}) {
     return (
-        <CaptionBox name="RK8 Disk Control" model={props.model}>
-            <RK8 model={props.model} />
+        <CaptionBox name="RK08 Disk Control" model={props.model}>
+            <RK08 model={props.model} />
+        </CaptionBox>
+    );
+}
+
+function RK8EBox(props: {model: RK8EModel}) {
+    return (
+        <CaptionBox name="RK8E Disk Control" model={props.model}>
+            <RK8E model={props.model} />
         </CaptionBox>
     );
 }
@@ -163,11 +134,14 @@ function CaptionBox(props: {model: PeripheralModel, name: string, children: Reac
     return (
         <Box mb={3}>
             <Card variant="outlined">
-                <CardHeader title={titleStr} action={
-                    <IconButton component={RouterLink} to={`/peripherals/${model.id}`} title="Display only this">
-                        <FullscreenIcon />
-                    </IconButton>
-                } />
+                <CardHeader
+                    title={titleStr}
+                    action={
+                        <IconButton component={RouterLink} to={`/peripherals/${model.id}`} title="Display only this">
+                            <FullscreenIcon />
+                        </IconButton>
+                    }
+                />
                 <CardContent>
                     { children }
                 </CardContent>

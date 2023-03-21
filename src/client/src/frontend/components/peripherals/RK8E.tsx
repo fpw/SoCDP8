@@ -16,26 +16,14 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Typography } from "@mui/material";
-import { SoCDP8 } from "../../models/SoCDP8";
-import { FrontPanelBox } from "../components/frontpanel/FrontPanelBox";
-import { PeripheralBox } from "../components/peripherals/PeripheralBox";
+import { Box } from "@mui/material";
+import { RK8EModel } from "../../../models/peripherals/RK8EModel";
+import { DumpButtons } from "./DumpButtons";
 
-export function SystemPage(props: {pdp8: SoCDP8}) {
-    const peripherals = props.pdp8.useStore(state => state.peripheralModels);
-    const sys = props.pdp8.useStore(state => state.activeSystem)!;
-
-    const models = [...peripherals.values()];
-
+export function RK8E(props: {model: RK8EModel}) {
     return (
-        <>
-            <Typography component="h1" variant="h4" gutterBottom>
-                System: {sys.name}
-            </Typography>
-
-            <FrontPanelBox pdp8={props.pdp8} />
-
-            { models.map((dev, i) => <PeripheralBox key={i} model={dev} />) }
-        </>
+        <Box>
+            <DumpButtons model={props.model} />
+        </Box>
     );
 }

@@ -16,17 +16,19 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PeripheralModel } from "./PeripheralModel";
+import { PeripheralInAction } from "../../types/PeripheralAction";
 import { DeviceID, RF08Configuration } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
-import { PeripheralInAction } from "../../types/PeripheralAction";
-import { loadFile } from "../../util";
+import { DiskModel } from "./DiskModel";
+import { DumpMixin } from "./DumpMixin";
+import { PeripheralModel } from "./PeripheralModel";
 
-export class RF08Model extends PeripheralModel {
-    private dumpAcceptor?: (dump: Uint8Array) => void;
+export class RF08Model extends PeripheralModel implements DiskModel {
+    private dumpHandler: DumpMixin;
 
     constructor(backend: Backend, private conf: RF08Configuration) {
         super(backend);
+        this.dumpHandler = new DumpMixin(backend, conf.id);
     }
 
     public get connections(): number[] {
@@ -37,26 +39,27 @@ export class RF08Model extends PeripheralModel {
         return this.conf.id;
     }
 
+    public getDumpExtension(): string {
+        return "rs08";
+    }
+
+    public getDiskCount(): number {
+        return 4;
+    }
+
+    public getDiskSize(): number {
+        return 524288;
+    }
+
     public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
-        if (action.type == "core-dump") {
-            if (this.dumpAcceptor) {
-                this.dumpAcceptor(action.dump);
-            }
-        }
+        this.dumpHandler.onPeripheralAction(id, action);
     }
 
-    public async getDump(): Promise<Uint8Array> {
-        return new Promise<Uint8Array>(accept => {
-            this.dumpAcceptor = accept;
-            void this.backend.sendPeripheralAction(DeviceID.DEV_ID_RF08, {type: "get-core"});
-        });
+    public async downloadDump(unit: number): Promise<Uint8Array> {
+        return await this.dumpHandler.downloadDump(unit);
     }
 
-    public async loadDump(dump: File) {
-        const data = await loadFile(dump);
-        await this.backend.sendPeripheralAction(this.conf.id, {
-            type: "load-core",
-            data: new Uint8Array(data),
-        });
+    public async uploadDump(unit: number, dump: Uint8Array) {
+        await this.dumpHandler.uploadDump(unit, dump);
     }
 }

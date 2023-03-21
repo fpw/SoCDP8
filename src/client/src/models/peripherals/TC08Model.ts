@@ -23,7 +23,8 @@ import { PeripheralModel } from "./PeripheralModel";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { PeripheralInAction } from "../../types/PeripheralAction";
-import { loadFile } from "../../util";
+import { DumpMixin } from "./DumpMixin";
+import { DiskModel } from "./DiskModel";
 
 interface TC08Store {
     tapes: DECTape[];
@@ -33,8 +34,8 @@ interface TC08Store {
     setNumTUs: (num: number) => void;
 }
 
-export class TC08Model extends PeripheralModel {
-    private dumpAcceptor?: (dump: Uint8Array) => void;
+export class TC08Model extends PeripheralModel implements DiskModel {
+    private dumpHandler: DumpMixin;
 
     private store = create<TC08Store>()(immer(set => ({
         tapes: [],
@@ -57,6 +58,7 @@ export class TC08Model extends PeripheralModel {
         super(backend);
         this.store.getState().clear();
         this.store.getState().setNumTUs(conf.numTapes);
+        this.dumpHandler = new DumpMixin(backend, conf.id);
     }
 
     public get connections(): number[] {
@@ -67,15 +69,25 @@ export class TC08Model extends PeripheralModel {
         return this.conf.id;
     }
 
+    public getDumpExtension(): string {
+        return "tu56";
+    }
+
+    public getDiskCount(): number {
+        return this.conf.numTapes;
+    }
+
+    public getDiskSize(): number {
+        return 380292;
+    }
+
     public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
         if (action.type == "tapeStates") {
             for (const state of action.states) {
                 this.store.getState().setTapeState(state.address, state);
             }
-        } else if (action.type == "core-dump") {
-            if (this.dumpAcceptor) {
-                this.dumpAcceptor(action.dump);
-            }
+        } else {
+            this.dumpHandler.onPeripheralAction(id, action);
         }
     }
 
@@ -83,19 +95,11 @@ export class TC08Model extends PeripheralModel {
         return this.store;
     }
 
-    public async getDump(unit: number): Promise<Uint8Array> {
-        return new Promise<Uint8Array>(accept => {
-            this.dumpAcceptor = accept;
-            void this.backend.sendPeripheralAction(DeviceID.DEV_ID_TC08, {type: "get-tape", unit});
-        });
+    public async downloadDump(unit: number): Promise<Uint8Array> {
+        return await this.dumpHandler.downloadDump(unit);
     }
 
-    public async loadTape(tape: File, unit: number) {
-        const data = await loadFile(tape);
-        await this.backend.sendPeripheralAction(this.conf.id, {
-            type: "load-tape",
-            unit: unit,
-            data: new Uint8Array(data),
-        });
+    public async uploadDump(unit: number, dump: Uint8Array) {
+        await this.dumpHandler.uploadDump(unit, dump);
     }
 }

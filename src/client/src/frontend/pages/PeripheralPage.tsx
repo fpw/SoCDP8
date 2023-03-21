@@ -20,7 +20,7 @@ import { useParams } from "react-router-dom";
 import { SoCDP8 } from "../../models/SoCDP8";
 import { PeripheralBox } from "../components/peripherals/PeripheralBox";
 
-export function PeripheralPage(props: { pdp8: SoCDP8; }) {
+export function PeripheralPage(props: {pdp8: SoCDP8}) {
     const idString = useParams<{ id: string; }>().id!;
     const id = Number.parseInt(idString);
     const peripherals = props.pdp8.useStore(state => state.peripheralModels);

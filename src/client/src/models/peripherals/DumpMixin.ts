@@ -17,49 +17,36 @@
  */
 
 import { PeripheralInAction } from "../../types/PeripheralAction";
-import { DeviceID, DF32Configuration } from "../../types/PeripheralTypes";
+import { DeviceID } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
-import { DiskModel } from "./DiskModel";
-import { DumpMixin } from "./DumpMixin";
-import { PeripheralModel } from "./PeripheralModel";
 
-export class DF32Model extends PeripheralModel implements DiskModel {
-    private dumpHandler: DumpMixin;
+export class DumpMixin {
+    private dumpAcceptor?: (dump: Uint8Array) => void;
 
-    constructor(backend: Backend, private conf: DF32Configuration) {
-        super(backend);
-        this.dumpHandler = new DumpMixin(backend, conf.id);
-    }
-
-    public get id() {
-        return this.conf.id;
-    }
-
-    public get connections(): number[] {
-        return [0o60, 0o61, 0o62, 0o63];
-    }
-
-    public getDumpExtension(): string {
-        return "df32";
-    }
-
-    public getDiskCount(): number {
-        return 4;
-    }
-
-    public getDiskSize(): number {
-        return 65536;
+    public constructor(private backend: Backend, private devId: DeviceID) {
     }
 
     public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
-        this.dumpHandler.onPeripheralAction(id, action);
+        if (action.type == "dump-data") {
+            if (this.dumpAcceptor) {
+                this.dumpAcceptor(action.dump);
+                this.dumpAcceptor = undefined;
+            }
+        }
     }
 
     public async downloadDump(unit: number): Promise<Uint8Array> {
-        return await this.dumpHandler.downloadDump(unit);
+        return new Promise<Uint8Array>(accept => {
+            this.dumpAcceptor = accept;
+            void this.backend.sendPeripheralAction(this.devId, {type: "download-disk", unit});
+        });
     }
 
-    public async uploadDump(unit: number, dump: Uint8Array) {
-        await this.dumpHandler.uploadDump(unit, dump);
+    public async uploadDump(unit: number, data: Uint8Array) {
+        await this.backend.sendPeripheralAction(this.devId, {
+            type: "upload-disk",
+            data,
+            unit,
+        });
     }
 }

@@ -21,12 +21,12 @@ import { useCallback, useEffect, useState } from "react";
 import { PaperTape } from "../../../models/PaperTape";
 import { ProgressBar } from "./ProgressBar";
 
-export interface PaperTapeBoxProps {
+interface PaperTapeBoxProps {
     tape: PaperTape;
     reverse: boolean;
 }
 
-export function PaperTapeBox(props: PaperTapeBoxProps) {
+export function PaperTapeBox(props: {tape: PaperTape, reverse: boolean}) {
     const tapeName = props.tape.useTape(state => state.tapeState.name);
 
     return (

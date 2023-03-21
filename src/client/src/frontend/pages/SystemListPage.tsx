@@ -24,11 +24,7 @@ import { DeviceID } from "../../types/PeripheralTypes";
 import { getDefaultSysConf, SystemConfiguration } from "../../types/SystemConfiguration";
 import { SystemForm } from "../components/system/SystemForm";
 
-export interface SystemManagerProps {
-    pdp8: SoCDP8
-}
-
-export function SystemListPage(props: SystemManagerProps) {
+export function SystemListPage(props: {pdp8: SoCDP8}) {
     const [formBusy, setFormBusy] = useState<boolean>(false);
     const [open, setOpen] = useState<boolean>(false);
     const activeSys = props.pdp8.useStore(state => state.activeSystem)!;
@@ -109,21 +105,10 @@ function SystemEntry(props: {pdp8: SoCDP8, system: SystemConfiguration, active: 
             </TableCell>
             <TableCell>
                 <ul>
-                    {(() => {
-                        if (props.system.maxMemField > 0) {
-                            return <li>MC8/I</li>
-                        }
-                    })()}
-                    {(() => {
-                        if (props.system.cpuExtensions.eae) {
-                            return <li>KE8/I</li>
-                        }
-                    })()}
-                    {(() => {
-                        if (props.system.cpuExtensions.kt8i) {
-                            return <li>KT8/I</li>
-                        }
-                    })()}
+                    { props.system.maxMemField > 0 && <li>MC8/I</li> }
+                    { props.system.cpuExtensions.eae && <li>KE8/I</li> }
+                    { props.system.cpuExtensions.kt8i && <li>KT8/I</li> }
+                    { props.system.cpuExtensions.bsw && <li>BSW</li> }
                 </ul>
             </TableCell>
             <TableCell>
@@ -160,7 +145,8 @@ function getPeripheralName(id: DeviceID): string {
         case DeviceID.DEV_ID_TT3:   return "TT3";
         case DeviceID.DEV_ID_TT4:   return "TT4";
         case DeviceID.DEV_ID_KW8I:  return "KW8I";
-        case DeviceID.DEV_ID_RK8:   return "RK8";
+        case DeviceID.DEV_ID_RK08:  return "RK08";
+        case DeviceID.DEV_ID_RK8E:  return "RK8E";
         default: return "Unknown";
     }
 }
