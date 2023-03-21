@@ -65,60 +65,31 @@ export class WasmBackend implements Backend {
         this.pdp8 = new Wasm8Context();
         this.store.getState().addSystem({
             id: "default",
-            name: "TSS/8",
+            name: "RK8E",
             description: "default",
             maxMemField: 7,
             cpuExtensions: {
-                eae: true,
-                kt8i: true,
-                bsw: false,
+                eae: false,
+                kt8i: false,
+                bsw: true,
             },
             peripherals: [
                 {
                     id: DeviceID.DEV_ID_PT08,
                     eightBit: false,
                     autoCaps: true,
-                    baudRate: 1200,
+                    baudRate: 9600,
                 },
                 {
                     id: DeviceID.DEV_ID_PC04,
-                    baudRate: 1200,
+                    baudRate: 9600,
                 },
                 {
                     id: DeviceID.DEV_ID_TC08,
                     numTapes: 2,
                 },
                 {
-                    id: DeviceID.DEV_ID_TT1,
-                    baudRate: 1200,
-                    eightBit: false,
-                    autoCaps: true,
-                },
-                {
-                    id: DeviceID.DEV_ID_TT2,
-                    baudRate: 1200,
-                    eightBit: false,
-                    autoCaps: true,
-                },
-                {
-                    id: DeviceID.DEV_ID_TT3,
-                    baudRate: 1200,
-                    eightBit: false,
-                    autoCaps: true,
-                },
-                {
-                    id: DeviceID.DEV_ID_TT4,
-                    baudRate: 1200,
-                    eightBit: false,
-                    autoCaps: true,
-                },
-                {
-                    id: DeviceID.DEV_ID_RF08,
-                },
-                {
-                    id: DeviceID.DEV_ID_KW8I,
-                    useExternalClock: true,
-                    use50Hz: false,
+                    id: DeviceID.DEV_ID_RK8E,
                 },
             ],
         });
