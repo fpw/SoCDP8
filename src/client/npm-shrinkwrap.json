@@ -17,7 +17,7 @@
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-router-dom": "^6.9.0",
-        "react-simple-keyboard": "^3.5.43",
+        "react-simple-keyboard": "^3.5.44",
         "socket.io-client": "^4.6.1",
         "xterm": "^5.1.0",
         "zustand": "^4.3.6"
@@ -6419,9 +6419,9 @@
       }
     },
     "node_modules/react-simple-keyboard": {
-      "version": "3.5.43",
-      "resolved": "https://registry.npmjs.org/react-simple-keyboard/-/react-simple-keyboard-3.5.43.tgz",
-      "integrity": "sha512-wKZSx4rJO8XswTOG3jDl8tBb2llY2DEU7bkQH1nwp4R8aImC0M7nmB+uyQPIErEoqyBVGwBMlt9ZAfFYM0xUcA==",
+      "version": "3.5.44",
+      "resolved": "https://registry.npmjs.org/react-simple-keyboard/-/react-simple-keyboard-3.5.44.tgz",
+      "integrity": "sha512-71Wi068t7BJag+9IbmZpbHeiLQ7Yd3Z4QCBRfBXCFnG7x5QGriYIbOOsRG07xl8CX7JKEf5PaK21xFzT7gFuaA==",
       "peerDependencies": {
         "react": "^16.0.0 || ^17.0.0 || ^18.0.0",
         "react-dom": "^16.0.0 || ^17.0.0 || ^18.0.0"
@@ -11911,9 +11911,9 @@
       }
     },
     "react-simple-keyboard": {
-      "version": "3.5.43",
-      "resolved": "https://registry.npmjs.org/react-simple-keyboard/-/react-simple-keyboard-3.5.43.tgz",
-      "integrity": "sha512-wKZSx4rJO8XswTOG3jDl8tBb2llY2DEU7bkQH1nwp4R8aImC0M7nmB+uyQPIErEoqyBVGwBMlt9ZAfFYM0xUcA==",
+      "version": "3.5.44",
+      "resolved": "https://registry.npmjs.org/react-simple-keyboard/-/react-simple-keyboard-3.5.44.tgz",
+      "integrity": "sha512-71Wi068t7BJag+9IbmZpbHeiLQ7Yd3Z4QCBRfBXCFnG7x5QGriYIbOOsRG07xl8CX7JKEf5PaK21xFzT7gFuaA==",
       "requires": {}
     },
     "react-transition-group": {

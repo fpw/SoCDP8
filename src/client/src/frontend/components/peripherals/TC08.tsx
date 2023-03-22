@@ -19,7 +19,7 @@
 import { Box } from "@mui/system";
 import { TC08Model } from "../../../models/peripherals/TC08Model";
 import { DumpButtons } from "./DumpButtons";
-import { TU56 } from "./TU56";
+import { TU56 } from "./accessoires/TU56";
 
 export function TC08(props: {model: TC08Model}) {
     const tapes = props.model.useState(state => state.tapes);

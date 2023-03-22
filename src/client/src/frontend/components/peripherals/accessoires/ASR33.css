@@ -1,0 +1,14 @@
+.simple-keyboard .activeKey {
+    background-color: rgb(255, 230, 0);
+}
+
+.simple-keyboard .space {
+    max-width: 30%;
+    margin-left: 35%;
+}
+
+.simple-keyboard .hg-button {
+    text-align: center;
+    border-radius: 20px;
+    line-height: 11pt;
+}
