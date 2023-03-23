@@ -16,22 +16,24 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PeripheralModel } from "./PeripheralModel";
-import { PT08Configuration, DeviceID } from "../../types/PeripheralTypes";
-import { PaperTape } from "../PaperTape";
-import { Terminal } from "xterm";
-import { Backend } from "../backends/Backend";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { PeripheralInAction } from "../../types/PeripheralAction";
+import { DeviceID, PT08Configuration } from "../../types/PeripheralTypes";
+import { Backend } from "../backends/Backend";
+import { PaperTape } from "../PaperTape";
+import { PeripheralModel } from "./PeripheralModel";
 
 interface PT08Store {
     conf?: PT08Configuration;
     readerActive: boolean;
     punchActive: boolean;
+    outBuf: number[];
     setConf: (conf: PT08Configuration) => void;
     setReader: (active: boolean) => void;
     setPunch: (active: boolean) => void;
+    addOutput: (chr: number) => void;
+    clearOutput: () => void;
 }
 
 export class PT08Model extends PeripheralModel {
@@ -40,32 +42,28 @@ export class PT08Model extends PeripheralModel {
     private store = create<PT08Store>()(immer(set => ({
         readerActive: false,
         punchActive: false,
+        outBuf: [],
 
         setConf: (newConf: PT08Configuration) => set(draft => {
             draft.conf = newConf;
         }),
-
         setReader: (active: boolean) => set(draft => {
             draft.readerActive = active;
         }),
         setPunch: (active: boolean) => set(draft => {
             draft.punchActive = active;
         }),
+        addOutput: (chr: number) => set(draft => {
+            draft.outBuf.push(chr);
+        }),
+        clearOutput: () => set(draft => {
+            draft.outBuf = [];
+        }),
     })));
-
-    private xterm: Terminal;
 
     constructor(backend: Backend, conf: PT08Configuration) {
         super(backend);
-
         this.store.getState().setConf(conf);
-
-        this.xterm = new Terminal();
-        this.xterm.onData(data => {
-            for (const c of data) {
-                void this.onRawKey(c);
-            }
-        });
     }
 
     public get useState() {
@@ -124,14 +122,10 @@ export class PT08Model extends PeripheralModel {
     }
 
     public onPunch(data: number) {
-        this.xterm.write(String.fromCodePoint(data & 0x7F));
+        this.store.getState().addOutput(data);
         if (this.store.getState().punchActive) {
             this.punchTape.useTape.getState().pushChar(data);
         }
-    }
-
-    public get terminal(): Terminal {
-        return this.xterm;
     }
 
     public async loadTape(file: File): Promise<void> {

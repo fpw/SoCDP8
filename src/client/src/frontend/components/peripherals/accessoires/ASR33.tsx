@@ -18,25 +18,23 @@
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Container, Divider, FormControl, FormControlLabel, FormGroup, Switch, Typography } from "@mui/material";
-import { ChangeEvent, useCallback, useRef, useState } from "react";
-import Keyboard, { KeyboardReactInterface } from "react-simple-keyboard";
-import "react-simple-keyboard/build/css/index.css";
-import "xterm/css/xterm.css";
+import { ChangeEvent, useRef } from "react";
 import { PT08Model } from "../../../../models/peripherals/PT08Model";
 import { downloadData } from "../../../../util";
 import { PaperTapeBox } from "../../common/PaperTapeBox";
-import "./ASR33.css";
+import { ASR33Keyboard } from "./ASR33Keyboard";
+import { VT100 } from "./VT100";
 
 export function ASR33(props: {model: PT08Model}) {
     return (<>
-        <TerminalBox {...props} />
+        <VT100 model={props.model} />
         <Accordion>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="body1">Virtual Keyboard</Typography>
+                <Typography variant="body1">ASR-33 Keyboard</Typography>
             </AccordionSummary>
             <AccordionDetails>
                 <Container>
-                    <VirtualKeyboard {...props} />
+                    <ASR33Keyboard onKey={chr => void props.model.onRawKey(String.fromCharCode(chr))} />
                 </Container>
             </AccordionDetails>
         </Accordion>
@@ -54,174 +52,6 @@ export function ASR33(props: {model: PT08Model}) {
         </Accordion>
     </>);
 }
-
-const keyboardOptions: KeyboardReactInterface["options"] = {
-    mergeDisplay: true,
-    layout: {
-        default: [
-            "1 2 3 4 5 6 7 8 9 0 : - {hereis}",
-            "{altmode} Q W E R T Y U I O P {lf} {return}",
-            "{ctrl} A S D F G H J K L ; {rubout}",
-            "{shift} Z X C V B N M , . / {shift}",
-            "{space}"
-        ],
-        shift: [
-            '! " # $ % & / ( ) 0 * = {hereis}',
-            "{altmode} Q W E R T Y U I O @ {lf} {return}",
-            "{ctrl} A S D F G H J [ \\ + {rubout}",
-            "{deshift} Z X C V B ^ ] < > ? {shift}",
-            "{space}"
-        ],
-        ctrl: [
-            "1 2 3 4 5 6 7 8 9 0 : - {hereis}",
-            "{altmode} Q W E R T Y U I O P {lf} {return}",
-            "{dectrl} A S D F G H J K L ; {rubout}",
-            "{shift} Z X C V B N M , . / {shift}",
-            "{space}"
-        ],
-        ctrlShift: [
-            '! " # $ % & / ( ) 0 * = {hereis}',
-            "{altmode} Q W E R T Y U I O @ {lf} {return}",
-            "{dectrl} A S D F G H J [ \\ + {rubout}",
-            "{deshift} Z X C V B ^ ] < > ? {shift}",
-            "{space}"
-        ],
-    },
-    display: {
-        "{shift}": "SHIFT",
-        "{deshift}": "SHIFT",
-        "{ctrl}": "CTRL",
-        "{dectrl}": "CTRL",
-
-        "{altmode}": "ALT<br/>MODE",
-        "{return}": "RE-<br/>TURN",
-        "{hereis}": "HERE<br/>IS",
-        "{lf}": "LINE<br/>FEED",
-        "{rubout}": "RUB<br/>OUT",
-    },
-    buttonTheme: [
-        { class: "activeKey", buttons: "{deshift} {dectrl}" },
-        { class: "space", buttons: "{space}" }
-    ],
-};
-
-function VirtualKeyboard(props: {model: PT08Model}) {
-    const [shift, setShift] = useState(false);
-    const [ctrl, setCtrl] = useState(false);
-    const { model } = props;
-    const conf = model.useState(state => state.conf!);
-
-    async function sendHereIs() {
-        await model.onRawKey("S");
-        await model.onRawKey("O");
-        await model.onRawKey("C");
-        await model.onRawKey("D");
-        await model.onRawKey("P");
-        await model.onRawKey("8");
-    }
-
-    const onKey = (key: string) => {
-        let chr: number | undefined;
-        switch (key) {
-            case "{shift}":
-            case "{deshift}":
-                if (shift && ctrl) {
-                    setCtrl(false);
-                }
-                setShift(!shift);
-                break;
-            case "{ctrl}":
-            case "{dectrl}":
-                if (shift && ctrl) {
-                    setShift(false);
-                }
-                setCtrl(!ctrl);
-                break;
-            case "{hereis}":
-                void sendHereIs();
-                break;
-            case "{altmode}":
-                chr = 0x7D;
-                break;
-            case "{return}":
-                chr = 0x0D;
-                break;
-            case "{lf}":
-                chr = 0x0A;
-                break;
-            case "{rubout}":
-                chr = 0x7F;
-                break;
-            case "{space}":
-                chr = 0x20;
-                break;
-            default:
-                chr = key.charCodeAt(0);
-                if (ctrl) {
-                    if (shift) {
-                        chr |= 0x20;
-                    } else {
-                        chr &= ~0x40;
-                    }
-                }
-                setShift(false);
-                setCtrl(false);
-        }
-        if (chr) {
-            const str = String.fromCharCode(chr);
-            void model.onRawKey(str);
-        }
-    };
-
-    let layout = "default";
-    if (shift) {
-        if (ctrl) {
-            layout = "ctrlShift";
-        } else {
-            layout = "shift";
-        }
-    } else if (ctrl) {
-        layout = "ctrl";
-    }
-
-    return (
-        <Box mt={1} sx={{activeButton: {backgroundColor: "yellow"}}}>
-            <Keyboard
-                baseClass={`keyboard${conf.id}`}
-                layoutName={layout}
-                onKeyPress={(button: string) => onKey(button)}
-                { ...keyboardOptions }
-            />
-        </Box>
-    );
-}
-
-function TerminalBox(props: {model: PT08Model}) {
-    const { model } = props;
-
-    const termRef = useCallback((node: HTMLDivElement) => {
-        if (!node) {
-            return;
-        }
-        const term = model.terminal;
-        term.resize(80, 25);
-        term.open(node);
-    }, [model.terminal]);
-
-    return (
-        <>
-            <Box mt={1}>
-                <div ref={termRef}></div>
-            </Box>
-
-            <Box mt={1} mb={3}>
-                <Button variant="contained" onClick={() => model.terminal.reset()}>
-                    Clear Output
-                </Button>
-            </Box>
-        </>
-    );
-};
 
 function ReaderBox(props: {model: PT08Model}) {
     const { model } = props;

@@ -17,8 +17,6 @@
  */
 
 import { Box, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, Switch } from "@mui/material";
-import "react-simple-keyboard/build/css/index.css";
-import "xterm/css/xterm.css";
 import { PT08Model } from "../../../models/peripherals/PT08Model";
 import { BaudRate, BAUD_RATES } from "../../../types/PeripheralTypes";
 import { ASR33 } from "./accessoires/ASR33";
