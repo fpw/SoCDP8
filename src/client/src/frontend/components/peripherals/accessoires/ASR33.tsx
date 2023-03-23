@@ -238,7 +238,7 @@ function ReaderBox(props: {model: PT08Model}) {
             <FormGroup row>
                 <FormControl>
                     <input ref={tapeInput} type="file" onChange={evt => void onLoadFile(evt, model)} hidden />
-                    <Button variant="outlined" color="primary" onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
+                    <Button variant="outlined" onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
                 </FormControl>
                 <FormControlLabel
                     control={<Switch onChange={evt => void model.setReaderActive(evt.target.checked)} checked={readerActive} />}
@@ -276,13 +276,13 @@ function PunchBox(props: {model: PT08Model}) {
 
             <FormGroup row>
                 <FormControl>
-                    <Button variant="outlined" color="primary" onClick={() => model.clearPunch()}>New Tape</Button>
+                    <Button variant="outlined" onClick={() => model.clearPunch()}>New Tape</Button>
                 </FormControl>
                 <FormControl>
-                    <Button variant="outlined" color="primary" onClick={() => void download()}>Download Tape</Button>
+                    <Button variant="outlined" onClick={() => void download()}>Download Tape</Button>
                 </FormControl>
                 <FormControl>
-                    <Button variant="outlined" color="primary" onClick={() => model.addPunchLeader()}>Leader</Button>
+                    <Button variant="outlined" onClick={() => model.addPunchLeader()}>Leader</Button>
                 </FormControl>
                 <FormControlLabel
                     control={<Switch onChange={evt => void model.setPunchActive(evt.target.checked)} checked={punchActive} />}

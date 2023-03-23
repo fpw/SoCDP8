@@ -1,4 +1,3 @@
-import viteBasicSslPlugin from "@vitejs/plugin-basic-ssl";
 import react from "@vitejs/plugin-react";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig, PluginOption } from "vite";
@@ -6,7 +5,7 @@ import viteTsconfigPaths from "vite-tsconfig-paths";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [viteBasicSslPlugin(), react(), viteTsconfigPaths(), visualizer({ filename: "build/bundle.html" }) as PluginOption,
+    plugins: [react(), viteTsconfigPaths(), visualizer({ filename: "build/bundle.html" }) as PluginOption,
         {
             name: "configure-response-headers",
             configureServer: server => {
@@ -30,6 +29,5 @@ export default defineConfig({
     },
     server: {
         port: 3000,
-        https: true,
     },
 });

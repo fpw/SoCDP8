@@ -52,9 +52,9 @@ export function SystemForm(props: SystemFormProps) {
 
                 <FormControl component="fieldset">
                     <FormLabel component="legend">CPU Extensions</FormLabel>
-                    <FormControlLabel control={<Switch name="eae" color="primary" defaultChecked={s.cpuExtensions.eae} />} label="KE8/I (EAE)" />
-                    <FormControlLabel control={<Switch name="kt8i" color="primary" defaultChecked={s.cpuExtensions.kt8i} />} label="KT8/I (Time Sharing Option)" />
-                    <FormControlLabel control={<Switch name="bsw" color="primary" defaultChecked={s.cpuExtensions.bsw} />} label="BSW instruction for 8/E programs" />
+                    <FormControlLabel control={<Switch name="eae" defaultChecked={s.cpuExtensions.eae} />} label="KE8/I (EAE)" />
+                    <FormControlLabel control={<Switch name="kt8i" defaultChecked={s.cpuExtensions.kt8i} />} label="KT8/I (Time Sharing Option)" />
+                    <FormControlLabel control={<Switch name="bsw" defaultChecked={s.cpuExtensions.bsw} />} label="BSW instruction for 8/E programs" />
                 </FormControl>
 
                 <FormControl component="fieldset">
@@ -73,17 +73,17 @@ export function SystemForm(props: SystemFormProps) {
                 <FormControl component="fieldset">
                     <FormLabel component="legend">Basic I/O</FormLabel>
                     <FormControlLabel control={
-                        <Switch name="serialLine" color="primary" defaultChecked={peripherals.includes(DeviceID.DEV_ID_PT08) } />
+                        <Switch name="serialLine" defaultChecked={peripherals.includes(DeviceID.DEV_ID_PT08)} />
                     } label="Serial Current Loop" />
                     <FormControlLabel control={
-                        <Switch name="pc04" color="primary" defaultChecked={peripherals.includes(DeviceID.DEV_ID_PC04)} />
+                        <Switch name="pc04" defaultChecked={peripherals.includes(DeviceID.DEV_ID_PC04)} />
                     } label="PC04 Reader / Punch" />
                 </FormControl>
 
                 <FormControl component="fieldset">
                     <FormLabel component="legend">DECtape</FormLabel>
                     <FormControlLabel control={
-                        <Switch name="tc08" color="primary" defaultChecked={peripherals.includes(DeviceID.DEV_ID_TC08)} />
+                        <Switch name="tc08" defaultChecked={peripherals.includes(DeviceID.DEV_ID_TC08)} />
                     } label="TC08 DECtape Controller" />
                 </FormControl>
 
@@ -114,11 +114,12 @@ export function SystemForm(props: SystemFormProps) {
                 <FormControl component="fieldset">
                     <FormLabel component="legend">Real-Time Clock</FormLabel>
                     <FormControlLabel control={
-                        <Switch name="kw8i" color="primary"defaultChecked={peripherals.includes(DeviceID.DEV_ID_KW8I)} />
+                        <Switch name="kw8i"defaultChecked={peripherals.includes(DeviceID.DEV_ID_KW8I)} />
                     } label="KW8/I" />
                 </FormControl>
             </FormGroup>
-            <Button type="submit" variant="contained" color="primary" disabled={!props.buttonEnabled}>
+
+            <Button type="submit" variant="contained" disabled={!props.buttonEnabled}>
                 Create System
             </Button>
         </form>

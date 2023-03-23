@@ -22,6 +22,7 @@ import { useState } from "react";
 import { ProgramSnippet, ProgramSnippets } from "../../../models/ProgramSnippets";
 import { SoCDP8 } from "../../../models/SoCDP8";
 import { downloadData, loadFile } from "../../../util";
+import { UploadButton } from "../common/UploadButton";
 import { FrontPanel } from "./FrontPanel";
 
 export function FrontPanelBox(props: {pdp8: SoCDP8}) {
@@ -48,15 +49,15 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
         setThrottle(!throttle);
     }
 
-    async function uploadCore(target: HTMLInputElement) {
-        if (!target.files || target.files.length < 1) {
+    async function uploadCore(files: FileList | null) {
+        if (!files || files.length < 1) {
             return;
         }
-        if (target.files[0].size > 65536) {
+        if (files[0].size > 65536) {
             alert(`File too big, max allowed size is ${65536} bytes.`);
             return;
         }
-        const data = await loadFile(target.files[0]);
+        const data = await loadFile(files[0]);
         await props.pdp8.loadCoreDump(data);
     }
 
@@ -73,17 +74,16 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
                 </CardContent>
                 <CardActions>
                     <Stack direction="row" justifyContent="space-between" component={CardActions}>
-                        <ButtonGroup color="primary" variant="outlined">
+                        <ButtonGroup variant="outlined">
                             <Button onClick={() => void saveState()} disabled={busy}>
                                 Save State
                             </Button>
                             <Button onClick={() => setShowSnippets(true)}>
                                 Load Snippet
                             </Button>
-                            <Button component="label">
+                            <UploadButton onSelect={files => void uploadCore(files)}>
                                 Upload Dump
-                                <input type="file" onChange={evt => void uploadCore(evt.target)} hidden />
-                            </Button>
+                            </UploadButton>
                             <Button onClick={() => void downloadCore()}>
                                 Download Dump
                             </Button>

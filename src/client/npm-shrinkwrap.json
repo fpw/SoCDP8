@@ -13,11 +13,11 @@
         "@emotion/styled": "^11.10.6",
         "@mui/icons-material": "^5.11.11",
         "@mui/material": "^5.11.14",
-        "immer": "^9.0.19",
+        "immer": "^9.0.21",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-router-dom": "^6.9.0",
-        "react-simple-keyboard": "^3.5.44",
+        "react-simple-keyboard": "^3.5.45",
         "socket.io-client": "^4.6.1",
         "xterm": "^5.1.0",
         "zustand": "^4.3.6"
@@ -29,7 +29,6 @@
         "@types/react-dom": "^18.0.11",
         "@typescript-eslint/eslint-plugin": "^5.56.0",
         "@typescript-eslint/parser": "^5.56.0",
-        "@vitejs/plugin-basic-ssl": "^1.0.1",
         "@vitejs/plugin-react": "^3.1.0",
         "eslint": "^8.36.0",
         "eslint-config-react-app": "^7.0.1",
@@ -3494,18 +3493,6 @@
         "url": "https://opencollective.com/typescript-eslint"
       }
     },
-    "node_modules/@vitejs/plugin-basic-ssl": {
-      "version": "1.0.1",
-      "resolved": "https://registry.npmjs.org/@vitejs/plugin-basic-ssl/-/plugin-basic-ssl-1.0.1.tgz",
-      "integrity": "sha512-pcub+YbFtFhaGRTo1832FQHQSHvMrlb43974e2eS8EKleR3p1cDdkJFPci1UhwkEf1J9Bz+wKBSzqpKp7nNj2A==",
-      "dev": true,
-      "engines": {
-        "node": ">=14.6.0"
-      },
-      "peerDependencies": {
-        "vite": "^3.0.0 || ^4.0.0"
-      }
-    },
     "node_modules/@vitejs/plugin-react": {
       "version": "3.1.0",
       "resolved": "https://registry.npmjs.org/@vitejs/plugin-react/-/plugin-react-3.1.0.tgz",
@@ -5331,9 +5318,9 @@
       }
     },
     "node_modules/immer": {
-      "version": "9.0.19",
-      "resolved": "https://registry.npmjs.org/immer/-/immer-9.0.19.tgz",
-      "integrity": "sha512-eY+Y0qcsB4TZKwgQzLaE/lqYMlKhv5J9dyd2RhhtGhNo2njPXDqU9XPfcNfa3MIDsdtZt5KlkIsirlo4dHsWdQ==",
+      "version": "9.0.21",
+      "resolved": "https://registry.npmjs.org/immer/-/immer-9.0.21.tgz",
+      "integrity": "sha512-bc4NBHqOqSfRW7POMkHd51LvClaeMXpm8dx0e8oE2GORbq5aRK7Bxl4FyzVLdGtLmvLKL7BTDBG5ACQm4HWjTA==",
       "funding": {
         "type": "opencollective",
         "url": "https://opencollective.com/immer"
@@ -6419,9 +6406,9 @@
       }
     },
     "node_modules/react-simple-keyboard": {
-      "version": "3.5.44",
-      "resolved": "https://registry.npmjs.org/react-simple-keyboard/-/react-simple-keyboard-3.5.44.tgz",
-      "integrity": "sha512-71Wi068t7BJag+9IbmZpbHeiLQ7Yd3Z4QCBRfBXCFnG7x5QGriYIbOOsRG07xl8CX7JKEf5PaK21xFzT7gFuaA==",
+      "version": "3.5.45",
+      "resolved": "https://registry.npmjs.org/react-simple-keyboard/-/react-simple-keyboard-3.5.45.tgz",
+      "integrity": "sha512-n/CRz2e9Br8agu/fS+lU7h6vlxpT3uRM3GKK47Ty0p8kpZgRL+TDPi7VPZZ0CQemG9p8RWpSKOQ//G2u4Gr8fw==",
       "peerDependencies": {
         "react": "^16.0.0 || ^17.0.0 || ^18.0.0",
         "react-dom": "^16.0.0 || ^17.0.0 || ^18.0.0"
@@ -9753,13 +9740,6 @@
         "eslint-visitor-keys": "^3.3.0"
       }
     },
-    "@vitejs/plugin-basic-ssl": {
-      "version": "1.0.1",
-      "resolved": "https://registry.npmjs.org/@vitejs/plugin-basic-ssl/-/plugin-basic-ssl-1.0.1.tgz",
-      "integrity": "sha512-pcub+YbFtFhaGRTo1832FQHQSHvMrlb43974e2eS8EKleR3p1cDdkJFPci1UhwkEf1J9Bz+wKBSzqpKp7nNj2A==",
-      "dev": true,
-      "requires": {}
-    },
     "@vitejs/plugin-react": {
       "version": "3.1.0",
       "resolved": "https://registry.npmjs.org/@vitejs/plugin-react/-/plugin-react-3.1.0.tgz",
@@ -11148,9 +11128,9 @@
       "dev": true
     },
     "immer": {
-      "version": "9.0.19",
-      "resolved": "https://registry.npmjs.org/immer/-/immer-9.0.19.tgz",
-      "integrity": "sha512-eY+Y0qcsB4TZKwgQzLaE/lqYMlKhv5J9dyd2RhhtGhNo2njPXDqU9XPfcNfa3MIDsdtZt5KlkIsirlo4dHsWdQ=="
+      "version": "9.0.21",
+      "resolved": "https://registry.npmjs.org/immer/-/immer-9.0.21.tgz",
+      "integrity": "sha512-bc4NBHqOqSfRW7POMkHd51LvClaeMXpm8dx0e8oE2GORbq5aRK7Bxl4FyzVLdGtLmvLKL7BTDBG5ACQm4HWjTA=="
     },
     "import-fresh": {
       "version": "3.3.0",
@@ -11911,9 +11891,9 @@
       }
     },
     "react-simple-keyboard": {
-      "version": "3.5.44",
-      "resolved": "https://registry.npmjs.org/react-simple-keyboard/-/react-simple-keyboard-3.5.44.tgz",
-      "integrity": "sha512-71Wi068t7BJag+9IbmZpbHeiLQ7Yd3Z4QCBRfBXCFnG7x5QGriYIbOOsRG07xl8CX7JKEf5PaK21xFzT7gFuaA==",
+      "version": "3.5.45",
+      "resolved": "https://registry.npmjs.org/react-simple-keyboard/-/react-simple-keyboard-3.5.45.tgz",
+      "integrity": "sha512-n/CRz2e9Br8agu/fS+lU7h6vlxpT3uRM3GKK47Ty0p8kpZgRL+TDPi7VPZZ0CQemG9p8RWpSKOQ//G2u4Gr8fw==",
       "requires": {}
     },
     "react-transition-group": {
