@@ -20,7 +20,6 @@ import { Box } from "@mui/material";
 import { useState } from "react";
 import Keyboard, { KeyboardReactInterface } from "react-simple-keyboard";
 import "react-simple-keyboard/build/css/index.css";
-import "xterm/css/xterm.css";
 import "./ASR33.css";
 
 const keyboardOptions: KeyboardReactInterface["options"] = {

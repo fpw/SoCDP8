@@ -69,7 +69,7 @@ export class WasmBackend implements Backend {
             description: "default",
             maxMemField: 7,
             cpuExtensions: {
-                eae: false,
+                eae: true,
                 kt8i: false,
                 bsw: true,
             },
