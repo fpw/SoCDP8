@@ -96,17 +96,17 @@ export function AppLayout(props: {pdp8: SoCDP8}) {
 
 function ConnectingInfo() {
     return (
-        <main>
+        <>
             <Container maxWidth="lg">
                 <Typography component="h1" variant="h2">
                     Connecting...
                 </Typography>
-                <p>
+                <Typography>
                     Please wait
-                </p>
+                </Typography>
             </Container>
             <Copyright />
-        </main>
+        </>
     );
 };
 

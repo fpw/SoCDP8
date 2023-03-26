@@ -18,7 +18,6 @@
 
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import { Box, Card, CardContent, CardHeader, IconButton } from "@mui/material";
-import { ReactNode } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { DF32Model } from "../../../models/peripherals/DF32Model";
 import { KW8IModel } from "../../../models/peripherals/KW8IModel";
@@ -40,97 +39,36 @@ import { TC08 } from "./TC08";
 
 export function PeripheralBox(props: {model: PeripheralModel}) {
     const model = props.model;
+    let caption = "";
+    let component = <></>;
 
     if (model instanceof PT08Model) {
-        return <PT08Box model={model} />
+        caption = "PT08 Serial Line";
+        component = <PT08 model={model} />;
     } else if (model instanceof PC04Model) {
-        return <PC04Box model={model} />
+        caption = "PC04 High-Speed Paper-Tape Reader and Punch";
+        component = <PC04 model={model} />;
     } else if (model instanceof TC08Model) {
-        return <TC08Box model={model} />
+        caption = "TC08 DECtape Control";
+        component = <TC08 model={model} />;
     } else if (model instanceof RF08Model) {
-        return <RF08Box model={model} />
+        caption = "RF08 Disk Control";
+        component = <RF08 model={model} />;
     } else if (model instanceof DF32Model) {
-        return <DF32Box model={model} />
+        caption = "DF32 Disk Control";
+        component = <DF32 model={model} />;
     } else if (model instanceof RK08Model) {
-        return <RK08Box model={model} />
+        caption = "RK08 Disk Control";
+        component = <RK08 model={model} />;
     } else if (model instanceof RK8EModel) {
-        return <RK8EBox model={model} />
+        caption = "RK8E Disk Control";
+        component = <RK8E model={model} />;
     } else if (model instanceof KW8IModel) {
-        return <KW8IBox model={model} />
-    } else {
-        return <></>;
+        caption = "KW8I Real Time Clock";
+        component = <KW8I model={model} />;
     }
-}
 
-function PT08Box(props: {model: PT08Model}) {
-    return (
-        <CaptionBox name="Serial Line" model={props.model}>
-            <PT08 model={props.model} />
-        </CaptionBox>
-    );
-}
-
-function PC04Box(props: {model: PC04Model}) {
-    return (
-        <CaptionBox name="PC04 High-Speed Paper-Tape Reader and Punch" model={props.model}>
-            <PC04 model={props.model} />
-        </CaptionBox>
-    );
-}
-
-function TC08Box(props: {model: TC08Model}) {
-    return (
-        <CaptionBox name="TC08 DECtape Control" model={props.model}>
-            <TC08
-                model={props.model}
-            />
-        </CaptionBox>
-    );
-}
-
-function RF08Box(props: {model: RF08Model}) {
-    return (
-        <CaptionBox name="RF08 Disk Control" model={props.model}>
-            <RF08 model={props.model} />
-        </CaptionBox>
-    );
-}
-
-function DF32Box(props: {model: DF32Model}) {
-    return (
-        <CaptionBox name="DF32 Disk Control" model={props.model}>
-            <DF32 model={props.model} />
-        </CaptionBox>
-    );
-}
-
-function RK08Box(props: {model: RK08Model}) {
-    return (
-        <CaptionBox name="RK08 Disk Control" model={props.model}>
-            <RK08 model={props.model} />
-        </CaptionBox>
-    );
-}
-
-function RK8EBox(props: {model: RK8EModel}) {
-    return (
-        <CaptionBox name="RK8E Disk Control" model={props.model}>
-            <RK8E model={props.model} />
-        </CaptionBox>
-    );
-}
-
-function KW8IBox(props: {model: KW8IModel}) {
-    return (
-        <CaptionBox name="KW8I Real Time Clock" model={props.model}>
-            <KW8I model={props.model} />
-        </CaptionBox>
-    );
-}
-
-function CaptionBox(props: {model: PeripheralModel, name: string, children: ReactNode}) {
-    const {model, name, children} = props;
-    const titleStr = `${name} @ Bus ${model.connections.map(x => x.toString(8)).join(", ")}`;
+    const titleStr = `${caption} @ Bus ${model.connections.map(x => x.toString(8)).join(", ")}`;
     return (
         <Box mb={3}>
             <Card variant="outlined">
@@ -143,7 +81,7 @@ function CaptionBox(props: {model: PeripheralModel, name: string, children: Reac
                     }
                 />
                 <CardContent>
-                    { children }
+                    { component }
                 </CardContent>
             </Card>
         </Box>

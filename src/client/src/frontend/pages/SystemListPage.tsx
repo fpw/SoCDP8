@@ -37,45 +37,43 @@ export function SystemListPage(props: {pdp8: SoCDP8}) {
         setOpen(false);
     }
 
-    return (
-        <section>
-            <Typography component="h1" variant="h4" gutterBottom>Manage Systems</Typography>
+    return (<>
+        <Typography component="h1" variant="h4" gutterBottom>Manage Systems</Typography>
 
-            <Accordion expanded={open} onChange={() => setOpen(!open)}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                    <Typography variant="body1">New System</Typography>
-                </AccordionSummary>
-                <AccordionDetails>
-                    <Box width="75%" pl={4}>
-                        <SystemForm
-                            initialState={getDefaultSysConf()}
-                            onSubmit={s => void addSystem(s)}
-                            buttonEnabled={!formBusy}
-                        />
-                    </Box>
-                </AccordionDetails>
-            </Accordion>
+        <Accordion expanded={open} onChange={() => setOpen(!open)}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Typography variant="body1">New System</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+                <Box width="75%" pl={4}>
+                    <SystemForm
+                        initialState={getDefaultSysConf()}
+                        onSubmit={s => void addSystem(s)}
+                        buttonEnabled={!formBusy}
+                    />
+                </Box>
+            </AccordionDetails>
+        </Accordion>
 
-            <Box mt={2}>
-                <TableContainer component={Paper}>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Name</TableCell>
-                                <TableCell>Core</TableCell>
-                                <TableCell>Extensions</TableCell>
-                                <TableCell>Peripherals</TableCell>
-                                <TableCell>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            { systems.map(s => <SystemEntry key= {s.id} pdp8={props.pdp8} system={s} active={s.id == activeSys.id} />)}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Box>
-        </section>
-    );
+        <Box mt={2}>
+            <TableContainer component={Paper}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Name</TableCell>
+                            <TableCell>Core</TableCell>
+                            <TableCell>Extensions</TableCell>
+                            <TableCell>Peripherals</TableCell>
+                            <TableCell>Actions</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        { systems.map(s => <SystemEntry key= {s.id} pdp8={props.pdp8} system={s} active={s.id == activeSys.id} />)}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Box>
+    </>);
 }
 
 function SystemEntry(props: {pdp8: SoCDP8, system: SystemConfiguration, active: boolean}) {

@@ -25,12 +25,12 @@ import { PaperTapeBox } from "../common/PaperTapeBox";
 
 export function PC04(props: {model: PC04Model}) {
     return (
-        <section>
+        <>
             <ConfigBox {...props} />
             <ReaderBox {...props} />
             <Divider />
             <PunchBox {...props} />
-        </section>
+        </>
     );
 }
 

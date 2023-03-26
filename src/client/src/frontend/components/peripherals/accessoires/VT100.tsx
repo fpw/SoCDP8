@@ -46,10 +46,7 @@ export function VT100(props: {model: PT08Model}) {
 
     return (
         <>
-            <Box mt={1}>
-                <div ref={termRef}></div>
-            </Box>
-
+            <Box ref={termRef} mt={1} />
             <Box mt={1} mb={3}>
                 <Button variant="contained" onClick={() => reset()}>
                     Clear Output

@@ -23,10 +23,10 @@ import { ASR33 } from "./accessoires/ASR33";
 
 export function PT08(props: {model: PT08Model}) {
     return (
-        <section>
+        <>
             <ConfigBox {...props} />
             <ASR33 model={props.model} />
-        </section>
+        </>
     );
 }
 
