@@ -29,15 +29,16 @@ import { PC04 } from '../peripherals/PC04';
 import { RF08 } from '../peripherals/RF08';
 import { DF32 } from '../peripherals/DF32';
 import { KW8I } from '../peripherals/KW8I';
-import { RK8 } from '../peripherals/RK8';
+import { RK08 } from '../peripherals/RK08';
 import { sleepMs } from '../sleep';
 import { SystemConfiguration } from '../types/SystemConfiguration';
 import { PeripheralConfiguration } from '../types/PeripheralTypes';
 import { ConsoleState } from '../types/ConsoleTypes';
 import { Disk } from '../drivers/IO/Disk';
+import { PeripheralInAction, PeripheralOutAction } from '../types/PeripheralAction';
 
 export interface IOListener {
-    onPeripheralEvent(id: number, action: string, data: any): void
+    onPeripheralEvent(id: number, action: PeripheralInAction): void
 }
 
 export class SoCDP8 {
@@ -88,7 +89,7 @@ export class SoCDP8 {
                 readRegister: reg => this.io.readPeripheralReg(devId, reg),
                 writeRegister: (reg, val) => this.io.writePeripheralReg(devId, reg, val),
                 dataBreak: req => this.io.doDataBreak(req),
-                emitEvent: (action, data) => this.ioListener.onPeripheralEvent(devId, action, data),
+                emitEvent: action => this.ioListener.onPeripheralEvent(devId, action),
             };
             peripheral.setIOContext(ioCtx);
 
@@ -167,10 +168,12 @@ export class SoCDP8 {
                 return new DF32(conf, dir);
             case DeviceID.DEV_ID_RF08:
                 return new RF08(conf, dir);
-            case DeviceID.DEV_ID_RK8:
-                return new RK8(conf, dir);
+            case DeviceID.DEV_ID_RK08:
+                return new RK08(conf, dir);
             case DeviceID.DEV_ID_KW8I:
                 return new KW8I(conf);
+            case DeviceID.DEV_ID_RK8E:
+                throw Error("RK8E not supported");
         }
     }
 
@@ -212,9 +215,9 @@ export class SoCDP8 {
         throw Error(`Unknown peripheral id ${id}`);
     }
 
-    public requestDeviceAction(id: number, action: string, data: any) {
+    public requestDeviceAction(id: number, action: PeripheralOutAction) {
         const peripheral = this.findPeripheral(id);
-        peripheral.requestAction(action, data);
+        peripheral.requestAction(action);
     }
 
     public readPeripheralBlock(id: number, block: number): Uint16Array {

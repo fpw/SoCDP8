@@ -17,7 +17,7 @@
  */
 
 import { mkdirSync, readdirSync, readFileSync, promises, rmdirSync } from 'fs';
-import { SystemConfiguration, DEFAULT_SYSTEM_CONF } from '../types/SystemConfiguration';
+import { SystemConfiguration, getDefaultSysConf } from '../types/SystemConfiguration';
 import { randomBytes } from 'crypto';
 
 export class SystemConfigurationList {
@@ -31,7 +31,8 @@ export class SystemConfigurationList {
         this.loadSystems();
 
         if (!this.systems.has('default')) {
-            this.addSystem(DEFAULT_SYSTEM_CONF, DEFAULT_SYSTEM_CONF.id);
+            const def = getDefaultSysConf();
+            this.addSystem(def, def.id);
         }
     }
 

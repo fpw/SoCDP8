@@ -18,6 +18,7 @@
 
 import { DataBreakRequest, DataBreakReply } from "./DataBreak";
 import { PeripheralConfiguration, DeviceID } from '../../types/PeripheralTypes';
+import { PeripheralInAction, PeripheralOutAction } from "../../types/PeripheralAction";
 
 export enum DeviceRegister {
     REG_ENABLED     = 0,
@@ -44,7 +45,7 @@ export interface IOContext {
     writeRegister(reg: DeviceRegister, value: number): void;
     dataBreak(req: DataBreakRequest): Promise<DataBreakReply>;
 
-    emitEvent(action: string, data: any): void;
+    emitEvent(action: PeripheralInAction): void;
 }
 
 export abstract class Peripheral {
@@ -73,7 +74,7 @@ export abstract class Peripheral {
         return this.id;
     }
 
-    public requestAction(action: string, data: any): void {
+    public requestAction(action: PeripheralOutAction): void {
     }
 
     public abstract getConfiguration(): PeripheralConfiguration;

@@ -20,6 +20,7 @@ import { Peripheral, DeviceRegister, IOContext } from '../drivers/IO/Peripheral'
 import { sleepMs, sleepUs } from '../sleep';
 import { TC08Configuration } from '../types/PeripheralTypes';
 import { isDeepStrictEqual } from 'util';
+import { PeripheralOutAction, TapeState as TapeStateEx } from '../types/PeripheralAction';
 
 enum TapeDirection {
     FORWARD = 0,
@@ -106,10 +107,10 @@ export class TC08 extends Peripheral {
         return [0o76, 0o77];
     }
 
-    public requestAction(action: string, data: any): void {
-        switch (action) {
-            case 'load-tape':
-                this.loadTape(data.unit, data.tapeData);
+    public requestAction(action: PeripheralOutAction): void {
+        switch (action.type) {
+            case 'upload-disk':
+                this.loadTape(action.unit, action.data as Buffer);
                 break;
         }
     }
@@ -126,12 +127,12 @@ export class TC08 extends Peripheral {
                 continue;
             }
 
-            this.io.emitEvent('status', status);
+            this.io.emitEvent({type: "tapeStates", states: status});
             lastStatus = status;
         }
     }
 
-    private getStatus(): Object[] {
+    private getStatus(): TapeStateEx[] {
         const regA = this.io.readRegister(DeviceRegister.REG_A);
         const state = this.decodeRegA(regA);
 
@@ -145,7 +146,7 @@ export class TC08 extends Peripheral {
                     reverse: state.direction == TapeDirection.REVERSE,
                     writing: (state.func == TapeFunction.WRITE) && state.run,
                     normalizedPosition: t.curLine / this.TAPE_LINES
-                };
+                } as TapeStateEx;
             } else {
                 return {
                     address: t.unit,
@@ -155,7 +156,7 @@ export class TC08 extends Peripheral {
                     reverse: false,
                     writing: false,
                     normalizedPosition: t.curLine / this.TAPE_LINES
-                };
+                } as TapeStateEx;
             }
         });
         return tapeStatus;

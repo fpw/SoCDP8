@@ -18,6 +18,7 @@
 
 import { Peripheral, DeviceRegister, IOContext } from '../drivers/IO/Peripheral';
 import { sleepMs } from '../sleep';
+import { PeripheralOutAction } from '../types/PeripheralAction';
 import { PT08Configuration, DeviceID } from '../types/PeripheralTypes';
 
 export class PT08 extends Peripheral {
@@ -56,17 +57,17 @@ export class PT08 extends Peripheral {
         Object.assign(this.conf, newConf);
     }
 
-    public requestAction(action: string, data: any): void {
-        switch (action) {
+    public requestAction(action: PeripheralOutAction): void {
+        switch (action.type) {
             case 'key-press':
-                this.onKey(data);
+                this.onKey(action.key);
                 break;
             case 'reader-tape-set':
-                this.readerTape = Array.from(data as Buffer);
+                this.readerTape = Array.from(action.tapeData as Buffer);
                 this.readerTapePos = 0;
                 break;
             case 'reader-set-active':
-                this.readerActive = data;
+                this.readerActive = action.active;
                 break;
         }
     }
@@ -121,7 +122,7 @@ export class PT08 extends Peripheral {
         if (this.readerTapePos < this.readerTape.length) {
             const data = this.readerTape[this.readerTapePos++];
             console.log(`PT08: Read ${data.toString(16)}, ${this.readerTapePos} / ${this.readerTape.length}`);
-            this.io.emitEvent('readerPos', this.readerTapePos);
+            this.io.emitEvent({type: 'readerPos', pos: this.readerTapePos});
             return data;
         } else {
             return null;
@@ -145,7 +146,7 @@ export class PT08 extends Peripheral {
 
             regD = io.readRegister(DeviceRegister.REG_D);
             io.writeRegister(DeviceRegister.REG_D, regD | 2); // ack data
-            io.emitEvent('punch', punchData);
+            io.emitEvent({type: 'punch', char: punchData});
         }
     }
 }

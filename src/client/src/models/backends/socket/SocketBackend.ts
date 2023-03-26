@@ -48,12 +48,14 @@ export class SocketBackend implements Backend {
             listener.onConsoleState(state);
         });
 
-        this.socket.on("peripheral-event", (id: DeviceID, action: PeripheralInAction) => {
+        this.socket.on("peripheral-event", (data: {id: number, action: PeripheralInAction}) => {
+            const id = data.id;
+            const action = data.action
             listener.onPeripheralEvent(id, action);
         });
 
-        this.socket.on("state", (data: PeripheralInAction) => {
-            listener.onStateChange(data);
+        this.socket.on("state", (action: PeripheralInAction) => {
+            listener.onStateChange(action);
         });
 
         this.socket.connect();

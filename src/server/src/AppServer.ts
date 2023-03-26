@@ -26,6 +26,7 @@ import { SystemConfiguration } from './types/SystemConfiguration';
 import { ConsoleState } from './types/ConsoleTypes';
 import { Server, Socket } from 'socket.io';
 import * as io from 'socket.io';
+import { PeripheralInAction, PeripheralOutAction } from './types/PeripheralAction';
 
 export class AppServer {
     private readonly DATA_DIR = '/home/socdp8/'
@@ -44,7 +45,7 @@ export class AppServer {
         this.systems = new SystemConfigurationList(this.DATA_DIR);
 
         this.pdp8 = new SoCDP8(this.DATA_DIR, {
-            onPeripheralEvent: (id, action, data) => this.sendPeripheralEvent(id, action, data)
+            onPeripheralEvent: (id, action) => this.sendPeripheralEvent(id, action),
         });
 
         this.app = express();
@@ -69,11 +70,10 @@ export class AppServer {
         this.startConsoleCheckLoop();
     }
 
-    private sendPeripheralEvent(id: number, action: string, data: any): void {
+    private sendPeripheralEvent(id: number, action: PeripheralInAction): void {
         this.socket.emit('peripheral-event', {
             id: id,
             action: action,
-            data: data
         });
     }
 
@@ -136,7 +136,7 @@ export class AppServer {
     }
 
     private sendSystemListChange() {
-        this.socket.emit('state', {action: 'state-list-changed'});
+        this.socket.emit('state', {type: 'state-list-changed'} as PeripheralInAction);
     }
 
     private getActiveSystem(client: Socket): SystemConfiguration {
@@ -151,7 +151,7 @@ export class AppServer {
             const system = this.systems.findSystemById(id);
             const dir = this.systems.getDirForSystem(system);
             await this.pdp8.activateSystem(system, dir);
-            this.socket.emit('state', {action: 'active-state-changed'});
+            this.socket.emit('state', {type: 'active-state-changed'} as PeripheralInAction);
             console.log('State changed');
             return true;
         } catch (e) {
@@ -185,8 +185,11 @@ export class AppServer {
     }
 
     private execPeripheralAction(client: Socket, data: any): void {
-        console.log(`${client.id}: Peripheral action ${data.action} on ${data.id}`);
-        this.pdp8.requestDeviceAction(data.id, data.action, data.data);
+        const id: number = data.id;
+        const action: PeripheralOutAction = data.action;
+
+        console.log(`${client.id}: Peripheral action ${action.type} on ${id}`);
+        this.pdp8.requestDeviceAction(data.id, data.action);
     }
 
     private changePeripheralConfig(client: Socket, data: any): void {

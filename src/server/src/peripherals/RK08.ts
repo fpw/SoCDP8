@@ -19,9 +19,9 @@
 import { Peripheral, IOContext, DeviceRegister } from '../drivers/IO/Peripheral';
 import { existsSync, readFileSync, promises } from 'fs';
 import { sleepMs, sleepUs } from '../sleep';
-import { RK8Configuration } from '../types/PeripheralTypes';
+import { RK08Configuration } from '../types/PeripheralTypes';
 
-export class RK8 extends Peripheral {
+export class RK08 extends Peripheral {
     private readonly DEBUG = true;
     private readonly DATA_FILE: string;
     private readonly SECTORS_PER_DISK = 203 * 16;
@@ -29,10 +29,10 @@ export class RK8 extends Peripheral {
     private readonly NUM_DISKS = 4;
     private data = Buffer.alloc(this.NUM_DISKS * this.SECTORS_PER_DISK * this.WORDS_PER_SECTOR * 2);
 
-    constructor(private readonly conf: RK8Configuration, dir: string) {
+    constructor(private readonly conf: RK08Configuration, dir: string) {
         super(conf.id);
 
-        this.DATA_FILE = dir + '/rk8.dat';
+        this.DATA_FILE = dir + '/RK08.dat';
 
         if (existsSync(this.DATA_FILE)) {
             const buf = readFileSync(this.DATA_FILE);
@@ -40,11 +40,11 @@ export class RK8 extends Peripheral {
         }
     }
 
-    public getConfiguration(): RK8Configuration {
+    public getConfiguration(): RK08Configuration {
         return this.conf;
     }
 
-    public reconfigure(newConf: RK8Configuration) {
+    public reconfigure(newConf: RK08Configuration) {
         Object.assign(this.conf, newConf);
     }
 
@@ -67,12 +67,12 @@ export class RK8 extends Peripheral {
                 await sleepMs(134);
                 io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 13)); // remove request
                 if (regA & (1 << 7)) {
-                    console.log(`RK8: Surface-only read`);
+                    console.log(`RK08: Surface-only read`);
                     this.setDoneFlag(io);
                     continue;
                 }
                 if (regA & (1 << 6)) {
-                    console.log(`RK8: Header word read not supported`);
+                    console.log(`RK08: Header word read not supported`);
                     continue;
                 }
                 await this.doRead(io);
@@ -81,12 +81,12 @@ export class RK8 extends Peripheral {
                 await sleepMs(134);
                 io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 14)); // remove request
                 if (regA & (1 << 7)) {
-                    console.log(`RK8: Surface-only write`);
+                    console.log(`RK08: Surface-only write`);
                     this.setDoneFlag(io);
                     continue;
                 }
                 if (regA & (1 << 6)) {
-                    console.log(`RK8: Header word write supported`);
+                    console.log(`RK08: Header word write supported`);
                     continue;
                 }
                 await this.doWrite(io);
@@ -94,7 +94,7 @@ export class RK8 extends Peripheral {
                 // parity
                 await sleepMs(134);
                 io.writeRegister(DeviceRegister.REG_A, regA & ~(1 << 15)); // remove request
-                console.log(`RK8: Unsupported operation DCHP`);
+                console.log(`RK08: Unsupported operation DCHP`);
             } else {
                 await sleepMs(1);
             }
@@ -105,7 +105,7 @@ export class RK8 extends Peripheral {
         let sector = this.readSectorNum(io);
 
         if (this.DEBUG) {
-            console.log(`RK8: Read sector ${sector}`)
+            console.log(`RK08: Read sector ${sector}`)
         }
 
         let overflow = false;
@@ -148,7 +148,7 @@ export class RK8 extends Peripheral {
         let sector = this.readSectorNum(io);
 
         if (this.DEBUG) {
-            console.log(`RK8: Write sector ${sector}`)
+            console.log(`RK08: Write sector ${sector}`)
         }
 
         let overflow = false;

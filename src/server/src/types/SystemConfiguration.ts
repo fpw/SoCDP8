@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PeripheralConfiguration, PC04Configuration, PT08Configuration, TC08Configuration, RF08Configuration, DeviceID } from './PeripheralTypes';
+import { PeripheralConfiguration, PC04Configuration, PT08Configuration, TC08Configuration, RF08Configuration, DeviceID } from "./PeripheralTypes";
 
 export interface SystemConfiguration {
     id: string,
@@ -26,6 +26,7 @@ export interface SystemConfiguration {
     cpuExtensions: {
         eae: boolean;
         kt8i: boolean;
+        bsw: boolean;
     }
 
     maxMemField: number;
@@ -33,31 +34,34 @@ export interface SystemConfiguration {
     peripherals: PeripheralConfiguration[],
 }
 
-export const DEFAULT_SYSTEM_CONF: SystemConfiguration = {
-    id: 'default',
-    name: 'default',
-    description: '',
-    maxMemField: 7,
-    cpuExtensions: {
-        eae: true,
-        kt8i: false,
-    },
-    peripherals: [
-        <PT08Configuration>
-        {
-            id: DeviceID.DEV_ID_PT08,
-            baudRate: 110,
+export function getDefaultSysConf(): SystemConfiguration {
+    return {
+        id: "default",
+        name: "default",
+        description: "",
+        maxMemField: 7,
+        cpuExtensions: {
+            eae: false,
+            kt8i: false,
+            bsw: false,
         },
-        <PC04Configuration> {
-            id: DeviceID.DEV_ID_PC04,
-            baudRate: 4800,
-        },
-        <TC08Configuration> {
-            id: DeviceID.DEV_ID_TC08,
-            numTapes: 2,
-        },
-        <RF08Configuration> {
-            id: DeviceID.DEV_ID_RF08,
-        },
-    ]
-};
+        peripherals: [
+            {
+                id: DeviceID.DEV_ID_PT08,
+                baudRate: 110,
+                autoCaps: true,
+            } as PT08Configuration,
+            {
+                id: DeviceID.DEV_ID_PC04,
+                baudRate: 4800,
+            } as PC04Configuration,
+            {
+                id: DeviceID.DEV_ID_TC08,
+                numTapes: 2,
+            } as TC08Configuration,
+            {
+                id: DeviceID.DEV_ID_RF08,
+            } as RF08Configuration,
+        ]
+    };
+}

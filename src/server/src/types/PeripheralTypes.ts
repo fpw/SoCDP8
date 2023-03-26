@@ -17,7 +17,7 @@
  */
 
 export enum DeviceID {
-    DEV_ID_NULL     = 0,
+    DEV_ID_CPU      = 0,
     DEV_ID_PT08     = 1,
     DEV_ID_PC04     = 2,
     DEV_ID_TC08     = 3,
@@ -28,7 +28,10 @@ export enum DeviceID {
     DEV_ID_TT3      = 8,
     DEV_ID_TT4      = 9,
     DEV_ID_KW8I     = 10,
-    DEV_ID_RK8      = 11,
+    DEV_ID_RK08     = 11,
+    DEV_ID_RK8E     = 12,
+
+    _COUNT
 }
 
 export type BaudRate = 110 | 150 | 300 | 1200 | 2400 | 4800 | 9600 | 19200;
@@ -50,6 +53,7 @@ export interface PT08Configuration {
     id: DeviceID.DEV_ID_PT08 | DeviceID.DEV_ID_TT1 | DeviceID.DEV_ID_TT2 | DeviceID.DEV_ID_TT3 | DeviceID.DEV_ID_TT4;
     baudRate: BaudRate;
     eightBit: boolean;
+    autoCaps: boolean;
 }
 
 export interface PC04Configuration {
@@ -70,16 +74,22 @@ export interface RF08Configuration {
     id: DeviceID.DEV_ID_RF08;
 }
 
-export interface RK8Configuration {
-    id: DeviceID.DEV_ID_RK8;
+export interface RK08Configuration {
+    id: DeviceID.DEV_ID_RK08;
+}
+
+export interface RK8EConfiguration {
+    id: DeviceID.DEV_ID_RK8E;
 }
 
 export interface KW8IConfiguration {
     id: DeviceID.DEV_ID_KW8I;
+    useExternalClock: boolean;
+    use50Hz: boolean;
 }
 
 export type PeripheralConfiguration =
     PT08Configuration | PC04Configuration |
     TC08Configuration |
-    DF32Configuration | RF08Configuration | RK8Configuration |
+    DF32Configuration | RF08Configuration | RK08Configuration | RK8EConfiguration |
     KW8IConfiguration;

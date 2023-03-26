@@ -18,6 +18,7 @@
 
 import { Peripheral, IOContext, DeviceRegister } from '../drivers/IO/Peripheral';
 import { sleepMs } from '../sleep';
+import { PeripheralOutAction } from '../types/PeripheralAction';
 import { PC04Configuration } from '../types/PeripheralTypes';
 
 export class PC04 extends Peripheral {
@@ -47,14 +48,14 @@ export class PC04 extends Peripheral {
         return [0o01, 0o02];
     }
 
-    public requestAction(action: string, data: any): any {
-        switch (action) {
+    public requestAction(action: PeripheralOutAction): any {
+        switch (action.type) {
             case 'reader-tape-set':
-                this.readerTape = Array.from(data as Buffer);
+                this.readerTape = Array.from(action.tapeData as Buffer);
                 this.readerTapePos = 0;
                 break;
             case 'reader-set-active':
-                this.readerActive = data;
+                this.readerActive = action.active;
                 break;
         }
     }
@@ -93,7 +94,7 @@ export class PC04 extends Peripheral {
         if (this.readerTapePos < this.readerTape.length) {
             const data = this.readerTape[this.readerTapePos++];
             console.log(`PC04: Read ${data.toString(16)}, ${this.readerTapePos} / ${this.readerTape.length}`);
-            this.io.emitEvent('readerPos', this.readerTapePos);
+            this.io.emitEvent({type: 'readerPos', pos: this.readerTapePos});
             return data;
         } else {
             return null;
@@ -120,7 +121,7 @@ export class PC04 extends Peripheral {
             io.writeRegister(DeviceRegister.REG_D, regD | 2); // ack data
 
             console.log(`PC04: Punch ${punchData.toString(16)}`);
-            io.emitEvent('punch', punchData);
+            io.emitEvent({type: 'punch', char: punchData});
         }
     }
 }
