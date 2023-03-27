@@ -16,10 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { FormControlLabel, FormGroup, Switch } from "@mui/material";
-import InputLabel from "@mui/material/InputLabel";
-import MenuItem from "@mui/material/MenuItem";
-import Select from "@mui/material/Select";
+import { FormControlLabel, FormGroup, InputLabel, MenuItem, Select, Switch } from "@mui/material";
 import { KW8IModel } from "../../../models/peripherals/KW8IModel";
 
 export function KW8I(props: {model: KW8IModel}) {

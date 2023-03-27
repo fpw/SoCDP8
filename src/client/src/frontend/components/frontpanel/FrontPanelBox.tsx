@@ -21,6 +21,7 @@ import { Stack } from "@mui/system";
 import { useState } from "react";
 import { ProgramSnippet, ProgramSnippets } from "../../../models/ProgramSnippets";
 import { SoCDP8 } from "../../../models/SoCDP8";
+import { DeviceID } from "../../../types/PeripheralTypes";
 import { downloadData, loadFile } from "../../../util";
 import { UploadButton } from "../common/UploadButton";
 import { FrontPanel } from "./FrontPanel";
@@ -30,6 +31,7 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
     const [busy, setBusy] = useState(false);
     const [showSnippets, setShowSnippets] = useState(false);
     const simSpeed = props.pdp8.useStore(state => state.simSpeed);
+    const sys = props.pdp8.useStore(state => state.activeSystem!);
 
     async function saveState() {
         setBusy(true);
@@ -94,6 +96,7 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
                                 open={showSnippets}
                                 onClose={() => setShowSnippets(false)}
                                 onSelect={(snippet) => void loadSnippet(snippet)}
+                                devices={sys.peripherals.map(p => p.id)}
                             />
                         </ButtonGroup>
                         <Box sx={{alignSelf: "right"}}>
@@ -110,6 +113,7 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
 interface SnippetProps {
     onSelect: ((s: ProgramSnippet) => void);
     open: boolean, onClose: (() => void);
+    devices: DeviceID[];
 }
 
 function SnippetDialog(props: SnippetProps) {
@@ -117,7 +121,7 @@ function SnippetDialog(props: SnippetProps) {
         <Dialog open={props.open} onClose={props.onClose}>
             <DialogTitle>Select Snippet</DialogTitle>
             <List>
-                { ProgramSnippets.map(snippet =>
+                { ProgramSnippets.filter(s => s.requirements.every(dev => props.devices.includes(dev))).map(snippet =>
                     <ListItemButton key={snippet.label} onClick={() => props.onSelect(snippet)}>
                         <ListItemText primary={snippet.label} secondary={snippet.desc} />
                     </ListItemButton>

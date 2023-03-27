@@ -16,9 +16,12 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { DeviceID } from "../types/PeripheralTypes";
+
 export interface ProgramSnippet {
     label: string;
     desc: string;
+    requirements: DeviceID[];
     snippets: {
         start: number,
         data: number[];
@@ -29,6 +32,7 @@ export const ProgramSnippets: ProgramSnippet[] = [
     {
         label: "AC/MQ Blinker",
         desc: "Lamp blink program from dustyoldcomputers.com, start at 0000",
+        requirements: [],
         snippets: [
             {
                 start: 0o0000,
@@ -52,6 +56,7 @@ export const ProgramSnippets: ProgramSnippet[] = [
     {
         label: "BIN Loader",
         desc: "BIN Loader, start at 7777",
+        requirements: [],
         snippets: [
             {
                 start: 0o7612,
@@ -167,6 +172,7 @@ export const ProgramSnippets: ProgramSnippet[] = [
     {
         label: "RIM Loader (ASR)",
         desc: "RIM Loader for ASR-33, start at 7756",
+        requirements: [DeviceID.DEV_ID_PT08],
         snippets: [
             {
                 start: 0o7756,
@@ -195,6 +201,7 @@ export const ProgramSnippets: ProgramSnippet[] = [
     {
         label: "RIM Loader (HS)",
         desc: "RIM Loader for PC04, start at 7756",
+        requirements: [DeviceID.DEV_ID_PC04],
         snippets: [
             {
                 start: 0o7756,
@@ -223,6 +230,7 @@ export const ProgramSnippets: ProgramSnippet[] = [
     {
         label: "OS/8 TC08 Loader",
         desc: "OS/8 for TC08, start at 7613",
+        requirements: [DeviceID.DEV_ID_TC08],
         snippets: [
             {
                 start: 0o7613,
@@ -250,6 +258,7 @@ export const ProgramSnippets: ProgramSnippet[] = [
     {
         label: "OS/8 RF08 Loader",
         desc: "OS/8 for RF08, start at 7750",
+        requirements: [DeviceID.DEV_ID_RF08],
         snippets: [
             {
                 start: 0o7750,
@@ -266,6 +275,7 @@ export const ProgramSnippets: ProgramSnippet[] = [
     {
         label: "OS/8 RK8E Loader",
         desc: "OS/8 for RK8E, start at 0030",
+        requirements: [DeviceID.DEV_ID_RK8E],
         snippets: [
             {
                 start: 0o0030,
@@ -279,6 +289,7 @@ export const ProgramSnippets: ProgramSnippet[] = [
     {
         label: "Monitor TC08 Loader",
         desc: "TC08 Loader for Monitor, start at 0200",
+        requirements: [DeviceID.DEV_ID_TC08],
         snippets: [
             {
                 start: 0o0200,
