@@ -16,9 +16,9 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Backend } from "../backends/Backend";
 import { PeripheralInAction } from "../../types/PeripheralAction";
-import { DeviceID, PeripheralConfiguration } from "./../../types/PeripheralTypes";
+import { Backend } from "../backends/Backend";
+import { DeviceID } from "./../../types/PeripheralTypes";
 
 export abstract class PeripheralModel {
     constructor(protected backend: Backend) {

@@ -100,8 +100,7 @@ export class WasmBackend implements Backend {
 
         await this.pdp8.create((dev, action, p1, p2) => void this.onPeripheralAction(dev, action, p1, p2));
         await this.setActiveSystem("default");
-
-        this.listener.onConnect();
+        await this.listener.onConnect();
 
         const updateConsole = () => {
             listener.onConsoleState(this.pdp8.getConsoleState());

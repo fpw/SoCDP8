@@ -21,7 +21,7 @@ import { DeviceID } from "../../types/PeripheralTypes";
 import { PeripheralInAction } from "../../types/PeripheralAction";
 
 export interface BackendListener {
-    onConnect(): void;
+    onConnect(): Promise<void>;
     onDisconnect(): void;
     onConsoleState(state: ConsoleState): void;
     onPeripheralEvent(id: DeviceID, action: PeripheralInAction): void;

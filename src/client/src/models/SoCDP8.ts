@@ -87,7 +87,9 @@ export class SoCDP8 {
 
     public async connect() {
         const listener: BackendListener = {
-            onConnect: () => {
+            onConnect: async() => {
+                await this.readActiveState();
+                await this.fetchStateList();
             },
 
             onDisconnect: () => {
@@ -112,8 +114,6 @@ export class SoCDP8 {
         };
 
         await this.backend.connect(listener);
-        await this.readActiveState();
-        await this.fetchStateList();
     }
 
     private async readActiveState(): Promise<void> {

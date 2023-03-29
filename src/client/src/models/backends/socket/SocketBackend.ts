@@ -36,10 +36,6 @@ export class SocketBackend implements Backend {
     }
 
     public async connect(listener: BackendListener) {
-        this.socket.on("connect", () => {
-            listener.onConnect();
-        });
-
         this.socket.on("disconnect", () => {
             listener.onDisconnect();
         });
@@ -58,7 +54,12 @@ export class SocketBackend implements Backend {
             listener.onStateChange(action);
         });
 
-        this.socket.connect();
+        return new Promise<void>(resolve => {
+            this.socket.on("connect", () => {
+                listener.onConnect().then(() => resolve()).catch(e => console.error(e));
+            });
+            this.socket.connect();
+        });
     }
 
     public async readActiveSystem(): Promise<SystemConfiguration> {

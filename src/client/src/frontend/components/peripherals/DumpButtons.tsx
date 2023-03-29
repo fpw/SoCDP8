@@ -25,16 +25,16 @@ export function DumpButtons(props: {model: DiskModel}) {
 
     return (
         <Box>
-            <ButtonGroup variant="outlined">
-                { Array.from({length: props.model.getDiskCount()}).map((_, i) => <React.Fragment key={i}>
+            { Array.from({length: props.model.getDiskCount()}).map((_, i) => <React.Fragment key={i}>
+                <ButtonGroup variant="outlined" orientation="vertical">
                     <Button onClick={() => void download(i)}>
-                        Download {i}
+                        Download Image {i}
                     </Button>
                     <UploadButton onSelect={files => void upload(i, files)}>
-                        Upload {i}
+                        Upload Image {i}
                     </UploadButton>
-                </React.Fragment>)}
-            </ButtonGroup>
+                </ButtonGroup>
+            </React.Fragment>)}
         </Box>
     );
 }

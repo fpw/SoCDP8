@@ -36,7 +36,7 @@ const keyboardOptions: KeyboardReactInterface["options"] = {
             '! " # $ % & / ( ) 0 * =',
             "{altmode} Q W E R T Y U I O @ {lf} {return}",
             "{ctrl} A S D F G H J [ \\ + {rubout}",
-            "{deshift} Z X C V B ^ ] < > ? {shift}",
+            "{deshift} Z X C V B ^ ] < > ? {deshift}",
             "{space}"
         ],
         ctrl: [
@@ -47,10 +47,10 @@ const keyboardOptions: KeyboardReactInterface["options"] = {
             "{space}"
         ],
         ctrlShift: [
-            '! " # $ % & / ( ) 0 * =',
-            "{altmode} Q W E R T Y U I O @ {lf} {return}",
-            "{dectrl} A S D F G H J [ \\ + {rubout}",
-            "{deshift} Z X C V B ^ ] < > ? {shift}",
+            "1 2 3 4 5 6 7 8 9 0 : -",
+            "{altmode} Q W E R T Y U I O P {lf} {return}",
+            "{dectrl} A S D F G H J K L ; {rubout}",
+            "{deshift} Z X C V B N M , . / {deshift}",
             "{space}"
         ],
     },
@@ -112,7 +112,14 @@ export function ASR33Keyboard(props: {onKey: (chr: number) => void}) {
                 chr = key.charCodeAt(0);
                 if (ctrl) {
                     if (shift) {
-                        chr |= 0x20;
+                        switch (key) {
+                            case "K": chr = 0x1B; break;
+                            case "L": chr = 0x1C; break;
+                            case "M": chr = 0x1D; break;
+                            case "N": chr = 0x1E; break;
+                            case "O": chr = 0x1F; break;
+                            case "P": chr = 0x00; break;
+                        }
                     } else {
                         chr &= ~0x40;
                     }
