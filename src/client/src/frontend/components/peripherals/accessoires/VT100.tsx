@@ -3,9 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import { Terminal } from "xterm";
 import "xterm/css/xterm.css";
 import { PT08Model } from "../../../../models/peripherals/PT08Model";
+import { PT08Style } from "../../../../types/PeripheralTypes";
 
 export function VT100(props: {model: PT08Model}) {
     const { model } = props;
+    const style = model.useState(state => state.conf!.style);
     const termRef = useRef(null);
     const [term, setTerm] = useState<Terminal>();
     const clearOutput = model.useState(state => state.clearOutput);
@@ -15,8 +17,27 @@ export function VT100(props: {model: PT08Model}) {
             return;
         }
 
-        const xTerm = new Terminal();
-        xTerm.resize(80, 25);
+        let xTerm: Terminal;
+        if (style == PT08Style.ASR33) {
+            xTerm = new Terminal({
+                theme: {
+                    background: "#f8f8f8",
+                    foreground: "black",
+                    cursor: "black",
+                    selectionBackground: "grey",
+                },
+                altClickMovesCursor: false,
+                rows: 25,
+                cols: 74,
+
+            });
+        } else {
+            xTerm = new Terminal({
+                rows: 25,
+                cols: 80,
+                altClickMovesCursor: false,
+            });
+        }
         xTerm.open(termRef.current);
         xTerm.onData(data => {
             for (const c of data) {
@@ -29,7 +50,7 @@ export function VT100(props: {model: PT08Model}) {
             xTerm.dispose();
             setTerm(undefined);
         };
-    }, [termRef, props.model]);
+    }, [termRef, style, props.model]);
 
     useEffect(() => model.useState.subscribe((state, prevState) => {
         if (term && state.outBuf.length != prevState.outBuf.length) {

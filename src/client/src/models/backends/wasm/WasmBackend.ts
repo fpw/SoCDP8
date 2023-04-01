@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { DeviceID, PeripheralConfiguration } from "../../../types/PeripheralTypes";
+import { DeviceID, PeripheralConfiguration, PT08Style } from "../../../types/PeripheralTypes";
 import { SystemConfiguration } from "../../../types/SystemConfiguration";
 import { TapeState } from "../../DECTape";
 import { Backend } from "../Backend";
@@ -79,6 +79,7 @@ export class WasmBackend implements Backend {
                     eightBit: false,
                     autoCaps: true,
                     baudRate: 9600,
+                    style: PT08Style.ASR33,
                 },
                 {
                     id: DeviceID.DEV_ID_PC04,

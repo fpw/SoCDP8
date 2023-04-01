@@ -118,7 +118,7 @@ function PunchBox(props: {model: PC04Model}) {
                     <Button variant="outlined" onClick={() => void download()}>Download Tape</Button>
                 </FormControl>
                 <FormControl>
-                    <Button variant="outlined" onClick={() => model.addPunchLeader()}>Leader</Button>
+                    <Button variant="outlined" onClick={() => model.addPunchLeader()}>Feed</Button>
                 </FormControl>
                 <FormControlLabel
                     control={<Switch onChange={evt => void model.setPunchActive(evt.target.checked)} checked={punchActive} />}

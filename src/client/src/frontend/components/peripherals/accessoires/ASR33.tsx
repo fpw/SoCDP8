@@ -26,18 +26,11 @@ import { ASR33Keyboard } from "./ASR33Keyboard";
 import { VT100 } from "./VT100";
 
 export function ASR33(props: {model: PT08Model}) {
+    const set8 = props.model.useState(state => state.conf!.eightBit);
+
     return (<>
         <VT100 model={props.model} />
-        <Accordion>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="body1">ASR-33 Keyboard</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-                <Container>
-                    <ASR33Keyboard onKey={chr => void props.model.onRawKey(String.fromCharCode(chr))} />
-                </Container>
-            </AccordionDetails>
-        </Accordion>
+        <ASR33Keyboard set8={set8} onKey={chr => void props.model.onRawKey(String.fromCharCode(chr))} />
         <Accordion>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Typography variant="body1">Reader &amp; Punch</Typography>
@@ -112,7 +105,7 @@ function PunchBox(props: {model: PT08Model}) {
                     <Button variant="outlined" onClick={() => void download()}>Download Tape</Button>
                 </FormControl>
                 <FormControl>
-                    <Button variant="outlined" onClick={() => model.addPunchLeader()}>Leader</Button>
+                    <Button variant="outlined" onClick={() => model.addPunchLeader()}>Feed</Button>
                 </FormControl>
                 <FormControlLabel
                     control={<Switch onChange={evt => void model.setPunchActive(evt.target.checked)} checked={punchActive} />}

@@ -49,11 +49,17 @@ export enum BaudRateConf {
 
 export const BAUD_RATES: BaudRate[] = [110, 150, 300, 1200, 2400, 4800, 9600, 19200];
 
+export enum PT08Style {
+    ASR33   = "ASR-33",
+    VT100   = "VT100",
+}
+
 export interface PT08Configuration {
     id: DeviceID.DEV_ID_PT08 | DeviceID.DEV_ID_TT1 | DeviceID.DEV_ID_TT2 | DeviceID.DEV_ID_TT3 | DeviceID.DEV_ID_TT4;
     baudRate: BaudRate;
     eightBit: boolean;
     autoCaps: boolean;
+    style: PT08Style;
 }
 
 export interface PC04Configuration {

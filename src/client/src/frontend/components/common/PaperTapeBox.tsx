@@ -83,7 +83,6 @@ function Tape(props: PaperTapeBoxProps) {
 }
 
 class PaperTapePainter {
-    private drawPending: boolean = false;
     private canvas?: HTMLCanvasElement;
 
     public setCanvas(canvas: HTMLCanvasElement) {
@@ -91,15 +90,10 @@ class PaperTapePainter {
     }
 
     public update(buf: number[], pos: number) {
-        if (!this.drawPending) {
-            this.drawPending = true;
-            requestAnimationFrame(() => this.draw(buf, pos));
-        }
+        requestAnimationFrame(() => this.draw(buf, pos));
     }
 
     private draw(buf: number[], pos: number) {
-        this.drawPending = false;
-
         if (!this.canvas) {
             return;
         }

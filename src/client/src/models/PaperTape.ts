@@ -17,6 +17,7 @@
  */
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
+import { loadFile } from "../util";
 
 export interface PaperState {
     name: string;
@@ -60,20 +61,9 @@ export class PaperTape {
     }
 
     static async fromFile(file: File): Promise<PaperTape> {
-        return new Promise<PaperTape>((resolve, reject) => {
-            const tape = new PaperTape();
-
-            const reader = new FileReader();
-            reader.onload = () => {
-                const buffer = Array.from(new Uint8Array(reader.result as ArrayBuffer));
-                tape.useTape.getState().setPaperState({buffer, name: file.name, pos: 0});
-                resolve(tape);
-            };
-            reader.onerror = () => {
-                reject();
-            }
-
-            reader.readAsArrayBuffer(file);
-        });
+        const data = await loadFile(file);
+        const tape = new PaperTape();
+        tape.useTape.getState().setPaperState({buffer: Array.from(data), name: file.name, pos: 0});
+        return tape;
     }
 }

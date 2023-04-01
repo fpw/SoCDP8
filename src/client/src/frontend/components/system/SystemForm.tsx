@@ -18,7 +18,7 @@
 
 import { Button, FormControl, FormControlLabel, FormGroup, FormLabel, Radio, RadioGroup, Slider, Switch, TextField } from "@mui/material";
 import { FormEvent } from "react";
-import { DeviceID, PeripheralConfiguration } from "../../../types/PeripheralTypes";
+import { DeviceID, PeripheralConfiguration, PT08Style } from "../../../types/PeripheralTypes";
 import { getDefaultSysConf, SystemConfiguration } from "../../../types/SystemConfiguration";
 
 export interface SystemFormProps {
@@ -139,7 +139,7 @@ function toSystemConf(ev: FormEvent<HTMLFormElement>): SystemConfiguration {
     s.maxMemField = Number.parseInt((form.elements.namedItem("maxMemField") as HTMLInputElement).value);
 
     if ((form.elements.namedItem("serialLine") as HTMLInputElement).checked) {
-        s.peripherals.push({id: DeviceID.DEV_ID_PT08, baudRate: 110, eightBit: false, autoCaps: true});
+        s.peripherals.push({id: DeviceID.DEV_ID_PT08, baudRate: 110, eightBit: false, autoCaps: true, style: PT08Style.ASR33});
     }
 
     if ((form.elements.namedItem("pc04") as HTMLInputElement).checked) {
@@ -156,16 +156,16 @@ function toSystemConf(ev: FormEvent<HTMLFormElement>): SystemConfiguration {
 
     const pt08Count = Number.parseInt((form.elements.namedItem("pt08") as HTMLInputElement).value);
     if (pt08Count >= 4) {
-        s.peripherals.push({id: DeviceID.DEV_ID_TT4, baudRate: 9600, eightBit: false, autoCaps: false});
+        s.peripherals.push({id: DeviceID.DEV_ID_TT4, baudRate: 9600, eightBit: false, autoCaps: false, style: PT08Style.ASR33});
     }
     if (pt08Count >= 3) {
-        s.peripherals.push({id: DeviceID.DEV_ID_TT3, baudRate: 9600, eightBit: false, autoCaps: false});
+        s.peripherals.push({id: DeviceID.DEV_ID_TT3, baudRate: 9600, eightBit: false, autoCaps: false, style: PT08Style.ASR33});
     }
     if (pt08Count >= 2) {
-        s.peripherals.push({id: DeviceID.DEV_ID_TT2, baudRate: 9600, eightBit: false, autoCaps: false});
+        s.peripherals.push({id: DeviceID.DEV_ID_TT2, baudRate: 9600, eightBit: false, autoCaps: false, style: PT08Style.ASR33});
     }
     if (pt08Count >= 1) {
-        s.peripherals.push({id: DeviceID.DEV_ID_TT1, baudRate: 9600, eightBit: false, autoCaps: false});
+        s.peripherals.push({id: DeviceID.DEV_ID_TT1, baudRate: 9600, eightBit: false, autoCaps: false, style: PT08Style.ASR33});
     }
 
     const diskStr = (form.elements.namedItem("disk") as HTMLInputElement).value;

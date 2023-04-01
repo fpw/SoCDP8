@@ -16,16 +16,20 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, Switch } from "@mui/material";
+import { FormControlLabel, FormGroup, MenuItem, Select, Switch } from "@mui/material";
 import { PT08Model } from "../../../models/peripherals/PT08Model";
-import { BaudRate, BAUD_RATES } from "../../../types/PeripheralTypes";
+import { BaudRate, BAUD_RATES, PT08Style } from "../../../types/PeripheralTypes";
 import { ASR33 } from "./accessoires/ASR33";
+import { VT100 } from "./accessoires/VT100";
 
 export function PT08(props: {model: PT08Model}) {
+    const style = props.model.useState(state => state.conf!.style);
+
     return (
         <>
-            <ConfigBox {...props} />
-            <ASR33 model={props.model} />
+            <ConfigBox model={props.model} />
+            { style == PT08Style.ASR33 && <ASR33 model={props.model} /> }
+            { style == PT08Style.VT100 && <VT100 model={props.model} /> }
         </>
     );
 }
@@ -34,23 +38,25 @@ function ConfigBox(props: {model: PT08Model}) {
     const { model } = props;
     const conf = model.useState(state => state.conf!);
 
-    return (<Box>
+    return (
         <FormGroup row>
-            <FormControl>
-                <FormLabel component="legend">Baud Rate</FormLabel>
-                <Select
-                    size="small"
-                    value={conf.baudRate}
-                    onChange={(evt) => {
-                        const rate = Number.parseInt(evt.target.value as string) as BaudRate;
-                        void model.updateConfig({...conf, baudRate: rate});
-                    }}
-                >
-                    {BAUD_RATES.map((b) => (
-                        <MenuItem key={b} value={b}>{b}</MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
+            <FormControlLabel
+                control={
+                    <Select
+                        size="small"
+                        value={conf.baudRate}
+                        onChange={(evt) => {
+                            const rate = Number.parseInt(evt.target.value as string) as BaudRate;
+                            void model.updateConfig({...conf, baudRate: rate});
+                        }}
+                    >
+                        {BAUD_RATES.map((b) => (
+                            <MenuItem key={b} value={b}>{b}</MenuItem>
+                        ))}
+                    </Select>
+                }
+                label="Baud Rate"
+            />
 
             <FormControlLabel
                 control={
@@ -62,7 +68,6 @@ function ConfigBox(props: {model: PT08Model}) {
                         }}
                     />
                 }
-                labelPlacement="start"
                 label="Set 8th bit"
             />
             <FormControlLabel
@@ -75,9 +80,23 @@ function ConfigBox(props: {model: PT08Model}) {
                         }}
                     />
                 }
-                labelPlacement="start"
                 label="Auto Caps"
             />
+            <FormControlLabel
+                control={
+                    <Select size="small" value={conf.style}
+                        onChange={ev => {
+                            const style = ev.target.value as PT08Style;
+                            void model.updateConfig({...conf, style});
+                        }}
+                    >
+                        { Object.entries(PT08Style).map(([key, val]) =>
+                            <MenuItem key={key} value={val}>{val}</MenuItem>
+                        )}
+                    </Select>
+                }
+                label="Style"
+            />
         </FormGroup>
-    </Box>);
+    );
 }
