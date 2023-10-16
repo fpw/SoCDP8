@@ -233,7 +233,7 @@ export class Wasm8Context {
             throw Error("Not connected");
         }
 
-        for (let i = 1; i < DeviceID._COUNT; i++) {
+        for (let i = 1; i < (DeviceID._COUNT as number); i++) {
             this.calls.setPeripheral(this.ctx, i, 0);
         }
     }
