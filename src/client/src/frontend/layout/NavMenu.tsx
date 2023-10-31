@@ -21,6 +21,7 @@ import { Link as RouterLink } from "react-router-dom";
 import InfoIcon from "@mui/icons-material/Info";
 import MemoryIcon from "@mui/icons-material/Memory";
 import TuneIcon from "@mui/icons-material/Tune";
+import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 
 export function NavMenu() {
     return (
@@ -32,6 +33,10 @@ export function NavMenu() {
             <ListItemButton component={RouterLink} to="/machines">
                 <ListItemIcon title="Manage Machines"><TuneIcon /></ListItemIcon>
                 <ListItemText primary="Manage Machines" />
+            </ListItemButton>
+            <ListItemButton component={RouterLink} to="/code">
+                <ListItemIcon title="Code Editor"><FormatListNumberedIcon /></ListItemIcon>
+                <ListItemText primary="Code Editor" />
             </ListItemButton>
             <ListItemButton component={RouterLink} to="/about">
                 <ListItemIcon title="About"><InfoIcon /></ListItemIcon>

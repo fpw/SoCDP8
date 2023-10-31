@@ -77,3 +77,7 @@ export function generateUUID() {
         return (c === "x" ? r : ((r & 0x3) | 0x8)).toString(16);
     });
 }
+
+export function numToOctal(num: number, width: number): string {
+    return num.toString(8).padStart(width, "0");
+}

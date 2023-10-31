@@ -23,6 +23,7 @@ import { AboutPage } from "./pages/AboutPage";
 import { PeripheralPage } from "./pages/PeripheralPage";
 import { SystemListPage } from "./pages/SystemListPage";
 import { SystemPage } from "./pages/SystemPage";
+import { CodePage } from "./pages/CodePage";
 
 const pdp8 = getBackend();
 
@@ -34,6 +35,7 @@ export const appRouter = createBrowserRouter([
         children: [
             { path: "", element: <Navigate to="/machines/active" />,  },
             { path: "about", element: <AboutPage />,  },
+            { path: "code", element: <CodePage pdp8={pdp8} />,  },
             { path: "machines", children: [
                 {
                     path: "", element: <SystemListPage pdp8={pdp8} />,
