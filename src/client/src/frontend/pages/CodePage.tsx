@@ -16,12 +16,14 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { indentLess, indentMore } from "@codemirror/commands";
+import { indentUnit } from "@codemirror/language";
 import { Button, ButtonGroup, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
-import { useRef, useState } from "react";
+import CodeMirror, { StateCommand, keymap } from "@uiw/react-codemirror";
+import React, { useState } from "react";
 import { BinTapeReader, CodeError, Yamas, YamasOutput } from "yamas";
-import { numToOctal } from "../../util";
-import React from "react";
 import { SoCDP8 } from "../../models/SoCDP8";
+import { numToOctal } from "../../util";
 
 const defaultSource =
 `/ YAMAS PDP-8 ASSEMBLER
@@ -32,17 +34,13 @@ PAGE 1
 `;
 
 export function CodePage(props: {pdp8: SoCDP8}) {
+    const [src, setSrc] = useState(defaultSource);
     const [output, setOutput] = useState<YamasOutput>();
     const [memState, setMemState] = useState<(number | undefined)[]>([]);
-    const sourceRef = useRef<HTMLTextAreaElement>(null);
 
     function assemble() {
-        if (!sourceRef.current) {
-            return;
-        }
-
         const asm = new Yamas({loadPrelude: true});
-        const ast = asm.addInput("input.pa", sourceRef.current.value);
+        const ast = asm.addInput("input.pa", src);
         const out = asm.run();
         setOutput(out);
 
@@ -61,17 +59,21 @@ export function CodePage(props: {pdp8: SoCDP8}) {
 
     return (<>
         <Typography component="h1" variant="h4">Code Editor</Typography>
-        <textarea
-            ref={sourceRef}
-            style={{width: "100%"}}
-            rows={20}
-            defaultValue={defaultSource}
-            spellCheck={false}
-            autoCapitalize="off"
-            autoComplete="off"
-            autoCorrect="off"
-            autoFocus={true}
+
+        <CodeMirror
+            value={src}
+            height="200px"
+            indentWithTab={false}
+            extensions={[
+                keymap.of([{
+                    key: "Tab",
+                    run: indentOrInsertTab,
+                    shift: indentLess
+                }])
+            ]}
+            onChange={v => setSrc(v)}
         />
+
         <ButtonGroup variant="outlined">
             <Button onClick={() => assemble()}>Assemble</Button>
             <Button
@@ -92,6 +94,25 @@ export function CodePage(props: {pdp8: SoCDP8}) {
         </>}
     </>);
 }
+
+export const indentOrInsertTab: StateCommand = ({ state, dispatch }) => {
+    if (state.readOnly) {
+        return false;
+    }
+    if (state.selection.ranges.some((r) => !r.empty)) {
+        return indentMore({ state, dispatch });
+    }
+    dispatch(
+        state.update(
+            state.replaceSelection(
+                state.facet(indentUnit)
+            ), {
+                scrollIntoView: true, userEvent: "input"
+            }
+        )
+    );
+    return true;
+};
 
 function ErrorTable(props: {errors: CodeError[]}) {
     const errs = props.errors;

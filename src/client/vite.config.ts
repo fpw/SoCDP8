@@ -23,6 +23,16 @@ export default defineConfig({
                 manualChunks: {
                     "mui": ["@mui/material"],
                     "perphs": ["xterm", "react-simple-keyboard"],
+                    "editor": [
+                        "@codemirror/autocomplete",
+                        "@codemirror/commands",
+                        "@codemirror/language",
+                        "@codemirror/lint",
+                        "@codemirror/search",
+                        "@codemirror/state",
+                        "@codemirror/theme-one-dark",
+                        "@codemirror/view",
+                    ],
                 },
             },
         },
