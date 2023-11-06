@@ -21,7 +21,7 @@ import { indentUnit } from "@codemirror/language";
 import { Button, ButtonGroup, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
 import CodeMirror, { StateCommand, keymap } from "@uiw/react-codemirror";
 import React, { useState } from "react";
-import { BinTapeReader, CodeError, Yamas, YamasOutput } from "yamas";
+import { BinTapeReader, CodeError, SymbolData, SymbolType, Yamas, YamasOutput } from "yamas";
 import { SoCDP8 } from "../../models/SoCDP8";
 import { numToOctal } from "../../util";
 
@@ -40,8 +40,12 @@ export function CodePage(props: {pdp8: SoCDP8}) {
 
     function assemble() {
         const asm = new Yamas({loadPrelude: true});
+        console.time("parse")
         const ast = asm.addInput("input.pa", src);
+        console.timeEnd("parse")
+        console.time("assemble")
         const out = asm.run();
+        console.timeEnd("assemble")
         setOutput(out);
 
         const mem = new BinTapeReader(out.binary).read();
@@ -62,7 +66,7 @@ export function CodePage(props: {pdp8: SoCDP8}) {
 
         <CodeMirror
             value={src}
-            height="200px"
+            height="400px"
             indentWithTab={false}
             extensions={[
                 keymap.of([{
@@ -88,9 +92,10 @@ export function CodePage(props: {pdp8: SoCDP8}) {
             { output.errors.length > 0 &&
                 <ErrorTable errors={output.errors} />
             }
-            { memState.length > 0 &&
+            { memState.length > 0 && false &&
                 <MemTable state={memState} />
             }
+            <SymbolTable symbols={output.symbols} />
         </>}
     </>);
 }
@@ -139,6 +144,7 @@ function ErrorTable(props: {errors: CodeError[]}) {
         </Table>
     </>);
 }
+
 function MemTable(props: {state: (number | undefined)[]}) {
     const mem = props.state;
 
@@ -157,6 +163,31 @@ function MemTable(props: {state: (number | undefined)[]}) {
                         <TableCell>{numToOctal(data, 4)}</TableCell>
                     </TableRow>
                     : <React.Fragment key={addr} />)}
+            </TableBody>
+        </Table>
+    </>);
+}
+
+function SymbolTable(props: {symbols: SymbolData[]}) {
+    const symbols = props.symbols;
+
+    return (<>
+        <Table size="small">
+            <TableHead>
+                <TableRow>
+                    <TableCell width={"15%"}>Symbol</TableCell>
+                    <TableCell width={"15%"}>Type</TableCell>
+                    <TableCell>Value</TableCell>
+                </TableRow>
+            </TableHead>
+            <TableBody>
+                { symbols.filter(s => ![SymbolType.Permanent, SymbolType.Fixed, SymbolType.Pseudo].includes(s.type)).map(sym =>
+                    <TableRow key={sym.name}>
+                        <TableCell>{sym.name}</TableCell>
+                        <TableCell>{SymbolType[sym.type]}</TableCell>
+                        <TableCell>{numToOctal(sym.value, 4)}</TableCell>
+                    </TableRow>
+                )}
             </TableBody>
         </Table>
     </>);
