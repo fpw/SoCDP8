@@ -73,7 +73,7 @@ export interface TC08Configuration {
 }
 
 export interface DF32Configuration {
-    id: DeviceID.DEV_ID_DF32
+    id: DeviceID.DEV_ID_DF32;
 }
 
 export interface RF08Configuration {

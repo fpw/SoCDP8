@@ -16,14 +16,17 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box, Button, Divider, FormControl, FormControlLabel, FormGroup, FormLabel, MenuItem, Select, Switch, Typography } from "@mui/material";
+import {
+    Box, Button, Divider, FormControl, FormControlLabel, FormGroup,
+    FormLabel, MenuItem, Select, Switch, Typography
+} from "@mui/material";
 import { ChangeEvent, useRef } from "react";
 import { PC04Model } from "../../../models/peripherals/PC04Model";
 import { BaudRate, BAUD_RATES } from "../../../types/PeripheralTypes";
 import { downloadData } from "../../../util";
 import { PaperTapeBox } from "../common/PaperTapeBox";
 
-export function PC04(props: {model: PC04Model}) {
+export function PC04(props: { model: PC04Model }) {
     return (
         <>
             <ConfigBox {...props} />
@@ -34,7 +37,7 @@ export function PC04(props: {model: PC04Model}) {
     );
 }
 
-function ConfigBox(props: {model: PC04Model}) {
+function ConfigBox(props: { model: PC04Model }) {
     const { model } = props;
     const conf = model.useState(state => state.conf!);
 
@@ -47,7 +50,7 @@ function ConfigBox(props: {model: PC04Model}) {
                         value={conf.baudRate}
                         onChange={(evt) => {
                             const rate = Number.parseInt(evt.target.value as string) as BaudRate;
-                            void model.updateConfig({...conf, baudRate: rate});
+                            void model.updateConfig({ ...conf, baudRate: rate });
                         }}
                     >
                         {BAUD_RATES.map((b) => (
@@ -60,7 +63,7 @@ function ConfigBox(props: {model: PC04Model}) {
     );
 }
 
-function ReaderBox(props: {model: PC04Model}) {
+function ReaderBox(props: { model: PC04Model }) {
     const { model } = props;
     const tapeInput = useRef<HTMLInputElement>(null);
     const readerActive = model.useState(state => state.readerActive);
@@ -77,7 +80,10 @@ function ReaderBox(props: {model: PC04Model}) {
                     <Button variant="outlined" onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
                 </FormControl>
                 <FormControlLabel
-                    control={<Switch onChange={(evt: ChangeEvent<HTMLInputElement>) => void model.setReaderActive(evt.target.checked)} checked={readerActive} />}
+                    control={<Switch
+                        onChange={evt => void model.setReaderActive(evt.target.checked)}
+                        checked={readerActive}
+                    />}
                     labelPlacement="start"
                     label="Reader On"
                 />
@@ -95,13 +101,13 @@ async function onLoadFile(evt: ChangeEvent, model: PC04Model) {
     await model.loadTape(target.files[0]);
 }
 
-function PunchBox(props: {model: PC04Model}) {
+function PunchBox(props: { model: PC04Model }) {
     const { model } = props;
     const punchActive = model.useState(state => state.punchActive);
 
     async function download() {
         const buffer = model.punchTape.useTape.getState().tapeState.buffer;
-        await downloadData(Uint8Array.from(buffer), "punch-pc04.bin")
+        await downloadData(Uint8Array.from(buffer), "punch-pc04.bin");
     }
 
     return (
@@ -121,7 +127,10 @@ function PunchBox(props: {model: PC04Model}) {
                     <Button variant="outlined" onClick={() => model.addPunchLeader()}>Feed</Button>
                 </FormControl>
                 <FormControlLabel
-                    control={<Switch onChange={evt => void model.setPunchActive(evt.target.checked)} checked={punchActive} />}
+                    control={<Switch
+                        onChange={evt => void model.setPunchActive(evt.target.checked)}
+                        checked={punchActive}
+                    />}
                     labelPlacement="start"
                     label="Punch On"
                 />

@@ -17,7 +17,11 @@
  */
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Accordion, AccordionDetails, AccordionSummary, Box, Button, Container, Divider, FormControl, FormControlLabel, FormGroup, Switch, Typography } from "@mui/material";
+import {
+    Accordion, AccordionDetails, AccordionSummary,
+    Box, Button, Container, Divider,
+    FormControl, FormControlLabel, FormGroup, Switch, Typography
+} from "@mui/material";
 import { ChangeEvent, useRef } from "react";
 import { PT08Model } from "../../../../models/peripherals/PT08Model";
 import { downloadData } from "../../../../util";
@@ -25,7 +29,7 @@ import { PaperTapeBox } from "../../common/PaperTapeBox";
 import { ASR33Keyboard } from "./ASR33Keyboard";
 import { VT100 } from "./VT100";
 
-export function ASR33(props: {model: PT08Model}) {
+export function ASR33(props: { model: PT08Model }) {
     const set8 = props.model.useState(state => state.conf!.eightBit);
 
     return (<>
@@ -46,7 +50,7 @@ export function ASR33(props: {model: PT08Model}) {
     </>);
 }
 
-function ReaderBox(props: {model: PT08Model}) {
+function ReaderBox(props: { model: PT08Model }) {
     const { model } = props;
     const tapeInput = useRef<HTMLInputElement>(null);
     const readerTape = model.readerTape;
@@ -64,7 +68,10 @@ function ReaderBox(props: {model: PT08Model}) {
                     <Button variant="outlined" onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
                 </FormControl>
                 <FormControlLabel
-                    control={<Switch onChange={evt => void model.setReaderActive(evt.target.checked)} checked={readerActive} />}
+                    control={<Switch
+                        onChange={evt => void model.setReaderActive(evt.target.checked)}
+                        checked={readerActive}
+                    />}
                     labelPlacement="start"
                     label="Reader On"
                 />
@@ -82,13 +89,13 @@ async function onLoadFile(evt: ChangeEvent, model: PT08Model) {
     void model.loadTape(target.files[0]);
 }
 
-function PunchBox(props: {model: PT08Model}) {
+function PunchBox(props: { model: PT08Model }) {
     const { model } = props;
     const punchActive = model.useState(state => state.punchActive);
 
     async function download() {
         const buffer = model.punchTape.useTape.getState().tapeState.buffer;
-        await downloadData(Uint8Array.from(buffer), "punch-pt08.bin")
+        await downloadData(Uint8Array.from(buffer), "punch-pt08.bin");
     }
 
     return (
@@ -108,7 +115,10 @@ function PunchBox(props: {model: PT08Model}) {
                     <Button variant="outlined" onClick={() => model.addPunchLeader()}>Feed</Button>
                 </FormControl>
                 <FormControlLabel
-                    control={<Switch onChange={evt => void model.setPunchActive(evt.target.checked)} checked={punchActive} />}
+                    control={<Switch
+                        onChange={evt => void model.setPunchActive(evt.target.checked)}
+                        checked={punchActive}
+                    />}
                     labelPlacement="start"
                     label="Punch On"
                 />

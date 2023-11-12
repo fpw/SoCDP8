@@ -17,14 +17,18 @@
  */
 
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Accordion, AccordionDetails, AccordionSummary, Box, Button, ButtonGroup, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import {
+    Accordion, AccordionDetails, AccordionSummary, Box, Button,
+    ButtonGroup, Paper, Table, TableBody, TableCell, TableContainer,
+    TableHead, TableRow, Typography
+} from "@mui/material";
 import { useState } from "react";
 import { SoCDP8 } from "../../models/SoCDP8";
 import { DeviceID } from "../../types/PeripheralTypes";
 import { getDefaultSysConf, SystemConfiguration } from "../../types/SystemConfiguration";
 import { SystemForm } from "../components/system/SystemForm";
 
-export function SystemListPage(props: {pdp8: SoCDP8}) {
+export function SystemListPage(props: { pdp8: SoCDP8 }) {
     const [formBusy, setFormBusy] = useState<boolean>(false);
     const [open, setOpen] = useState<boolean>(false);
     const activeSys = props.pdp8.useStore(state => state.activeSystem)!;
@@ -68,7 +72,14 @@ export function SystemListPage(props: {pdp8: SoCDP8}) {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        { systems.map(s => <SystemEntry key= {s.id} pdp8={props.pdp8} system={s} active={s.id == activeSys.id} />)}
+                        { systems.map(s =>
+                            <SystemEntry
+                                key={s.id}
+                                pdp8={props.pdp8}
+                                system={s}
+                                active={s.id == activeSys.id}
+                            />
+                        )}
                     </TableBody>
                 </Table>
             </TableContainer>
@@ -76,7 +87,7 @@ export function SystemListPage(props: {pdp8: SoCDP8}) {
     </>);
 }
 
-function SystemEntry(props: {pdp8: SoCDP8, system: SystemConfiguration, active: boolean}) {
+function SystemEntry(props: { pdp8: SoCDP8, system: SystemConfiguration, active: boolean }) {
     const [busy, setBusy] = useState<boolean>(false);
 
     async function activate() {
@@ -94,7 +105,7 @@ function SystemEntry(props: {pdp8: SoCDP8, system: SystemConfiguration, active: 
     return (
         <TableRow>
             <TableCell>
-                <Box style={{fontWeight: props.active ? "bold" : undefined}}>
+                <Box style={{ fontWeight: props.active ? "bold" : undefined }}>
                     {props.system.name}
                 </Box>
             </TableCell>

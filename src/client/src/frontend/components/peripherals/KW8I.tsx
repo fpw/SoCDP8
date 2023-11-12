@@ -19,7 +19,7 @@
 import { FormControlLabel, FormGroup, InputLabel, MenuItem, Select, Switch } from "@mui/material";
 import { KW8IModel } from "../../../models/peripherals/KW8IModel";
 
-export function KW8I(props: {model: KW8IModel}) {
+export function KW8I(props: { model: KW8IModel }) {
     const is50 = props.model.useState(state => state.conf.use50Hz);
     const set50 = props.model.useState(state => state.set50Hz);
     const isSync = props.model.useState(state => state.conf.useExternalClock);
@@ -27,12 +27,20 @@ export function KW8I(props: {model: KW8IModel}) {
 
     return (<>
         <InputLabel id="hz">Frequency</InputLabel>
-        <Select size="small" labelId="hz" value={is50 ? 1 : 0} onChange={ev => ev.target.value == 1 ? set50(true) : set50(false)}>
+        <Select
+            size="small"
+            labelId="hz"
+            value={is50 ? 1 : 0}
+            onChange={ev => ev.target.value == 1 ? set50(true) : set50(false)}
+        >
             <MenuItem value={0}>60 Hz</MenuItem>
             <MenuItem value={1}>50 Hz</MenuItem>
         </Select>
         <FormGroup>
-            <FormControlLabel control={<Switch checked={isSync} onChange={(_, c) => setSync(c)} />} label="Sync to real clock" />
+            <FormControlLabel
+                control={<Switch checked={isSync} onChange={(_, c) => setSync(c)} />}
+                label="Sync to real clock"
+            />
         </FormGroup>
     </>);
 }

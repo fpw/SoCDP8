@@ -50,9 +50,9 @@ export interface DownloadDiskAction {
 
 export type PeripheralInAction =
 DumpResultAction |
-    ActiveStateChangeAction | StateListChangeAction |
-    ReaderPosAction | PunchAction |
-    TapeStatusAction;
+ActiveStateChangeAction | StateListChangeAction |
+ReaderPosAction | PunchAction |
+TapeStatusAction;
 
 export interface DumpResultAction {
     type: "dump-data";

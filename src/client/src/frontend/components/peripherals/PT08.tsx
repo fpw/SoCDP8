@@ -22,7 +22,7 @@ import { BaudRate, BAUD_RATES, PT08Style } from "../../../types/PeripheralTypes"
 import { ASR33 } from "./accessoires/ASR33";
 import { VT100 } from "./accessoires/VT100";
 
-export function PT08(props: {model: PT08Model}) {
+export function PT08(props: { model: PT08Model }) {
     const style = props.model.useState(state => state.conf!.style);
 
     return (
@@ -34,7 +34,7 @@ export function PT08(props: {model: PT08Model}) {
     );
 }
 
-function ConfigBox(props: {model: PT08Model}) {
+function ConfigBox(props: { model: PT08Model }) {
     const { model } = props;
     const conf = model.useState(state => state.conf!);
 
@@ -47,7 +47,7 @@ function ConfigBox(props: {model: PT08Model}) {
                         value={conf.baudRate}
                         onChange={(evt) => {
                             const rate = Number.parseInt(evt.target.value as string) as BaudRate;
-                            void model.updateConfig({...conf, baudRate: rate});
+                            void model.updateConfig({ ...conf, baudRate: rate });
                         }}
                     >
                         {BAUD_RATES.map((b) => (
@@ -64,7 +64,7 @@ function ConfigBox(props: {model: PT08Model}) {
                         checked={conf.eightBit}
                         onChange={(evt) => {
                             const bit8 = evt.target.checked;
-                            void model.updateConfig({...conf, eightBit: bit8});
+                            void model.updateConfig({ ...conf, eightBit: bit8 });
                         }}
                     />
                 }
@@ -76,7 +76,7 @@ function ConfigBox(props: {model: PT08Model}) {
                         checked={conf.autoCaps}
                         onChange={(evt) => {
                             const caps = evt.target.checked;
-                            void model.updateConfig({...conf, autoCaps: caps});
+                            void model.updateConfig({ ...conf, autoCaps: caps });
                         }}
                     />
                 }
@@ -87,7 +87,7 @@ function ConfigBox(props: {model: PT08Model}) {
                     <Select size="small" value={conf.style}
                         onChange={ev => {
                             const style = ev.target.value as PT08Style;
-                            void model.updateConfig({...conf, style});
+                            void model.updateConfig({ ...conf, style });
                         }}
                     >
                         { Object.entries(PT08Style).map(([key, val]) =>

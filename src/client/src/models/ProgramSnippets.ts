@@ -23,9 +23,9 @@ export interface ProgramSnippet {
     desc: string;
     requirements: DeviceID[];
     snippets: {
-        start: number,
+        start: number;
         data: number[];
-    }[]
+    }[];
 }
 
 export const ProgramSnippets: ProgramSnippet[] = [
@@ -241,7 +241,7 @@ export const ProgramSnippets: ProgramSnippet[] = [
                     0o6771, // 7616: DTSF        / wait until done
                     0o5216, // 7617: JMP .-1
                     0o1223, // 7620: TAD K0220   / set forward read
-                    0o5215, // 7621: JMP 7615    / execute - that loop will run until block loaded, but that won't happen before overwritten
+                    0o5215, // 7621: JMP 7615    / execute - that loop will run until block loaded
                     0o0600, // 7622: K0600
                     0o0220, // 7623: K0220
                 ],

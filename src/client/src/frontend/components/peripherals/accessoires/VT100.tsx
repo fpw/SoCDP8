@@ -5,7 +5,7 @@ import "xterm/css/xterm.css";
 import { PT08Model } from "../../../../models/peripherals/PT08Model";
 import { PT08Style } from "../../../../types/PeripheralTypes";
 
-export function VT100(props: {model: PT08Model}) {
+export function VT100(props: { model: PT08Model }) {
     const { model } = props;
     const style = model.useState(state => state.conf!.style);
     const termRef = useRef(null);

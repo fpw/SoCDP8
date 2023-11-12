@@ -33,19 +33,19 @@ PAGE 1
     HLT
 `;
 
-export function CodePage(props: {pdp8: SoCDP8}) {
+export function CodePage(props: { pdp8: SoCDP8 }) {
     const [src, setSrc] = useState(defaultSource);
     const [output, setOutput] = useState<YamasOutput>();
     const [memState, setMemState] = useState<(number | undefined)[]>([]);
 
     function assemble() {
-        const asm = new Yamas({loadPrelude: true});
-        console.time("parse")
+        const asm = new Yamas({ loadPrelude: true });
+        console.time("parse");
         const ast = asm.addInput("input.pa", src);
-        console.timeEnd("parse")
-        console.time("assemble")
+        console.timeEnd("parse");
+        console.time("assemble");
         const out = asm.run();
-        console.timeEnd("assemble")
+        console.timeEnd("assemble");
         setOutput(out);
 
         const mem = new BinTapeReader(out.binary).read();
@@ -95,7 +95,7 @@ export function CodePage(props: {pdp8: SoCDP8}) {
             { memState.length > 0 && false &&
                 <MemTable state={memState} />
             }
-            <SymbolTable symbols={output.symbols} />
+            <SymbolTable symbols={[...output.symbols.values()]} />
         </>}
     </>);
 }
@@ -119,7 +119,7 @@ export const indentOrInsertTab: StateCommand = ({ state, dispatch }) => {
     return true;
 };
 
-function ErrorTable(props: {errors: CodeError[]}) {
+function ErrorTable(props: { errors: ReadonlyArray<CodeError> }) {
     const errs = props.errors;
 
     return (<>
@@ -145,7 +145,7 @@ function ErrorTable(props: {errors: CodeError[]}) {
     </>);
 }
 
-function MemTable(props: {state: (number | undefined)[]}) {
+function MemTable(props: { state: (number | undefined)[] }) {
     const mem = props.state;
 
     return (<>
@@ -168,7 +168,7 @@ function MemTable(props: {state: (number | undefined)[]}) {
     </>);
 }
 
-function SymbolTable(props: {symbols: SymbolData[]}) {
+function SymbolTable(props: { symbols: SymbolData[] }) {
     const symbols = props.symbols;
 
     return (<>
@@ -181,13 +181,15 @@ function SymbolTable(props: {symbols: SymbolData[]}) {
                 </TableRow>
             </TableHead>
             <TableBody>
-                { symbols.filter(s => ![SymbolType.Permanent, SymbolType.Fixed, SymbolType.Pseudo].includes(s.type)).map(sym =>
-                    <TableRow key={sym.name}>
-                        <TableCell>{sym.name}</TableCell>
-                        <TableCell>{SymbolType[sym.type]}</TableCell>
-                        <TableCell>{numToOctal(sym.value, 4)}</TableCell>
-                    </TableRow>
-                )}
+                { symbols.map(sym => <React.Fragment key={sym.name}>
+                    { (sym.type == SymbolType.Param || sym.type == SymbolType.Label) &&
+                        <TableRow key={sym.name}>
+                            <TableCell>{sym.name}</TableCell>
+                            <TableCell>{SymbolType[sym.type]}</TableCell>
+                            <TableCell>{numToOctal(sym.value, 4)}</TableCell>
+                        </TableRow>
+                    }
+                </React.Fragment>)}
             </TableBody>
         </Table>
     </>);

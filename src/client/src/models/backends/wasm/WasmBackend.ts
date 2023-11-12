@@ -106,7 +106,7 @@ export class WasmBackend implements Backend {
         const updateConsole = () => {
             listener.onConsoleState(this.pdp8.getConsoleState());
             setTimeout(updateConsole, 15);
-        }
+        };
         updateConsole();
     }
 
@@ -125,7 +125,7 @@ export class WasmBackend implements Backend {
     public async createSystem(system: SystemConfiguration) {
         system.id = generateUUID();
         this.store.getState().addSystem(system);
-        this.listener?.onStateChange({type: "state-list-changed"});
+        this.listener?.onStateChange({ type: "state-list-changed" });
     }
 
     public async deleteSystem(id: string) {
@@ -135,7 +135,7 @@ export class WasmBackend implements Backend {
         }
 
         this.store.getState().deleteSystem(id);
-        this.listener?.onStateChange({type: "state-list-changed"});
+        this.listener?.onStateChange({ type: "state-list-changed" });
     }
 
     public async saveActiveSystem(): Promise<boolean> {
@@ -157,7 +157,7 @@ export class WasmBackend implements Backend {
             await this.changePeripheralConfig(peripheral.id, peripheral);
         }
         this.store.getState().setActiveSystem(sys);
-        this.listener?.onStateChange({type: "active-state-changed"});
+        this.listener?.onStateChange({ type: "active-state-changed" });
     }
 
     public async setThrottleControl(control: boolean) {
@@ -241,7 +241,7 @@ export class WasmBackend implements Backend {
                     this.listener.onPerformanceReport(simSpeed);
                 } else if (action == 6) {
                     const dump = this.pdp8.fetchBuffer(p1, p2);
-                    this.listener.onPeripheralEvent(DeviceID.DEV_ID_CPU, {type: "dump-data", dump});
+                    this.listener.onPeripheralEvent(DeviceID.DEV_ID_CPU, { type: "dump-data", dump });
                 }
                 break;
             case DeviceID.DEV_ID_DF32:
@@ -250,7 +250,7 @@ export class WasmBackend implements Backend {
             case DeviceID.DEV_ID_RK8E:
                 if (action >= 20 && action < 30) {
                     const dump = this.pdp8.fetchBuffer(p1, p2);
-                    this.listener.onPeripheralEvent(dev, {type: "dump-data", dump});
+                    this.listener.onPeripheralEvent(dev, { type: "dump-data", dump });
                 }
                 break;
             case DeviceID.DEV_ID_PT08:
@@ -303,7 +303,7 @@ export class WasmBackend implements Backend {
                     }
                 } else if (action >= 20 && action < 30) {
                     const dump = this.pdp8.fetchBuffer(p1, p2);
-                    this.listener.onPeripheralEvent(dev, {type: "dump-data", dump});
+                    this.listener.onPeripheralEvent(dev, { type: "dump-data", dump });
                 }
                 break;
         }

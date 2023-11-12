@@ -22,7 +22,7 @@ import { LampBrightness, SwitchState } from "../../../types/ConsoleTypes";
 
 type OnSwitch = (sw: string, state: boolean) => void;
 
-export function FrontPanel(props: {pdp8: SoCDP8}) {
+export function FrontPanel(props: { pdp8: SoCDP8 }) {
     const [svgRoot, setSVGRoot] = useState<SVGSVGElement>();
     const [lamps, setLamps] = useState<Record<string, SVGSVGElement>>({});
     const [switches, setSwitches] = useState<Record<string, SVGSVGElement>>({});
@@ -108,7 +108,7 @@ function connectSwitch(id: string, switches: Record<string, SVGSVGElement>, onSw
         elem.onclick = () => {
             const curState = isSwitchSet(elem);
             onSwitch(id.replace("pdp8_sw_", ""), !curState);
-        }
+        };
     }
 }
 
@@ -117,7 +117,7 @@ function connectMomentarySwitch(id: string, switches: Record<string, SVGSVGEleme
     if (elem) {
         elem.onmousedown = () => {
             onSwitch(id.replace("pdp8_sw_", ""), true);
-        }
+        };
     }
 }
 
@@ -184,7 +184,13 @@ function setLampBrightness(id: string, rawBright: number, lamps: Record<string, 
     elem.style.fill = `hsl(35, 100%, ${lightness.toFixed(0)}%)`;
 }
 
-function setSwitchRow(id: string, width: number, value: number, switches: Record<string, SVGSVGElement>, svg: SVGSVGElement): void {
+function setSwitchRow(
+    id: string,
+    width: number,
+    value: number,
+    switches: Record<string, SVGSVGElement>,
+    svg: SVGSVGElement
+): void {
     for (let i = 0; i < width; i++) {
         setSwitch(`${id}${i}`, (value & (1 << (width - i - 1))) != 0, switches, svg);
     }

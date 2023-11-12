@@ -50,7 +50,7 @@ export class KW8IModel extends PeripheralModel {
         this.store.getState().setConf(conf);
         this.store.subscribe(state => {
             void this.backend.changePeripheralConfig(state.conf.id, state.conf);
-        })
+        });
     }
 
     public get connections(): number[] {

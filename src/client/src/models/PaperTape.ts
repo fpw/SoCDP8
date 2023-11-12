@@ -63,7 +63,7 @@ export class PaperTape {
     static async fromFile(file: File): Promise<PaperTape> {
         const data = await loadFile(file);
         const tape = new PaperTape();
-        tape.useTape.getState().setPaperState({buffer: Array.from(data), name: file.name, pos: 0});
+        tape.useTape.getState().setPaperState({ buffer: Array.from(data), name: file.name, pos: 0 });
         return tape;
     }
 }

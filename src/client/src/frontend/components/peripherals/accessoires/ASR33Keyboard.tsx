@@ -74,7 +74,7 @@ const keyboardOptions: KeyboardReactInterface["options"] = {
     ],
 };
 
-export function ASR33Keyboard(props: {set8: boolean, onKey: (chr: number) => void}) {
+export function ASR33Keyboard(props: { set8: boolean, onKey: (chr: number) => void }) {
     const [shift, setShift] = useState(false);
     const [ctrl, setCtrl] = useState(false);
     const onRawKey = props.onKey;
@@ -156,7 +156,7 @@ export function ASR33Keyboard(props: {set8: boolean, onKey: (chr: number) => voi
     }
 
     return (
-        <Box mt={1} sx={{activeButton: {backgroundColor: "yellow"}}}>
+        <Box mt={1} sx={{ activeButton: { backgroundColor: "yellow" } }}>
             <Keyboard
                 layoutName={layout}
                 onKeyPress={(button: string) => onKey(button)}

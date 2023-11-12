@@ -29,9 +29,9 @@ export class SocketBackend implements Backend {
 
     public constructor(url: string) {
         if (url.length > 0) {
-            this.socket = io(url, {autoConnect: false});
+            this.socket = io(url, { autoConnect: false });
         } else {
-            this.socket = io({autoConnect: false});
+            this.socket = io({ autoConnect: false });
         }
     }
 
@@ -44,9 +44,9 @@ export class SocketBackend implements Backend {
             listener.onConsoleState(state);
         });
 
-        this.socket.on("peripheral-event", (data: {id: number, action: PeripheralInAction}) => {
+        this.socket.on("peripheral-event", (data: { id: number, action: PeripheralInAction }) => {
             const id = data.id;
-            const action = data.action
+            const action = data.action;
             listener.onPeripheralEvent(id, action);
         });
 
@@ -74,7 +74,7 @@ export class SocketBackend implements Backend {
         return new Promise<boolean>((accept, reject) => {
             this.socket.emit("save-active-system", (res: boolean) => {
                 accept(res);
-            })
+            });
         });
     }
 
@@ -82,7 +82,7 @@ export class SocketBackend implements Backend {
         return new Promise<SystemConfiguration[]>((accept, reject) => {
             this.socket.emit("system-list", (list: SystemConfiguration[]) => {
                 accept(list);
-            })
+            });
         });
     }
 
@@ -126,11 +126,11 @@ export class SocketBackend implements Backend {
     }
 
     public async setPanelSwitch(sw: string, state: boolean): Promise<void> {
-        this.socket.emit("console-switch", {"switch": sw, "state": state});
+        this.socket.emit("console-switch", { "switch": sw, "state": state });
     }
 
     public async clearCore() {
-        this.socket.emit("core", {action: "clear"});
+        this.socket.emit("core", { action: "clear" });
     }
 
     public async writeCore(addr: number, fragment: number[]) {

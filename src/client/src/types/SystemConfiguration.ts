@@ -16,10 +16,13 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { PeripheralConfiguration, PC04Configuration, PT08Configuration, TC08Configuration, RF08Configuration, DeviceID } from "./PeripheralTypes";
+import {
+    PeripheralConfiguration, DeviceID,
+    PC04Configuration, PT08Configuration, TC08Configuration, RF08Configuration
+} from "./PeripheralTypes";
 
 export interface SystemConfiguration {
-    id: string,
+    id: string;
     name: string;
     description: string;
 
@@ -27,11 +30,11 @@ export interface SystemConfiguration {
         eae: boolean;
         kt8i: boolean;
         bsw: boolean;
-    }
+    };
 
     maxMemField: number;
 
-    peripherals: PeripheralConfiguration[],
+    peripherals: PeripheralConfiguration[];
 }
 
 export function getDefaultSysConf(): SystemConfiguration {

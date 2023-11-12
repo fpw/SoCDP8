@@ -37,7 +37,7 @@ import { RK08 } from "./RK08";
 import { RK8E } from "./RK8E";
 import { TC08 } from "./TC08";
 
-export function PeripheralBox(props: {model: PeripheralModel}) {
+export function PeripheralBox(props: { model: PeripheralModel }) {
     const model = props.model;
     let caption = "";
     let component = <></>;

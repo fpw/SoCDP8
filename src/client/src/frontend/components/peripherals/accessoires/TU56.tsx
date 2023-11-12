@@ -46,7 +46,7 @@ export function TU56(props: TU56Props) {
         painter.start();
         return () => {
             painter.stop();
-        }
+        };
     }, [painter]);
 
     useEffect(() => props.left.useTape.subscribe(state => {
@@ -121,10 +121,22 @@ class TU56Painter {
         const reelHeight = h * 0.7;
         const reelWidth = reelHeight * 5 / 8;
 
-        this.drawHeader(ctx, 5, 5, 2 * reelWidth - 10, h * 0.3 - 5, this.address, this.leftTape);
+        this.drawHeader(ctx,
+            5, 5,
+            2 * reelWidth - 10,
+            h * 0.3 - 5,
+            this.address,
+            this.leftTape
+        );
         this.drawSystem(ctx, t, 0, h * 0.35, reelWidth, reelHeight, this.leftTape);
 
-        this.drawHeader(ctx, w - 2 * reelWidth + 5, 5, 2 * reelWidth - 10, h * 0.3 - 5, this.address + 1, this.rightTape);
+        this.drawHeader(ctx,
+            w - 2 * reelWidth + 5, 5,
+            2 * reelWidth - 10,
+            h * 0.3 - 5,
+            this.address + 1,
+            this.rightTape
+        );
         this.drawSystem(ctx, t, w - 2 * reelWidth, h * 0.35, reelWidth, reelHeight, this.rightTape);
 
         if (!this.stopped) {
@@ -136,12 +148,23 @@ class TU56Painter {
         }
     }
 
-    private drawSystem(ctx: CanvasRenderingContext2D, t: number, cx: number, cy: number, w: number, h: number, tape?: TapeState) {
+    private drawSystem(
+        ctx: CanvasRenderingContext2D,
+        t: number,
+        cx: number, cy: number,
+        w: number, h: number,
+        tape?: TapeState
+    ) {
         this.drawReel(ctx, t, cx, cy, w, h, false, tape);
         this.drawReel(ctx, t, cx + 2 * w - 1, cy, w, h, true, tape);
     }
 
-    private drawHeader(ctx: CanvasRenderingContext2D, cx: number, cy: number, w: number, h: number, unitNo: number, tape?: TapeState) {
+    private drawHeader(
+        ctx: CanvasRenderingContext2D,
+        cx: number, cy: number,
+        w: number, h: number,
+        unitNo: number, tape?: TapeState
+    ) {
         ctx.strokeStyle = "#FFF";
         ctx.lineWidth = 2;
         ctx.strokeRect(cx, cy, w, h);
@@ -182,7 +205,14 @@ class TU56Painter {
         ctx.fillText(`${unitNo}`, cx + w / 2, cy + h / 2);
     }
 
-    private drawReel(ctx: CanvasRenderingContext2D, t: number, cx: number, cy: number, w: number, h: number, right: boolean, tape?: TapeState) {
+    private drawReel(
+        ctx: CanvasRenderingContext2D,
+        t: number,
+        cx: number, cy: number,
+        w: number, h: number,
+        right: boolean,
+        tape?: TapeState
+    ) {
         ctx.resetTransform();
         ctx.translate(cx, cy);
         if (right) {
@@ -196,7 +226,10 @@ class TU56Painter {
         const guideRightX = w * this.GUIDE_RIGHT_X;
         const guideLeftX = w * this.GUIDE_RIGHT_X - h * this.GUIDE_BOTTOM_Y;
         const angle1 = Math.atan((guideRightX - reelX) / (reelY - guideBottomY));
-        const distGuideReel = Math.sqrt((guideRightX - reelX) * (guideRightX - reelX) + (reelY - guideBottomY) * (reelY - guideBottomY));
+        const distGuideReel = Math.sqrt(
+            (guideRightX - reelX) * (guideRightX - reelX) +
+            (reelY - guideBottomY) * (reelY - guideBottomY)
+        );
         const headTopY = h * this.HEAD_TOP_Y;
 
         let reelRadius = 0;
@@ -227,7 +260,9 @@ class TU56Painter {
 
         if (tape?.loaded) {
             const reelLine = (right ? tape.normalizedPosition : (1 - tape.normalizedPosition)) * 0x100000;
-            const windings = (Math.sqrt(1 + (this.MIL * reelLine / (150 * Math.PI * hubRadius * 4.5 / w))) - 1) / (2 * this.MIL);
+            const windings =
+                (Math.sqrt(1 + (this.MIL * reelLine / (150 * Math.PI * hubRadius * 4.5 / w))) - 1)
+                / (2 * this.MIL);
             const tapeRadius = (windings * this.MIL + 1) * hubRadius;
 
             if (tape.moving) {
@@ -321,9 +356,9 @@ class TU56Painter {
         const x = Math.cos(angle);
         const y = Math.sin(angle);
         const x1 = Math.cos(angle - 25 * Math.PI / 180);
-        const y1 = Math.sin(angle - 25 * Math.PI / 180)
+        const y1 = Math.sin(angle - 25 * Math.PI / 180);
         const x2 = Math.cos(angle + 25 * Math.PI / 180);
-        const y2 = Math.sin(angle + 25 * Math.PI / 180)
+        const y2 = Math.sin(angle + 25 * Math.PI / 180);
 
         ctx.beginPath();
         ctx.moveTo(reelX - x * hubRadius * 0.1, reelY + y * hubRadius * 0.1);

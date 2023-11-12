@@ -43,12 +43,12 @@ export const appRouter = createBrowserRouter([
                 {
                     path: "active", element: <SystemPage pdp8={pdp8} />,
                 },
-            ]},
+            ] },
             { path: "peripherals", children: [
                 {
                     path: ":id", element: <PeripheralPage pdp8={pdp8} />,
                 },
-            ]},
+            ] },
         ],
     },
 ]);

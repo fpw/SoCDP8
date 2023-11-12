@@ -21,7 +21,7 @@ import { TC08Model } from "../../../models/peripherals/TC08Model";
 import { DumpButtons } from "./DumpButtons";
 import { TU56 } from "./accessoires/TU56";
 
-export function TC08(props: {model: TC08Model}) {
+export function TC08(props: { model: TC08Model }) {
     const tapes = props.model.useState(state => state.tapes);
     const numTUs = props.model.useState(state => state.numTUs);
 

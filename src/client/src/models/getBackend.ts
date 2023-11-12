@@ -9,7 +9,7 @@ export function getBackend() {
     if (!pdp8) {
         let url = "";
         if (window.location.toString().includes("localhost")) {
-            url = "http://192.168.178.71:8000/"
+            url = "http://192.168.178.71:8000/";
         }
 
         enableMapSet();

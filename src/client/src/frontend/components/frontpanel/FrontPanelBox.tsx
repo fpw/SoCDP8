@@ -16,7 +16,11 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box, Button, ButtonGroup, Card, CardActions, CardContent, Checkbox, Dialog, DialogTitle, FormControlLabel, List, ListItemButton, ListItemText } from "@mui/material";
+import {
+    Box, Button, ButtonGroup, Card, CardActions, CardContent,
+    Checkbox, Dialog, DialogTitle, FormControlLabel, List,
+    ListItemButton, ListItemText
+} from "@mui/material";
 import { Stack } from "@mui/system";
 import { useState } from "react";
 import { ProgramSnippet, ProgramSnippets } from "../../../models/ProgramSnippets";
@@ -26,7 +30,7 @@ import { downloadData, loadFile } from "../../../util";
 import { UploadButton } from "../common/UploadButton";
 import { FrontPanel } from "./FrontPanel";
 
-export function FrontPanelBox(props: {pdp8: SoCDP8}) {
+export function FrontPanelBox(props: { pdp8: SoCDP8 }) {
     const [throttle, setThrottle] = useState(true);
     const [busy, setBusy] = useState(false);
     const [showSnippets, setShowSnippets] = useState(false);
@@ -64,7 +68,7 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
     }
 
     async function downloadCore() {
-        const dump = await props.pdp8.getCoreDump()
+        const dump = await props.pdp8.getCoreDump();
         await downloadData(dump, "core.dat");
     }
 
@@ -99,9 +103,12 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
                                 devices={sys.peripherals.map(p => p.id)}
                             />
                         </ButtonGroup>
-                        <Box sx={{alignSelf: "right"}}>
+                        <Box sx={{ alignSelf: "right" }}>
                             Emulation Speed: { simSpeed.toFixed(2) }
-                            <FormControlLabel control={<Checkbox checked={throttle} onChange={() => void toggleThrottle()} />} label="Control" sx={{ml: 1}}/>
+                            <FormControlLabel
+                                control={<Checkbox checked={throttle} onChange={() => void toggleThrottle()} />}
+                                label="Control" sx={{ ml: 1 }}
+                            />
                         </Box>
                     </Stack>
                 </CardActions>
@@ -112,7 +119,7 @@ export function FrontPanelBox(props: {pdp8: SoCDP8}) {
 
 interface SnippetProps {
     onSelect: ((s: ProgramSnippet) => void);
-    open: boolean, onClose: (() => void);
+    open: boolean; onClose: (() => void);
     devices: DeviceID[];
 }
 

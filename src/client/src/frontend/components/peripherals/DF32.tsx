@@ -20,7 +20,7 @@ import { Box } from "@mui/material";
 import { DF32Model } from "../../../models/peripherals/DF32Model";
 import { DumpButtons } from "./DumpButtons";
 
-export function DF32(props: {model: DF32Model}) {
+export function DF32(props: { model: DF32Model }) {
     return (
         <Box>
             <DumpButtons model={props.model} />

@@ -17,109 +17,31 @@
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.14.16",
-    "@mui/material": "^5.14.16",
+    "@mui/material": "^5.14.17",
     "@uiw/react-codemirror": "^4.21.20",
     "immer": "^10.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.18.0",
-    "react-simple-keyboard": "^3.7.33",
+    "react-simple-keyboard": "^3.7.37",
     "socket.io-client": "^4.7.2",
     "xterm": "^5.3.0",
-    "yamas": "^0.0.7",
+    "yamas": "^0.0.8",
     "zustand": "^4.4.6"
   },
   "devDependencies": {
-    "@types/emscripten": "^1.39.9",
-    "@types/node": "^20.8.10",
-    "@types/react": "^18.2.34",
-    "@types/react-dom": "^18.2.14",
-    "@typescript-eslint/eslint-plugin": "^6.9.1",
-    "@typescript-eslint/parser": "^6.9.1",
+    "@stylistic/eslint-plugin": "^1.1.0",
+    "@types/emscripten": "^1.39.10",
+    "@types/node": "^20.9.0",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
+    "@typescript-eslint/parser": "^6.10.0",
     "@vitejs/plugin-react": "^4.1.1",
     "eslint": "^8.53.0",
     "rollup-plugin-visualizer": "^5.9.2",
     "typescript": "^5.2.2",
     "vite": "^4.5.0",
     "vite-tsconfig-paths": "^4.2.1"
-  },
-  "eslintConfig": {
-    "plugins": [
-      "@typescript-eslint"
-    ],
-    "extends": [
-      "plugin:@typescript-eslint/strict",
-      "plugin:@typescript-eslint/recommended-requiring-type-checking"
-    ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-      "project": [
-        "./tsconfig.json"
-      ]
-    },
-    "rules": {
-      "@typescript-eslint/brace-style": [
-        "error",
-        "1tbs",
-        {
-          "allowSingleLine": true
-        }
-      ],
-      "@typescript-eslint/comma-spacing": "error",
-      "@typescript-eslint/require-await": "off",
-      "@typescript-eslint/no-non-null-assertion": "off",
-      "@typescript-eslint/keyword-spacing": "error",
-      "@typescript-eslint/func-call-spacing": "error",
-      "@typescript-eslint/space-before-blocks": "error",
-      "@typescript-eslint/space-before-function-paren": [
-        "error",
-        "never"
-      ],
-      "@typescript-eslint/restrict-template-expressions": "off",
-      "@typescript-eslint/space-infix-ops": "error",
-      "@typescript-eslint/type-annotation-spacing": "error",
-      "@typescript-eslint/indent": [
-        "error",
-        4,
-        {
-          "SwitchCase": 1,
-          "ignoredNodes": [
-            "PropertyDefinition[decorators]",
-            "TSUnionType"
-          ]
-        }
-      ],
-      "jsx-quotes": [
-        "error",
-        "prefer-double"
-      ],
-      "@typescript-eslint/quotes": [
-        "error",
-        "double",
-        {
-          "avoidEscape": true
-        }
-      ],
-      "eqeqeq": "off",
-      "@typescript-eslint/no-unnecessary-condition": "off",
-      "@typescript-eslint/no-unused-vars": "off"
-    },
-    "ignorePatterns": [
-      "public/",
-      "build/",
-      "node_modules/"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
   }
 }

@@ -16,9 +16,12 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Button, FormControl, FormControlLabel, FormGroup, FormLabel, Radio, RadioGroup, Slider, Switch, TextField } from "@mui/material";
+import {
+    Button, FormControl, FormControlLabel, FormGroup,
+    FormLabel, Radio, RadioGroup, Slider, Switch, TextField
+} from "@mui/material";
 import { FormEvent } from "react";
-import { DeviceID, PeripheralConfiguration, PT08Style } from "../../../types/PeripheralTypes";
+import { DeviceID, PeripheralConfiguration, PT08Configuration, PT08Style } from "../../../types/PeripheralTypes";
 import { getDefaultSysConf, SystemConfiguration } from "../../../types/SystemConfiguration";
 
 export interface SystemFormProps {
@@ -52,9 +55,18 @@ export function SystemForm(props: SystemFormProps) {
 
                 <FormControl component="fieldset">
                     <FormLabel component="legend">CPU Extensions</FormLabel>
-                    <FormControlLabel control={<Switch name="eae" defaultChecked={s.cpuExtensions.eae} />} label="KE8/I (EAE)" />
-                    <FormControlLabel control={<Switch name="kt8i" defaultChecked={s.cpuExtensions.kt8i} />} label="KT8/I (Time Sharing Option)" />
-                    <FormControlLabel control={<Switch name="bsw" defaultChecked={s.cpuExtensions.bsw} />} label="BSW instruction for 8/E programs" />
+                    <FormControlLabel
+                        control={<Switch name="eae" defaultChecked={s.cpuExtensions.eae} />}
+                        label="KE8/I (EAE)"
+                    />
+                    <FormControlLabel
+                        control={<Switch name="kt8i" defaultChecked={s.cpuExtensions.kt8i} />}
+                        label="KT8/I (Time Sharing Option)"
+                    />
+                    <FormControlLabel
+                        control={<Switch name="bsw" defaultChecked={s.cpuExtensions.bsw} />}
+                        label="BSW instruction for 8/E programs"
+                    />
                 </FormControl>
 
                 <FormControl component="fieldset">
@@ -139,49 +151,62 @@ function toSystemConf(ev: FormEvent<HTMLFormElement>): SystemConfiguration {
     s.maxMemField = Number.parseInt((form.elements.namedItem("maxMemField") as HTMLInputElement).value);
 
     if ((form.elements.namedItem("serialLine") as HTMLInputElement).checked) {
-        s.peripherals.push({id: DeviceID.DEV_ID_PT08, baudRate: 110, eightBit: false, autoCaps: true, style: PT08Style.ASR33});
+        s.peripherals.push({
+            id: DeviceID.DEV_ID_PT08,
+            baudRate: 110,
+            eightBit: false,
+            autoCaps: true,
+            style: PT08Style.ASR33
+        });
     }
 
     if ((form.elements.namedItem("pc04") as HTMLInputElement).checked) {
-        s.peripherals.push({id: DeviceID.DEV_ID_PC04, baudRate: 4800});
+        s.peripherals.push({ id: DeviceID.DEV_ID_PC04, baudRate: 4800 });
     }
 
     if ((form.elements.namedItem("kw8i") as HTMLInputElement).checked) {
-        s.peripherals.push({id: DeviceID.DEV_ID_KW8I, use50Hz: false, useExternalClock: true});
+        s.peripherals.push({ id: DeviceID.DEV_ID_KW8I, use50Hz: false, useExternalClock: true });
     }
 
     if ((form.elements.namedItem("tc08") as HTMLInputElement).checked) {
-        s.peripherals.push({id: DeviceID.DEV_ID_TC08, numTapes: 2});
+        s.peripherals.push({ id: DeviceID.DEV_ID_TC08, numTapes: 2 });
     }
 
     const pt08Count = Number.parseInt((form.elements.namedItem("pt08") as HTMLInputElement).value);
+    const baseTT: Omit<PT08Configuration, "id"> = {
+        baudRate: 9600,
+        eightBit: false,
+        autoCaps: false,
+        style: PT08Style.ASR33
+    };
+
     if (pt08Count >= 4) {
-        s.peripherals.push({id: DeviceID.DEV_ID_TT4, baudRate: 9600, eightBit: false, autoCaps: false, style: PT08Style.ASR33});
+        s.peripherals.push({ id: DeviceID.DEV_ID_TT4, ...baseTT });
     }
     if (pt08Count >= 3) {
-        s.peripherals.push({id: DeviceID.DEV_ID_TT3, baudRate: 9600, eightBit: false, autoCaps: false, style: PT08Style.ASR33});
+        s.peripherals.push({ id: DeviceID.DEV_ID_TT3, ...baseTT });
     }
     if (pt08Count >= 2) {
-        s.peripherals.push({id: DeviceID.DEV_ID_TT2, baudRate: 9600, eightBit: false, autoCaps: false, style: PT08Style.ASR33});
+        s.peripherals.push({ id: DeviceID.DEV_ID_TT2, ...baseTT });
     }
     if (pt08Count >= 1) {
-        s.peripherals.push({id: DeviceID.DEV_ID_TT1, baudRate: 9600, eightBit: false, autoCaps: false, style: PT08Style.ASR33});
+        s.peripherals.push({ id: DeviceID.DEV_ID_TT1, ...baseTT });
     }
 
     const diskStr = (form.elements.namedItem("disk") as HTMLInputElement).value;
     const diskId = Number.parseInt(diskStr, 10) as DeviceID;
     switch (diskId) {
         case DeviceID.DEV_ID_DF32:
-            s.peripherals.push({id: DeviceID.DEV_ID_DF32});
+            s.peripherals.push({ id: DeviceID.DEV_ID_DF32 });
             break;
         case DeviceID.DEV_ID_RF08:
-            s.peripherals.push({id: DeviceID.DEV_ID_RF08});
+            s.peripherals.push({ id: DeviceID.DEV_ID_RF08 });
             break;
         case DeviceID.DEV_ID_RK08:
-            s.peripherals.push({id: DeviceID.DEV_ID_RK08});
+            s.peripherals.push({ id: DeviceID.DEV_ID_RK08 });
             break;
         case DeviceID.DEV_ID_RK8E:
-            s.peripherals.push({id: DeviceID.DEV_ID_RK8E});
+            s.peripherals.push({ id: DeviceID.DEV_ID_RK8E });
             break;
     }
 

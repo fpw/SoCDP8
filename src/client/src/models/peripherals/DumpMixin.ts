@@ -38,7 +38,7 @@ export class DumpMixin {
     public async downloadDump(unit: number): Promise<Uint8Array> {
         return new Promise<Uint8Array>(accept => {
             this.dumpAcceptor = accept;
-            void this.backend.sendPeripheralAction(this.devId, {type: "download-disk", unit});
+            void this.backend.sendPeripheralAction(this.devId, { type: "download-disk", unit });
         });
     }
 

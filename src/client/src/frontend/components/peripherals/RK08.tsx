@@ -20,7 +20,7 @@ import { Box } from "@mui/material";
 import { RK08Model } from "../../../models/peripherals/RK08Model";
 import { DumpButtons } from "./DumpButtons";
 
-export function RK08(props: {model: RK08Model}) {
+export function RK08(props: { model: RK08Model }) {
     return (
         <Box>
             <DumpButtons model={props.model} />

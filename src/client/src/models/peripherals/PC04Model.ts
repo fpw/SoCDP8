@@ -139,6 +139,6 @@ export class PC04Model extends PeripheralModel {
 
     public async setReaderActive(active: boolean) {
         this.store.getState().setReader(active);
-        await this.backend.sendPeripheralAction(this.config.id, {type: "reader-set-active", active});
+        await this.backend.sendPeripheralAction(this.config.id, { type: "reader-set-active", active });
     };
 }

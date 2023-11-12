@@ -4,7 +4,7 @@ import { DiskModel } from "../../../models/peripherals/DiskModel";
 import { downloadData, loadFile } from "../../../util";
 import { UploadButton } from "../common/UploadButton";
 
-export function DumpButtons(props: {model: DiskModel}) {
+export function DumpButtons(props: { model: DiskModel }) {
     async function upload(disk: number, files: FileList | null) {
         if (!files || files.length < 1) {
             return;
@@ -25,7 +25,7 @@ export function DumpButtons(props: {model: DiskModel}) {
 
     return (
         <Box>
-            { Array.from({length: props.model.getDiskCount()}).map((_, i) => <React.Fragment key={i}>
+            { Array.from({ length: props.model.getDiskCount() }).map((_, i) => <React.Fragment key={i}>
                 <ButtonGroup variant="outlined" orientation="vertical">
                     <Button onClick={() => void download(i)}>
                         Download Image {i}

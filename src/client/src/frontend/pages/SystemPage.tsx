@@ -21,7 +21,7 @@ import { SoCDP8 } from "../../models/SoCDP8";
 import { FrontPanelBox } from "../components/frontpanel/FrontPanelBox";
 import { PeripheralBox } from "../components/peripherals/PeripheralBox";
 
-export function SystemPage(props: {pdp8: SoCDP8}) {
+export function SystemPage(props: { pdp8: SoCDP8 }) {
     const peripherals = props.pdp8.useStore(state => state.peripheralModels);
     const sys = props.pdp8.useStore(state => state.activeSystem)!;
 

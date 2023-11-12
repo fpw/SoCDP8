@@ -26,7 +26,7 @@ interface PaperTapeBoxProps {
     reverse: boolean;
 }
 
-export function PaperTapeBox(props: {tape: PaperTape, reverse: boolean}) {
+export function PaperTapeBox(props: { tape: PaperTape, reverse: boolean }) {
     const tapeName = props.tape.useTape(state => state.tapeState.name);
 
     return (

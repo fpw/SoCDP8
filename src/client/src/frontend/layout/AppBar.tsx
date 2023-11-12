@@ -20,7 +20,8 @@ import { styled } from "@mui/material";
 import MuiAppBar from "@mui/material/AppBar";
 import { drawerWidth } from "./Theme";
 
-export const AppBar = styled(MuiAppBar, {shouldForwardProp: (prop) => prop !== "open"})<{open?: boolean}>(({ theme, open }) => ({
+export const AppBar = styled(MuiAppBar, { shouldForwardProp: (prop) => prop !== "open" })
+<{ open?: boolean }>(({ theme, open }) => ({
     zIndex: theme.zIndex.drawer + 1,
     transition: theme.transitions.create(["width", "margin"], {
         easing: theme.transitions.easing.sharp,

@@ -83,7 +83,7 @@ export class PT08Model extends PeripheralModel {
             chr |= 0x80;
         }
 
-        await this.backend.sendPeripheralAction(this.config.id, {type: "key-press", key: chr});
+        await this.backend.sendPeripheralAction(this.config.id, { type: "key-press", key: chr });
     }
 
     public get connections(): number[] {
@@ -172,6 +172,6 @@ export class PT08Model extends PeripheralModel {
 
     public async setReaderActive(active: boolean) {
         this.store.getState().setReader(active);
-        await this.backend.sendPeripheralAction(this.config.id, {type: "reader-set-active", active});
+        await this.backend.sendPeripheralAction(this.config.id, { type: "reader-set-active", active });
     };
 }

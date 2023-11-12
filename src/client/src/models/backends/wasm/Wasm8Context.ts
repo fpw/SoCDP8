@@ -20,7 +20,7 @@
 import { ConsoleState } from "../../../types/ConsoleTypes";
 import { DeviceID } from "../../../types/PeripheralTypes";
 
-declare function createWASM8(options: {locateFile: (path: string) => string}): Promise<{
+declare function createWASM8(options: { locateFile: (path: string) => string }): Promise<{
     addFunction: typeof addFunction;
     cwrap: typeof cwrap;
     getValue: typeof getValue;

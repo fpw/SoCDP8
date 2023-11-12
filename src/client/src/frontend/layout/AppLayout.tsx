@@ -26,7 +26,7 @@ import { AppBar } from "./AppBar";
 import { Drawer } from "./Drawer";
 import { NavMenu } from "./NavMenu";
 
-export function AppLayout(props: {pdp8: SoCDP8}) {
+export function AppLayout(props: { pdp8: SoCDP8 }) {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const sys = props.pdp8.useStore(state => state.activeSystem);
 
@@ -40,11 +40,11 @@ export function AppLayout(props: {pdp8: SoCDP8}) {
 
     return (<>
         <CssBaseline />
-        <Box sx={{display: "flex"}}>
+        <Box sx={{ display: "flex" }}>
             <AppBar position="absolute" open={drawerOpen}>
-                <Toolbar sx={{pr: "24px"}}>
+                <Toolbar sx={{ pr: "24px" }}>
                     <IconButton
-                        sx={{marginRight: "36px", ...(drawerOpen && {display: "none"})}}
+                        sx={{ marginRight: "36px", ...(drawerOpen && { display: "none" }) }}
                         edge="start"
                         color="inherit"
                         onClick={toggleDrawerOpen}
@@ -52,7 +52,7 @@ export function AppLayout(props: {pdp8: SoCDP8}) {
                     >
                         <MenuIcon />
                     </IconButton>
-                    <Typography component="h1" variant="h6" color="inherit" noWrap sx={{flexGrow: 1}}>
+                    <Typography component="h1" variant="h6" color="inherit" noWrap sx={{ flexGrow: 1 }}>
                         <Link color="inherit" underline="none" component={RouterLink} to="/">
                             SoCDP-8
                         </Link>
@@ -78,14 +78,17 @@ export function AppLayout(props: {pdp8: SoCDP8}) {
             <Box
                 component="main"
                 sx={{
-                    backgroundColor: (theme) => theme.palette.mode == "light" ? theme.palette.grey[100] : theme.palette.grey[900],
+                    backgroundColor: (theme) =>
+                        theme.palette.mode == "light" ?
+                            theme.palette.grey[100] :
+                            theme.palette.grey[900],
                     flexGrow: 1,
                     height: "100vh",
                     overflow: "auto"
                 }}
             >
                 <Toolbar />
-                <Container maxWidth="lg" sx={{mt: 4}}>
+                <Container maxWidth="lg" sx={{ mt: 4 }}>
                     <Outlet />
                 </Container>
                 <Copyright />
@@ -113,7 +116,10 @@ function ConnectingInfo() {
 function Copyright() {
     return (
         <Typography variant="body2" color="textSecondary" align="center">
-            Copyright © <Link component={RouterLink} to="https://github.com/fpw/socdp8" target="_blank">Folke Will</Link>, 2023
+            Copyright ©
+            <Link component={RouterLink} to="https://github.com/fpw/socdp8" target="_blank">
+                Folke Will
+            </Link>, 2023
         </Typography>
     );
 }
