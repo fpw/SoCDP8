@@ -41,6 +41,7 @@ export class WasmBackend implements Backend {
     private pdp8: Wasm8Context;
     private controlThrottle = true;
     private throttle = 0;
+    private lastUnthrottledReport?: number;
 
     private store = create<BackendStore>()(immer(set => ({
         systems: [],
@@ -235,9 +236,7 @@ export class WasmBackend implements Backend {
             case DeviceID.DEV_ID_CPU:
                 if (action == 4) {
                     const simSpeed = p1 / 100;
-                    if (this.controlThrottle) {
-                        this.doThrottleControl(simSpeed);
-                    }
+                    this.doThrottleControl(simSpeed);
                     this.listener.onPerformanceReport(simSpeed);
                 } else if (action == 6) {
                     const dump = this.pdp8.fetchBuffer(p1, p2);
@@ -310,22 +309,28 @@ export class WasmBackend implements Backend {
     }
 
     private doThrottleControl(simSpeed: number) {
-        if (this.throttle == 0) {
-            this.throttle = 5000;
+        if (!this.controlThrottle) {
+            this.lastUnthrottledReport = simSpeed;
+            return;
+        }
+
+        if (this.throttle == 0 || this.lastUnthrottledReport === undefined) {
+            this.lastUnthrottledReport = simSpeed;
+            this.throttle = this.lastUnthrottledReport * 5000;
             this.pdp8.setThrottle(this.throttle);
             // console.log(`throttle: start at ${this.throttle}`);
             return;
         }
 
+        const factor = this.lastUnthrottledReport * 1000;
+
         const delta = 1 - simSpeed;
         const abs = Math.abs(delta);
         let step;
         if (abs > 1) {
-            step = 2500;
-        } else if (abs > 0.1) {
-            step = 1500;
+            step = factor / abs;
         } else if (abs > 0.01) {
-            step = 250;
+            step = factor * abs;
         } else {
             step = 0;
         }
