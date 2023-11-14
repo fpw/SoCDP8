@@ -26,6 +26,7 @@ import { Wasm8Context } from "./Wasm8Context";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { generateUUID } from "../../../util";
+import { ThrottleController } from "./ThrottleController";
 
 interface BackendStore {
     activeSystem?: SystemConfiguration;
@@ -39,9 +40,7 @@ interface BackendStore {
 export class WasmBackend implements Backend {
     private listener?: BackendListener;
     private pdp8: Wasm8Context;
-    private controlThrottle = true;
-    private throttle = 0;
-    private lastUnthrottledReport?: number;
+    private throttler?: ThrottleController;
 
     private store = create<BackendStore>()(immer(set => ({
         systems: [],
@@ -64,6 +63,7 @@ export class WasmBackend implements Backend {
 
     public constructor() {
         this.pdp8 = new Wasm8Context();
+
         this.store.getState().addSystem({
             id: "default",
             name: "RK8E",
@@ -104,8 +104,12 @@ export class WasmBackend implements Backend {
         await this.setActiveSystem("default");
         await this.listener.onConnect();
 
+        this.throttler = new ThrottleController(t => this.pdp8.setThrottle(t));
+        this.throttler.setControl(true);
+
         const updateConsole = () => {
-            listener.onConsoleState(this.pdp8.getConsoleState());
+            const state = this.pdp8.getConsoleState();
+            listener.onConsoleState(state);
             setTimeout(updateConsole, 15);
         };
         updateConsole();
@@ -162,11 +166,8 @@ export class WasmBackend implements Backend {
     }
 
     public async setThrottleControl(control: boolean) {
-        this.controlThrottle = control;
-        if (!control) {
-            this.throttle = 0;
-            this.pdp8.setThrottle(0);
-        }
+        this.throttler?.setControl(control);
+        this.pdp8.setThrottle(0);
     }
 
     public async setPanelSwitch(sw: string, state: boolean): Promise<void> {
@@ -236,7 +237,7 @@ export class WasmBackend implements Backend {
             case DeviceID.DEV_ID_CPU:
                 if (action == 4) {
                     const simSpeed = p1 / 100;
-                    this.doThrottleControl(simSpeed);
+                    this.throttler?.onPerformanceReport(simSpeed);
                     this.listener.onPerformanceReport(simSpeed);
                 } else if (action == 6) {
                     const dump = this.pdp8.fetchBuffer(p1, p2);
@@ -305,41 +306,6 @@ export class WasmBackend implements Backend {
                     this.listener.onPeripheralEvent(dev, { type: "dump-data", dump });
                 }
                 break;
-        }
-    }
-
-    private doThrottleControl(simSpeed: number) {
-        if (!this.controlThrottle) {
-            this.lastUnthrottledReport = simSpeed;
-            return;
-        }
-
-        if (this.throttle == 0 || this.lastUnthrottledReport === undefined) {
-            this.lastUnthrottledReport = simSpeed;
-            this.throttle = this.lastUnthrottledReport * 5000;
-            this.pdp8.setThrottle(this.throttle);
-            // console.log(`throttle: start at ${this.throttle}`);
-            return;
-        }
-
-        const factor = this.lastUnthrottledReport * 1000;
-
-        const delta = 1 - simSpeed;
-        const abs = Math.abs(delta);
-        let step;
-        if (abs > 1) {
-            step = factor / abs;
-        } else if (abs > 0.01) {
-            step = factor * abs;
-        } else {
-            step = 0;
-        }
-        const incr = step * Math.sign(delta);
-
-        if (incr != 0) {
-            this.throttle = Math.max(1, this.throttle + incr);
-            this.pdp8.setThrottle(this.throttle);
-            // console.log(`throttle: change by ${incr.toFixed(0)} to ${this.throttle}`);
         }
     }
 
