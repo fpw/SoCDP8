@@ -51,5 +51,6 @@ module.exports = {
         "dist/",
         "build/",
         "node_modules/",
+        "src/editor/parser.*",
     ],
 };

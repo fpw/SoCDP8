@@ -1,0 +1,56 @@
+@precedence { left @left, cut @cut }
+@top Program { Statement* Blank* EOF? }
+
+Statement { Blank* (Origin | Label | Assign | ExprStatement | PseudoStatement | Separator | EOL | Comment) }
+Origin { "*" Expression }
+Label { Symbol "," }
+Assign { Symbol "=" Blank* Expression }
+ExprStatement { Expression }
+Separator { ";" }
+Expression { BinaryOp | SymbolGroup | ParenExpr | Element }
+ParenExpr { "(" Blank* Expression !left Blank* ")"? }
+SymbolGroup { Element !left (Blank+ Expression)* }
+BinaryOp    { Element (BinaryOperator Element)+ }
+
+Element { UnaryOp? (Integer | Symbol | ASCII | CLC) }
+
+@tokens {
+    Comment { "/" ![\n]* }
+    Symbol { $[a-zA-Z]$[a-zA-Z0-9]* }
+    Integer { @digit+ }
+    CLC { "." }
+    ASCII { "\"" }
+    Blank { $[\r\t\f ] }
+    BinaryOperator { $[-+!&^%] }
+    UnaryOp { $[-+] }
+    EOL { "\n" }
+    EOF { "$" ![\0]* }
+    @precedence { BinaryOperator, UnaryOp }
+}
+
+// Only pseudos below
+PseudoStatement { originPseudo | radixPseudo | symbolPseudo | macroPseudo }
+
+originPseudo { Page | Field | Reloc }
+Page { @specialize<Symbol, "PAGE"> !left Blank* Param? }
+Field { @specialize<Symbol, "FIELD"> Blank* Param }
+Reloc { @specialize<Symbol, "RELOC"> !left Blank* Param? }
+
+symbolPseudo { FixMri | FixTab | Expunge }
+FixMri { @specialize<Symbol, "FIXMRI"> Blank* Symbol "=" Blank* Param }
+FixTab { @specialize<Symbol, "FIXTAB"> }
+Expunge { @specialize<Symbol, "EXPUNGE"> }
+
+radixPseudo { Decimal | Octal }
+Decimal { @specialize<Symbol, "DECIMA" | "DECIMAL"> }
+Octal { @specialize<Symbol, "OCTAL"> }
+
+macroPseudo             { Define | IfDef | IfNDef | IfZero | IfNZro }
+Define                  { @specialize<Symbol, "DEFINE"> Blank Symbol (Blank Symbol)* Blank* MacroBody }
+IfDef                   { @specialize<Symbol, "IFDEF"> Blank Symbol Blank* MacroBody }
+IfNDef                  { @specialize<Symbol, "IFNDEF"> Blank Symbol Blank* MacroBody }
+IfZero                  { @specialize<Symbol, "IFZERO"> Blank Expression Blank* MacroBody }
+IfNZro                  { @specialize<Symbol, "IFNZRO"> Blank Expression Blank* MacroBody }
+MacroBody { "<" Statement* ">"}
+
+Param { BinaryOp | Element }

@@ -24,6 +24,7 @@ import React, { useState } from "react";
 import { BinTapeReader, CodeError, SymbolData, SymbolType, Yamas, YamasOutput } from "yamas";
 import { SoCDP8 } from "../../models/SoCDP8";
 import { numToOctal } from "../../util";
+import { yamasLanguage } from "../../editor/YamasLanguage";
 
 const defaultSource =
 `/ YAMAS PDP-8 ASSEMBLER
@@ -66,9 +67,11 @@ export function CodePage(props: { pdp8: SoCDP8 }) {
 
         <CodeMirror
             value={src}
-            height="400px"
+            height="800px"
             indentWithTab={false}
+            theme="dark"
             extensions={[
+                yamasLanguage(),
                 keymap.of([{
                     key: "Tab",
                     run: indentOrInsertTab,
