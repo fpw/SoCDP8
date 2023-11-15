@@ -81,7 +81,7 @@ export function CodePage(props: { pdp8: SoCDP8 }) {
             onChange={v => setSrc(v)}
         />
 
-        <ButtonGroup variant="outlined">
+        <ButtonGroup variant="outlined" sx={{ mt: 1 }}>
             <Button onClick={() => assemble()}>Assemble</Button>
             <Button
                 onClick={() => void load()}
@@ -98,7 +98,9 @@ export function CodePage(props: { pdp8: SoCDP8 }) {
             { memState.length > 0 && false &&
                 <MemTable state={memState} />
             }
-            <SymbolTable symbols={[...output.symbols.values()]} />
+            { output.symbols.size > 0 &&
+                <SymbolTable symbols={[...output.symbols.values()]} />
+            }
         </>}
     </>);
 }
@@ -172,7 +174,10 @@ function MemTable(props: { state: (number | undefined)[] }) {
 }
 
 function SymbolTable(props: { symbols: SymbolData[] }) {
-    const symbols = props.symbols;
+    const symbols = props.symbols
+        .filter(s => (s.type == SymbolType.Param && !s.fixed) ||
+                     (s.type == SymbolType.Label))
+        .sort((a, b) => a.name.localeCompare(b.name));
 
     return (<>
         <Table size="small">

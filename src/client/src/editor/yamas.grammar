@@ -1,43 +1,46 @@
 @precedence { left @left, cut @cut }
-@top Program { Statement* Blank* EOF? }
+@top Program { Statement* EOF }
 
-Statement { Blank* (Origin | Label | Assign | ExprStatement | PseudoStatement | Separator | EOL | Comment) }
+Statement {
+    blank* (Origin | Label | Assign | ExprStatement | PseudoStatement)? (Separator | EOL | Comment)
+}
+
 Origin { "*" Expression }
 Label { Symbol "," }
-Assign { Symbol "=" Blank* Expression }
+Assign { Symbol "=" blank* Expression }
 ExprStatement { Expression }
 Separator { ";" }
 Expression { BinaryOp | SymbolGroup | ParenExpr | Element }
-ParenExpr { "(" Blank* Expression !left Blank* ")"? }
-SymbolGroup { Element !left (Blank+ Expression)* }
+ParenExpr { ("(" blank* Expression !left blank* ")"?) | ("[" blank* Expression !left blank* "]"?)}
+SymbolGroup { (Element | ParenExpr) !left (blank+ Expression)* }
 BinaryOp    { Element (BinaryOperator Element)+ }
 
 Element { UnaryOp? (Integer | Symbol | ASCII | CLC) }
 
 @tokens {
-    Comment { "/" ![\n]* }
+    Comment { "/" ![\n]* "\n" }
     Symbol { $[a-zA-Z]$[a-zA-Z0-9]* }
     Integer { @digit+ }
+    Float  { (($[0-9]+ "." $[0-9]*) | ($[0-9]* "." $[0-9]+) | ($[0-9]+)) ($[eE] $[-+]? $[0-9]+)? }
     CLC { "." }
-    ASCII { "\"" }
-    Blank { $[\r\t\f ] }
+    ASCII { $["]![] }
+    blank { $[\r\t\f ] }
     BinaryOperator { $[-+!&^%] }
     UnaryOp { $[-+] }
     EOL { "\n" }
-    EOF { "$" ![\0]* }
-    @precedence { BinaryOperator, UnaryOp }
+    EOF { "$" ![]* | @eof }
 }
 
 // Only pseudos below
-PseudoStatement { originPseudo | radixPseudo | symbolPseudo | macroPseudo }
+PseudoStatement { originPseudo | radixPseudo | symbolPseudo | macroPseudo | dataPseudo | outputCtrlPseudo }
 
 originPseudo { Page | Field | Reloc }
-Page { @specialize<Symbol, "PAGE"> !left Blank* Param? }
-Field { @specialize<Symbol, "FIELD"> Blank* Param }
-Reloc { @specialize<Symbol, "RELOC"> !left Blank* Param? }
+Page { @specialize<Symbol, "PAGE"> (blank+ Param)? }
+Field { @specialize<Symbol, "FIELD"> (blank+ Param)? }
+Reloc { @specialize<Symbol, "RELOC"> (blank+ Param)? }
 
 symbolPseudo { FixMri | FixTab | Expunge }
-FixMri { @specialize<Symbol, "FIXMRI"> Blank* Symbol "=" Blank* Param }
+FixMri { @specialize<Symbol, "FIXMRI"> blank Symbol "=" blank+ Param }
 FixTab { @specialize<Symbol, "FIXTAB"> }
 Expunge { @specialize<Symbol, "EXPUNGE"> }
 
@@ -46,11 +49,34 @@ Decimal { @specialize<Symbol, "DECIMA" | "DECIMAL"> }
 Octal { @specialize<Symbol, "OCTAL"> }
 
 macroPseudo             { Define | IfDef | IfNDef | IfZero | IfNZro }
-Define                  { @specialize<Symbol, "DEFINE"> Blank Symbol (Blank Symbol)* Blank* MacroBody }
-IfDef                   { @specialize<Symbol, "IFDEF"> Blank Symbol Blank* MacroBody }
-IfNDef                  { @specialize<Symbol, "IFNDEF"> Blank Symbol Blank* MacroBody }
-IfZero                  { @specialize<Symbol, "IFZERO"> Blank Expression Blank* MacroBody }
-IfNZro                  { @specialize<Symbol, "IFNZRO"> Blank Expression Blank* MacroBody }
-MacroBody { "<" Statement* ">"}
+Define                  { @specialize<Symbol, "DEFINE"> blank Symbol (blank Symbol)* blank* MacroBody }
+IfDef                   { @specialize<Symbol, "IFDEF"> blank Symbol blank* MacroBody }
+IfNDef                  { @specialize<Symbol, "IFNDEF"> blank Symbol blank* MacroBody }
+IfZero                  { @specialize<Symbol, "IFZERO"> blank Expression blank* MacroBody }
+IfNZro                  { @specialize<Symbol, "IFNZRO"> blank Expression blank* MacroBody }
+MacroBody               { "<" Statement* ">"}
+
+dataPseudo              { ZBlock | Text | Dubl | Fltg | Device | FileName }
+ZBlock { @specialize<Symbol, "ZBLOCK"> (blank+ Param)? }
+@skip {} {
+    Text { @specialize<Symbol, "TEXT"> blank (text | stringContent)* endOfText }
+}
+Dubl { @specialize<Symbol, "DUBL"> !left ((UnaryOp? Integer) | Separator | Comment| EOL | blank)* }
+Fltg { @specialize<Symbol, "FLTG"> !left ((UnaryOp? Float) | Separator | Comment | EOL | blank)* }
+Device { @specialize<Symbol, "DEVICE"> blank+ Param }
+FileName { @specialize<Symbol, ("FILENAM" | "FILENAME")> blank stringContent* endOfText }
+
+outputCtrlPseudo { EnPunch | NoPunch | Eject | Pause | XList }
+EnPunch { @specialize<Symbol, "ENPUNCH"> }
+NoPunch { @specialize<Symbol, "NOPUNCH"> }
+Pause { @specialize<Symbol, "PAUSE"> }
+XList { @specialize<Symbol, "XLIST"> }
+Eject { @specialize<Symbol, "EJECT"> blank stringContent* endOfText }
+
+@local tokens {
+    stringContent { ![\r\n/;] }
+    endOfText { "\n" }
+    @else text
+}
 
 Param { BinaryOp | Element }

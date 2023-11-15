@@ -13,7 +13,11 @@ const parserWithMeta = parser.configure({
             "Assign/Symbol": t.definitionOperator,
             "PseudoStatement/...": t.keyword,
             "Integer": t.number,
+            "Float": t.regexp,
             "MacroBody": t.regexp,
+            "Separator": t.separator,
+            "ASCII": t.character,
+            "ParenExpr": t.controlOperator,
         }),
         foldNodeProp.add({
             "MacroBody": foldInside,
