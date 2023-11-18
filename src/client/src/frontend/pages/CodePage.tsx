@@ -25,6 +25,7 @@ import { BinTapeReader, CodeError, SymbolData, SymbolType, Yamas, YamasOutput } 
 import { SoCDP8 } from "../../models/SoCDP8";
 import { numToOctal } from "../../util";
 import { yamasLanguage } from "../../editor/YamasLanguage";
+import { vscodeDarkInit } from "@uiw/codemirror-theme-vscode";
 
 const defaultSource =
 `/ YAMAS PDP-8 ASSEMBLER
@@ -67,9 +68,9 @@ export function CodePage(props: { pdp8: SoCDP8 }) {
 
         <CodeMirror
             value={src}
-            height="800px"
+            height="75vh"
             indentWithTab={false}
-            theme="dark"
+            theme={ vscodeDarkInit() }
             extensions={[
                 yamasLanguage(),
                 keymap.of([{
