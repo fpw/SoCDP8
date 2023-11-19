@@ -26,7 +26,7 @@
         "react-simple-keyboard": "^3.7.37",
         "socket.io-client": "^4.7.2",
         "xterm": "^5.3.0",
-        "yamas": "^1.1.0",
+        "yamas": "^1.1.1",
         "zustand": "^4.4.6"
       },
       "devDependencies": {
@@ -4522,9 +4522,9 @@
       "dev": true
     },
     "node_modules/yamas": {
-      "version": "1.1.0",
-      "resolved": "https://registry.npmjs.org/yamas/-/yamas-1.1.0.tgz",
-      "integrity": "sha512-gr2/f+cxkVGLazH5sCydp2urza//fOomeq584O0nbchGkqpFsY174lzhCjsQy+HBzDozpYihL+LWGJzvnA+eaw==",
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/yamas/-/yamas-1.1.1.tgz",
+      "integrity": "sha512-h88BGziu7VEgE6IQKqlyhWyv/JIk6LUb/PbB7PP4xEdIHZxNlRreEpa4noPJgDhxXeFQ8RdeOhZ3cpmDCdcDGw==",
       "dependencies": {
         "cmd-ts": "^0.13.0"
       },
@@ -7632,9 +7632,9 @@
       "dev": true
     },
     "yamas": {
-      "version": "1.1.0",
-      "resolved": "https://registry.npmjs.org/yamas/-/yamas-1.1.0.tgz",
-      "integrity": "sha512-gr2/f+cxkVGLazH5sCydp2urza//fOomeq584O0nbchGkqpFsY174lzhCjsQy+HBzDozpYihL+LWGJzvnA+eaw==",
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/yamas/-/yamas-1.1.1.tgz",
+      "integrity": "sha512-h88BGziu7VEgE6IQKqlyhWyv/JIk6LUb/PbB7PP4xEdIHZxNlRreEpa4noPJgDhxXeFQ8RdeOhZ3cpmDCdcDGw==",
       "requires": {
         "cmd-ts": "^0.13.0"
       }
