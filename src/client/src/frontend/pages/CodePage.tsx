@@ -19,28 +19,25 @@
 import { indentLess, indentMore } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
 import { Button, ButtonGroup, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
-import CodeMirror, { StateCommand, keymap } from "@uiw/react-codemirror";
-import React, { useState } from "react";
+import { vscodeDarkInit } from "@uiw/codemirror-theme-vscode";
+import CodeMirror, { ReactCodeMirrorRef, StateCommand, keymap } from "@uiw/react-codemirror";
+import React, { ForwardedRef, forwardRef, useCallback, useRef, useState } from "react";
 import { BinTapeReader, CodeError, SymbolData, SymbolType, Yamas, YamasOutput } from "yamas";
+import { yamasLanguage } from "../../editor/YamasLanguage";
 import { SoCDP8 } from "../../models/SoCDP8";
 import { numToOctal } from "../../util";
-import { yamasLanguage } from "../../editor/YamasLanguage";
-import { vscodeDarkInit } from "@uiw/codemirror-theme-vscode";
-
-const defaultSource =
-`/ YAMAS PDP-8 ASSEMBLER
-PAGE 1
-    CLA CLL
-    TAD (1234)
-    HLT
-`;
 
 export function CodePage(props: { pdp8: SoCDP8 }) {
-    const [src, setSrc] = useState(defaultSource);
     const [output, setOutput] = useState<YamasOutput>();
     const [memState, setMemState] = useState<(number | undefined)[]>([]);
+    const editorRef = useRef<ReactCodeMirrorRef>(null);
 
-    function assemble() {
+    const assemble = useCallback(() => {
+        const src = editorRef.current?.view?.state.doc.toString();
+        if (!src) {
+            return;
+        }
+
         const asm = new Yamas({ loadPrelude: true });
         console.time("parse");
         const ast = asm.addInput("input.pa", src);
@@ -52,7 +49,7 @@ export function CodePage(props: { pdp8: SoCDP8 }) {
 
         const mem = new BinTapeReader(out.binary).read();
         setMemState(mem);
-    }
+    }, [editorRef]);
 
     async function load() {
         for (const [addr, val] of memState.entries()) {
@@ -65,23 +62,7 @@ export function CodePage(props: { pdp8: SoCDP8 }) {
 
     return (<>
         <Typography component="h1" variant="h4">Code Editor</Typography>
-
-        <CodeMirror
-            value={src}
-            height="75vh"
-            indentWithTab={false}
-            theme={ vscodeDarkInit() }
-            extensions={[
-                yamasLanguage(),
-                keymap.of([{
-                    key: "Tab",
-                    run: indentOrInsertTab,
-                    shift: indentLess
-                }])
-            ]}
-            onChange={v => setSrc(v)}
-        />
-
+        <Editor ref={editorRef} />
         <ButtonGroup variant="outlined" sx={{ mt: 1 }}>
             <Button onClick={() => assemble()}>Assemble</Button>
             <Button
@@ -100,13 +81,43 @@ export function CodePage(props: { pdp8: SoCDP8 }) {
                 <MemTable state={memState} />
             }
             { output.symbols.size > 0 &&
-                <SymbolTable symbols={[...output.symbols.values()]} />
+                <SymbolTable symbols={output.symbols} />
             }
         </>}
     </>);
 }
 
-export const indentOrInsertTab: StateCommand = ({ state, dispatch }) => {
+const initialSource =
+`/ YAMAS PDP-8 ASSEMBLER
+PAGE 1
+    CLA CLL
+    TAD (1234)
+    HLT
+`;
+
+const theme = vscodeDarkInit();
+
+const Editor = forwardRef((props: unknown, ref: ForwardedRef<ReactCodeMirrorRef>) => {
+    return (<>
+        <CodeMirror
+            ref={ref}
+            value={initialSource}
+            height="75vh"
+            indentWithTab={false}
+            theme={ theme }
+            extensions={[
+                yamasLanguage(),
+                keymap.of([{
+                    key: "Tab",
+                    run: indentOrInsertTab,
+                    shift: indentLess
+                }])
+            ]}
+        />
+    </>);
+});
+
+const indentOrInsertTab: StateCommand = ({ state, dispatch }) => {
     if (state.readOnly) {
         return false;
     }
@@ -174,8 +185,8 @@ function MemTable(props: { state: (number | undefined)[] }) {
     </>);
 }
 
-function SymbolTable(props: { symbols: SymbolData[] }) {
-    const symbols = props.symbols
+function SymbolTable(props: { symbols: ReadonlyMap<string, SymbolData> }) {
+    const symbols = [...props.symbols.values()]
         .filter(s => (s.type == SymbolType.Param && !s.fixed) ||
                      (s.type == SymbolType.Label))
         .sort((a, b) => a.name.localeCompare(b.name));

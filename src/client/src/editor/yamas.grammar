@@ -1,7 +1,6 @@
 @external tokens readDelimitedString from "./helpers.js" { DelimitedString }
 @external tokens readUndelimitedString from "./helpers.js" { UndelimitedString }
 @external tokens readMacroArguments from "./helpers.js" { MacroArgument }
-@external specialize { Symbol } specializeSymbol from "./helpers.js" { MacroSymbol }
 @precedence { top, bot, macro }
 @top Program { Instruction* EOF }
 
@@ -19,7 +18,7 @@ Statement {
     Origin { "*" Expression } |
     Assign { Symbol "=" blank* Expression } |
     ExprStatement { Expression } |
-    Invocation { MacroSymbol MacroArgument* } |
+    /* Invocation { MacroSymbol MacroArgument* } | */
     PseudoStatement
 }
 

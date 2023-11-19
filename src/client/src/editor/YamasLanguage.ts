@@ -1,20 +1,8 @@
 import { LRLanguage, LanguageSupport, foldInside, foldNodeProp } from "@codemirror/language";
 import { styleTags, tags as t } from "@lezer/highlight";
 import { parser } from "./parser.js";
-import { ContextTracker } from "@lezer/lr";
-
-export type Context = {
-    macros: Set<string>;
-};
-
-const tracker = new ContextTracker<Context>({
-    start: {
-        macros: new Set(),
-    },
-});
 
 const parserWithMeta = parser.configure({
-    contextTracker: tracker,
     props: [
         styleTags({
             "CLC": t.controlOperator,
@@ -36,7 +24,7 @@ const parserWithMeta = parser.configure({
         }),
         foldNodeProp.add({
             "MacroBody": foldInside,
-        })
+        }),
     ],
 });
 

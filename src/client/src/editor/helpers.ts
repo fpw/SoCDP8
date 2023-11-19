@@ -1,14 +1,5 @@
-import { ExternalTokenizer, Stack } from "@lezer/lr";
-import { DelimitedString, MacroArgument, MacroSymbol, UndelimitedString } from "./parser.terms.js";
-import { Context } from "./YamasLanguage.js";
-
-export function specializeSymbol(input: string, stack: Stack): number {
-    const ctx = stack.context as Context;
-    if (ctx.macros.has(input)) {
-        return MacroSymbol;
-    }
-    return -1;
-}
+import { ExternalTokenizer } from "@lezer/lr";
+import { DelimitedString, MacroArgument, UndelimitedString } from "./parser.terms.js";
 
 export const readDelimitedString = new ExternalTokenizer((input, stack) => {
     const delim = input.next;
