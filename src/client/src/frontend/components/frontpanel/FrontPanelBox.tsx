@@ -21,7 +21,6 @@ import {
     Checkbox, Dialog, DialogTitle, FormControlLabel, List,
     ListItemButton, ListItemText
 } from "@mui/material";
-import { Stack } from "@mui/system";
 import { useState } from "react";
 import { ProgramSnippet, ProgramSnippets } from "../../../models/ProgramSnippets";
 import { SoCDP8 } from "../../../models/SoCDP8";
@@ -79,40 +78,38 @@ export function FrontPanelBox(props: { pdp8: SoCDP8 }) {
                     <FrontPanel pdp8={props.pdp8} />
                 </CardContent>
                 <CardActions>
-                    <Stack direction="row" justifyContent="space-between" component={CardActions}>
-                        <ButtonGroup variant="outlined">
-                            <Button onClick={() => void saveState()} disabled={busy}>
-                                Save State
-                            </Button>
-                            <Button onClick={() => setShowSnippets(true)}>
-                                Load Snippet
-                            </Button>
-                            <UploadButton onSelect={files => void uploadCore(files)}>
-                                Upload Dump
-                            </UploadButton>
-                            <Button onClick={() => void downloadCore()}>
-                                Download Dump
-                            </Button>
-                            <Button onClick={() => void props.pdp8.clearCore()}>
-                                Clear Core
-                            </Button>
-                            <SnippetDialog
-                                open={showSnippets}
-                                onClose={() => setShowSnippets(false)}
-                                onSelect={(snippet) => void loadSnippet(snippet)}
-                                devices={sys.peripherals.map(p => p.id)}
-                            />
-                        </ButtonGroup>
-                        <Box sx={{ alignSelf: "right" }}>
-                            Emulation Speed: { simSpeed.toFixed(2) }
-                            <FormControlLabel
-                                control={<Checkbox checked={throttle} onChange={() => void toggleThrottle()} />}
-                                label="Control" sx={{ ml: 1 }}
-                            />
-                        </Box>
-                    </Stack>
+                    <ButtonGroup variant="outlined">
+                        <Button onClick={() => void saveState()} disabled={busy}>
+                            Save State
+                        </Button>
+                        <Button onClick={() => setShowSnippets(true)}>
+                            Load Snippet
+                        </Button>
+                        <UploadButton onSelect={files => void uploadCore(files)}>
+                            Upload Dump
+                        </UploadButton>
+                        <Button onClick={() => void downloadCore()}>
+                            Download Dump
+                        </Button>
+                        <Button onClick={() => void props.pdp8.clearCore()}>
+                            Clear Core
+                        </Button>
+                    </ButtonGroup>
+                    <Box sx={{ textAlign: "right" }}>
+                        Simulation Speed: { simSpeed.toFixed(2) }
+                        <FormControlLabel
+                            control={<Checkbox checked={throttle} onChange={() => void toggleThrottle()} />}
+                            label="Control"
+                        />
+                    </Box>
                 </CardActions>
             </Card>
+            <SnippetDialog
+                open={showSnippets}
+                onClose={() => setShowSnippets(false)}
+                onSelect={(snippet) => void loadSnippet(snippet)}
+                devices={sys.peripherals.map(p => p.id)}
+            />
         </Box>
     );
 }

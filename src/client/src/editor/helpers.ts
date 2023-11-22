@@ -42,7 +42,7 @@ export const readMacroArguments = new ExternalTokenizer((input, stack) => {
         const c = input.advance();
         if (c == 0x2C) { // comma
             input.acceptToken(MacroArgument);
-        } if (c == 0x0D || c == 0x0A) {
+        } else if (c == 0x0D || c == 0x0A) {
             input.acceptToken(MacroArgument);
             break;
         } else if (c == -1) {

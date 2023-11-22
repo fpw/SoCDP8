@@ -42,30 +42,39 @@ export function PeripheralBox(props: { model: PeripheralModel }) {
     let caption = "";
     let component = <></>;
 
-    if (model instanceof PT08Model) {
-        caption = "PT08 Serial Line";
-        component = <PT08 model={model} />;
-    } else if (model instanceof PC04Model) {
-        caption = "PC04 High-Speed Paper-Tape Reader and Punch";
-        component = <PC04 model={model} />;
-    } else if (model instanceof TC08Model) {
-        caption = "TC08 DECtape Control";
-        component = <TC08 model={model} />;
-    } else if (model instanceof RF08Model) {
-        caption = "RF08 Disk Control";
-        component = <RF08 model={model} />;
-    } else if (model instanceof DF32Model) {
-        caption = "DF32 Disk Control";
-        component = <DF32 model={model} />;
-    } else if (model instanceof RK08Model) {
-        caption = "RK08 Disk Control";
-        component = <RK08 model={model} />;
-    } else if (model instanceof RK8EModel) {
-        caption = "RK8E Disk Control";
-        component = <RK8E model={model} />;
-    } else if (model instanceof KW8IModel) {
-        caption = "KW8I Real Time Clock";
-        component = <KW8I model={model} />;
+    switch (true) {
+        case model instanceof PT08Model:
+            caption = "PT08 Serial Line";
+            component = <PT08 model={model} />;
+            break;
+        case model instanceof PC04Model:
+            caption = "PC04 High-Speed Paper-Tape Reader and Punch";
+            component = <PC04 model={model} />;
+            break;
+        case model instanceof TC08Model:
+            caption = "TC08 DECtape Control";
+            component = <TC08 model={model} />;
+            break;
+        case model instanceof RF08Model:
+            caption = "RF08 Disk Control";
+            component = <RF08 model={model} />;
+            break;
+        case model instanceof DF32Model:
+            caption = "DF32 Disk Control";
+            component = <DF32 model={model} />;
+            break;
+        case model instanceof RK08Model:
+            caption = "RK08 Disk Control";
+            component = <RK08 model={model} />;
+            break;
+        case model instanceof RK8EModel:
+            caption = "RK8E Disk Control";
+            component = <RK8E model={model} />;
+            break;
+        case model instanceof KW8IModel:
+            caption = "KW8I Real Time Clock";
+            component = <KW8I model={model} />;
+            break;
     }
 
     const titleStr = `${caption} @ Bus ${model.connections.map(x => x.toString(8)).join(", ")}`;
