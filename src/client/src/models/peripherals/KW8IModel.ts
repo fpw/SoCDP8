@@ -17,7 +17,7 @@
  */
 
 import { PeripheralModel } from "./PeripheralModel";
-import { DeviceID, KW8IConfiguration } from "../../types/PeripheralTypes";
+import { DeviceID, KW8IConfiguration, PeripheralConfiguration } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
 import { PeripheralInAction } from "../../types/PeripheralAction";
 import { create } from "zustand";
@@ -70,5 +70,9 @@ export class KW8IModel extends PeripheralModel {
     }
 
     public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
+    }
+
+    public async saveState(): Promise<{ config: PeripheralConfiguration, data: Map<string, Uint8Array> }> {
+        return { config: this.store.getState().conf, data: new Map() };
     }
 }

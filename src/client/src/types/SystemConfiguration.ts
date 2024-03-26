@@ -18,7 +18,7 @@
 
 import {
     PeripheralConfiguration, DeviceID,
-    PC04Configuration, PT08Configuration, TC08Configuration, RF08Configuration
+    PC04Configuration, PT08Configuration, TC08Configuration, RF08Configuration, PT08Style
 } from "./PeripheralTypes";
 
 export interface SystemConfiguration {
@@ -53,18 +53,20 @@ export function getDefaultSysConf(): SystemConfiguration {
                 id: DeviceID.DEV_ID_PT08,
                 baudRate: 110,
                 autoCaps: true,
-            } as PT08Configuration,
+                style: PT08Style.ASR33,
+                eightBit: true,
+            },
             {
                 id: DeviceID.DEV_ID_PC04,
                 baudRate: 4800,
-            } as PC04Configuration,
+            },
             {
                 id: DeviceID.DEV_ID_TC08,
                 numTapes: 2,
-            } as TC08Configuration,
+            },
             {
                 id: DeviceID.DEV_ID_RF08,
-            } as RF08Configuration,
+            },
         ]
     };
 }

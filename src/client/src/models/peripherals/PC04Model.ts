@@ -16,16 +16,16 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { DeviceID, PC04Configuration } from "../../types/PeripheralTypes";
-import { Backend } from "../backends/Backend";
-import { PaperTape } from "../PaperTape";
-import { PeripheralModel } from "./PeripheralModel";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { PeripheralInAction } from "../../types/PeripheralAction";
+import { DeviceID, PC04Configuration, PeripheralConfiguration } from "../../types/PeripheralTypes";
+import { PaperTape } from "../PaperTape";
+import { Backend } from "../backends/Backend";
+import { PeripheralModel } from "./PeripheralModel";
 
 interface PC04Store {
-    conf?: PC04Configuration;
+    conf: PC04Configuration;
     readerActive: boolean;
     punchActive: boolean;
     setConf: (conf: PC04Configuration) => void;
@@ -37,6 +37,7 @@ export class PC04Model extends PeripheralModel {
     private readerTape_: PaperTape = new PaperTape();
     private punchTape_: PaperTape = new PaperTape();
     private store = create<PC04Store>()(immer(set => ({
+        conf: { id: DeviceID.DEV_ID_PC04, baudRate: 110 },
         readerActive: false,
         punchActive: false,
 
@@ -66,7 +67,7 @@ export class PC04Model extends PeripheralModel {
     }
 
     private get config(): PC04Configuration {
-        return this.store.getState().conf!;
+        return this.store.getState().conf;
     }
 
     public async updateConfig(newConf: PC04Configuration) {
@@ -141,4 +142,9 @@ export class PC04Model extends PeripheralModel {
         this.store.getState().setReader(active);
         await this.backend.sendPeripheralAction(this.config.id, { type: "reader-set-active", active });
     };
+
+    public async saveState(): Promise<{ config: PeripheralConfiguration, data: Map<string, Uint8Array> }> {
+        const dumps = new Map<string, Uint8Array>();
+        return { config: this.store.getState().conf, data: dumps };
+    }
 }

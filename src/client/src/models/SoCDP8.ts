@@ -196,6 +196,10 @@ export class SoCDP8 {
     }
 
     public async saveCurrentState() {
+        const coreDump = await this.getCoreDump();
+        for (const [_id, model] of this.store.getState().peripheralModels) {
+        }
+
         const res = await this.backend.saveActiveSystem();
         if (!res) {
             throw Error("Couldn't save system state");

@@ -17,7 +17,7 @@
  */
 
 import { PeripheralInAction } from "../../types/PeripheralAction";
-import { DeviceID, DF32Configuration } from "../../types/PeripheralTypes";
+import { DeviceID, DF32Configuration, PeripheralConfiguration } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
 import { DiskModel } from "./DiskModel";
 import { DumpMixin } from "./DumpMixin";
@@ -61,5 +61,15 @@ export class DF32Model extends PeripheralModel implements DiskModel {
 
     public async uploadDump(unit: number, dump: Uint8Array) {
         await this.dumpHandler.uploadDump(unit, dump);
+    }
+
+    public async saveState(): Promise<{ config: PeripheralConfiguration, data: Map<string, Uint8Array> }> {
+        const dumps = new Map<string, Uint8Array>();
+        for (let i = 0; i < this.getDiskSize(); i++) {
+            const name = `dump${i + 1}.${this.getDumpExtension()}`;
+            const dump = await this.downloadDump(i);
+            dumps.set(name, dump);
+        }
+        return { config: this.conf, data: dumps };
     }
 }

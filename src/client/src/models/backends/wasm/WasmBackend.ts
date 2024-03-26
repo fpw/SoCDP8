@@ -16,17 +16,17 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { DeviceID, PeripheralConfiguration, PT08Style } from "../../../types/PeripheralTypes";
-import { SystemConfiguration } from "../../../types/SystemConfiguration";
+import { create } from "zustand";
+import { immer } from "zustand/middleware/immer";
+import { PeripheralOutAction } from "../../../types/PeripheralAction";
+import { DeviceID, PeripheralConfiguration } from "../../../types/PeripheralTypes";
+import { getDefaultSysConf, SystemConfiguration } from "../../../types/SystemConfiguration";
+import { generateUUID } from "../../../util";
 import { TapeState } from "../../DECTape";
 import { Backend } from "../Backend";
 import { BackendListener } from "../BackendListener";
-import { PeripheralOutAction } from "../../../types/PeripheralAction";
-import { Wasm8Context } from "./Wasm8Context";
-import { create } from "zustand";
-import { immer } from "zustand/middleware/immer";
-import { generateUUID } from "../../../util";
 import { ThrottleController } from "./ThrottleController";
+import { Wasm8Context } from "./Wasm8Context";
 
 interface BackendStore {
     activeSystem?: SystemConfiguration;
@@ -63,44 +63,13 @@ export class WasmBackend implements Backend {
 
     public constructor() {
         this.pdp8 = new Wasm8Context();
-
-        this.store.getState().addSystem({
-            id: "default",
-            name: "RK8E",
-            description: "default",
-            maxMemField: 7,
-            cpuExtensions: {
-                eae: true,
-                kt8i: false,
-                bsw: true,
-            },
-            peripherals: [
-                {
-                    id: DeviceID.DEV_ID_PT08,
-                    eightBit: false,
-                    autoCaps: true,
-                    baudRate: 9600,
-                    style: PT08Style.ASR33,
-                },
-                {
-                    id: DeviceID.DEV_ID_PC04,
-                    baudRate: 9600,
-                },
-                {
-                    id: DeviceID.DEV_ID_TC08,
-                    numTapes: 2,
-                },
-                {
-                    id: DeviceID.DEV_ID_RK8E,
-                },
-            ],
-        });
     }
 
     public async connect(listener: BackendListener) {
         this.listener = listener;
 
         await this.pdp8.create((dev, action, p1, p2) => void this.onPeripheralAction(dev, action, p1, p2));
+        await this.loadSystems();
         await this.setActiveSystem("default");
         await this.listener.onConnect();
 
@@ -115,22 +84,46 @@ export class WasmBackend implements Backend {
         updateConsole();
     }
 
-    public async readActiveSystem(): Promise<SystemConfiguration> {
-        const sys = this.store.getState().activeSystem;
-        if (!sys) {
-            throw Error("No active system");
+    private async loadSystems() {
+        const root = await navigator.storage.getDirectory();
+        const systemsDir = await root.getDirectoryHandle("systems", { create: true });
+        for await (const [name, handle] of systemsDir) {
+            if (handle.kind == "directory") {
+                try {
+                    const sysDir = await systemsDir.getDirectoryHandle(name);
+                    const systemHandle = await sysDir.getFileHandle("system.json");
+                    const systemFile = await systemHandle.getFile();
+                    const systemJson = await systemFile.text();
+                    const system = JSON.parse(systemJson) as SystemConfiguration;
+                    this.store.getState().addSystem(system);
+                } catch (e) {
+                    if (e instanceof Error) {
+                        console.error(`Couldn't load system ${name}: ${e.message}`);
+                    }
+                }
+            }
         }
-        return sys;
-    }
 
-    public async readSystems(): Promise<SystemConfiguration[]> {
-        return this.store.getState().systems;
+        if (this.store.getState().systems.length == 0) {
+            const system = getDefaultSysConf();
+            await this.saveSystem(system);
+            this.store.getState().addSystem(system);
+        }
     }
 
     public async createSystem(system: SystemConfiguration) {
         system.id = generateUUID();
+        await this.saveSystem(system);
         this.store.getState().addSystem(system);
         this.listener?.onStateChange({ type: "state-list-changed" });
+    }
+
+    private async saveSystem(system: SystemConfiguration) {
+        const sysDir = await this.getSystemDirectory(system);
+        const systemFile = await sysDir.getFileHandle("system.json", { create: true });
+        const writable = await systemFile.createWritable();
+        await writable.write(JSON.stringify(system));
+        await writable.close();
     }
 
     public async deleteSystem(id: string) {
@@ -139,12 +132,42 @@ export class WasmBackend implements Backend {
             throw Error("Can't delete active system");
         }
 
+        const root = await navigator.storage.getDirectory();
+        const systemsDir = await root.getDirectoryHandle("systems");
+        await systemsDir.removeEntry(id, { recursive: true });
+
         this.store.getState().deleteSystem(id);
         this.listener?.onStateChange({ type: "state-list-changed" });
     }
 
     public async saveActiveSystem(): Promise<boolean> {
+        const sys = this.store.getState().activeSystem;
+        if (!sys) {
+            throw Error("No active system");
+        }
+
+        const sysDir = await this.getSystemDirectory(sys);
+
         return true;
+    }
+
+    private async getSystemDirectory(system: SystemConfiguration): Promise<FileSystemDirectoryHandle> {
+        const root = await navigator.storage.getDirectory();
+        const systemsDir = await root.getDirectoryHandle("systems", { create: true });
+        const sysDir = await systemsDir.getDirectoryHandle(system.id, { create: true });
+        return sysDir;
+    }
+
+    public async readSystems(): Promise<SystemConfiguration[]> {
+        return this.store.getState().systems;
+    }
+
+    public async readActiveSystem(): Promise<SystemConfiguration> {
+        const sys = this.store.getState().activeSystem;
+        if (!sys) {
+            throw Error("No active system");
+        }
+        return sys;
     }
 
     public async setActiveSystem(id: string) {

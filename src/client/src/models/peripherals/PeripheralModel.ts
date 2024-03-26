@@ -18,7 +18,7 @@
 
 import { PeripheralInAction } from "../../types/PeripheralAction";
 import { Backend } from "../backends/Backend";
-import { DeviceID } from "./../../types/PeripheralTypes";
+import { DeviceID, PeripheralConfiguration } from "./../../types/PeripheralTypes";
 
 export abstract class PeripheralModel {
     constructor(protected backend: Backend) {
@@ -29,4 +29,6 @@ export abstract class PeripheralModel {
     public abstract get id(): number;
 
     public abstract onPeripheralAction(id: DeviceID, action: PeripheralInAction): void;
+
+    public abstract saveState(): Promise<{ config: PeripheralConfiguration, data: Map<string, Uint8Array> }>;
 }
