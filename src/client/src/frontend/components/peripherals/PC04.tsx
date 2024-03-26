@@ -39,7 +39,7 @@ export function PC04(props: { model: PC04Model }) {
 
 function ConfigBox(props: { model: PC04Model }) {
     const { model } = props;
-    const conf = model.useState(state => state.conf!);
+    const conf = model.useState(state => state.conf);
 
     return (
         <Box>

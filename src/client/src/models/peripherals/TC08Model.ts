@@ -16,15 +16,15 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { DeviceID, TC08Configuration } from "../../types/PeripheralTypes";
-import { Backend } from "../backends/Backend";
-import { DECTape, TapeState } from "../DECTape";
-import { PeripheralModel } from "./PeripheralModel";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { PeripheralInAction } from "../../types/PeripheralAction";
-import { DumpMixin } from "./DumpMixin";
+import { DeviceID, TC08Configuration } from "../../types/PeripheralTypes";
+import { DECTape, TapeState } from "../DECTape";
+import { Backend } from "../backends/Backend";
 import { DiskModel } from "./DiskModel";
+import { DumpMixin } from "./DumpMixin";
+import { PeripheralModel } from "./PeripheralModel";
 
 interface TC08Store {
     tapes: DECTape[];
@@ -101,5 +101,10 @@ export class TC08Model extends PeripheralModel implements DiskModel {
 
     public async uploadDump(unit: number, dump: Uint8Array) {
         await this.dumpHandler.uploadDump(unit, dump);
+    }
+
+    public async saveState(): Promise<{ config: TC08Configuration, data: Map<string, Uint8Array> }> {
+        const dumps = await this.dumpHandler.saveState(this);
+        return { config: this.conf, data: dumps };
     }
 }

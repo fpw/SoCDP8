@@ -19,6 +19,7 @@
 import { PeripheralInAction } from "../../types/PeripheralAction";
 import { DeviceID } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
+import { DiskModel } from "./DiskModel";
 
 export class DumpMixin {
     private dumpAcceptor?: (dump: Uint8Array) => void;
@@ -48,5 +49,15 @@ export class DumpMixin {
             data,
             unit,
         });
+    }
+
+    public async saveState(model: DiskModel): Promise<Map<string, Uint8Array>> {
+        const dumps = new Map<string, Uint8Array>();
+        for (let i = 0; i < model.getDiskSize(); i++) {
+            const name = `dump${i + 1}.${model.getDumpExtension()}`;
+            const dump = await model.downloadDump(i);
+            dumps.set(name, dump);
+        }
+        return dumps;
     }
 }

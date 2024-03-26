@@ -62,4 +62,9 @@ export class RK8EModel extends PeripheralModel implements DiskModel {
     public async uploadDump(unit: number, dump: Uint8Array) {
         await this.dumpHandler.uploadDump(unit, dump);
     }
+
+    public async saveState(): Promise<{ config: RK8EConfiguration, data: Map<string, Uint8Array> }> {
+        const dumps = await this.dumpHandler.saveState(this);
+        return { config: this.conf, data: dumps };
+    }
 }

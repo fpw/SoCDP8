@@ -19,7 +19,7 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { PeripheralInAction } from "../../types/PeripheralAction";
-import { DeviceID, PT08Configuration } from "../../types/PeripheralTypes";
+import { DeviceID, PT08Configuration, PeripheralConfiguration } from "../../types/PeripheralTypes";
 import { Backend } from "../backends/Backend";
 import { PaperTape } from "../PaperTape";
 import { PeripheralModel } from "./PeripheralModel";
@@ -174,4 +174,8 @@ export class PT08Model extends PeripheralModel {
         this.store.getState().setReader(active);
         await this.backend.sendPeripheralAction(this.config.id, { type: "reader-set-active", active });
     };
+
+    public async saveState(): Promise<{ config: PeripheralConfiguration, data: Map<string, Uint8Array> }> {
+        return { config: this.store.getState().conf!, data: new Map() };
+    }
 }
