@@ -213,7 +213,7 @@ export class Wasm8Context {
         this.calls.writePointer(this.consoleIn + offset, val, "i16");
     }
 
-    public configureCPU(maxMemField: number, eae: boolean, kt8i: boolean, bsw: boolean) {
+    public configureCPU(maxMemField: number, eae: boolean, kt8i: boolean, bsw: boolean, fixCont: boolean) {
         let confWord = maxMemField;
         if (eae) {
             confWord |= 0o10;
@@ -223,6 +223,9 @@ export class Wasm8Context {
         }
         if (bsw) {
             confWord |= 0o40;
+        }
+        if (fixCont) {
+            confWord |= 0o60;
         }
 
         this.sendPeripheralAction(0, this.EventConfigure, confWord, 0);

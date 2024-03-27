@@ -191,7 +191,13 @@ export class Wasm8Backend implements Backend {
         this.pdp8.setSwitch("stop", true);
         this.pdp8.clearPeripherals();
         this.pdp8.clearCore();
-        this.pdp8.configureCPU(sys.maxMemField, sys.cpuExtensions.eae, sys.cpuExtensions.kt8i, sys.cpuExtensions.bsw);
+        this.pdp8.configureCPU(
+            sys.maxMemField,
+            sys.cpuExtensions.eae,
+            sys.cpuExtensions.kt8i,
+            sys.cpuExtensions.bsw,
+            sys.cpuExtensions.fixCont
+        );
 
         for (const peripheral of sys.peripherals) {
             this.pdp8.addPeripheral(peripheral.id);
