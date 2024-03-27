@@ -24,20 +24,17 @@ export function AboutPage() {
         <Typography component="h2" variant="h6">Thanks to</Typography>
         <ul>
             <li>
-                Oscar Vermeulen for the
-                <Link href="https://obsolescence.wixsite.com/obsolescence/pidp-8">
+                Oscar Vermeulen for the <Link href="https://obsolescence.wixsite.com/obsolescence/pidp-8">
                     PiDP-8
                 </Link> and letting me use the panel artwork
             </li>
             <li>
-                Vince Slyngstad for his
-                <Link href="http://so-much-stuff.com/pdp8/index.php">
+                Vince Slyngstad for his <Link href="http://so-much-stuff.com/pdp8/index.php">
                     PDP-8 software library
                 </Link> and letting me use it for this project
             </li>
             <li>
-                Willem van der Mark for his
-                <Link href="http://www.vandermark.ch/pdp8/index.php?n=Emulator.TD8E">
+                Willem van der Mark for his <Link href="http://www.vandermark.ch/pdp8/index.php?n=Emulator.TD8E">
                     TD8E emulator
                 </Link>, the visualization was ported to this project
             </li>

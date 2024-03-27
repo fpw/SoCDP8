@@ -1,6 +1,6 @@
 import { enableMapSet } from "immer";
 import { SocketBackend } from "./backends/socket/SocketBackend";
-import { WasmBackend } from "./backends/wasm/WasmBackend";
+import { Wasm8Backend } from "./backends/wasm/Wasm8Backend";
 import { SoCDP8 } from "./SoCDP8";
 
 let pdp8: SoCDP8 | undefined;
@@ -16,7 +16,7 @@ export function getBackend() {
 
         let backend;
         if (true) {
-            backend = new WasmBackend();
+            backend = new Wasm8Backend();
         } else {
             backend = new SocketBackend(url);
         }

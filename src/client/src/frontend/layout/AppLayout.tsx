@@ -119,7 +119,7 @@ function Copyright() {
             ©&nbsp;
             <Link component={RouterLink} to="https://github.com/fpw/socdp8" target="_blank">
                 Folke Will
-            </Link>, 2023
+            </Link>, 2024
         </Typography>
     );
 }

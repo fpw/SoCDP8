@@ -21,7 +21,7 @@ import { immer } from "zustand/middleware/immer";
 import { PeripheralOutAction } from "../../../types/PeripheralAction";
 import { DeviceID, PeripheralConfiguration } from "../../../types/PeripheralTypes";
 import { getDefaultSysConf, SystemConfiguration } from "../../../types/SystemConfiguration";
-import { generateUUID } from "../../../util";
+import { downloadData, generateUUID } from "../../../util";
 import { TapeState } from "../../DECTape";
 import { Backend } from "../Backend";
 import { BackendListener } from "../BackendListener";
@@ -37,10 +37,11 @@ interface BackendStore {
     deleteSystem: (id: string) => void;
 }
 
-export class WasmBackend implements Backend {
+export class Wasm8Backend implements Backend {
     private listener?: BackendListener;
     private pdp8: Wasm8Context;
     private throttler?: ThrottleController;
+    private dumpAcceptor?: (dump: Uint8Array) => void;
 
     private store = create<BackendStore>()(immer(set => ({
         systems: [],
@@ -70,7 +71,10 @@ export class WasmBackend implements Backend {
 
         await this.pdp8.create((dev, action, p1, p2) => void this.onPeripheralAction(dev, action, p1, p2));
         await this.loadSystems();
-        await this.setActiveSystem("default");
+        const defaultSys = this.store.getState().systems[0];
+        if (defaultSys) {
+            await this.setActiveSystem(defaultSys.id);
+        }
         await this.listener.onConnect();
 
         this.throttler = new ThrottleController(t => this.pdp8.setThrottle(t));
@@ -147,6 +151,14 @@ export class WasmBackend implements Backend {
         }
 
         const sysDir = await this.getSystemDirectory(sys);
+        const dumpPromise = new Promise<Uint8Array>((resolve, _reject) => {
+            this.dumpAcceptor = resolve;
+            void this.sendPeripheralAction(DeviceID.DEV_ID_CPU, { type: "download-disk", unit: 0 });
+        });
+        const coreDump = await dumpPromise;
+        this.dumpAcceptor = undefined;
+
+        await downloadData(coreDump, "core.dat");
 
         return true;
     }
@@ -176,6 +188,7 @@ export class WasmBackend implements Backend {
             throw Error(`Unknown system ${id}`);
         }
 
+        this.pdp8.setSwitch("stop", true);
         this.pdp8.clearPeripherals();
         this.pdp8.clearCore();
         this.pdp8.configureCPU(sys.maxMemField, sys.cpuExtensions.eae, sys.cpuExtensions.kt8i, sys.cpuExtensions.bsw);
@@ -264,7 +277,11 @@ export class WasmBackend implements Backend {
                     this.listener.onPerformanceReport(simSpeed);
                 } else if (action == 6) {
                     const dump = this.pdp8.fetchBuffer(p1, p2);
-                    this.listener.onPeripheralEvent(DeviceID.DEV_ID_CPU, { type: "dump-data", dump });
+                    if (this.dumpAcceptor) {
+                        this.dumpAcceptor(dump);
+                    } else {
+                        this.listener.onPeripheralEvent(DeviceID.DEV_ID_CPU, { type: "dump-data", dump });
+                    }
                 }
                 break;
             case DeviceID.DEV_ID_DF32:

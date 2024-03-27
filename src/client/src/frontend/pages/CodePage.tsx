@@ -88,11 +88,24 @@ export function CodePage(props: { pdp8: SoCDP8 }) {
 }
 
 const initialSource =
-`/ YAMAS PDP-8 ASSEMBLER
-PAGE 1
-    CLA CLL
-    TAD (1234)
-    HLT
+`
+/ AC/MQ blinker from http://dustyoldcomputers.com/pdp8/pdp8i/testprogs/acmqblinker.html, start at 0000
+
+PAGE 0
+loop,   ISZ delay       / create a delay
+        JMP loop
+        CLA             / clear AC so we can load it
+        TAD value       / get value
+        MQL             / stash AC into MQ
+        TAD value       / fetch value again
+        CMA             / complement AC
+        ISZ value       / get to next value
+        NOP             / ignore possible "skip" from ISZ
+        JMP loop        / and do it all again
+*20
+delay, 0
+value, 0
+$
 `;
 
 const theme = vscodeDarkInit();
