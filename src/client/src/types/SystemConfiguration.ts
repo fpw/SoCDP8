@@ -27,7 +27,6 @@ export interface SystemConfiguration {
         eae: boolean;
         kt8i: boolean;
         bsw: boolean;
-        fixCont: boolean;
     };
 
     maxMemField: number;
@@ -45,7 +44,6 @@ export function getDefaultSysConf(): SystemConfiguration {
             eae: true,
             kt8i: false,
             bsw: false,
-            fixCont: false,
         },
         peripherals: [
             {

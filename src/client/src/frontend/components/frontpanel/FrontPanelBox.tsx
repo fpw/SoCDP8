@@ -30,7 +30,7 @@ import { UploadButton } from "../common/UploadButton";
 import { FrontPanel } from "./FrontPanel";
 
 export function FrontPanelBox(props: { pdp8: SoCDP8 }) {
-    const [throttle, setThrottle] = useState(true);
+    const [throttle, setThrottle] = useState(false);
     const [busy, setBusy] = useState(false);
     const [showSnippets, setShowSnippets] = useState(false);
     const simSpeed = props.pdp8.useStore(state => state.simSpeed);

@@ -50,7 +50,7 @@ export class ThrottleController {
     }
 
     private controlVelocity(norm: number) {
-        const throt = 100000 * norm;
+        const throt = 10000000 * norm;
         this.control(Math.max(1, throt));
     }
 

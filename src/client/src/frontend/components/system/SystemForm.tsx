@@ -68,10 +68,6 @@ export function SystemForm(props: SystemFormProps) {
                 <FormControl component="fieldset">
                     <FormLabel component="legend">Unofficial CPU Changes</FormLabel>
                     <FormControlLabel
-                        control={<Switch name="fixCont" defaultChecked={s.cpuExtensions.fixCont} />}
-                        label="Make Cont key set fetch (to function after Load Add and initially)"
-                    />
-                    <FormControlLabel
                         control={<Switch name="bsw" defaultChecked={s.cpuExtensions.bsw} />}
                         label="BSW instruction for 8/E programs"
                     />

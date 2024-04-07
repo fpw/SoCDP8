@@ -78,7 +78,7 @@ export class Wasm8Backend implements Backend {
         await this.listener.onConnect();
 
         this.throttler = new ThrottleController(t => this.pdp8.setThrottle(t));
-        this.throttler.setControl(true);
+        this.throttler.setControl(false);
 
         const updateConsole = () => {
             const state = this.pdp8.getConsoleState();
@@ -196,7 +196,6 @@ export class Wasm8Backend implements Backend {
             sys.cpuExtensions.eae,
             sys.cpuExtensions.kt8i,
             sys.cpuExtensions.bsw,
-            sys.cpuExtensions.fixCont
         );
 
         for (const peripheral of sys.peripherals) {
