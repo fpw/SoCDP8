@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box, Select, Switch } from "@mantine/core";
+import { Box, Group, Select, Switch } from "@mantine/core";
 import { PT08Model } from "../../../models/peripherals/PT08Model";
 import { BaudRate, BAUD_RATES, PT08Style } from "../../../types/PeripheralTypes";
 import { ASR33 } from "./accessoires/ASR33";
@@ -39,7 +39,19 @@ function ConfigBox(props: { model: PT08Model }) {
     const conf = model.useState(state => state.conf!);
 
     return (
-        <Box>
+        <Group mb="xs">
+            <Select
+                label="Style"
+                value={conf.style}
+                onChange={s => {
+                    if (s !== null) {
+                        const style = s as PT08Style;
+                        void model.updateConfig({ ...conf, style });
+                    }
+                }}
+                data={Object.entries(PT08Style).map(([key, val]) => ({ value: val, label: key }))}
+            />
+
             <Select
                 label="Baud Rate"
                 value={conf.baudRate.toString()}
@@ -68,18 +80,6 @@ function ConfigBox(props: { model: PT08Model }) {
                     void model.updateConfig({ ...conf, autoCaps: caps });
                 }}
             />
-
-            <Select
-                label="Style"
-                value={conf.style}
-                onChange={s => {
-                    if (s !== null) {
-                        const style = s as PT08Style;
-                        void model.updateConfig({ ...conf, style });
-                    }
-                }}
-                data={Object.entries(PT08Style).map(([key, val]) => ({ value: val, label: key }))}
-            />
-        </Box>
+        </Group>
     );
 }

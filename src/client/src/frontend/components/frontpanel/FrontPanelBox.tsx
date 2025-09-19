@@ -21,9 +21,8 @@ import { ProgramSnippet, ProgramSnippets } from "../../../models/ProgramSnippets
 import { SoCDP8 } from "../../../models/SoCDP8";
 import { DeviceID } from "../../../types/PeripheralTypes";
 import { downloadData, loadFile } from "../../../util";
-import { UploadButton } from "../common/UploadButton";
 import { FrontPanel } from "./FrontPanel";
-import { Box, Button, Card, Checkbox, Group, List, Modal, NavLink } from "@mantine/core";
+import { Box, Button, Card, Checkbox, FileButton, Group, List, Modal, NavLink } from "@mantine/core";
 
 export function FrontPanelBox(props: { pdp8: SoCDP8 }) {
     const [throttle, setThrottle] = useState(false);
@@ -50,15 +49,12 @@ export function FrontPanelBox(props: { pdp8: SoCDP8 }) {
         setThrottle(!throttle);
     }
 
-    async function uploadCore(files: FileList | null) {
-        if (!files || files.length < 1) {
-            return;
-        }
-        if (files[0].size > 65536) {
+    async function uploadCore(file: File) {
+        if (file.size > 65536) {
             alert("File too big, max allowed size is 65536 bytes.");
             return;
         }
-        const data = await loadFile(files[0]);
+        const data = await loadFile(file);
         await props.pdp8.loadCoreDump(data);
     }
 
@@ -67,44 +63,42 @@ export function FrontPanelBox(props: { pdp8: SoCDP8 }) {
         await downloadData(dump, "core.dat");
     }
 
-    return (
-        <Box mb={4}>
-            <Card>
-                <Card.Section>
-                    <FrontPanel pdp8={props.pdp8} />
-                </Card.Section>
-                <Card.Section>
-                    <Group>
-                        <Button onClick={() => void saveState()} disabled={busy}>
-                            Save State
-                        </Button>
-                        <Button onClick={() => setShowSnippets(true)}>
-                            Load Snippet
-                        </Button>
-                        <UploadButton onSelect={files => void uploadCore(files)}>
-                            Upload Dump
-                        </UploadButton>
-                        <Button onClick={() => void downloadCore()}>
-                            Download Dump
-                        </Button>
-                        <Button onClick={() => void props.pdp8.clearCore()}>
-                            Clear Core
-                        </Button>
-                    </Group>
-                    <Box style={{ textAlign: "right" }}>
-                        Simulation Speed: { simSpeed.toFixed(2) }
-                        <Checkbox label="Control" checked={throttle} onChange={() => void toggleThrottle()} />
-                    </Box>
-                </Card.Section>
-            </Card>
-            <SnippetDialog
-                open={showSnippets}
-                onClose={() => setShowSnippets(false)}
-                onSelect={(snippet) => void loadSnippet(snippet)}
-                devices={sys.peripherals.map(p => p.id)}
-            />
-        </Box>
-    );
+    return (<>
+        <Card mb="sm">
+            <Card.Section>
+                <FrontPanel pdp8={props.pdp8} />
+            </Card.Section>
+            <Group justify="space-between">
+                <Button.Group borderWidth={15}>
+                    <Button size="compact-md" onClick={() => setShowSnippets(true)}>
+                        Load Snippet
+                    </Button>
+                    <Button size="compact-md" onClick={() => void saveState()} disabled={busy}>
+                        Save State
+                    </Button>
+                    <FileButton onChange={file => file ? void uploadCore(file) : undefined}>
+                        { props => <Button size="compact-md" {...props}>Upload Dump</Button> }
+                    </FileButton>
+                    <Button size="compact-md" onClick={() => void downloadCore()}>
+                        Download Dump
+                    </Button>
+                    <Button size="compact-md" onClick={() => void props.pdp8.clearCore()}>
+                        Clear Core
+                    </Button>
+                </Button.Group>
+                <Group>
+                    Simulation Speed: { simSpeed.toFixed(2) }
+                    <Checkbox label="Control" checked={throttle} onChange={() => void toggleThrottle()} />
+                </Group>
+            </Group>
+        </Card>
+        <SnippetDialog
+            open={showSnippets}
+            onClose={() => setShowSnippets(false)}
+            onSelect={(snippet) => void loadSnippet(snippet)}
+            devices={sys.peripherals.map(p => p.id)}
+        />
+    </>);
 }
 
 interface SnippetProps {

@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Select, Switch } from "@mantine/core";
+import { Group, Select, Switch } from "@mantine/core";
 import { KW8IModel } from "../../../models/peripherals/KW8IModel";
 
 export function KW8I(props: { model: KW8IModel }) {
@@ -25,12 +25,14 @@ export function KW8I(props: { model: KW8IModel }) {
     const isSync = props.model.useState(state => state.conf.useExternalClock);
     const setSync = props.model.useState(state => state.setSync);
 
-    return (<>
-        <Select
-            value={is50 ? "1" : "0"}
-            data={[{ value: "0", label: "60 Hz" }, { value: "1", label: "50 Hz" }]}
-            onChange={x => set50(x === "1" ? true : false)}
-        />
-        <Switch label="Sync to real clock" checked={isSync} onChange={ev => setSync(ev.currentTarget.checked)} />
-    </>);
+    return (
+        <Group>
+            <Select
+                value={is50 ? "1" : "0"}
+                data={[{ value: "0", label: "60 Hz" }, { value: "1", label: "50 Hz" }]}
+                onChange={x => set50(x === "1" ? true : false)}
+            />
+            <Switch label="Sync to real clock" checked={isSync} onChange={ev => setSync(ev.currentTarget.checked)} />
+        </Group>
+    );
 }

@@ -60,7 +60,7 @@ export function CodePage(props: { pdp8: SoCDP8 }) {
         }
     }
 
-    async function download() {
+    async function downloadAntares() {
         let str = "";
         for (let i = 0; i < 4096; i++) {
             str += (memState[i] ?? 0).toString(16) + " ";
@@ -71,7 +71,7 @@ export function CodePage(props: { pdp8: SoCDP8 }) {
     return (<>
         <Title order={4}>Code Editor</Title>
         <Editor ref={editorRef} />
-        <Group variant="outlined" mt={10}>
+        <Button.Group>
             <Button onClick={() => assemble()}>Assemble</Button>
             <Button
                 onClick={() => void load()}
@@ -80,12 +80,12 @@ export function CodePage(props: { pdp8: SoCDP8 }) {
                 Load into Machine
             </Button>
             <Button
-                onClick={() => void download()}
+                onClick={() => void downloadAntares()}
                 disabled={!output || output.binary.length == 0}
             >
                 Download Antares Dump
             </Button>
-        </Group>
+        </Button.Group>
 
         { output && <>
             { output.errors.length > 0 &&

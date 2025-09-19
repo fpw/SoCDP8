@@ -21,7 +21,7 @@ import { SoCDP8 } from "../../models/SoCDP8";
 import { DeviceID } from "../../types/PeripheralTypes";
 import { getDefaultSysConf, SystemConfiguration } from "../../types/SystemConfiguration";
 import { SystemForm } from "../components/system/SystemForm";
-import { Accordion, Box, Button, Group, Table, Title } from "@mantine/core";
+import { Accordion, Box, Button, Group, List, Table, Title } from "@mantine/core";
 
 export function SystemListPage(props: { pdp8: SoCDP8 }) {
     const [formBusy, setFormBusy] = useState<boolean>(false);
@@ -43,7 +43,7 @@ export function SystemListPage(props: { pdp8: SoCDP8 }) {
             <Accordion.Item value="New System">
                 <Accordion.Control>New System</Accordion.Control>
                 <Accordion.Panel>
-                    <Box pl={4}>
+                    <Box>
                         <SystemForm
                             initialState={getDefaultSysConf()}
                             onSubmit={s => void addSystem(s)}
@@ -54,7 +54,7 @@ export function SystemListPage(props: { pdp8: SoCDP8 }) {
             </Accordion.Item>
         </Accordion>
 
-        <Box mt={2}>
+        <Box mt="xs">
             <Table>
                 <Table.Thead>
                     <Table.Tr>
@@ -106,29 +106,29 @@ function SystemEntry(props: { pdp8: SoCDP8, system: SystemConfiguration, active:
                 {(props.system.maxMemField + 1) * 4} kiW
             </Table.Td>
             <Table.Td>
-                <ul>
-                    { props.system.maxMemField > 0 && <li>MC8/I</li> }
-                    { props.system.cpuExtensions.eae && <li>KE8/I</li> }
-                    { props.system.cpuExtensions.kt8i && <li>KT8/I</li> }
-                    { props.system.cpuExtensions.bsw && <li>BSW</li> }
-                </ul>
+                <List>
+                    { props.system.maxMemField > 0 && <List.Item>MC8/I</List.Item> }
+                    { props.system.cpuExtensions.eae && <List.Item>KE8/I</List.Item> }
+                    { props.system.cpuExtensions.kt8i && <List.Item>KT8/I</List.Item> }
+                    { props.system.cpuExtensions.bsw && <List.Item>BSW</List.Item> }
+                </List>
             </Table.Td>
             <Table.Td>
-                <ul>
+                <List>
                     { props.system.peripherals.map(conf =>
-                        <li key={conf.id}>{getPeripheralName(conf.id)}</li>
+                        <List.Item key={conf.id}>{getPeripheralName(conf.id)}</List.Item>
                     )}
-                </ul>
+                </List>
             </Table.Td>
             <Table.Td>
-                <Group>
+                <Button.Group>
                     <Button disabled={busy} onClick={() => void activate()}>
                         Activate
                     </Button>
                     <Button disabled={busy} onClick={() => void del()}>
                         Delete
                     </Button>
-                </Group>
+                </Button.Group>
             </Table.Td>
         </Table.Tr>
     );

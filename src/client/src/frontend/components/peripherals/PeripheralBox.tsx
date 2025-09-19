@@ -16,7 +16,9 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Link as RouterLink } from "react-router-dom";
+import { ActionIcon, Button, Card, Group, Title } from "@mantine/core";
+import { IconMaximize } from "@tabler/icons-react";
+import { Link as RouterLink } from "react-router";
 import { DF32Model } from "../../../models/peripherals/DF32Model";
 import { KW8IModel } from "../../../models/peripherals/KW8IModel";
 import { PC04Model } from "../../../models/peripherals/PC04Model";
@@ -34,8 +36,6 @@ import { RF08 } from "./RF08";
 import { RK08 } from "./RK08";
 import { RK8E } from "./RK8E";
 import { TC08 } from "./TC08";
-import { ActionIcon, Box, Button, Card, Group, NavLink, Title } from "@mantine/core";
-import { IconMaximize } from "@tabler/icons-react";
 
 export function PeripheralBox(props: { model: PeripheralModel }) {
     const model = props.model;
@@ -81,12 +81,17 @@ export function PeripheralBox(props: { model: PeripheralModel }) {
     return (
         <Card mb="md">
             <Group justify="space-between">
-                <Title order={3}>{ titleStr }</Title>
-                <Button component={RouterLink} leftSection={<IconMaximize />} to={`/peripherals/${model.id}`} title="Display only this" />
+                <Title order={4}>{ titleStr }</Title>
+                <ActionIcon
+                    variant="default"
+                    title="Display only this"
+                    component={RouterLink}
+                    to={`/peripherals/${model.id}`}
+                >
+                    <IconMaximize />
+                </ActionIcon>
             </Group>
-            <Card.Section>
-                { component }
-            </Card.Section>
+            { component }
         </Card>
     );
 }

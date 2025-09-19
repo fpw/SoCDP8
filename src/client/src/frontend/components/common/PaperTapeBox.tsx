@@ -16,9 +16,9 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useCallback, useEffect, useState } from "react";
-import { PaperTape } from "../../../models/PaperTape";
 import { Box, Progress } from "@mantine/core";
+import { useCallback, useEffect, useMemo } from "react";
+import { PaperTape } from "../../../models/PaperTape";
 
 interface PaperTapeBoxProps {
     tape: PaperTape;
@@ -50,7 +50,7 @@ function TapeBar(props: PaperTapeBoxProps) {
 }
 
 function Tape(props: PaperTapeBoxProps) {
-    const [painter] = useState<PaperTapePainter>(new PaperTapePainter());
+    const painter = useMemo(() => new PaperTapePainter(), []);
 
     const canvasRef = useCallback((canvas: HTMLCanvasElement) => {
         if (!canvas) {
@@ -58,11 +58,6 @@ function Tape(props: PaperTapeBoxProps) {
         }
 
         painter.setCanvas(canvas);
-
-        if (canvas.parentElement) {
-            canvas.width = canvas.parentElement.scrollWidth;
-            canvas.height = 100;
-        }
     }, [painter]);
 
     useEffect(() => {
@@ -89,6 +84,10 @@ class PaperTapePainter {
     }
 
     public update(buf: number[], pos: number) {
+        if (this.canvas?.parentElement) {
+            this.canvas.width = this.canvas.parentElement.scrollWidth;
+            this.canvas.height = 100;
+        }
         requestAnimationFrame(() => this.draw(buf, pos));
     }
 
@@ -145,10 +144,10 @@ class PaperTapePainter {
 
     private drawByte(ctx: CanvasRenderingContext2D, x: number, byte: number) {
         for (let i = 0; i < 8; i++) {
-            if ((byte & (1 << i)) != 0) {
-                let y = 10 + (7 - i) * 10;
-                if (i < 3) {
-                    y += 5;
+            if ((byte & (1 << (7 - i))) != 0) {
+                let y = 18 + (7 - i) * 10;
+                if (i >= 5) {
+                    y -= 5;
                 }
                 ctx.beginPath();
                 ctx.arc(x, y, 4, 0, 2 * Math.PI);
@@ -156,7 +155,7 @@ class PaperTapePainter {
             }
         }
         ctx.beginPath();
-        ctx.arc(x, 58, 2, 0, 2 * Math.PI);
+        ctx.arc(x, 41, 2, 0, 2 * Math.PI);
         ctx.fill();
     }
 }

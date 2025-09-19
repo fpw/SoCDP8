@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { SoCDP8 } from "../../models/SoCDP8";
 import { PeripheralBox } from "../components/peripherals/PeripheralBox";
 

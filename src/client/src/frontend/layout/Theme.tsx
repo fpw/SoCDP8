@@ -20,7 +20,18 @@ import { createTheme } from "@mantine/core";
 
 export const theme = createTheme({
     colors: {
-        tomato: ["#fff0e4", "#ffe0cf", "#fac0a1", "#f69e6e", "#f28043", "#f06e27", "#f06418", "#d6530c", "#bf4906", "#a73c00"],
+        tomato: [
+            "#fbf5ee",
+            "#f3e7dd",
+            "#e8cdb5",
+            "#deb189",
+            "#d69963",
+            "#d18a4c",
+            "#cf833f",
+            "#b77031",
+            "#a36329",
+            "#935720"
+        ],
     },
     primaryColor: "tomato",
 });

@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box, Button, Divider, FileButton, Select, Switch, Title } from "@mantine/core";
+import { Box, Button, Divider, FileButton, Group, Select, Switch, Title } from "@mantine/core";
 import { PC04Model } from "../../../models/peripherals/PC04Model";
 import { BAUD_RATES, BaudRate } from "../../../types/PeripheralTypes";
 import { downloadData } from "../../../util";
@@ -38,7 +38,7 @@ function ConfigBox(props: { model: PC04Model }) {
     const conf = model.useState(state => state.conf);
 
     return (
-        <Box>
+        <Box mt="xs">
             <Select
                 label="Baud Rate"
                 value={conf.baudRate.toString()}
@@ -59,17 +59,17 @@ function ReaderBox(props: { model: PC04Model }) {
     const readerActive = model.useState(state => state.readerActive);
 
     return (
-        <Box mt={2}>
+        <Box mt="xs">
             <Title order={6}>Reader</Title>
 
             <PaperTapeBox tape={model.readerTape} reverse={false} />
 
-            <Box>
+            <Group>
                 <FileButton onChange={f => void onLoadFile(f, model)}>
                     { props => <Button {...props}>Load Tape</Button> }
                 </FileButton>
                 <Switch label="Reader On" checked={readerActive} onChange={ev => void model.setReaderActive(ev.currentTarget.checked)}/>
-            </Box>
+            </Group>
         </Box>
     );
 }
@@ -90,17 +90,19 @@ function PunchBox(props: { model: PC04Model }) {
     }
 
     return (
-        <Box mt={2}>
+        <Box mt="xs">
             <Title order={6}>Punch</Title>
 
             <PaperTapeBox tape={model.punchTape} reverse={true} />
 
-            <Box>
-                <Button onClick={() => model.clearPunch()}>New Tape</Button>
-                <Button onClick={() => void download()}>Download Tape</Button>
-                <Button onClick={() => model.addPunchLeader()}>Feed</Button>
+            <Group>
+                <Button.Group>
+                    <Button onClick={() => model.clearPunch()}>New Tape</Button>
+                    <Button onClick={() => void download()}>Download Tape</Button>
+                    <Button onClick={() => model.addPunchLeader()}>Feed</Button>
+                </Button.Group>
                 <Switch label="Punch On" onChange={evt => void model.setPunchActive(evt.target.checked)} checked={punchActive} />
-            </Box>
+            </Group>
         </Box>
     );
 }

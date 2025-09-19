@@ -1,19 +1,17 @@
-import React from "react";
+import { Button, FileButton, Group } from "@mantine/core";
 import { DiskModel } from "../../../models/peripherals/DiskModel";
 import { downloadData, loadFile } from "../../../util";
-import { UploadButton } from "../common/UploadButton";
-import { Box, Button, Group } from "@mantine/core";
 
 export function DumpButtons(props: { model: DiskModel }) {
-    async function upload(disk: number, files: FileList | null) {
-        if (!files || files.length < 1) {
+    async function upload(disk: number, file: File | null) {
+        if (!file) {
             return;
         }
-        if (files[0].size > props.model.getDiskSize()) {
+        if (file.size > props.model.getDiskSize()) {
             alert(`File too big, max allowed size is ${props.model.getDiskSize()} bytes.`);
             return;
         }
-        const data = await loadFile(files[0]);
+        const data = await loadFile(file);
         await props.model.uploadDump(disk, data);
     }
 
@@ -24,17 +22,19 @@ export function DumpButtons(props: { model: DiskModel }) {
     }
 
     return (
-        <Box>
-            { Array.from({ length: props.model.getDiskCount() }).map((_, i) => <React.Fragment key={i}>
-                <Group variant="outlined">
-                    <Button onClick={() => void download(i)}>
+        <Group>
+            <Button.Group>
+                { Array.from({ length: props.model.getDiskCount() }).map((_, i) =>
+                    <Button key={i} onClick={() => void download(i)}>
                         Download Image {i}
                     </Button>
-                    <UploadButton onSelect={files => void upload(i, files)}>
-                        Upload Image {i}
-                    </UploadButton>
-                </Group>
-            </React.Fragment>)}
-        </Box>
+                )}
+                { Array.from({ length: props.model.getDiskCount() }).map((_, i) =>
+                    <FileButton key={i} onChange={file => void upload(i, file)}>
+                        { props => <Button {...props}>Upload Image {i}</Button> }
+                    </FileButton>
+                )}
+            </Button.Group>
+        </Group>
     );
 }

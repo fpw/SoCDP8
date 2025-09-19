@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router";
 import { getBackend } from "../models/getBackend";
 import { AppLayout } from "./layout/AppLayout";
 import { AboutPage } from "./pages/AboutPage";

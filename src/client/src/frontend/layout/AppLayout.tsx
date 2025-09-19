@@ -20,7 +20,7 @@ import { ActionIcon, Anchor, AppShell, Box, Burger, Flex, Group, Text, Title, us
 import { useDisclosure } from "@mantine/hooks";
 import { IconMoon, IconSun } from "@tabler/icons-react";
 import React from "react";
-import { Outlet, Link } from "react-router-dom";
+import { Outlet, Link } from "react-router";
 import { SoCDP8 } from "../../models/SoCDP8";
 import { NavMenu } from "./NavMenu";
 

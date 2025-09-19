@@ -48,19 +48,22 @@ export function SystemForm(props: SystemFormProps) {
                 <Fieldset>
                     <TextInput label="System Name" required name="name" />
                 </Fieldset>
+
                 <Fieldset legend="CPU Extensions">
-                    <Switch name="eae" label="KE8/I (EAE)" defaultChecked={s.cpuExtensions.eae} />
-                    <Switch name="kt8i" label="KT8/I (Time Sharing Option)" defaultChecked={s.cpuExtensions.kt8i} />
+                    <Group>
+                        <Switch name="eae" label="KE8/I (EAE)" defaultChecked={s.cpuExtensions.eae} />
+                        <Switch name="kt8i" label="KT8/I (Time Sharing Option)" defaultChecked={s.cpuExtensions.kt8i} />
+                    </Group>
                 </Fieldset>
 
                 <Fieldset legend="Unofficial CPU Changes">
                     <Switch name="bsw" label="BSW instruction for 8/E programs" defaultChecked={s.cpuExtensions.bsw} />
                 </Fieldset>
 
-                <Fieldset>
+                <Fieldset legend="Core Memory (kiW)">
                     <Slider
                         defaultValue={s.maxMemField}
-                        label="Core Memory (kiW)"
+                        label={null}
                         step={1}
                         min={0}
                         max={7}
@@ -70,8 +73,10 @@ export function SystemForm(props: SystemFormProps) {
                 </Fieldset>
 
                 <Fieldset legend="Basic I/O">
-                    <Switch name="serialLine" label="Serial Current Loop" defaultChecked={peripherals.includes(DeviceID.DEV_ID_PT08)} />
-                    <Switch name="pc04" label="PC04 Reader / Punch" defaultChecked={peripherals.includes(DeviceID.DEV_ID_PC04)} />
+                    <Group>
+                        <Switch name="serialLine" label="Serial Current Loop" defaultChecked={peripherals.includes(DeviceID.DEV_ID_PT08)} />
+                        <Switch name="pc04" label="PC04 Reader / Punch" defaultChecked={peripherals.includes(DeviceID.DEV_ID_PC04)} />
+                    </Group>
                 </Fieldset>
 
                 <Fieldset legend="DECtape">
@@ -93,6 +98,7 @@ export function SystemForm(props: SystemFormProps) {
                 <Fieldset legend="Additional PT08 Serial Ports">
                     <Slider
                         defaultValue={countPT08(s.peripherals)}
+                        label={null}
                         step={1}
                         min={0}
                         max={4}
@@ -104,11 +110,11 @@ export function SystemForm(props: SystemFormProps) {
                 <Fieldset legend="Real-Time Clock">
                     <Switch name="kw8i" label="KW8/I" defaultChecked={peripherals.includes(DeviceID.DEV_ID_KW8I)} />
                 </Fieldset>
-            </Box>
 
-            <Button type="submit" variant="contained" disabled={!props.buttonEnabled}>
-                Create System
-            </Button>
+                <Button m={2} type="submit" disabled={!props.buttonEnabled}>
+                    Create System
+                </Button>
+            </Box>
         </form>
     );
 }

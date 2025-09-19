@@ -16,8 +16,8 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Accordion, Box, Button, Divider, FileButton, Paper, Switch, Title } from "@mantine/core";
-import { useRef, useState } from "react";
+import { Accordion, Box, Button, Divider, FileButton, Group, Switch, Title } from "@mantine/core";
+import { useState } from "react";
 import { PT08Model } from "../../../../models/peripherals/PT08Model";
 import { downloadData } from "../../../../util";
 import { PaperTapeBox } from "../../common/PaperTapeBox";
@@ -35,22 +35,17 @@ export function ASR33(props: { model: PT08Model }) {
             <Accordion.Item value="Reader & Punch">
                 <Accordion.Control>Reader & Punch</Accordion.Control>
                 <Accordion.Panel>
-                    <Paper>
-                        <ReaderBox {...props} />
-                        <Divider />
-                        <PunchBox {...props} />
-                    </Paper>
+                    <ReaderBox {...props} />
+                    <Divider mt="xs" mb="xs" />
+                    <PunchBox {...props} />
                 </Accordion.Panel>
             </Accordion.Item>
-        </Accordion>
-        <Accordion>
         </Accordion>
     </>);
 }
 
 function ReaderBox(props: { model: PT08Model }) {
     const { model } = props;
-    const tapeInput = useRef<HTMLInputElement>(null);
     const readerTape = model.readerTape;
     const readerActive = model.useState(state => state.readerActive);
 
@@ -60,12 +55,12 @@ function ReaderBox(props: { model: PT08Model }) {
 
             <PaperTapeBox tape={readerTape} reverse={false} />
 
-            <Box>
+            <Group>
                 <FileButton onChange={f => void onLoadFile(f, model)}>
                     { props => <Button {...props}>Load Tape</Button> }
                 </FileButton>
                 <Switch label="Reader On" checked={readerActive} onChange={ev => void model.setReaderActive(ev.currentTarget.checked)}/>
-            </Box>
+            </Group>
         </Box>
     );
 }
@@ -91,12 +86,14 @@ function PunchBox(props: { model: PT08Model }) {
 
             <PaperTapeBox tape={model.punchTape} reverse={true} />
 
-            <Box>
-                <Button onClick={() => model.clearPunch()}>New Tape</Button>
-                <Button onClick={() => void download()}>Download Tape</Button>
-                <Button onClick={() => model.addPunchLeader()}>Feed</Button>
+            <Group>
+                <Button.Group>
+                    <Button onClick={() => model.clearPunch()}>New Tape</Button>
+                    <Button onClick={() => void download()}>Download Tape</Button>
+                    <Button onClick={() => model.addPunchLeader()}>Feed</Button>
+                </Button.Group>
                 <Switch label="Punch On" onChange={evt => void model.setPunchActive(evt.target.checked)} checked={punchActive} />
-            </Box>
+            </Group>
         </Box>
     );
 }

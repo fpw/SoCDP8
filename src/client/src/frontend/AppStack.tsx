@@ -18,7 +18,7 @@
 
 import { MantineProvider } from "@mantine/core";
 import { StrictMode } from "react";
-import { RouterProvider } from "react-router-dom";
+import { RouterProvider } from "react-router";
 import { appRouter } from "./AppRouter";
 import { theme } from "./layout/Theme";
 

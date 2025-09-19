@@ -3,7 +3,7 @@ import { Terminal } from "xterm";
 import "xterm/css/xterm.css";
 import { PT08Model } from "../../../../models/peripherals/PT08Model";
 import { PT08Style } from "../../../../types/PeripheralTypes";
-import { Box, Button } from "@mantine/core";
+import { Box, Button, Group } from "@mantine/core";
 
 export function VT100(props: { model: PT08Model }) {
     const { model } = props;
@@ -67,12 +67,12 @@ export function VT100(props: { model: PT08Model }) {
 
     return (
         <>
-            <Box ref={termRef} mt={1} />
-            <Box mt={1} mb={3}>
-                <Button variant="contained" onClick={() => reset()}>
+            <Group justify="flex-end">
+                <Button size="compact-md" onClick={() => reset()}>
                     Clear Output
                 </Button>
-            </Box>
+            </Group>
+            <Box ref={termRef} mt="xs" mb="xs" />
         </>
     );
 };
