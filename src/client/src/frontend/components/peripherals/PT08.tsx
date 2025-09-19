@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { FormControlLabel, FormGroup, MenuItem, Select, Switch } from "@mui/material";
+import { Box, Select, Switch } from "@mantine/core";
 import { PT08Model } from "../../../models/peripherals/PT08Model";
 import { BaudRate, BAUD_RATES, PT08Style } from "../../../types/PeripheralTypes";
 import { ASR33 } from "./accessoires/ASR33";
@@ -39,64 +39,47 @@ function ConfigBox(props: { model: PT08Model }) {
     const conf = model.useState(state => state.conf!);
 
     return (
-        <FormGroup row>
-            <FormControlLabel
-                control={
-                    <Select
-                        size="small"
-                        value={conf.baudRate}
-                        onChange={(evt) => {
-                            const rate = Number.parseInt(evt.target.value as string) as BaudRate;
-                            void model.updateConfig({ ...conf, baudRate: rate });
-                        }}
-                    >
-                        {BAUD_RATES.map((b) => (
-                            <MenuItem key={b} value={b}>{b}</MenuItem>
-                        ))}
-                    </Select>
-                }
+        <Box>
+            <Select
                 label="Baud Rate"
+                value={conf.baudRate.toString()}
+                onChange={val => {
+                    if (val !== null) {
+                        const rate = Number.parseInt(val) as BaudRate;
+                        void model.updateConfig({ ...conf, baudRate: rate });
+                    }
+                }}
+                data={BAUD_RATES.map(x => ({ value: x.toString(), label: x.toString() }))}
             />
 
-            <FormControlLabel
-                control={
-                    <Switch
-                        checked={conf.eightBit}
-                        onChange={(evt) => {
-                            const bit8 = evt.target.checked;
-                            void model.updateConfig({ ...conf, eightBit: bit8 });
-                        }}
-                    />
-                }
+            <Switch
                 label="Set 8th bit"
+                checked={conf.eightBit}
+                onChange={(evt) => {
+                    const bit8 = evt.target.checked;
+                    void model.updateConfig({ ...conf, eightBit: bit8 });
+                }}
             />
-            <FormControlLabel
-                control={
-                    <Switch
-                        checked={conf.autoCaps}
-                        onChange={(evt) => {
-                            const caps = evt.target.checked;
-                            void model.updateConfig({ ...conf, autoCaps: caps });
-                        }}
-                    />
-                }
+            <Switch
                 label="Auto Caps"
+                checked={conf.autoCaps}
+                onChange={(evt) => {
+                    const caps = evt.target.checked;
+                    void model.updateConfig({ ...conf, autoCaps: caps });
+                }}
             />
-            <FormControlLabel
-                control={
-                    <Select size="small" value={conf.style}
-                        onChange={ev => {
-                            const style = ev.target.value as PT08Style;
-                            void model.updateConfig({ ...conf, style });
-                        }}
-                    >
-                        { Object.entries(PT08Style).map(([key, val]) =>
-                            <MenuItem key={key} value={val}>{val}</MenuItem>
-                        )}
-                    </Select>
-                }
+
+            <Select
                 label="Style"
+                value={conf.style}
+                onChange={s => {
+                    if (s !== null) {
+                        const style = s as PT08Style;
+                        void model.updateConfig({ ...conf, style });
+                    }
+                }}
+                data={Object.entries(PT08Style).map(([key, val]) => ({ value: val, label: key }))}
             />
-        </FormGroup>
+        </Box>
     );
 }

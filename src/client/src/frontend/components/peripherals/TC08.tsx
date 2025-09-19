@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box } from "@mui/system";
+import { Box } from "@mantine/core";
 import { TC08Model } from "../../../models/peripherals/TC08Model";
 import { DumpButtons } from "./DumpButtons";
 import { TU56 } from "./accessoires/TU56";

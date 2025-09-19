@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { FormControlLabel, FormGroup, InputLabel, MenuItem, Select, Switch } from "@mui/material";
+import { Select, Switch } from "@mantine/core";
 import { KW8IModel } from "../../../models/peripherals/KW8IModel";
 
 export function KW8I(props: { model: KW8IModel }) {
@@ -26,21 +26,11 @@ export function KW8I(props: { model: KW8IModel }) {
     const setSync = props.model.useState(state => state.setSync);
 
     return (<>
-        <InputLabel id="hz">Frequency</InputLabel>
         <Select
-            size="small"
-            labelId="hz"
-            value={is50 ? 1 : 0}
-            onChange={ev => ev.target.value == 1 ? set50(true) : set50(false)}
-        >
-            <MenuItem value={0}>60 Hz</MenuItem>
-            <MenuItem value={1}>50 Hz</MenuItem>
-        </Select>
-        <FormGroup>
-            <FormControlLabel
-                control={<Switch checked={isSync} onChange={(_, c) => setSync(c)} />}
-                label="Sync to real clock"
-            />
-        </FormGroup>
+            value={is50 ? "1" : "0"}
+            data={[{ value: "0", label: "60 Hz" }, { value: "1", label: "50 Hz" }]}
+            onChange={x => set50(x === "1" ? true : false)}
+        />
+        <Switch label="Sync to real clock" checked={isSync} onChange={ev => setSync(ev.currentTarget.checked)} />
     </>);
 }

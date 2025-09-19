@@ -16,18 +16,20 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ThemeProvider } from "@emotion/react";
+import { MantineProvider } from "@mantine/core";
 import { StrictMode } from "react";
 import { RouterProvider } from "react-router-dom";
 import { appRouter } from "./AppRouter";
-import { socdp8Theme } from "./layout/Theme";
+import { theme } from "./layout/Theme";
+
+import "@mantine/core/styles.css";
 
 export function AppStack() {
     return (
         <StrictMode>
-            <ThemeProvider theme={socdp8Theme}>
+            <MantineProvider theme={theme} defaultColorScheme="auto">
                 <RouterProvider router={appRouter} />
-            </ThemeProvider>
+            </MantineProvider>
         </StrictMode>
     );
 }

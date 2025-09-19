@@ -16,13 +16,9 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-    Box, Button, Divider, FormControl, FormControlLabel, FormGroup,
-    FormLabel, MenuItem, Select, Switch, Typography
-} from "@mui/material";
-import { ChangeEvent, useRef } from "react";
+import { Box, Button, Divider, FileButton, Select, Switch, Title } from "@mantine/core";
 import { PC04Model } from "../../../models/peripherals/PC04Model";
-import { BaudRate, BAUD_RATES } from "../../../types/PeripheralTypes";
+import { BAUD_RATES, BaudRate } from "../../../types/PeripheralTypes";
 import { downloadData } from "../../../util";
 import { PaperTapeBox } from "../common/PaperTapeBox";
 
@@ -43,62 +39,45 @@ function ConfigBox(props: { model: PC04Model }) {
 
     return (
         <Box>
-            <FormGroup row>
-                <FormControl>
-                    <FormLabel component="legend">Baud Rate</FormLabel>
-                    <Select
-                        value={conf.baudRate}
-                        onChange={(evt) => {
-                            const rate = Number.parseInt(evt.target.value as string) as BaudRate;
-                            void model.updateConfig({ ...conf, baudRate: rate });
-                        }}
-                    >
-                        {BAUD_RATES.map((b) => (
-                            <MenuItem key={b} value={b}>{b}</MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-            </FormGroup>
+            <Select
+                label="Baud Rate"
+                value={conf.baudRate.toString()}
+                onChange={val => {
+                    if (val !== null) {
+                        const rate = Number.parseInt(val) as BaudRate;
+                        void model.updateConfig({ ...conf, baudRate: rate });
+                    }
+                }}
+                data={BAUD_RATES.map(x => ({ value: x.toString(), label: x.toString() }))}
+            />
         </Box>
     );
 }
 
 function ReaderBox(props: { model: PC04Model }) {
     const { model } = props;
-    const tapeInput = useRef<HTMLInputElement>(null);
     const readerActive = model.useState(state => state.readerActive);
 
     return (
         <Box mt={2}>
-            <Typography component="h6" variant="h6">Reader</Typography>
+            <Title order={6}>Reader</Title>
 
             <PaperTapeBox tape={model.readerTape} reverse={false} />
 
-            <FormGroup row>
-                <FormControl>
-                    <input ref={tapeInput} type="file" onChange={evt => void onLoadFile(evt, model)} hidden/>
-                    <Button variant="outlined" onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
-                </FormControl>
-                <FormControlLabel
-                    control={<Switch
-                        onChange={evt => void model.setReaderActive(evt.target.checked)}
-                        checked={readerActive}
-                    />}
-                    labelPlacement="start"
-                    label="Reader On"
-                />
-            </FormGroup>
+            <Box>
+                <FileButton onChange={f => void onLoadFile(f, model)}>
+                    { props => <Button {...props}>Load Tape</Button> }
+                </FileButton>
+                <Switch label="Reader On" checked={readerActive} onChange={ev => void model.setReaderActive(ev.currentTarget.checked)}/>
+            </Box>
         </Box>
     );
 }
 
-async function onLoadFile(evt: ChangeEvent, model: PC04Model) {
-    const target = evt.target as HTMLInputElement;
-    if (!target.files || target.files.length < 1) {
-        return;
+async function onLoadFile(file: File | null, model: PC04Model) {
+    if (file) {
+        await model.loadTape(file);
     }
-
-    await model.loadTape(target.files[0]);
 }
 
 function PunchBox(props: { model: PC04Model }) {
@@ -112,29 +91,16 @@ function PunchBox(props: { model: PC04Model }) {
 
     return (
         <Box mt={2}>
-            <Typography component="h6" variant="h6">Punch</Typography>
+            <Title order={6}>Punch</Title>
 
             <PaperTapeBox tape={model.punchTape} reverse={true} />
 
-            <FormGroup row>
-                <FormControl>
-                    <Button variant="outlined" onClick={() => model.clearPunch()}>New Tape</Button>
-                </FormControl>
-                <FormControl>
-                    <Button variant="outlined" onClick={() => void download()}>Download Tape</Button>
-                </FormControl>
-                <FormControl>
-                    <Button variant="outlined" onClick={() => model.addPunchLeader()}>Feed</Button>
-                </FormControl>
-                <FormControlLabel
-                    control={<Switch
-                        onChange={evt => void model.setPunchActive(evt.target.checked)}
-                        checked={punchActive}
-                    />}
-                    labelPlacement="start"
-                    label="Punch On"
-                />
-            </FormGroup>
+            <Box>
+                <Button onClick={() => model.clearPunch()}>New Tape</Button>
+                <Button onClick={() => void download()}>Download Tape</Button>
+                <Button onClick={() => model.addPunchLeader()}>Feed</Button>
+                <Switch label="Punch On" onChange={evt => void model.setPunchActive(evt.target.checked)} checked={punchActive} />
+            </Box>
         </Box>
     );
 }

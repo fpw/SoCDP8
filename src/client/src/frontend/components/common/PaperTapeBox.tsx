@@ -16,10 +16,9 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { PaperTape } from "../../../models/PaperTape";
-import { ProgressBar } from "./ProgressBar";
+import { Box, Progress } from "@mantine/core";
 
 interface PaperTapeBoxProps {
     tape: PaperTape;
@@ -47,7 +46,7 @@ function TapeBar(props: PaperTapeBoxProps) {
         progress = Math.round(tapePos / tapeLen * 100);
     }
 
-    return <ProgressBar variant="determinate" value={progress} />;
+    return <Progress value={progress} />;
 }
 
 function Tape(props: PaperTapeBoxProps) {

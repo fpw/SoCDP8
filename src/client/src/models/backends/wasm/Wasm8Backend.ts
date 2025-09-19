@@ -100,7 +100,7 @@ export class Wasm8Backend implements Backend {
                     const systemJson = await systemFile.text();
                     const system = JSON.parse(systemJson) as SystemConfiguration;
                     this.store.getState().addSystem(system);
-                } catch (e) {
+                } catch(e) {
                     if (e instanceof Error) {
                         console.error(`Couldn't load system ${name}: ${e.message}`);
                     }

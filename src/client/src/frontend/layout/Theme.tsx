@@ -16,15 +16,11 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { createTheme } from "@mui/material";
+import { createTheme } from "@mantine/core";
 
-export const drawerWidth = 240;
-
-export const socdp8Theme = createTheme({
-    palette: {
-        primary: {
-            main: "#935720",
-            contrastText: "#f2eedf"
-        }
+export const theme = createTheme({
+    colors: {
+        tomato: ["#fff0e4", "#ffe0cf", "#fac0a1", "#f69e6e", "#f28043", "#f06e27", "#f06418", "#d6530c", "#bf4906", "#a73c00"],
     },
+    primaryColor: "tomato",
 });

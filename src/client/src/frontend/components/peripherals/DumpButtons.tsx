@@ -1,8 +1,8 @@
-import { Box, Button, ButtonGroup } from "@mui/material";
 import React from "react";
 import { DiskModel } from "../../../models/peripherals/DiskModel";
 import { downloadData, loadFile } from "../../../util";
 import { UploadButton } from "../common/UploadButton";
+import { Box, Button, Group } from "@mantine/core";
 
 export function DumpButtons(props: { model: DiskModel }) {
     async function upload(disk: number, files: FileList | null) {
@@ -26,14 +26,14 @@ export function DumpButtons(props: { model: DiskModel }) {
     return (
         <Box>
             { Array.from({ length: props.model.getDiskCount() }).map((_, i) => <React.Fragment key={i}>
-                <ButtonGroup variant="outlined" orientation="vertical">
+                <Group variant="outlined">
                     <Button onClick={() => void download(i)}>
                         Download Image {i}
                     </Button>
                     <UploadButton onSelect={files => void upload(i, files)}>
                         Upload Image {i}
                     </UploadButton>
-                </ButtonGroup>
+                </Group>
             </React.Fragment>)}
         </Box>
     );

@@ -1,4 +1,4 @@
-import { Button } from "@mui/material";
+import { Button } from "@mantine/core";
 import { ReactNode, useRef } from "react";
 
 export function UploadButton(props: { onSelect: (list: FileList | null) => void, children: ReactNode }) {

@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box } from "@mui/material";
+import { Box } from "@mantine/core";
 import { DF32Model } from "../../../models/peripherals/DF32Model";
 import { DumpButtons } from "./DumpButtons";
 

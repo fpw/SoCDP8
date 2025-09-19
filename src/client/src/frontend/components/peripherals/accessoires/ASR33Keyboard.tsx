@@ -16,11 +16,11 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box } from "@mui/material";
 import { useState } from "react";
 import Keyboard, { KeyboardReactInterface } from "react-simple-keyboard";
 import "react-simple-keyboard/build/css/index.css";
 import "./ASR33.css";
+import { Box } from "@mantine/core";
 
 const keyboardOptions: KeyboardReactInterface["options"] = {
     mergeDisplay: true,
@@ -156,7 +156,7 @@ export function ASR33Keyboard(props: { set8: boolean, onKey: (chr: number) => vo
     }
 
     return (
-        <Box mt={1} sx={{ activeButton: { backgroundColor: "yellow" } }}>
+        <Box mt={1} style={{ activeButton: { backgroundColor: "yellow" } }}>
             <Keyboard
                 layoutName={layout}
                 onKeyPress={(button: string) => onKey(button)}

@@ -16,13 +16,8 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import {
-    Accordion, AccordionDetails, AccordionSummary,
-    Box, Button, Container, Divider,
-    FormControl, FormControlLabel, FormGroup, Switch, Typography
-} from "@mui/material";
-import { ChangeEvent, useRef } from "react";
+import { Accordion, Box, Button, Divider, FileButton, Paper, Switch, Title } from "@mantine/core";
+import { useRef, useState } from "react";
 import { PT08Model } from "../../../../models/peripherals/PT08Model";
 import { downloadData } from "../../../../util";
 import { PaperTapeBox } from "../../common/PaperTapeBox";
@@ -31,21 +26,24 @@ import { VT100 } from "./VT100";
 
 export function ASR33(props: { model: PT08Model }) {
     const set8 = props.model.useState(state => state.conf!.eightBit);
+    const [readerPunchOpen, setReaderPunchOpen] = useState<string | null>(null);
 
     return (<>
         <VT100 model={props.model} />
         <ASR33Keyboard set8={set8} onKey={chr => void props.model.onRawKey(String.fromCharCode(chr))} />
+        <Accordion value={readerPunchOpen} onChange={setReaderPunchOpen} >
+            <Accordion.Item value="Reader & Punch">
+                <Accordion.Control>Reader & Punch</Accordion.Control>
+                <Accordion.Panel>
+                    <Paper>
+                        <ReaderBox {...props} />
+                        <Divider />
+                        <PunchBox {...props} />
+                    </Paper>
+                </Accordion.Panel>
+            </Accordion.Item>
+        </Accordion>
         <Accordion>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="body1">Reader &amp; Punch</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-                <Container>
-                    <ReaderBox {...props} />
-                    <Divider />
-                    <PunchBox {...props} />
-                </Container>
-            </AccordionDetails>
         </Accordion>
     </>);
 }
@@ -58,35 +56,24 @@ function ReaderBox(props: { model: PT08Model }) {
 
     return (
         <Box mt={2}>
-            <Typography component="h6" variant="h6">Reader</Typography>
+            <Title order={6}>Reader</Title>
 
             <PaperTapeBox tape={readerTape} reverse={false} />
 
-            <FormGroup row>
-                <FormControl>
-                    <input ref={tapeInput} type="file" onChange={evt => void onLoadFile(evt, model)} hidden />
-                    <Button variant="outlined" onClick={() => tapeInput?.current?.click()}>Load Tape</Button>
-                </FormControl>
-                <FormControlLabel
-                    control={<Switch
-                        onChange={evt => void model.setReaderActive(evt.target.checked)}
-                        checked={readerActive}
-                    />}
-                    labelPlacement="start"
-                    label="Reader On"
-                />
-            </FormGroup>
+            <Box>
+                <FileButton onChange={f => void onLoadFile(f, model)}>
+                    { props => <Button {...props}>Load Tape</Button> }
+                </FileButton>
+                <Switch label="Reader On" checked={readerActive} onChange={ev => void model.setReaderActive(ev.currentTarget.checked)}/>
+            </Box>
         </Box>
     );
 }
 
-async function onLoadFile(evt: ChangeEvent, model: PT08Model) {
-    const target = evt.target as HTMLInputElement;
-    if (!target.files || target.files.length < 1) {
-        return;
+async function onLoadFile(f: File | null, model: PT08Model) {
+    if (f) {
+        void model.loadTape(f);
     }
-
-    void model.loadTape(target.files[0]);
 }
 
 function PunchBox(props: { model: PT08Model }) {
@@ -100,29 +87,16 @@ function PunchBox(props: { model: PT08Model }) {
 
     return (
         <Box mt={2}>
-            <Typography component="h6" variant="h6">Punch</Typography>
+            <Title order={6}>Punch</Title>
 
             <PaperTapeBox tape={model.punchTape} reverse={true} />
 
-            <FormGroup row>
-                <FormControl>
-                    <Button variant="outlined" onClick={() => model.clearPunch()}>New Tape</Button>
-                </FormControl>
-                <FormControl>
-                    <Button variant="outlined" onClick={() => void download()}>Download Tape</Button>
-                </FormControl>
-                <FormControl>
-                    <Button variant="outlined" onClick={() => model.addPunchLeader()}>Feed</Button>
-                </FormControl>
-                <FormControlLabel
-                    control={<Switch
-                        onChange={evt => void model.setPunchActive(evt.target.checked)}
-                        checked={punchActive}
-                    />}
-                    labelPlacement="start"
-                    label="Punch On"
-                />
-            </FormGroup>
+            <Box>
+                <Button onClick={() => model.clearPunch()}>New Tape</Button>
+                <Button onClick={() => void download()}>Download Tape</Button>
+                <Button onClick={() => model.addPunchLeader()}>Feed</Button>
+                <Switch label="Punch On" onChange={evt => void model.setPunchActive(evt.target.checked)} checked={punchActive} />
+            </Box>
         </Box>
     );
 }

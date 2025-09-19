@@ -21,7 +21,7 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 manualChunks: {
-                    "mui": ["@mui/material"],
+                    "ui": ["@mantine/core", "@tabler/icons-react"],
                     "perphs": ["xterm", "react-simple-keyboard"],
                     "editor": [
                         "@codemirror/autocomplete",
@@ -35,6 +35,12 @@ export default defineConfig({
                     ],
                 },
             },
+        },
+    },
+    resolve: {
+        alias: {
+            // /esm/icons/index.mjs only exports the icons statically, so no separate chunks are created
+            "@tabler/icons-react": "@tabler/icons-react/dist/esm/icons/index.mjs",
         },
     },
     server: {

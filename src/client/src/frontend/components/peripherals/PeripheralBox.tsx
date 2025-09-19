@@ -16,8 +16,6 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import FullscreenIcon from "@mui/icons-material/Fullscreen";
-import { Box, Card, CardContent, CardHeader, IconButton } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { DF32Model } from "../../../models/peripherals/DF32Model";
 import { KW8IModel } from "../../../models/peripherals/KW8IModel";
@@ -36,6 +34,8 @@ import { RF08 } from "./RF08";
 import { RK08 } from "./RK08";
 import { RK8E } from "./RK8E";
 import { TC08 } from "./TC08";
+import { ActionIcon, Box, Button, Card, Group, NavLink, Title } from "@mantine/core";
+import { IconMaximize } from "@tabler/icons-react";
 
 export function PeripheralBox(props: { model: PeripheralModel }) {
     const model = props.model;
@@ -79,20 +79,14 @@ export function PeripheralBox(props: { model: PeripheralModel }) {
 
     const titleStr = `${caption} @ Bus ${model.connections.map(x => x.toString(8)).join(", ")}`;
     return (
-        <Box mb={3}>
-            <Card variant="outlined">
-                <CardHeader
-                    title={titleStr}
-                    action={
-                        <IconButton component={RouterLink} to={`/peripherals/${model.id}`} title="Display only this">
-                            <FullscreenIcon />
-                        </IconButton>
-                    }
-                />
-                <CardContent>
-                    { component }
-                </CardContent>
-            </Card>
-        </Box>
+        <Card mb="md">
+            <Group justify="space-between">
+                <Title order={3}>{ titleStr }</Title>
+                <Button component={RouterLink} leftSection={<IconMaximize />} to={`/peripherals/${model.id}`} title="Display only this" />
+            </Group>
+            <Card.Section>
+                { component }
+            </Card.Section>
+        </Card>
     );
 }

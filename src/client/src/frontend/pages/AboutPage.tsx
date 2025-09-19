@@ -16,32 +16,32 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Link, Typography } from "@mui/material";
+import { Anchor, Title } from "@mantine/core";
 
 export function AboutPage() {
     return (<>
-        <Typography component="h1" variant="h4">About SoCDP-8</Typography>
-        <Typography component="h2" variant="h6">Thanks to</Typography>
+        <Title order={4}>About SoCDP-8</Title>
+        <Title order={6}>Thanks to</Title>
         <ul>
             <li>
-                Oscar Vermeulen for the <Link href="https://obsolescence.wixsite.com/obsolescence/pidp-8">
+                Oscar Vermeulen for the <Anchor href="https://obsolescence.wixsite.com/obsolescence/pidp-8">
                     PiDP-8
-                </Link> and letting me use the panel artwork
+                </Anchor> and letting me use the panel artwork
             </li>
             <li>
-                Vince Slyngstad for his <Link href="http://so-much-stuff.com/pdp8/index.php">
+                Vince Slyngstad for his <Anchor href="http://so-much-stuff.com/pdp8/index.php">
                     PDP-8 software library
-                </Link> and letting me use it for this project
+                </Anchor> and letting me use it for this project
             </li>
             <li>
-                Willem van der Mark for his <Link href="http://www.vandermark.ch/pdp8/index.php?n=Emulator.TD8E">
+                Willem van der Mark for his <Anchor href="http://www.vandermark.ch/pdp8/index.php?n=Emulator.TD8E">
                     TD8E emulator
-                </Link>, the visualization was ported to this project
+                </Anchor>, the visualization was ported to this project
             </li>
             <li>
-                <Link href="http://www.bitsavers.org/">
+                <Anchor href="http://www.bitsavers.org/">
                     BitSavers
-                </Link> for their preservation of documentation
+                </Anchor> for their preservation of documentation
             </li>
         </ul>
     </>);

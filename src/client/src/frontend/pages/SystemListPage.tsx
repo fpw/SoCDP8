@@ -16,21 +16,16 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import {
-    Accordion, AccordionDetails, AccordionSummary, Box, Button,
-    ButtonGroup, Paper, Table, TableBody, TableCell, TableContainer,
-    TableHead, TableRow, Typography
-} from "@mui/material";
 import { useState } from "react";
 import { SoCDP8 } from "../../models/SoCDP8";
 import { DeviceID } from "../../types/PeripheralTypes";
 import { getDefaultSysConf, SystemConfiguration } from "../../types/SystemConfiguration";
 import { SystemForm } from "../components/system/SystemForm";
+import { Accordion, Box, Button, Group, Table, Title } from "@mantine/core";
 
 export function SystemListPage(props: { pdp8: SoCDP8 }) {
     const [formBusy, setFormBusy] = useState<boolean>(false);
-    const [open, setOpen] = useState<boolean>(false);
+    const [open, setOpen] = useState<string | null>(null);
     const activeSys = props.pdp8.useStore(state => state.activeSystem)!;
     const systems = props.pdp8.useStore(state => state.systemList);
 
@@ -38,51 +33,49 @@ export function SystemListPage(props: { pdp8: SoCDP8 }) {
         setFormBusy(true);
         await onNewSystem(props.pdp8, s);
         setFormBusy(false);
-        setOpen(false);
+        setOpen(null);
     }
 
     return (<>
-        <Typography component="h1" variant="h4" gutterBottom>Manage Systems</Typography>
+        <Title order={4}>Manage Systems</Title>
 
-        <Accordion expanded={open} onChange={() => setOpen(!open)}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography variant="body1">New System</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-                <Box width="75%" pl={4}>
-                    <SystemForm
-                        initialState={getDefaultSysConf()}
-                        onSubmit={s => void addSystem(s)}
-                        buttonEnabled={!formBusy}
-                    />
-                </Box>
-            </AccordionDetails>
+        <Accordion value={open} onChange={setOpen}>
+            <Accordion.Item value="New System">
+                <Accordion.Control>New System</Accordion.Control>
+                <Accordion.Panel>
+                    <Box pl={4}>
+                        <SystemForm
+                            initialState={getDefaultSysConf()}
+                            onSubmit={s => void addSystem(s)}
+                            buttonEnabled={!formBusy}
+                        />
+                    </Box>
+                </Accordion.Panel>
+            </Accordion.Item>
         </Accordion>
 
         <Box mt={2}>
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Name</TableCell>
-                            <TableCell>Core</TableCell>
-                            <TableCell>Extensions</TableCell>
-                            <TableCell>Peripherals</TableCell>
-                            <TableCell>Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        { systems.map(s =>
-                            <SystemEntry
-                                key={s.id}
-                                pdp8={props.pdp8}
-                                system={s}
-                                active={s.id == activeSys.id}
-                            />
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+            <Table>
+                <Table.Thead>
+                    <Table.Tr>
+                        <Table.Td>Name</Table.Td>
+                        <Table.Td>Core</Table.Td>
+                        <Table.Td>Extensions</Table.Td>
+                        <Table.Td>Peripherals</Table.Td>
+                        <Table.Td>Actions</Table.Td>
+                    </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                    { systems.map(s =>
+                        <SystemEntry
+                            key={s.id}
+                            pdp8={props.pdp8}
+                            system={s}
+                            active={s.id == activeSys.id}
+                        />
+                    )}
+                </Table.Tbody>
+            </Table>
         </Box>
     </>);
 }
@@ -103,41 +96,41 @@ function SystemEntry(props: { pdp8: SoCDP8, system: SystemConfiguration, active:
     }
 
     return (
-        <TableRow>
-            <TableCell>
+        <Table.Tr>
+            <Table.Td>
                 <Box style={{ fontWeight: props.active ? "bold" : undefined }}>
                     {props.system.name}
                 </Box>
-            </TableCell>
-            <TableCell>
+            </Table.Td>
+            <Table.Td>
                 {(props.system.maxMemField + 1) * 4} kiW
-            </TableCell>
-            <TableCell>
+            </Table.Td>
+            <Table.Td>
                 <ul>
                     { props.system.maxMemField > 0 && <li>MC8/I</li> }
                     { props.system.cpuExtensions.eae && <li>KE8/I</li> }
                     { props.system.cpuExtensions.kt8i && <li>KT8/I</li> }
                     { props.system.cpuExtensions.bsw && <li>BSW</li> }
                 </ul>
-            </TableCell>
-            <TableCell>
+            </Table.Td>
+            <Table.Td>
                 <ul>
                     { props.system.peripherals.map(conf =>
                         <li key={conf.id}>{getPeripheralName(conf.id)}</li>
                     )}
                 </ul>
-            </TableCell>
-            <TableCell>
-                <ButtonGroup variant="outlined" orientation="vertical">
+            </Table.Td>
+            <Table.Td>
+                <Group>
                     <Button disabled={busy} onClick={() => void activate()}>
                         Activate
                     </Button>
                     <Button disabled={busy} onClick={() => void del()}>
                         Delete
                     </Button>
-                </ButtonGroup>
-            </TableCell>
-        </TableRow>
+                </Group>
+            </Table.Td>
+        </Table.Tr>
     );
 }
 
@@ -163,7 +156,7 @@ function getPeripheralName(id: DeviceID): string {
 async function onNewSystem(pdp8: SoCDP8, state: SystemConfiguration) {
     try {
         await pdp8.createNewSystem(state);
-    } catch (e) {
+    } catch(e) {
         if (e instanceof Error) {
             alert(`Creating state failed: ${e.message}`);
         } else {
@@ -175,7 +168,7 @@ async function onNewSystem(pdp8: SoCDP8, state: SystemConfiguration) {
 async function activateSystem(pdp8: SoCDP8, state: SystemConfiguration) {
     try {
         await pdp8.activateSystem(state.id);
-    } catch (e) {
+    } catch(e) {
         if (e instanceof Error) {
             alert(`Activating state failed: ${e.message}`);
         } else {
@@ -191,7 +184,7 @@ async function deleteSystem(pdp8: SoCDP8, state: SystemConfiguration) {
 
     try {
         await pdp8.deleteSystem(state.id);
-    } catch (e) {
+    } catch(e) {
         if (e instanceof Error) {
             alert(`Deleting system failed: ${e.message}`);
         } else {

@@ -16,13 +16,10 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-    Button, FormControl, FormControlLabel, FormGroup,
-    FormLabel, Radio, RadioGroup, Slider, Switch, TextField
-} from "@mui/material";
 import { FormEvent } from "react";
 import { DeviceID, PeripheralConfiguration, PT08Configuration, PT08Style } from "../../../types/PeripheralTypes";
 import { getDefaultSysConf, SystemConfiguration } from "../../../types/SystemConfiguration";
+import { Box, Button, Fieldset, Group, Radio, RadioGroup, Slider, Switch, TextInput } from "@mantine/core";
 
 export interface SystemFormProps {
     initialState: SystemConfiguration;
@@ -47,93 +44,67 @@ export function SystemForm(props: SystemFormProps) {
 
     return (
         <form autoComplete="off" onSubmit={(ev) => props.onSubmit(toSystemConf(ev))}>
-            <FormGroup>
-                <FormControl component="fieldset">
-                    <FormLabel component="legend">System Name</FormLabel>
-                    <TextField required name="name" label="Name" variant="outlined" />
-                </FormControl>
+            <Box>
+                <Fieldset>
+                    <TextInput label="System Name" required name="name" />
+                </Fieldset>
+                <Fieldset legend="CPU Extensions">
+                    <Switch name="eae" label="KE8/I (EAE)" defaultChecked={s.cpuExtensions.eae} />
+                    <Switch name="kt8i" label="KT8/I (Time Sharing Option)" defaultChecked={s.cpuExtensions.kt8i} />
+                </Fieldset>
 
-                <FormControl component="fieldset">
-                    <FormLabel component="legend">CPU Extensions</FormLabel>
-                    <FormControlLabel
-                        control={<Switch name="eae" defaultChecked={s.cpuExtensions.eae} />}
-                        label="KE8/I (EAE)"
-                    />
-                    <FormControlLabel
-                        control={<Switch name="kt8i" defaultChecked={s.cpuExtensions.kt8i} />}
-                        label="KT8/I (Time Sharing Option)"
-                    />
-                </FormControl>
+                <Fieldset legend="Unofficial CPU Changes">
+                    <Switch name="bsw" label="BSW instruction for 8/E programs" defaultChecked={s.cpuExtensions.bsw} />
+                </Fieldset>
 
-                <FormControl component="fieldset">
-                    <FormLabel component="legend">Unofficial CPU Changes</FormLabel>
-                    <FormControlLabel
-                        control={<Switch name="bsw" defaultChecked={s.cpuExtensions.bsw} />}
-                        label="BSW instruction for 8/E programs"
-                    />
-                </FormControl>
-
-                <FormControl component="fieldset">
-                    <FormLabel component="legend">Core Memory (kiW)</FormLabel>
+                <Fieldset>
                     <Slider
                         defaultValue={s.maxMemField}
-                        valueLabelDisplay="off"
+                        label="Core Memory (kiW)"
                         step={1}
                         min={0}
                         max={7}
                         marks={coreMemoryMarks}
                         name="maxMemField"
                     />
-                </FormControl>
+                </Fieldset>
 
-                <FormControl component="fieldset">
-                    <FormLabel component="legend">Basic I/O</FormLabel>
-                    <FormControlLabel control={
-                        <Switch name="serialLine" defaultChecked={peripherals.includes(DeviceID.DEV_ID_PT08)} />
-                    } label="Serial Current Loop" />
-                    <FormControlLabel control={
-                        <Switch name="pc04" defaultChecked={peripherals.includes(DeviceID.DEV_ID_PC04)} />
-                    } label="PC04 Reader / Punch" />
-                </FormControl>
+                <Fieldset legend="Basic I/O">
+                    <Switch name="serialLine" label="Serial Current Loop" defaultChecked={peripherals.includes(DeviceID.DEV_ID_PT08)} />
+                    <Switch name="pc04" label="PC04 Reader / Punch" defaultChecked={peripherals.includes(DeviceID.DEV_ID_PC04)} />
+                </Fieldset>
 
-                <FormControl component="fieldset">
-                    <FormLabel component="legend">DECtape</FormLabel>
-                    <FormControlLabel control={
-                        <Switch name="tc08" defaultChecked={peripherals.includes(DeviceID.DEV_ID_TC08)} />
-                    } label="TC08 DECtape Controller" />
-                </FormControl>
+                <Fieldset legend="DECtape">
+                    <Switch name="tc08" label="TC08 DECtape Controller" defaultChecked={peripherals.includes(DeviceID.DEV_ID_TC08)} />
+                </Fieldset>
 
-                <FormControl component="fieldset">
-                    <FormLabel component="legend">Hard Disk</FormLabel>
-                    <RadioGroup name="disk" defaultValue={getDiskType(s.peripherals)} row>
-                        <FormControlLabel value={""} control={<Radio />} label="None" />
-                        <FormControlLabel value={DeviceID.DEV_ID_DF32} control={<Radio />} label="DF32" />
-                        <FormControlLabel value={DeviceID.DEV_ID_RF08} control={<Radio />} label="RF08" />
-                        <FormControlLabel value={DeviceID.DEV_ID_RK08} control={<Radio />} label="RK08" />
-                        <FormControlLabel value={DeviceID.DEV_ID_RK8E} control={<Radio />} label="RK8E" />
-                    </RadioGroup>
-                </FormControl>
+                <Fieldset legend="Hard Disk">
+                    <Radio.Group name="disk" defaultValue={getDiskType(s.peripherals).toString()}>
+                        <Group>
+                            <Radio value="" label="None" />
+                            <Radio value={DeviceID.DEV_ID_DF32.toString()} label="DF32" />
+                            <Radio value={DeviceID.DEV_ID_RF08.toString()} label="RF08" />
+                            <Radio value={DeviceID.DEV_ID_RK08.toString()} label="RK08" />
+                            <Radio value={DeviceID.DEV_ID_RK8E.toString()} label="RK8E" />
+                        </Group>
+                    </Radio.Group>
+                </Fieldset>
 
-                <FormControl component="fieldset">
-                    <FormLabel component="legend">Additional PT08 Serial Ports</FormLabel>
+                <Fieldset legend="Additional PT08 Serial Ports">
                     <Slider
                         defaultValue={countPT08(s.peripherals)}
-                        valueLabelDisplay="off"
                         step={1}
                         min={0}
                         max={4}
                         marks={pt08Marks}
                         name="pt08"
                     />
-                </FormControl>
+                </Fieldset>
 
-                <FormControl component="fieldset">
-                    <FormLabel component="legend">Real-Time Clock</FormLabel>
-                    <FormControlLabel control={
-                        <Switch name="kw8i"defaultChecked={peripherals.includes(DeviceID.DEV_ID_KW8I)} />
-                    } label="KW8/I" />
-                </FormControl>
-            </FormGroup>
+                <Fieldset legend="Real-Time Clock">
+                    <Switch name="kw8i" label="KW8/I" defaultChecked={peripherals.includes(DeviceID.DEV_ID_KW8I)} />
+                </Fieldset>
+            </Box>
 
             <Button type="submit" variant="contained" disabled={!props.buttonEnabled}>
                 Create System

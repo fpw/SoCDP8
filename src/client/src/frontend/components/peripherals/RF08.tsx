@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box } from "@mui/material";
+import { Box } from "@mantine/core";
 import { RF08Model } from "../../../models/peripherals/RF08Model";
 import { DumpButtons } from "./DumpButtons";
 

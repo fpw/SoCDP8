@@ -70,6 +70,7 @@ export class KW8IModel extends PeripheralModel {
     }
 
     public onPeripheralAction(id: DeviceID, action: PeripheralInAction) {
+        // no actions
     }
 
     public async saveState(): Promise<{ config: PeripheralConfiguration, data: Map<string, Uint8Array> }> {

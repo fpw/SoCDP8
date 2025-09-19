@@ -24,7 +24,7 @@ export async function downloadData(data: Uint8Array, name: string): Promise<void
             if (evt.target?.result) {
                 resolve(evt.target.result as string);
             } else {
-                reject("Invalid data");
+                reject(Error("Invalid data"));
             }
         };
         reader.readAsDataURL(blob);
@@ -38,7 +38,7 @@ export async function downloadData(data: Uint8Array, name: string): Promise<void
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-    } catch (e) {
+    } catch(e) {
         alert(e);
     }
 }
@@ -51,7 +51,7 @@ export async function loadFile(file: File): Promise<Uint8Array> {
             resolve(new Uint8Array(data));
         };
         reader.onerror = () => {
-            reject();
+            reject(Error("Couldn't read file"));
         };
         reader.readAsArrayBuffer(file);
     });

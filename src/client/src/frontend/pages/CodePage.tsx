@@ -18,14 +18,14 @@
 
 import { indentLess, indentMore } from "@codemirror/commands";
 import { indentUnit } from "@codemirror/language";
-import { Button, ButtonGroup, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
 import { vscodeDarkInit } from "@uiw/codemirror-theme-vscode";
 import CodeMirror, { ReactCodeMirrorRef, StateCommand, keymap } from "@uiw/react-codemirror";
 import React, { ForwardedRef, forwardRef, useCallback, useRef, useState } from "react";
 import { BinTapeReader, CodeError, SymbolData, SymbolType, Yamas, YamasOutput } from "yamas";
 import { yamasLanguage } from "../../editor/YamasLanguage";
 import { SoCDP8 } from "../../models/SoCDP8";
-import { numToOctal } from "../../util";
+import { downloadData, numToOctal } from "../../util";
+import { Button, Group, Table, Title } from "@mantine/core";
 
 export function CodePage(props: { pdp8: SoCDP8 }) {
     const [output, setOutput] = useState<YamasOutput>();
@@ -60,10 +60,18 @@ export function CodePage(props: { pdp8: SoCDP8 }) {
         }
     }
 
+    async function download() {
+        let str = "";
+        for (let i = 0; i < 4096; i++) {
+            str += (memState[i] ?? 0).toString(16) + " ";
+        }
+        await downloadData(new TextEncoder().encode(str), "mem.ex");
+    }
+
     return (<>
-        <Typography component="h1" variant="h4">Code Editor</Typography>
+        <Title order={4}>Code Editor</Title>
         <Editor ref={editorRef} />
-        <ButtonGroup variant="outlined" sx={{ mt: 1 }}>
+        <Group variant="outlined" mt={10}>
             <Button onClick={() => assemble()}>Assemble</Button>
             <Button
                 onClick={() => void load()}
@@ -71,7 +79,13 @@ export function CodePage(props: { pdp8: SoCDP8 }) {
             >
                 Load into Machine
             </Button>
-        </ButtonGroup>
+            <Button
+                onClick={() => void download()}
+                disabled={!output || output.binary.length == 0}
+            >
+                Download Antares Dump
+            </Button>
+        </Group>
 
         { output && <>
             { output.errors.length > 0 &&
@@ -88,7 +102,7 @@ export function CodePage(props: { pdp8: SoCDP8 }) {
 }
 
 const initialSource =
-`
+    `
 / AC/MQ blinker from http://dustyoldcomputers.com/pdp8/pdp8i/testprogs/acmqblinker.html, start at 0000
 
 PAGE 0
@@ -149,28 +163,28 @@ const indentOrInsertTab: StateCommand = ({ state, dispatch }) => {
     return true;
 };
 
-function ErrorTable(props: { errors: ReadonlyArray<CodeError> }) {
+function ErrorTable(props: { errors: readonly CodeError[] }) {
     const errs = props.errors;
 
     return (<>
-        <Typography variant="h5">Errors</Typography>
+        <Title variant="h5">Errors</Title>
         <Table>
-            <TableHead>
-                <TableRow>
-                    <TableCell>Line</TableCell>
-                    <TableCell>Column</TableCell>
-                    <TableCell>Error</TableCell>
-                </TableRow>
-            </TableHead>
-            <TableBody>
+            <Table.Thead>
+                <Table.Tr>
+                    <Table.Td>Line</Table.Td>
+                    <Table.Td>Column</Table.Td>
+                    <Table.Td>Error</Table.Td>
+                </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
                 { errs.map((err, i) =>
-                    <TableRow key={i}>
-                        <TableCell>{err.line}</TableCell>
-                        <TableCell>{err.col}</TableCell>
-                        <TableCell>{err.message}</TableCell>
-                    </TableRow>
+                    <Table.Tr key={i}>
+                        <Table.Td>{err.line}</Table.Td>
+                        <Table.Td>{err.col}</Table.Td>
+                        <Table.Td>{err.message}</Table.Td>
+                    </Table.Tr>
                 )}
-            </TableBody>
+            </Table.Tbody>
         </Table>
     </>);
 }
@@ -179,21 +193,21 @@ function MemTable(props: { state: (number | undefined)[] }) {
     const mem = props.state;
 
     return (<>
-        <Table size="small">
-            <TableHead>
-                <TableRow>
-                    <TableCell width={"15%"}>Address</TableCell>
-                    <TableCell>Data</TableCell>
-                </TableRow>
-            </TableHead>
-            <TableBody>
+        <Table>
+            <Table.Thead>
+                <Table.Tr>
+                    <Table.Td width={"15%"}>Address</Table.Td>
+                    <Table.Td>Data</Table.Td>
+                </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
                 { mem.map((data, addr) => data ?
-                    <TableRow key={addr}>
-                        <TableCell>{numToOctal(addr, 5)}</TableCell>
-                        <TableCell>{numToOctal(data, 4)}</TableCell>
-                    </TableRow>
+                    <Table.Tr key={addr}>
+                        <Table.Td>{numToOctal(addr, 5)}</Table.Td>
+                        <Table.Td>{numToOctal(data, 4)}</Table.Td>
+                    </Table.Tr>
                     : <React.Fragment key={addr} />)}
-            </TableBody>
+            </Table.Tbody>
         </Table>
     </>);
 }
@@ -205,25 +219,25 @@ function SymbolTable(props: { symbols: ReadonlyMap<string, SymbolData> }) {
         .sort((a, b) => a.name.localeCompare(b.name));
 
     return (<>
-        <Table size="small">
-            <TableHead>
-                <TableRow>
-                    <TableCell width={"15%"}>Symbol</TableCell>
-                    <TableCell width={"15%"}>Type</TableCell>
-                    <TableCell>Value</TableCell>
-                </TableRow>
-            </TableHead>
-            <TableBody>
+        <Table>
+            <Table.Thead>
+                <Table.Tr>
+                    <Table.Td width={"15%"}>Symbol</Table.Td>
+                    <Table.Td width={"15%"}>Type</Table.Td>
+                    <Table.Td>Value</Table.Td>
+                </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
                 { symbols.map(sym => <React.Fragment key={sym.name}>
                     { (sym.type == SymbolType.Param || sym.type == SymbolType.Label) &&
-                        <TableRow key={sym.name}>
-                            <TableCell>{sym.name}</TableCell>
-                            <TableCell>{SymbolType[sym.type]}</TableCell>
-                            <TableCell>{numToOctal(sym.value, 4)}</TableCell>
-                        </TableRow>
+                        <Table.Tr key={sym.name}>
+                            <Table.Td>{sym.name}</Table.Td>
+                            <Table.Td>{SymbolType[sym.type]}</Table.Td>
+                            <Table.Td>{numToOctal(sym.value, 4)}</Table.Td>
+                        </Table.Tr>
                     }
                 </React.Fragment>)}
-            </TableBody>
+            </Table.Tbody>
         </Table>
     </>);
 }

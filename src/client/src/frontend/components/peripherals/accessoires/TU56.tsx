@@ -79,7 +79,7 @@ class TU56Painter {
     private canvas?: HTMLCanvasElement;
     private leftTape?: TapeState;
     private rightTape?: TapeState;
-    private stopped: boolean = false;
+    private stopped = false;
 
     public constructor(addr: number) {
         this.address = addr;

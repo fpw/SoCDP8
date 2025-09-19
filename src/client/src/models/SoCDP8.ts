@@ -215,7 +215,7 @@ export class SoCDP8 {
     }
 
     public async createNewSystem(state: SystemConfiguration): Promise<void> {
-        return await this.backend.createSystem(state);
+        await this.backend.createSystem(state);
     }
 
     public async activateSystem(id: string): Promise<void> {

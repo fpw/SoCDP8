@@ -56,7 +56,7 @@ export class SocketBackend implements Backend {
 
         return new Promise<void>(resolve => {
             this.socket.on("connect", () => {
-                listener.onConnect().then(() => resolve()).catch(e => console.error(e));
+                listener.onConnect().then(() => resolve()).catch((e: unknown) => console.error(e));
             });
             this.socket.connect();
         });
@@ -92,7 +92,7 @@ export class SocketBackend implements Backend {
                 if (res) {
                     accept();
                 } else {
-                    reject();
+                    reject(Error("Couldn't create system"));
                 }
             });
         });
@@ -104,7 +104,7 @@ export class SocketBackend implements Backend {
                 if (res) {
                     accept();
                 } else {
-                    reject();
+                    reject(Error("Couldn't activate system"));
                 }
             });
         });
@@ -116,13 +116,14 @@ export class SocketBackend implements Backend {
                 if (res) {
                     accept();
                 } else {
-                    reject();
+                    reject(Error("Couldn't delete system"));
                 }
             });
         });
     }
 
     public async setThrottleControl(control: boolean): Promise<void> {
+        // no effect
     }
 
     public async setPanelSwitch(sw: string, state: boolean): Promise<void> {

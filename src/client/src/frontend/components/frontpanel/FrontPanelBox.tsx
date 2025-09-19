@@ -16,11 +16,6 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {
-    Box, Button, ButtonGroup, Card, CardActions, CardContent,
-    Checkbox, Dialog, DialogTitle, FormControlLabel, List,
-    ListItemButton, ListItemText
-} from "@mui/material";
 import { useState } from "react";
 import { ProgramSnippet, ProgramSnippets } from "../../../models/ProgramSnippets";
 import { SoCDP8 } from "../../../models/SoCDP8";
@@ -28,6 +23,7 @@ import { DeviceID } from "../../../types/PeripheralTypes";
 import { downloadData, loadFile } from "../../../util";
 import { UploadButton } from "../common/UploadButton";
 import { FrontPanel } from "./FrontPanel";
+import { Box, Button, Card, Checkbox, Group, List, Modal, NavLink } from "@mantine/core";
 
 export function FrontPanelBox(props: { pdp8: SoCDP8 }) {
     const [throttle, setThrottle] = useState(false);
@@ -59,7 +55,7 @@ export function FrontPanelBox(props: { pdp8: SoCDP8 }) {
             return;
         }
         if (files[0].size > 65536) {
-            alert(`File too big, max allowed size is ${65536} bytes.`);
+            alert("File too big, max allowed size is 65536 bytes.");
             return;
         }
         const data = await loadFile(files[0]);
@@ -73,12 +69,12 @@ export function FrontPanelBox(props: { pdp8: SoCDP8 }) {
 
     return (
         <Box mb={4}>
-            <Card variant="outlined">
-                <CardContent>
+            <Card>
+                <Card.Section>
                     <FrontPanel pdp8={props.pdp8} />
-                </CardContent>
-                <CardActions>
-                    <ButtonGroup variant="outlined">
+                </Card.Section>
+                <Card.Section>
+                    <Group>
                         <Button onClick={() => void saveState()} disabled={busy}>
                             Save State
                         </Button>
@@ -94,15 +90,12 @@ export function FrontPanelBox(props: { pdp8: SoCDP8 }) {
                         <Button onClick={() => void props.pdp8.clearCore()}>
                             Clear Core
                         </Button>
-                    </ButtonGroup>
-                    <Box sx={{ textAlign: "right" }}>
+                    </Group>
+                    <Box style={{ textAlign: "right" }}>
                         Simulation Speed: { simSpeed.toFixed(2) }
-                        <FormControlLabel
-                            control={<Checkbox checked={throttle} onChange={() => void toggleThrottle()} />}
-                            label="Control"
-                        />
+                        <Checkbox label="Control" checked={throttle} onChange={() => void toggleThrottle()} />
                     </Box>
-                </CardActions>
+                </Card.Section>
             </Card>
             <SnippetDialog
                 open={showSnippets}
@@ -122,15 +115,12 @@ interface SnippetProps {
 
 function SnippetDialog(props: SnippetProps) {
     return (
-        <Dialog open={props.open} onClose={props.onClose}>
-            <DialogTitle>Select Snippet</DialogTitle>
+        <Modal opened={props.open} onClose={props.onClose} title="Select Snippet">
             <List>
                 { ProgramSnippets.filter(s => s.requirements.every(dev => props.devices.includes(dev))).map(snippet =>
-                    <ListItemButton key={snippet.label} onClick={() => props.onSelect(snippet)}>
-                        <ListItemText primary={snippet.label} secondary={snippet.desc} />
-                    </ListItemButton>
+                    <NavLink key={snippet.label} onClick={() => props.onSelect(snippet)} label={snippet.label} description={snippet.desc} />
                 )}
             </List>
-        </Dialog>
+        </Modal>
     );
 }

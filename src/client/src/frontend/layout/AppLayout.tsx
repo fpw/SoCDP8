@@ -16,98 +16,74 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import MenuIcon from "@mui/icons-material/Menu";
-import { Box, Container, CssBaseline, Divider, IconButton, Link, Toolbar, Typography } from "@mui/material";
-import { useState } from "react";
-import { Link as RouterLink, Outlet } from "react-router-dom";
+import { ActionIcon, Anchor, AppShell, Box, Burger, Flex, Group, Text, Title, useMantineColorScheme } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { IconMoon, IconSun } from "@tabler/icons-react";
+import React from "react";
+import { Outlet, Link } from "react-router-dom";
 import { SoCDP8 } from "../../models/SoCDP8";
-import { AppBar } from "./AppBar";
-import { Drawer } from "./Drawer";
 import { NavMenu } from "./NavMenu";
 
 export function AppLayout(props: { pdp8: SoCDP8 }) {
-    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [isOpen, { toggle, close }] = useDisclosure();
+    const { toggleColorScheme, colorScheme } = useMantineColorScheme();
     const sys = props.pdp8.useStore(state => state.activeSystem);
-
-    const toggleDrawerOpen = () => {
-        setDrawerOpen(!drawerOpen);
-    };
 
     if (!sys) {
         return <ConnectingInfo />;
     }
 
     return (<>
-        <CssBaseline />
-        <Box sx={{ display: "flex" }}>
-            <AppBar position="absolute" open={drawerOpen}>
-                <Toolbar sx={{ pr: "24px" }}>
-                    <IconButton
-                        sx={{ marginRight: "36px", ...(drawerOpen && { display: "none" }) }}
-                        edge="start"
-                        color="inherit"
-                        onClick={toggleDrawerOpen}
-                        size="large"
+        <AppShell
+            header={{ height: 60 }}
+            navbar={{
+                width: 200,
+                breakpoint: "sm",
+                collapsed: { mobile: !isOpen }
+            }}
+            padding="md"
+        >
+            <AppShell.Header p="xs">
+                <Flex justify="space-between">
+                    <Burger
+                        opened={isOpen}
+                        onClick={toggle}
+                        hiddenFrom="sm"
+                        size="sm"
                     >
-                        <MenuIcon />
-                    </IconButton>
-                    <Typography component="h1" variant="h6" color="inherit" noWrap sx={{ flexGrow: 1 }}>
-                        <Link color="inherit" underline="none" component={RouterLink} to="/">
-                            SoCDP-8
-                        </Link>
-                    </Typography>
-                </Toolbar>
-            </AppBar>
-            <Drawer variant="permanent" open={drawerOpen}>
-                <Toolbar
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "flex-end",
-                        px: [1],
-                    }}
-                >
-                    <IconButton onClick={toggleDrawerOpen}>
-                        <ChevronLeftIcon />
-                    </IconButton>
-                </Toolbar>
-                <Divider />
-                <NavMenu />
-            </Drawer>
-            <Box
-                component="main"
-                sx={{
-                    backgroundColor: (theme) =>
-                        theme.palette.mode == "light" ?
-                            theme.palette.grey[100] :
-                            theme.palette.grey[900],
-                    flexGrow: 1,
-                    height: "100vh",
-                    overflow: "auto"
-                }}
-            >
-                <Toolbar />
-                <Container maxWidth="lg" sx={{ mt: 4 }}>
+                    </Burger>
+                    <Title order={2}>
+                        <Anchor component={Link} to="/" inherit>SoCDP-8</Anchor>
+                    </Title>
+                    <ActionIcon variant="transparent" onClick={toggleColorScheme}>{ colorScheme == "dark" ? <IconSun /> : <IconMoon />}</ActionIcon>
+                </Flex>
+            </AppShell.Header>
+            <AppShell.Navbar p="md">
+                <NavMenu onClick={() => close()}/>
+            </AppShell.Navbar>
+            <AppShell.Main>
+                <React.Suspense fallback={<>Loading...</>}>
                     <Outlet />
-                </Container>
+                </React.Suspense>
+            </AppShell.Main>
+            <AppShell.Footer>
                 <Copyright />
-            </Box>
-        </Box>
+            </AppShell.Footer>
+        </AppShell>
     </>);
 }
 
 function ConnectingInfo() {
     return (
         <>
-            <Container maxWidth="lg">
-                <Typography component="h1" variant="h2">
+            <Box>
+                <Text component="h1" variant="h2">
                     Connecting...
-                </Typography>
-                <Typography>
+                </Text>
+                <Text>
                     Please wait
-                </Typography>
-            </Container>
+                </Text>
+            </Box>
             <Copyright />
         </>
     );
@@ -115,11 +91,11 @@ function ConnectingInfo() {
 
 function Copyright() {
     return (
-        <Typography variant="body2" color="textSecondary" align="center">
+        <Text>
             ©&nbsp;
-            <Link component={RouterLink} to="https://github.com/fpw/socdp8" target="_blank">
+            <Link to="https://github.com/fpw/socdp8" target="_blank">
                 Folke Will
             </Link>, 2024
-        </Typography>
+        </Text>
     );
 }

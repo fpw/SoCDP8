@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Typography } from "@mui/material";
+import { Title } from "@mantine/core";
 import { SoCDP8 } from "../../models/SoCDP8";
 import { FrontPanelBox } from "../components/frontpanel/FrontPanelBox";
 import { PeripheralBox } from "../components/peripherals/PeripheralBox";
@@ -29,9 +29,9 @@ export function SystemPage(props: { pdp8: SoCDP8 }) {
 
     return (
         <>
-            <Typography component="h1" variant="h4" gutterBottom>
+            <Title order={3}>
                 System: {sys.name}
-            </Typography>
+            </Title>
 
             <FrontPanelBox pdp8={props.pdp8} />
 

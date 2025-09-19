@@ -16,32 +16,30 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { List, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
-import InfoIcon from "@mui/icons-material/Info";
-import MemoryIcon from "@mui/icons-material/Memory";
-import TuneIcon from "@mui/icons-material/Tune";
-import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
+import { NavLink } from "@mantine/core";
+import { IconAdjustmentsHorizontal, IconCpu, IconInfoCircleFilled, IconListNumbers } from "@tabler/icons-react";
+import { Link } from "react-router-dom";
 
-export function NavMenu() {
-    return (
-        <List component="nav">
-            <ListItemButton component={RouterLink} to="/machines/active">
-                <ListItemIcon title="Active Machine"><MemoryIcon /></ListItemIcon>
-                <ListItemText primary="Active Machine" />
-            </ListItemButton>
-            <ListItemButton component={RouterLink} to="/machines">
-                <ListItemIcon title="Manage Machines"><TuneIcon /></ListItemIcon>
-                <ListItemText primary="Manage Machines" />
-            </ListItemButton>
-            <ListItemButton component={RouterLink} to="/code">
-                <ListItemIcon title="Code Editor"><FormatListNumberedIcon /></ListItemIcon>
-                <ListItemText primary="Code Editor" />
-            </ListItemButton>
-            <ListItemButton component={RouterLink} to="/about">
-                <ListItemIcon title="About"><InfoIcon /></ListItemIcon>
-                <ListItemText primary="About" />
-            </ListItemButton>
-        </List>
-    );
+export function NavMenu(props: { onClick: () => void }) {
+    const links: [string, string, React.ReactNode][] = [
+        ["Active Machine", "/machines/active", <IconCpu />],
+        ["Manage Machines", "/machines", <IconAdjustmentsHorizontal />],
+        ["Code", "/code", <IconListNumbers />],
+        ["About", "/about", <IconInfoCircleFilled />],
+    ];
+
+    return (<>
+        { links.map(l =>
+            <NavLink
+                key={l[0]}
+                component={Link}
+                label={l[0]}
+                to={l[1]}
+                leftSection={l[2]}
+                onClick={ev => {
+                    props.onClick();
+                }}
+            />
+        )}
+    </>);
 }
