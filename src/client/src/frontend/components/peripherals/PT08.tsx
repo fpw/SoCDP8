@@ -16,9 +16,9 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { Box, Group, Select, Switch } from "@mantine/core";
+import { Group, Select, Switch } from "@mantine/core";
 import { PT08Model } from "../../../models/peripherals/PT08Model";
-import { BaudRate, BAUD_RATES, PT08Style } from "../../../types/PeripheralTypes";
+import { BAUD_RATES, BaudRate, PT08Style } from "../../../types/PeripheralTypes";
 import { ASR33 } from "./accessoires/ASR33";
 import { VT100 } from "./accessoires/VT100";
 

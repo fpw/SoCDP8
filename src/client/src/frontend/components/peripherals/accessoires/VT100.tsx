@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Terminal } from "xterm";
-import "xterm/css/xterm.css";
 import { PT08Model } from "../../../../models/peripherals/PT08Model";
 import { PT08Style } from "../../../../types/PeripheralTypes";
 import { Box, Button, Group } from "@mantine/core";
+import "xterm/css/xterm.css";
 
 export function VT100(props: { model: PT08Model }) {
     const { model } = props;

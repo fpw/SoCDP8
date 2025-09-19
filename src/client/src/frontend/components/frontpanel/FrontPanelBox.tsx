@@ -16,13 +16,13 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { Button, Card, Checkbox, FileButton, Group, List, Modal, NavLink } from "@mantine/core";
 import { useState } from "react";
 import { ProgramSnippet, ProgramSnippets } from "../../../models/ProgramSnippets";
 import { SoCDP8 } from "../../../models/SoCDP8";
 import { DeviceID } from "../../../types/PeripheralTypes";
 import { downloadData, loadFile } from "../../../util";
 import { FrontPanel } from "./FrontPanel";
-import { Box, Button, Card, Checkbox, FileButton, Group, List, Modal, NavLink } from "@mantine/core";
 
 export function FrontPanelBox(props: { pdp8: SoCDP8 }) {
     const [throttle, setThrottle] = useState(false);

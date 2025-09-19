@@ -16,11 +16,11 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ActionIcon, Anchor, AppShell, Box, Burger, Flex, Group, Text, Title, useMantineColorScheme } from "@mantine/core";
+import { ActionIcon, Anchor, AppShell, Box, Burger, Container, Flex, Text, Title, useMantineColorScheme } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconMoon, IconSun } from "@tabler/icons-react";
 import React from "react";
-import { Outlet, Link } from "react-router";
+import { Link, Outlet } from "react-router";
 import { SoCDP8 } from "../../models/SoCDP8";
 import { NavMenu } from "./NavMenu";
 
@@ -41,6 +41,7 @@ export function AppLayout(props: { pdp8: SoCDP8 }) {
                 breakpoint: "sm",
                 collapsed: { mobile: !isOpen }
             }}
+            footer={{ height: 30 }}
             padding="md"
         >
             <AppShell.Header p="xs">
@@ -63,7 +64,9 @@ export function AppLayout(props: { pdp8: SoCDP8 }) {
             </AppShell.Navbar>
             <AppShell.Main>
                 <React.Suspense fallback={<>Loading...</>}>
-                    <Outlet />
+                    <Container size="xl">
+                        <Outlet />
+                    </Container>
                 </React.Suspense>
             </AppShell.Main>
             <AppShell.Footer>
@@ -91,11 +94,11 @@ function ConnectingInfo() {
 
 function Copyright() {
     return (
-        <Text>
-            ©&nbsp;
-            <Link to="https://github.com/fpw/socdp8" target="_blank">
+        <Text style={{ textAlign: "right" }}>
+            ©
+            <Anchor href="https://github.com/fpw/socdp8" target="_blank">
                 Folke Will
-            </Link>, 2024
+            </Anchor>, 2024
         </Text>
     );
 }

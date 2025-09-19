@@ -17,15 +17,15 @@
  */
 
 import { NavLink } from "@mantine/core";
-import { IconAdjustmentsHorizontal, IconCpu, IconInfoCircleFilled, IconListNumbers } from "@tabler/icons-react";
+import { IconAdjustmentsHorizontal, IconCode, IconCpu, IconInfoCircle } from "@tabler/icons-react";
 import { Link } from "react-router";
 
 export function NavMenu(props: { onClick: () => void }) {
     const links: [string, string, React.ReactNode][] = [
         ["Active Machine", "/machines/active", <IconCpu />],
         ["Machiness", "/machines", <IconAdjustmentsHorizontal />],
-        ["Code", "/code", <IconListNumbers />],
-        ["About", "/about", <IconInfoCircleFilled />],
+        ["Code", "/code", <IconCode />],
+        ["About", "/about", <IconInfoCircle />],
     ];
 
     return (<>
