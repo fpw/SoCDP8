@@ -23,7 +23,7 @@ import { DeviceID } from "../../../types/PeripheralTypes";
 declare function createWASM8(options: { locateFile: (path: string) => string }): Promise<{
     addFunction: typeof addFunction;
     cwrap: typeof cwrap;
-    getValue: typeof getValue;
+    getValue: (addr: number, type: string) => number;
     setValue: typeof setValue;
     writeArrayToMemory: typeof writeArrayToMemory;
     _malloc: (n: number) => number;
