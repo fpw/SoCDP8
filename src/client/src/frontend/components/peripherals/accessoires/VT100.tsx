@@ -1,14 +1,14 @@
+import { Box, Button, Group } from "@mantine/core";
+import { Terminal } from "@xterm/xterm";
 import { useEffect, useRef, useState } from "react";
-import { Terminal } from "xterm";
 import { PT08Model } from "../../../../models/peripherals/PT08Model";
 import { PT08Style } from "../../../../types/PeripheralTypes";
-import { Box, Button, Group } from "@mantine/core";
-import "xterm/css/xterm.css";
+import "@xterm/xterm/css/xterm.css";
 
 export function VT100(props: { model: PT08Model }) {
     const { model } = props;
     const style = model.useState(state => state.conf!.style);
-    const termRef = useRef(null);
+    const termRef = useRef<HTMLDivElement>(null);
     const [term, setTerm] = useState<Terminal>();
     const clearOutput = model.useState(state => state.clearOutput);
 
@@ -29,7 +29,6 @@ export function VT100(props: { model: PT08Model }) {
                 altClickMovesCursor: false,
                 rows: 25,
                 cols: 74,
-
             });
         } else {
             xTerm = new Terminal({

@@ -22,7 +22,7 @@ export default defineConfig({
             output: {
                 manualChunks: {
                     "ui": ["@mantine/core", "@tabler/icons-react"],
-                    "perphs": ["xterm", "react-simple-keyboard"],
+                    "perphs": ["@xterm/xterm", "react-simple-keyboard"],
                     "editor": [
                         "@codemirror/autocomplete",
                         "@codemirror/commands",
@@ -35,12 +35,6 @@ export default defineConfig({
                     ],
                 },
             },
-        },
-    },
-    resolve: {
-        alias: {
-            // /esm/icons/index.mjs only exports the icons statically, so no separate chunks are created
-            "@tabler/icons-react": "@tabler/icons-react/dist/esm/icons/index.mjs",
         },
     },
     server: {
