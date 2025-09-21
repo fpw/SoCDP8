@@ -43,6 +43,9 @@ export function AboutPage() {
                     BitSavers
                 </Anchor> for their preservation of documentation
             </List.Item>
+            <List.Item>
+                Typewriter bell sound from <Anchor href="https://bigsoundbank.com/typewriter-bell-s2844.html">bigsoundbank.com</Anchor>
+            </List.Item>
         </List>
     </>);
 }

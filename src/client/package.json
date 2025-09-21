@@ -30,7 +30,7 @@
     "react-simple-keyboard": "^3.8.122",
     "socket.io-client": "^4.8.1",
     "@xterm/xterm": "^5.5.0",
-    "yamas": "^1.1.3",
+    "yamas": "^1.2.0",
     "zustand": "^5.0.8"
   },
   "devDependencies": {

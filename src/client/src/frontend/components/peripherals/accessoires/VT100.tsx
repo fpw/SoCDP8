@@ -7,10 +7,17 @@ import "@xterm/xterm/css/xterm.css";
 
 export function VT100(props: { model: PT08Model }) {
     const { model } = props;
+    const bellRef = useRef<HTMLAudioElement>(null);
     const style = model.useState(state => state.conf!.style);
     const termRef = useRef<HTMLDivElement>(null);
     const [term, setTerm] = useState<Terminal>();
     const clearOutput = model.useState(state => state.clearOutput);
+
+    function playBell() {
+        if (bellRef.current) {
+            void bellRef.current.play();
+        }
+    }
 
     useEffect(() => {
         if (!termRef.current) {
@@ -53,7 +60,11 @@ export function VT100(props: { model: PT08Model }) {
 
     useEffect(() => model.useState.subscribe((state, prevState) => {
         if (term && state.outBuf.length != prevState.outBuf.length) {
-            term.write(String.fromCharCode(state.outBuf[state.outBuf.length - 1] & 0x7F));
+            const byte = state.outBuf[state.outBuf.length - 1] & 0x7F;
+            if (byte == 0x07 && style == PT08Style.ASR33) {
+                playBell();
+            }
+            term.write(String.fromCharCode(byte));
         }
     }), [model, term]);
 
@@ -72,6 +83,9 @@ export function VT100(props: { model: PT08Model }) {
                 </Button>
             </Group>
             <Box ref={termRef} mt="xs" mb="xs" />
+            <audio preload="1" ref={bellRef}>
+                <source src="/bell.ogg" type="audio/ogg" />
+            </audio>
         </>
     );
 };

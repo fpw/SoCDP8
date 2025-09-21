@@ -26,7 +26,7 @@
         "react-router": "^7.9.1",
         "react-simple-keyboard": "^3.8.122",
         "socket.io-client": "^4.8.1",
-        "yamas": "^1.1.3",
+        "yamas": "^1.2.0",
         "zustand": "^5.0.8"
       },
       "devDependencies": {
@@ -2209,6 +2209,7 @@
       "version": "5.0.1",
       "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz",
       "integrity": "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==",
+      "dev": true,
       "license": "MIT",
       "engines": {
         "node": ">=8"
@@ -2218,6 +2219,7 @@
       "version": "4.3.0",
       "resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-4.3.0.tgz",
       "integrity": "sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==",
+      "dev": true,
       "license": "MIT",
       "dependencies": {
         "color-convert": "^2.0.1"
@@ -2356,7 +2358,9 @@
       "version": "4.1.2",
       "resolved": "https://registry.npmjs.org/chalk/-/chalk-4.1.2.tgz",
       "integrity": "sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==",
+      "dev": true,
       "license": "MIT",
+      "peer": true,
       "dependencies": {
         "ansi-styles": "^4.1.0",
         "supports-color": "^7.1.0"
@@ -2393,15 +2397,54 @@
       }
     },
     "node_modules/cmd-ts": {
-      "version": "0.13.0",
-      "resolved": "https://registry.npmjs.org/cmd-ts/-/cmd-ts-0.13.0.tgz",
-      "integrity": "sha512-nsnxf6wNIM/JAS7T/x/1JmbEsjH0a8tezXqqpaL0O6+eV0/aDEnRxwjxpu0VzDdRcaC1ixGSbRlUuf/IU59I4g==",
+      "version": "0.14.2",
+      "resolved": "https://registry.npmjs.org/cmd-ts/-/cmd-ts-0.14.2.tgz",
+      "integrity": "sha512-YzSXosVEyWVK1IheMKvm6ACejWoSPeKJ18rmXESmMigbShNiQ/rjRifdzeAtKYkuF3Bpf4QjMsBvsjM3UUBwAw==",
       "license": "MIT",
       "dependencies": {
-        "chalk": "^4.0.0",
-        "debug": "^4.3.4",
+        "chalk": "^5.4.1",
+        "debug": "^4.4.1",
         "didyoumean": "^1.2.2",
-        "strip-ansi": "^6.0.0"
+        "strip-ansi": "^7.1.0"
+      }
+    },
+    "node_modules/cmd-ts/node_modules/ansi-regex": {
+      "version": "6.2.2",
+      "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-6.2.2.tgz",
+      "integrity": "sha512-Bq3SmSpyFHaWjPk8If9yc6svM8c56dB5BAtW4Qbw5jHTwwXXcTLoRMkpDJp6VL0XzlWaCHTXrkFURMYmD0sLqg==",
+      "license": "MIT",
+      "engines": {
+        "node": ">=12"
+      },
+      "funding": {
+        "url": "https://github.com/chalk/ansi-regex?sponsor=1"
+      }
+    },
+    "node_modules/cmd-ts/node_modules/chalk": {
+      "version": "5.6.2",
+      "resolved": "https://registry.npmjs.org/chalk/-/chalk-5.6.2.tgz",
+      "integrity": "sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA==",
+      "license": "MIT",
+      "engines": {
+        "node": "^12.17.0 || ^14.13 || >=16.0.0"
+      },
+      "funding": {
+        "url": "https://github.com/chalk/chalk?sponsor=1"
+      }
+    },
+    "node_modules/cmd-ts/node_modules/strip-ansi": {
+      "version": "7.1.2",
+      "resolved": "https://registry.npmjs.org/strip-ansi/-/strip-ansi-7.1.2.tgz",
+      "integrity": "sha512-gmBGslpoQJtgnMAvOVqGZpEz9dyoKTCzy2nfz/n8aIFhN/jCE/rCmcxabB6jOOHV+0WNnylOxaxBQPSvcWklhA==",
+      "license": "MIT",
+      "dependencies": {
+        "ansi-regex": "^6.0.1"
+      },
+      "engines": {
+        "node": ">=12"
+      },
+      "funding": {
+        "url": "https://github.com/chalk/strip-ansi?sponsor=1"
       }
     },
     "node_modules/codemirror": {
@@ -2423,6 +2466,7 @@
       "version": "2.0.1",
       "resolved": "https://registry.npmjs.org/color-convert/-/color-convert-2.0.1.tgz",
       "integrity": "sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==",
+      "dev": true,
       "license": "MIT",
       "dependencies": {
         "color-name": "~1.1.4"
@@ -2435,6 +2479,7 @@
       "version": "1.1.4",
       "resolved": "https://registry.npmjs.org/color-name/-/color-name-1.1.4.tgz",
       "integrity": "sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==",
+      "dev": true,
       "license": "MIT"
     },
     "node_modules/concat-map": {
@@ -3057,7 +3102,9 @@
       "version": "4.0.0",
       "resolved": "https://registry.npmjs.org/has-flag/-/has-flag-4.0.0.tgz",
       "integrity": "sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==",
+      "dev": true,
       "license": "MIT",
+      "peer": true,
       "engines": {
         "node": ">=8"
       }
@@ -4179,6 +4226,7 @@
       "version": "6.0.1",
       "resolved": "https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz",
       "integrity": "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==",
+      "dev": true,
       "license": "MIT",
       "dependencies": {
         "ansi-regex": "^5.0.1"
@@ -4233,7 +4281,9 @@
       "version": "7.2.0",
       "resolved": "https://registry.npmjs.org/supports-color/-/supports-color-7.2.0.tgz",
       "integrity": "sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==",
+      "dev": true,
       "license": "MIT",
+      "peer": true,
       "dependencies": {
         "has-flag": "^4.0.0"
       },
@@ -4718,12 +4768,12 @@
       "license": "ISC"
     },
     "node_modules/yamas": {
-      "version": "1.1.3",
-      "resolved": "https://registry.npmjs.org/yamas/-/yamas-1.1.3.tgz",
-      "integrity": "sha512-J3z6YHDztmq0iy5jhSonVPxh5Yp8jlVvLrxE5bYM09iPWY8dbYfo3ReKrR325if17N1f8ZvAnCMDbS83Y7N3Kg==",
+      "version": "1.2.0",
+      "resolved": "https://registry.npmjs.org/yamas/-/yamas-1.2.0.tgz",
+      "integrity": "sha512-S+UrWwElK8Y3L1HKTeGGZqkuUf1k8rQYcoSpxh1K5AMwAAW2WTVqU8R4eP9vfQb9fia4TZ78N5OodJErSVHvkA==",
       "license": "AGPL-3.0-or-later",
       "dependencies": {
-        "cmd-ts": "^0.13.0"
+        "cmd-ts": "^0.14.2"
       },
       "bin": {
         "yamas": "dist/scripts/yamas.js",

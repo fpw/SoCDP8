@@ -78,7 +78,7 @@ export class Wasm8Backend implements Backend {
         await this.listener.onConnect();
 
         this.throttler = new ThrottleController(t => this.pdp8.setThrottle(t));
-        this.throttler.setControl(false);
+        this.throttler.setControl(true);
 
         const updateConsole = () => {
             const state = this.pdp8.getConsoleState();
