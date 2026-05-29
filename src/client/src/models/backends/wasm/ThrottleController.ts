@@ -41,10 +41,11 @@ export class ThrottleController {
                 this.control(0);
             } else {
                 this.state = State.Control;
-                this.control(this.velocity);
+                this.controlVelocity(this.velocity);
             }
         } else {
             this.state = State.Uncontrolled;
+            this.history = [];
             this.control(0);
         }
     }

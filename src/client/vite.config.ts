@@ -1,11 +1,10 @@
 import react from "@vitejs/plugin-react";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig, PluginOption } from "vite";
-import viteTsconfigPaths from "vite-tsconfig-paths";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [react(), viteTsconfigPaths(), visualizer({ filename: "build/bundle.html" }) as PluginOption,
+    plugins: [react(), visualizer({ filename: "build/bundle.html" }),
         {
             name: "configure-response-headers",
             configureServer: server => {
@@ -18,22 +17,24 @@ export default defineConfig({
         }],
     build: {
         outDir: "build",
-        rollupOptions: {
+        rolldownOptions: {
             output: {
-                manualChunks: {
-                    "ui": ["@mantine/core", "@tabler/icons-react"],
-                    "perphs": ["@xterm/xterm", "react-simple-keyboard"],
-                    "editor": [
-                        "@codemirror/autocomplete",
-                        "@codemirror/commands",
-                        "@codemirror/language",
-                        "@codemirror/lint",
-                        "@codemirror/search",
-                        "@codemirror/state",
-                        "@codemirror/theme-one-dark",
-                        "@codemirror/view",
-                    ],
-                },
+                codeSplitting: {
+                    groups: [
+                        {
+                            name: "ui",
+                            test: /[\\/]node_modules[\\/](@mantine[\\/]core|@tabler[\\/]icons-react)[\\/]/,
+                        },
+                        {
+                            name: "perphs",
+                            test: /[\\/]node_modules[\\/](@xterm[\\/]xterm|react-simple-keyboard)[\\/]/,
+                        },
+                        {
+                            name: "codemirror",
+                            test: /[\\/]node_modules[\\/](codemirror|@codemirror)[\\/]/,
+                        }
+                    ]
+                }
             },
         },
     },

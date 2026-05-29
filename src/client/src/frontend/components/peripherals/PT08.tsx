@@ -45,8 +45,7 @@ function ConfigBox(props: { model: PT08Model }) {
                 value={conf.style}
                 onChange={s => {
                     if (s !== null) {
-                        const style = s as PT08Style;
-                        void model.updateConfig({ ...conf, style });
+                        void model.updateConfig({ ...conf, style: s });
                     }
                 }}
                 data={Object.entries(PT08Style).map(([key, val]) => ({ value: val, label: key }))}

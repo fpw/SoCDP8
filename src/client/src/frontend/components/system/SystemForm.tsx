@@ -16,7 +16,7 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { FormEvent } from "react";
+import { FormEvent, SyntheticEvent } from "react";
 import { DeviceID, PeripheralConfiguration, PT08Configuration, PT08Style } from "../../../types/PeripheralTypes";
 import { getDefaultSysConf, SystemConfiguration } from "../../../types/SystemConfiguration";
 import { Box, Button, Fieldset, Group, Radio, RadioGroup, Slider, Switch, TextInput } from "@mantine/core";
@@ -119,7 +119,7 @@ export function SystemForm(props: SystemFormProps) {
     );
 }
 
-function toSystemConf(ev: FormEvent<HTMLFormElement>): SystemConfiguration {
+function toSystemConf(ev: SyntheticEvent<HTMLFormElement>): SystemConfiguration {
     const form = ev.currentTarget;
     const s: SystemConfiguration = getDefaultSysConf();
     s.peripherals = [];
@@ -175,7 +175,7 @@ function toSystemConf(ev: FormEvent<HTMLFormElement>): SystemConfiguration {
     }
 
     const diskStr = (form.elements.namedItem("disk") as HTMLInputElement).value;
-    const diskId = Number.parseInt(diskStr, 10) as DeviceID;
+    const diskId: DeviceID = Number.parseInt(diskStr, 10);
     switch (diskId) {
         case DeviceID.DEV_ID_DF32:
             s.peripherals.push({ id: DeviceID.DEV_ID_DF32 });
